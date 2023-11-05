@@ -81,7 +81,7 @@ cluster <- function(merged_gs, cutoff, overlap, minSize) {
     # gene=TRUE returns list of terms within cluster under 'Cluster' column
     clustered_gs <- richCluster(x=merged_gs, gene=TRUE, cutoff=cutoff, overlap=overlap, minSize=minSize) # from richR
     # for debugging
-    write.table(clustered_gs, file='/Users/sarahhong/Projects/Hur Lab/RichStudio/data/clustered_data.txt', sep='\t')
+    # write.table(clustered_gs, file='/Users/sarahhong/Projects/Hur Lab/RichStudio/data/clustered_data.txt', sep='\t')
     # order clusters by ascending cluster #
     clustered_gs <- clustered_gs[order(as.numeric(clustered_gs$AnnotationCluster)), ]
     return(clustered_gs)

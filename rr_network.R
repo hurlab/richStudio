@@ -1,6 +1,10 @@
+
+# Test
 # deg1 <- read.delim("data/degs/HF_12wk_DRG_vs_WT_12wk_DRG_DE_12_19.txt")
 # deg1_enriched <- shiny_enrich(deg1, 'geneID', 'mouse',  "GO", "SYMBOL", "BP")
 # net <- ggnetwork(deg1_enriched, deg1)
+# plotly_net <- ggplotly(net)
+# print(plotly_net)
 
 rr_network <- function(rr, deg=NULL) {
   if (is.null(deg)) {

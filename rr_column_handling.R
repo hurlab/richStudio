@@ -28,7 +28,7 @@ expand_dictionary <- function(dictionary) {
 
 # Sample dictionary
 col_dictionary <- list(
-  ID = c("ID", "identifier", "pathway ID", "identity"),
+  ID = c("ID", "identifier", "pathway ID", "identity", "Annot", "Anno"),
   Term = c("Term", "name", "description", "pathway"),
   Pvalue = c("Pvalue", "P-value", "Nominal p-value"),
   Padj = c("Padj", "P-adjusted", "Adjusted p-value", "Corrected", "Corrected Pvaue", "Benjamini-Hochberg", "BH corrected p-value", "BH Pvalaue", "FDR", "False Discovery Rate", "Q-value"),

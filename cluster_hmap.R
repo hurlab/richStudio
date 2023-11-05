@@ -159,24 +159,26 @@ cluster_hmap <- function(cluster_list, term_vec, final_data, value_type="Padj") 
     yaxis = list(title = 'Term', categoryorder = "trace", nticks = my_nticks)
   )
   
-  # ComplexHeatmap
   clusty_annot <- melted_chmap_data %>%
     distinct(Cluster, Term) %>%
     arrange(Cluster)
   
   clusty <- cluster_hmap[, !(colnames(cluster_hmap) %in% c("Cluster", "Term"))]
   clusty <- apply(clusty, c(1, 2), function(x) -log10(x))
-  clusty <- apply(clusty, 2, function(x) replace_na(x, 0))
+  rownames(clusty) <- clusty_annot$Term
   
+  my_hm <- heatmaply(
+    clusty, 
+    row_side_colors=data.frame("Cluster"=clusty_annot$Cluster, check.names=FALSE),
+    cellnote=clusty,
+    plot_method='plotly',
+    cluster_rows=FALSE, cluster_cols=FALSE,
+    Rowv=FALSE,
+    Colv=FALSE,
+    main=paste0("-log10(", value_type, ") by Term"),
+    key.title=paste0("-log10(", value_type, ")")
+  )
   
-  col_fun <- colorRamp2(c(0, max(melted_chmap_data$value, na.rm=TRUE)), c("white", "purple"))
-  #col_fun(seq(-3, 3))
-  
-  rownames(clusty) <- cluster_hmap$Term
-  la <- ComplexHeatmap::rowAnnotation(Cluster=clusty_annot$Cluster, name="Cluster", show_annotation_name=TRUE)
-  ch <- ComplexHeatmap::Heatmap(as.matrix(clusty), name="Test", col=col_fun, cluster_rows=FALSE, 
-                                cluster_columns=FALSE, left_annotation=la)
-  
-  return(ch)
+  return(my_hm)
 }
   

@@ -102,7 +102,7 @@ enrichTabUI <- function(id, tabName) {
             ),
             box(title='Network', width=NULL, status='info', solidHeader=TRUE,
               br(),
-              plotlyOutput(ns("network"))
+              plotOutput(ns("network"), height="800px")
             )
           ),
           
@@ -252,6 +252,10 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_clus
       mynet <- rr_network(rr=df, deg=NULL)
       return(mynet)
     })
+    output$network <- renderPlot ({
+      get_rr_network()
+    })
+    
     output$dotplot <- renderPlotly ({
       get_rr_dotplot()
     })

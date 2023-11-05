@@ -89,5 +89,10 @@ select_required_columns <- function(df) {
 # Example
 # user_df <- data.frame(name = letters[1:5], Pvalue = runif(5),
 #                       `Q-value` = runif(5), `gene list` = paste(sample(letters, 5), collapse = ","))
+# user_df2 <-  data.frame(`geneID` = paste(sample(letters, 5), collapse = ","), baseMean=runif(5),
+#                         log2FoldChange=runif(5), lfcSE=runif(5), stat=runif(5), pvalue=runif(5), padj=runif(5))
+# 
 # result_df <- select_required_columns(user_df)
+# result_df_bad <- select_required_columns(user_df2) # why?
+# 
 # print(result_df)

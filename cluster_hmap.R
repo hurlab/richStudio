@@ -1,10 +1,5 @@
 # Functions to create comprehensive and individual term heatmaps for cluster results
-library(cowplot)
-library(ComplexHeatmap)
-library(circlize)
-library(tidyHeatmap)
-library(grid)
-library(patchwork)
+
 
 # Prepare cluster result for heatmap
 hmap_prepare <- function(clustered_gs, gs_names) {

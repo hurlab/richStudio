@@ -11,11 +11,10 @@ library(data.table)
 library(ggplot2)
 library(dplyr)
 library(plotly)
+library(heatmaply)
 library(DT)
 library(devtools)
 library(config)
-
-library(ComplexHeatmap)
 
 library(richR)
 library(bioAnno)

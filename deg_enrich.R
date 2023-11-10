@@ -10,6 +10,7 @@
 # x: deg to analyze
 # header: name of vector in question
 shiny_enrich <- function(x, header, species, anntype, keytype, ontology) {
+  header <- grep(header, colnames(x), ignore.case=TRUE, value=TRUE) # grab case-insensitive header
   x <- x[, header]
   x <- as.character(x)
   annot_data <- buildAnnot(species=species, keytype=keytype, anntype=anntype)

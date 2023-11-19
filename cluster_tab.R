@@ -8,7 +8,7 @@ clusterTabUI <- function(id, tabName) {
         tabBox(title="Cluster", width = NULL,
           tabPanel("Kappa clustering",
             br(),
-            selectInput(ns('selected_rrs'), "Select rich results", choices=NULL, multiple=TRUE),
+            selectInput(ns('selected_rrs'), "Select enrichment results to cluster", choices=NULL, multiple=TRUE),
             textInput(ns('cluster_name'), "Name", value="Test group"),
             selectInput(ns('cluster_by'), "Cluster by", c("Mean Pvalue", "Median Pvalue", "Min Pvalue", "Mean Padj", "Median Padj", "Min Padj")),
             numericInput(ns('cutoff'), "Cutoff", value=.5, min=0, max=1),

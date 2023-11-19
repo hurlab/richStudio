@@ -9,7 +9,7 @@ enrichTabUI <- function(id, tabName) {
           br(),
           selectInput(ns('selected_degs'), "Select DEG sets to enrich", choices=NULL, multiple=TRUE),
           textInput(ns('header_input'), "Header", value="geneID"),
-          selectInput(ns('anntype_select'), "Select annotation source", c("GO", "KEGG", "Reactome", "KEGGM")),
+          selectInput(ns('anntype_select'), "Select annotation source", c("GO", "KEGG", "Reactome")),
           selectInput(ns('keytype_select'), "Select keytype", 
                       c("ACCNUM", "ALIAS", "ENSEMBL", "ENSEMBLPROT", "ENSEMBLTRANS",
                         "ENTREZID", "ENZYME", "EVIDENCE", "EVIDENCEALL", "FLYBASE",
@@ -108,7 +108,7 @@ enrichTabUI <- function(id, tabName) {
           
           # Heatmap
           tabPanel("Heatmap",
-            tabBox(title = "Edit Heatmap", id="edit_hmap_box", width = NULL,
+            tabBox(id="edit_hmap_box", width = NULL,
               # EZ heatmap
               tabPanel("Quick make",
                 selectInput(ns("ez_add_select"), "Select enrichment results", choices=NULL, multiple=TRUE),

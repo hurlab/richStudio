@@ -172,7 +172,7 @@ uploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_clus
     deg_to_table <- reactive ({
       req(input$deg_table_select)
       df <- u_degdfs[[input$deg_table_select]]
-      df <- round_tbl(df, 3)
+      #df <- round_tbl(df, 3)
       return(df)
     })
     

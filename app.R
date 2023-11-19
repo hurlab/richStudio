@@ -51,7 +51,7 @@ source('cluster_tab.R')
 
 
 ui <- dashboardPage(
-  dashboardHeader(title = "RichStudio"),
+  dashboardHeader(title = "RichStudio v0.1.0"),
   dashboardSidebar(
     sidebarMenu(
       menuItem("Upload", icon = icon("plus"), tabName = "upload_tab",

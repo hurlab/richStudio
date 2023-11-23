@@ -9,16 +9,16 @@ uploadTabUI <- function(id, tabName) {
           # DEG upload panel
           tabPanel("DEG Sets",
             fileInput(ns('deg_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt')),
-            helpText("Accepted formats: .txt, .csv, .tsv"),
-            selectInput(ns('deg_sep'), "Element separator", c(Comma=",", Space=" ", Tab="\t", "Guess"), selected="Guess"),
-            actionButton(ns('upload_deg_file'), "Upload")
+            helpText("Accepted formats: .txt, .csv, .tsv")
+            #selectInput(ns('deg_sep'), "Element separator", c(Comma=",", Space=" ", Tab="\t", "Guess"), selected="Guess"),
+            #actionButton(ns('upload_deg_file'), "Upload")
           ),
           # Rich Result upload panel
           tabPanel("Enrichment Results",
             fileInput(ns('rr_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt')),
             helpText("Accepted formats: .txt, .csv, .tsv"),
-            selectInput(ns('rr_sep'), "Element separator", c(Comma=",", Space=" ", Tab="\t", "Guess"), selected="Guess"),
-            actionButton(ns('upload_rr_file'), "Upload")
+            #selectInput(ns('rr_sep'), "Element separator", c(Comma=",", Space=" ", Tab="\t", "Guess"), selected="Guess"),
+            #actionButton(ns('upload_rr_file'), "Upload")
           )
         ),
       ),
@@ -108,47 +108,33 @@ uploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_clus
     
     # <!----- DEG FILE MANAGEMENT -----!>
     # when deg upload button clicked
-    observeEvent(input$upload_deg_file, {
-      req(input$deg_files) # Make sure file uploaded
+    observeEvent(input$deg_files, {
+      #req(input$deg_files) # Make sure file uploaded
       
       for (i in seq_along(input$deg_files$name)) {
         lab <- input$deg_files$name[i]
         
         ext <- tools::file_ext(input$deg_files$name[i])
         path <- input$deg_files$datapath[i]
-        
-        # read file based on file extension
-        if (ext != "txt") {
-          df <- switch(ext,
-            csv = read.csv(path),
-            tsv = read.delim(path),
-            xls = readxl::read_excel(path)
-          )
-        } else if (ext == "txt" && input$deg_sep != "Guess") {
-          df <- read.csv(path, sep=input$deg_sep)
-        } 
-        # GUESS separator logic
-        else if (ext == "txt" && input$deg_sep == "Guess") {
-          # try to read file as csv
-          csv_ncol <- tryCatch({
-            csvdf <- read.csv(path)
-            ncol(csvdf)
-          }, error = function(err) {
-            0
-          })
-          # try to read file as tsv
-          tsv_ncol <- tryCatch({
-            tsvdf <- read.delim(path)
-            ncol(tsvdf)
-          }, error = function(err) {
-            0
-          })
-          # decide which df to store
-          if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
-            df <- read.csv(path)
-          } else {
-            df <- read.delim(path)
-          }
+        # try to read file as csv
+        csv_ncol <- tryCatch({
+          csvdf <- read.csv(path)
+          ncol(csvdf)
+        }, error = function(err) {
+          0
+        })
+        # try to read file as tsv
+        tsv_ncol <- tryCatch({
+          tsvdf <- read.delim(path)
+          ncol(tsvdf)
+        }, error = function(err) {
+          0
+        })
+        # decide which df to store
+        if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
+          df <- read.csv(path)
+        } else {
+          df <- read.delim(path)
         }
         
         u_degdfs[[lab]] <- df # set u_degdfs
@@ -202,7 +188,7 @@ uploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_clus
     
     # <!----- RICH RESULT FILE MANAGEMENT -----!>
     # when rich result upload button clicked
-    observeEvent(input$upload_rr_file, {
+    observeEvent(input$rr_files, {
       req(input$rr_files) # Make sure file uploaded
       
       for (i in seq_along(input$rr_files$name)) {
@@ -210,39 +196,26 @@ uploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_clus
         
         ext <- tools::file_ext(input$rr_files$name[i])
         path <- input$rr_files$datapath[i]
-        
-        # read file based on file extension
-        if (ext != "txt") {
-          df <- switch(ext,
-            csv = read.csv(path),
-            tsv = read.delim(path),
-            xls = readxl::read_excel(path)
-          )
-        } else if (ext == "txt" && input$rr_sep != "Guess") {
-          df <- read.csv(path, sep=input$rr_sep)
-        } 
-        # GUESS separator logic
-        else if (ext == "txt" && input$rr_sep == "Guess") {
-          # try to read file as csv
-          csv_ncol <- tryCatch({
-            csvdf <- read.csv(path)
-            ncol(csvdf)
-          }, error = function(err) {
-            0
-          })
-          # try to read file as tsv
-          tsv_ncol <- tryCatch({
-            tsvdf <- read.delim(path)
-            ncol(tsvdf)
-          }, error = function(err) {
-            0
-          })
-          # decide which df to store
-          if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
-            df <- read.csv(path)
-          } else {
-            df <- read.delim(path)
-          }
+      
+        # try to read file as csv
+        csv_ncol <- tryCatch({
+          csvdf <- read.csv(path)
+          ncol(csvdf)
+        }, error = function(err) {
+          0
+        })
+        # try to read file as tsv
+        tsv_ncol <- tryCatch({
+          tsvdf <- read.delim(path)
+          ncol(tsvdf)
+        }, error = function(err) {
+          0
+        })
+        # decide which df to store
+        if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
+          df <- read.csv(path)
+        } else {
+          df <- read.delim(path)
         }
         
         #u_rrdfs[[lab]] <- select_required_columns(df) # set u_rrdfs

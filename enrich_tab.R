@@ -38,15 +38,32 @@ enrichTabUI <- function(id, tabName) {
     ),
     column(width = 8,
       shinyjs::hidden(tags$div(
-        id=ns("deglist_box"),
+        id=ns("list_box"),
         tabBox(title="Uploaded files", width=NULL,
+          
           tabPanel("DEG sets",
-            DT::DTOutput(ns('deg_list_table')),
-            actionButton(ns('remove_deg'), "Delete")
+            tags$div(id=ns("deglist_box"),
+              div(style="display:inline-block; float:left", helpText("Double-click on any cell to change its value.")),
+              div(style="display:inline-block; float:right", 
+                  actionBttn(ns('deglist_help'), label=NULL, style='material-circle', status='primary', icon=icon('info'), size='xs')
+              ),
+              br(),
+              br(),
+              DT::DTOutput(ns('deg_list_table')),
+              actionButton(ns('remove_deg'), "Delete")
+            )
           ),
           tabPanel("Enrichment Results",
-            DT::DTOutput(ns('rr_list_table')),
-            actionButton(ns('remove_rr'), "Delete")
+            tags$div(id=ns("rrlist_box"),
+              div(style="display:inline-block; float:left", helpText("Double-click on any cell to change its value.")),
+              div(style="display:inline-block; float:right", 
+                actionBttn(ns('rrlist_help'), label=NULL, style='material-circle', status='primary', icon=icon('info'), size='xs')
+              ),
+              br(),
+              br(),
+              DT::DTOutput(ns('rr_list_table')),
+              actionButton(ns('remove_rr'), "Delete")
+            )
           )
         ))
       ), 
@@ -110,22 +127,41 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     observe ({
       # Show/hide entire box
       if (is.null(u_big_degdf[['df']]) && is.null(u_big_rrdf[['df']])) {
-        shinyjs::hide('deglist_box')
+        shinyjs::hide('list_box')
       } else if (!is.null(u_big_degdf[['df']]) || !is.null(u_big_rrdf[['df']])) {
-        shinyjs::show("deglist_box")
+        shinyjs::show("list_box")
         # Show/hide delete deg button
         if (is.null(u_big_degdf[['df']])) {
-          shinyjs::hide('remove_deg')
+          shinyjs::hide('deglist_box')
         } else if (!is.null(u_big_degdf[['df']])){
-          shinyjs::show('remove_deg')
+          shinyjs::show('deglist_box')
         }
         # Show/hide delete rr button
         if (is.null(u_big_rrdf[['df']])) {
-          shinyjs::hide('remove_rr')
+          shinyjs::hide('rrlist_box')
         } else if (!is.null(u_big_rrdf[['df']])){
-          shinyjs::show('remove_rr')
+          shinyjs::show('rrlist_box')
         }
       }
+    })
+    
+    observeEvent(input$deglist_help, {
+      showModal(modalDialog(
+        title="Help",
+        "'GeneID_header' value indicates the column name containing relevant geneID 
+        information, and 'has_expr_data' value indicates whether relevant gene expression 
+        data is included."
+      ))
+    })
+    observeEvent(input$rrlist_help, {
+      showModal(modalDialog(
+        title="Help",
+        "If annotation, ontology, keytype, or species data is marked with '?', you
+        can update it by double-clicking on the relevant cell. If you started from
+        an enrichment output but wish to link corresponding differential expression data
+        to it, you can update the 'from_deg' value to the name of a DEG set uploaded to
+        RichStudio."
+      ))
     })
     
     # When deg upload button clicked
@@ -165,7 +201,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       
       # Show file list
       # if (!is.null(u_big_degdf[['df']])) {
-      #   shinyjs::show("deglist_box")
+      #   shinyjs::show("list_box")
       #   print("showing...")
       # }
       
@@ -185,7 +221,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       
       # Show file list
       # if (!is.null(u_big_degdf[['df']])) {
-      #   shinyjs::show("deglist_box")
+      #   shinyjs::show("list_box")
       #   print("showing...")
       # }
       
@@ -243,7 +279,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       u_big_degdf[['df']] <- rm_file_degdf(u_big_degdf[['df']], rm_vec)
       
       # if (is.null(u_big_degdf[['df']])) {
-      #   shinyjs::hide("deglist_box")
+      #   shinyjs::hide("list_box")
       #   print("hide")
       # }
     })

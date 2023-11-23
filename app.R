@@ -20,6 +20,8 @@ library(config)
 library(richR)
 library(bioAnno)
 
+library(shinyWidgets)
+
 #Set working directory
 # getwd()
 # library(rstudioapi)

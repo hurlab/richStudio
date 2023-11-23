@@ -20,6 +20,7 @@ rrVisTabUI <- function(id, tabName) {
         shinyjs::hidden(tags$div(
           id=ns("rrlist_box"),
           box(title="Available enrichment results", width=NULL,
+            helpText("You can rename any enrichment result by double-clicking on the relevant cell."),
             DT::DTOutput(ns('rr_list_table')),
             actionButton(ns('remove_rr'), "Delete")
           )

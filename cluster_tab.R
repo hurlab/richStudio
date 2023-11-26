@@ -418,5 +418,34 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       }
     )
     
+    # Reactively update which cluster result is read based on selection
+    clusdf_to_table <- reactive ({
+      req(input$clus_table_select)
+      df <- u_clusdfs[[input$clus_table_select]]
+      return(df)
+    })
+    # Output cluster result table
+    output$clus_table = DT::renderDataTable({
+      clusdf_to_table()
+    })
+    
+    # Download cluster result
+    output$download_clus <- downloadHandler(
+      filename = function() {
+        req(input$clus_table_select)
+        paste0(input$clus_table_select, input$clus_export_type)
+      },
+      content = function(file) {
+        ext_type <- input$clus_export_type
+        if (ext_type == ".txt") {
+          write.table(u_clusdfs[[input$clus_table_select]], file, sep='\t', row.names=FALSE)
+        } else if (ext_type == ".csv") {
+          write.csv(u_clusdfs[[input$clus_table_select]], file, row.names=FALSE)
+        } else if (ext_type == ".tsv") {
+          write.table(u_clusdfs[[input$clus_table_select]], file, sep='\t', row.names=FALSE)
+        }
+      }
+    )
+    
   })
 }

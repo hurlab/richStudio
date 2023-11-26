@@ -5,30 +5,26 @@ clusVisTabUI <- function(id, tabName) {
     # ENRICH TAB CONTENTS
     fluidRow(
       column(width = 4,
-        tabBox(title=span(icon("upload"), "Upload enrichment results"), width=NULL,
+        tabBox(title="Load cluster result", width=NULL,
           tabPanel("File upload",
-            helpText("Accepted formats: .txt, .csv, .tsv"),      
-            fileInput(ns('rr_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt'))
+            helpText("Accepted formats: .txt, .csv, .tsv (Not currently supported)"),
+            fileInput(ns('clus_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt'))
           ),
           tabPanel("Text input",
             helpText("This functionality is currently not available, but will be supported in the future."),
             textAreaInput(ns('rr_text'), "Text Input", placeholder="Paste dataframe-like object"),
-            textInput(ns('rrtext_name'), "Name", placeholder="Set name for pasted enrichment result"),
-            actionButton(ns('upload_rrtext'), "Upload")
+            textInput(ns('clustext_name'), "Name", placeholder="Set name for pasted enrichment result"),
+            actionButton(ns('upload_clustext'), "Upload")
           )
         ),
-        tabBox(title="Cluster", width = NULL,
-          tabPanel("Kappa clustering",
-            br(),
-            selectInput(ns('selected_rrs'), "Select enrichment results to cluster", choices=NULL, multiple=TRUE),
-            textInput(ns('cluster_name'), "Name", value="Test group"),
-            selectInput(ns('cluster_by'), "Cluster by", c("Mean Pvalue", "Median Pvalue", "Min Pvalue", "Mean Padj", "Median Padj", "Min Padj")),
-            numericInput(ns('cutoff'), "Cutoff", value=.5, min=0, max=1),
-            numericInput(ns('overlap'), "Overlap", value=.5, min=0, max=1),
-            numericInput(ns('min_size'), "Min size", value=2, min=0),
-            actionButton(ns('cluster'), "Cluster")
+        shinyjs::hidden(tags$div(
+          id=ns("cluslist_box"),
+          box(title="Available cluster results", width=NULL,
+            helpText("You can rename any cluster result by double-clicking on the relevant cell."),
+            DT::DTOutput(ns('clus_list_table')),
+            actionButton(ns('remove_clus'), "Delete")
           )
-        )
+        ))
       ),
       column(width = 8,
         h3("Cluster Result Visualization"),
@@ -126,46 +122,71 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       updateSelectInput(session=getDefaultReactiveDomain(), 'cluslist_select', choices=u_clusnames_reactive())
     })
     
-  
-    # <!----- CLUSTERING LOGIC -----!>
-    # Clustering
-    observeEvent(input$cluster, {
-      req(input$selected_rrs) # Require rich result selection
-      req(input$cluster_name) # Require cluster name
-      
-      withProgress(message="Clustering...", value=0, {
-        genesets <- list()
-        gs_names <- c()
-        for (i in seq_along(input$selected_rrs)) {
-          tmp <- input$selected_rrs[i]
-          genesets <- c(genesets, list(u_rrdfs[[tmp]]))
-        }
-        names(genesets) <- input$selected_rrs
-        gs_names <- names(genesets)
-        
-        merged_gs <- merge_genesets(genesets)
-        incProgress(0.2, message=NULL, "Done merging")
-        clustered_gs <- tryCatch(
-          cluster(merged_gs=merged_gs, cutoff=input$cutoff, overlap=input$overlap, minSize=input$min_size),
-          error = function(e) {
-            showNotification(e$message)
-            return(NULL)
-          }
-        )
-        if(!is.null(clustered_gs)) {
-          incProgress(0.5, message=NULL, "Done clustering")
-          cluster_list <- get_cluster_list(clustered_gs=clustered_gs, merged_gs=merged_gs, gs_names=gs_names) # get cluster info
-          final_data <- hmap_prepare(clustered_gs, gs_names=gs_names) # final data
-          final_data <- change_finaldata_valueby(final_data=final_data, cluster_list=cluster_list, value_by="mean")
-          
-          # store in reactive
-          lab <- input$cluster_name
-          u_clusdfs[[lab]] <- final_data # set u_clusdfs
-          u_cluslists[[lab]] <- cluster_list # set u_cluslists
-          u_clusnames$labels <- c(u_clusnames$labels, lab) # set u_clusnames
-        }
-      })
+    observe ({
+      if (is.null(u_big_clusdf[['df']])) {
+        shinyjs::hide('cluslist_box')
+      } else {
+        shinyjs::show("cluslist_box")
+      }
     })
+    
+  
+    # Reactively update created cluster result dataframe
+    big_clusdf_to_table <- reactive({
+      u_big_clusdf[['df']]
+    })
+    # Output uploaded file table
+    output$clus_list_table = DT::renderDT(
+      big_clusdf_to_table(), editable='cell'
+    )
+    # Cluslist table editing code
+    proxy = dataTableProxy('clus_list_table')
+    observeEvent(input$clus_list_table_cell_edit, {
+      info = input$clus_list_table_cell_edit
+      str(info)
+      i = info$row
+      j = info$col
+      v = info$value
+      print(info$col)
+      
+      # Rename rr if changing a value in column 1 (name col)
+      if (info$col == 1) {
+        new_name <- v
+        old_name <- u_big_clusdf[['df']][i, j]
+        if (nchar(new_name) > 0 && nchar(old_name) > 0) {
+          u_clusnames$labels <- c(u_clusnames$labels, new_name)
+          u_clusnames$labels <- setdiff(u_clusnames$labels, old_name) # remove old name
+          
+          u_clusdfs[[new_name]] <- u_clusdfs[[old_name]] # Update clusdfs
+          u_clusdfs <- setdiff(names(u_clusdfs), old_name)
+          
+          u_cluslists[[new_name]] <- u_cluslists[[old_name]] # Update cluslists
+          u_cluslists <- setdiff(names(u_cluslists), old_name)
+        }
+      }
+      # Update u_big_clusdf
+      u_big_clusdf[['df']][i, j] <<- DT::coerceValue(v, u_big_clusdf[['df']][i, j])
+    })
+    
+    # Remove clus from list of created cluster results
+    observeEvent(input$remove_clus, {
+      req(input$clus_list_table_rows_selected)
+      
+      # Also remove from clusdfs, cluslists, and clusnames
+      for (clus in input$clus_list_table_rows_selected) {
+        clus_to_rm <- u_big_clusdf[['df']][clus, ]
+        clus_to_rm <- clus_to_rm$name
+        
+        u_clusdfs <- setdiff(names(u_clusdfs), clus_to_rm)
+        u_cluslists <- setdiff(names(u_cluslists), clus_to_rm)
+        u_clusnames$labels <- setdiff(u_clusnames$labels, clus_to_rm)
+      }
+      
+      # Remove selection from u_big_clusdf
+      rm_vec <- u_big_clusdf[['df']][input$clus_list_table_rows_selected, ]
+      u_big_clusdf[['df']] <- rm_file_clusdf(u_big_clusdf[['df']], rm_vec)
+    })
+    
       
     
     # Update heatmap when cluster result selection changes
@@ -202,13 +223,13 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       plot_cluslist_hmap()
     })
     
-    # reactively update which cluster list table is read based on selection
+    # Reactively update which cluster list table is read based on selection
     cluslist_to_table <- reactive ({
       req(input$cluslist_select)
       df <- u_cluslists[[input$cluslist_select]]
       return(df)
     })
-    # output cluslist table
+    # Output cluslist table
     output$cluslist_table = DT::renderDataTable({
       cluslist_to_table()
     })

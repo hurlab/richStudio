@@ -194,9 +194,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         
         u_degdfs[[lab]] <- df # set u_degdfs
         u_degnames$labels <- c(u_degnames$labels, lab) # set u_degnames 
-        print("does this work?")
         u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
-        print("yes!")
       }
       
       # Show file list

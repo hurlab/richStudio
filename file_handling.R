@@ -16,6 +16,8 @@ add_file_degdf <- function(df, name, new_df) {
   possible_geneID <- c("GeneID", "gene_id", "gene", "gene list") # Possible "GeneID" colnames
   geneIDmatches <- grep(paste(possible_geneID, collapse="|"), colnames(new_df), ignore.case=TRUE)
   
+  # Make expr_data checking better later
+  # For now assumes dataframe-like objects contain expression data
   if (length(names(new_df)) > 1) {
     expr_data <- "True"
   } else {
@@ -25,12 +27,14 @@ add_file_degdf <- function(df, name, new_df) {
   # If one GeneID column matched
   if (length(geneIDmatches) == 1) {
     geneIDcol <-  names(new_df[geneIDmatches])
-    new_file_vec <- c(name=name, GeneID_header=geneIDcol, has_expr_data=expr_data)
-    if (!is.null(df)) { # rbind if df already exists
+    num_genes <- length(new_df[, geneIDcol]) # Count # genes
+    
+    new_file_vec <- c(name=name, GeneID_header=geneIDcol, num_genes=num_genes, has_expr_data=expr_data)
+    if (!is.null(df)) { # Rbind if df already exists
       df <- rbind(df, new_file_vec)
-      names(df) <- c("name", "GeneID_header", "has_expr_data")
+      names(df) <- c("name", "GeneID_header", "num_genes", "has_expr_data")
       rownames(df) <- NULL
-    } else { # else set df to the new file vector
+    } else { # Else set df to the new file vector
       df <- new_file_vec
       df <- base::t(df)
       df <- as.data.frame(df)
@@ -88,6 +92,44 @@ add_file_rrdf <- function(df, name, annot='?', keytype='?', ontology='?', specie
 }
 
 rm_file_rrdf <- function(df, rm_vec) {
+  #df <- df[df %!in% rm_vec]
+  if(!is.atomic(df)){
+    df <- df[-which(df$name %in% rm_vec$name), ]
+  } else {
+    df <- NULL
+  }
+  return(df)
+}
+
+
+add_file_clusdf <- function(df, clusdf, name, from_vec) {
+  # Don't add if name already in df
+  if (is.atomic(df) && name %in% df) { # Prevent error in $ operator for atomic vectors
+    return(df)
+  } else if (!is.atomic(df) && name %in% df$name) {
+    return(df)
+  } 
+  from <- paste(from_vec, collapse=", ")
+  n_clusters <- nrow(clusdf)
+  
+  new_file_vec <- c(name=name,  n_clusters=n_clusters, from=from)
+  
+  if (!is.null(df)) { # Rbind if df already exists
+    df <- rbind(df, new_file_vec)
+    names(df) <- c("name", "n_clusters", "from")
+    rownames(df) <- NULL
+  } else { # Else set df to the new file vector
+    df <- new_file_vec
+    df <- base::t(df)
+    df <- as.data.frame(df)
+    rownames(df) <- NULL
+  }
+  
+  return(df)
+  
+}
+
+rm_file_clusdf <- function(df, rm_vec) {
   #df <- df[df %!in% rm_vec]
   if(!is.atomic(df)){
     df <- df[-which(df$name %in% rm_vec$name), ]

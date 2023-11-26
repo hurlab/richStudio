@@ -20,7 +20,7 @@ library(config)
 library(richR)
 library(bioAnno)
 
-library(shinyWidgets)
+library(shinyWidgets) # Installed from GitHub
 
 #Set working directory
 # getwd()
@@ -54,6 +54,7 @@ source('update_tab.R')
 source('enrich_tab.R')
 source('rr_visualize_tab.R')
 source('cluster_tab.R')
+source('clus_visualize_tab.R')
 
 
 ui <- dashboardPage(
@@ -61,10 +62,6 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(
       menuItem("Home", icon=icon("house"), tabName="home_tab"),
-      # menuItem("Upload", icon = icon("plus"), tabName = "upload_tab",
-      #   menuSubItem("Upload files", icon=icon("upload"), tabName="upload_files"),
-      #   menuSubItem("Rename/remove files", icon=icon("pencil"), tabName="update_files")
-      # ),
       menuItem("Enrichment", icon=icon("flask"), tabName = "enrich_tab_group",
         menuSubItem("Enrich", icon=icon("upload"), tabName="enrich_tab"),
         menuSubItem("Visualize", icon=icon("dna"), tabName="rr_visualize_tab")
@@ -81,11 +78,10 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
       homeTabUI("home", tabName="home_tab"),
-      uploadTabUI("upload", tabName="upload_files"),
-      updateTabUI("update", tabName="update_files"),
       enrichTabUI("enrich", tabName="enrich_tab"),
       rrVisTabUI("rr_visualize", tabName="rr_visualize_tab"),
-      clusterTabUI("cluster", tabName="cluster_tab")
+      clusterTabUI("cluster", tabName="cluster_tab"),
+      clusVisTabUI("clus_visualize", tabName="clus_visualize_tab")
     ),
     tags$head(
       tags$style(
@@ -115,6 +111,7 @@ server <- function(input, output) {
   
   u_clusnames <- reactiveValues(labels=NULL)  # cluster result names
   u_clusdfs <- reactiveValues()  # cluster result dataframes
+  u_big_clusdf <- reactiveValues() # list of created cluster results with info
   u_cluslists <- reactiveValues()  # cluster info lists
   
   # Server logic
@@ -132,8 +129,11 @@ server <- function(input, output) {
                   u_clusnames=u_clusnames, u_clusdfs=u_clusdfs, u_cluslists=u_cluslists)
   #uploadRichTabServer()
   clusterTabServer("cluster", u_degnames=u_degnames, u_degdfs=u_degdfs, 
-                   u_rrnames=u_rrnames, u_rrdfs=u_rrdfs, 
-                   u_clusnames=u_clusnames, u_clusdfs=u_clusdfs, u_cluslists=u_cluslists)
+                   u_rrnames=u_rrnames, u_rrdfs=u_rrdfs, u_big_rrdf=u_big_rrdf,
+                   u_clusnames=u_clusnames, u_clusdfs=u_clusdfs, u_big_clusdf=u_big_clusdf, u_cluslists=u_cluslists)
+  clusVisTabServer("clus_visualize", u_degnames=u_degnames, u_degdfs=u_degdfs, 
+                   u_rrnames=u_rrnames, u_rrdfs=u_rrdfs, u_big_rrdf=u_big_rrdf,
+                   u_clusnames=u_clusnames, u_clusdfs=u_clusdfs, u_big_clusdf=u_big_clusdf, u_cluslists=u_cluslists)
 }
 
 # Run the application 

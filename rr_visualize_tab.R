@@ -111,9 +111,9 @@ rrVisTabUI <- function(id, tabName) {
           
           # Heatmap
           tabPanel("Heatmap",
-            tabBox(id="edit_hmap_box", width = NULL,
+            tabBox(id=ns("edit_hmap_box"), width = NULL,
               # EZ heatmap
-              tabPanel("Quick make",
+              tabPanel(title="Quick make", 
                 selectInput(ns("ez_add_select"), "Select enrichment results", choices=NULL, multiple=TRUE),
                 fluidRow(
                   column(4, 
@@ -126,7 +126,7 @@ rrVisTabUI <- function(id, tabName) {
                 sliderInput(ns("ez_nterms"), "Number of terms per result to display", value=10, min=0, max=100)
               ),
               # add enrichment result to heatmap
-              tabPanel("Add",
+              tabPanel(title="Add",
                 selectInput(ns("rr_add_select"), "Select enrichment result", choices=NULL, multiple=FALSE),
                 fluidRow(
                   column(4,
@@ -143,7 +143,7 @@ rrVisTabUI <- function(id, tabName) {
                 actionButton(ns('add_rr'), "Add terms")
               ),
               # delete result/terms from heatmap
-              tabPanel("Delete",
+              tabPanel(title="Delete", 
                 selectInput(ns("rr_delete_select"), "Select enrichment result", choices=NULL, multiple=FALSE),
                 selectInput(ns("rr_term_delete_select"), "Select terms to delete", choices=NULL, multiple=TRUE),
                 fluidRow(
@@ -207,6 +207,7 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       updateSelectInput(session=getDefaultReactiveDomain(), 'select_table', choices=u_rrnames_reactive())
       updateSelectInput(session=getDefaultReactiveDomain(), 'ez_add_select', choices=u_rrnames_reactive())
       updateSelectInput(session=getDefaultReactiveDomain(), 'rr_add_select', choices=u_rrnames_reactive())
+      updateSelectInput(session=getDefaultReactiveDomain(), 'rr_delete_select', choices=rr_custom_list_reactive$labels)
     })
     
     observe ({
@@ -353,18 +354,21 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     
     # Enrichment Result Heatmap
     # quick make
-    ez_listen <- reactive({
-      list(input$ez_add_select, input$ez_value_by, input$ez_nterms, input$ez_value_cutoff)
-    })
-    observeEvent(ez_listen(), {
+    # ez_listen <- reactive({
+    #   list(input$ez_add_select, input$ez_value_by, input$ez_nterms, input$ez_value_cutoff)
+    # })
+    observeEvent({
+      c(input$ez_add_select, input$ez_value_by, input$ez_nterms, input$ez_value_cutoff)
+    }, {
       req(input$ez_add_select)
+      req(input$edit_hmap_box == "Quick make")
       # reset custom_data and the list of added genesets and terms
-      custom_data_reactive$df <- data.frame() 
-      rr_custom_list_reactive <- NULL
-      rr_term_vec_reactive <- NULL
       value_by_reactive(input$ez_value_by)
       
       if (input$ez_nterms != 0) {
+        custom_data_reactive$df <- data.frame()
+        rr_custom_list_reactive <- NULL
+        rr_term_vec_reactive <- NULL
         
         for (i in seq_along(input$ez_add_select)) {
           gs <- u_rrdfs[[input$ez_add_select[i]]]
@@ -380,9 +384,12 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
             custom_data_reactive$df <- add_gs(custom_data=custom_data_reactive$df, gs=gs, 
                                               gs_name=input$ez_add_select[i], term_vec=term_vec)
             # add terms to rr_term_vec_reactive
-            rr_term_vec_reactive[[input$rr_add_select]] <- term_vec
+            rr_term_vec_reactive[[input$ez_add_select[i]]] <- term_vec
             # add gs name to rr_custom_list_reactive
-            rr_custom_list_reactive$labels <- c(rr_custom_list_reactive$labels, input$rr_add_select)
+            rr_custom_list_reactive$labels <- c(rr_custom_list_reactive$labels, input$ez_add_select[i])
+            print(input$ez_add_select[i])
+            print("...")
+            print(rr_custom_list_reactive$labels)
           }
         }
       }
@@ -428,6 +435,14 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       
     })
     
+    observeEvent(input$rr_delete_select, {
+      req(input$rr_delete_select)
+      if (!is.null(rr_term_vec_reactive)) {
+        updateSelectInput(session=getDefaultReactiveDomain(), 'rr_term_delete_select',
+                          choices=rr_term_vec_reactive[[input$rr_delete_select]])
+      }
+    })
+    
     # remove selected terms from heatmap
     observeEvent(input$delete_rr_terms, {
       req(input$rr_term_delete_select)
@@ -436,7 +451,8 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       
       tmp <- rr_term_vec_reactive[[input$rr_delete_select]]
       rr_term_vec_reactive[[input$rr_delete_select]] <- tmp[-which(tmp %in% input$rr_term_delete_select)]
-      updateSelectInput(session=getDefaultReactiveDomain(), 'rr_term_delete_select', 
+      
+      updateSelectInput(session=getDefaultReactiveDomain(), 'rr_term_delete_select',
                         choices=rr_term_vec_reactive[[input$rr_delete_select]])
     })
     
@@ -449,6 +465,14 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
                                            input$rr_term_delete_select, all_terms)
       # remove result name from list
       rr_custom_list_reactive$labels <- setdiff(rr_custom_list_reactive$labels, input$rr_delete_select)
+    })
+    
+    # Debugging delete terms...
+    observeEvent({
+      input$edit_hmap_box == "Delete"
+    }, {
+      print(rr_custom_list_reactive)
+      print(rr_custom_list_reactive$labels)
     })
     
     # plot enrichment result heatmap

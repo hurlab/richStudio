@@ -498,7 +498,7 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       term_vec <- term_df$Term # get only Term column of subsetted df
       
       # Add gs to custom_data_reactive
-      custom_data_reactive$df <- add_gs(custom_data=custom_data_reactive$df, 
+      custom_data_reactive$df <- add_custom_gs(custom_data=custom_data_reactive$df, 
                                         gs=gs, 
                                         gs_name=gs_name, 
                                         term_vec=term_vec)

@@ -231,7 +231,8 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     })
     # Output uploaded file table
     output$deg_list_table = DT::renderDT(
-      big_degdf_to_table(), editable='cell'
+      big_degdf_to_table(), 
+      editable = list(target='cell', disable=list(columns = c(3)))
     )
     # Code from https://github.com/rstudio/DT/pull/480
     proxy = dataTableProxy('deg_list_table')

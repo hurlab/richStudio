@@ -17,14 +17,12 @@ rrVisTabUI <- function(id, tabName) {
             actionButton(ns('upload_rrtext'), "Upload")
           )
         ),
-        shinyjs::hidden(tags$div(
-          id=ns("rrlist_box"),
+        shinyjs::hidden(tags$div(id=ns("rrlist_box"),
           box(title="Available enrichment results", width=NULL,
             helpText("You can rename any enrichment result by double-clicking on the relevant cell."),
             DT::DTOutput(ns('rr_list_table')),
             actionButton(ns('remove_rr'), "Delete")
-          )
-        ))
+          )))
       ),
       
       # VISUALIZATION
@@ -35,7 +33,6 @@ rrVisTabUI <- function(id, tabName) {
           # Table
           tabPanel("Table",
             box(title="Table View", width=NULL, status='primary', collapsible=TRUE,
-              br(),
               selectInput(ns('select_table'), "Select enrichment result to view", choices=NULL, multiple=FALSE),
             ),
             box(title='Table View', width=NULL, status='info', solidHeader=TRUE,
@@ -111,39 +108,41 @@ rrVisTabUI <- function(id, tabName) {
           
           # Heatmap
           tabPanel("Heatmap",
-            tabBox(id=ns("edit_hmap_box"), width = NULL,
-              # EZ heatmap
-              tabPanel(title="Quick make", 
-                selectInput(ns("ez_add_select"), "Select enrichment results", choices=NULL, multiple=TRUE),
+            tabBox(id=ns("edit_hmap_box"), width=NULL,
+              # Top terms heatmap
+              tabPanel(title="Top terms", 
                 fluidRow(
                   column(4, 
-                    selectInput(ns("ez_value_by"), "Select top terms by", choices=c("Padj", "Pvalue")),
+                    selectInput(ns("select_tophmap"), "Select enrichment results", choices=NULL, multiple=TRUE),
+                    selectInput(ns("tophmap_valtype"), "Select top terms by", choices=c("Padj", "Pvalue")),
+                    numericInput(ns("tophmap_cutoff"), "P-value cutoff", value=0.05, min=0, max=1),
+                    sliderInput(ns("tophmap_nterms"), "Number of terms per result to display", value=10, min=0, max=100)
                   ),
-                  column(4,
-                    numericInput(ns("ez_value_cutoff"), "P-value cutoff", value=0.05, min=0, max=1)
+                  column(8,
+                    h3("Enrichment results in heatmap"),
+                    p("Double click any cell to change its value."),
+                    DT::DTOutput(ns('tophmap_table'))
                   )
-                ),
-                sliderInput(ns("ez_nterms"), "Number of terms per result to display", value=10, min=0, max=100)
+                )
               ),
               # add enrichment result to heatmap
-              tabPanel(title="Add",
-                selectInput(ns("rr_add_select"), "Select enrichment result", choices=NULL, multiple=FALSE),
+              tabPanel(title="Custom terms",
+                selectInput(ns("select_cushmap"), "Select enrichment result", choices=NULL, multiple=FALSE),
                 fluidRow(
                   column(4,
-                    numericInput(ns('top_rr_terms'), "Select top ? terms", value = 20, min=0, max=100)
+                    selectInput(ns('cushmap_valtype'), "Select top terms by", choices=c("Padj", "Pvalue"))
                   ),
                   column(4,
-                    selectInput(ns('rr_top_value_by'), "Select top terms by", choices=c("Padj", "Pvalue"))
-                  ),
-                  column(4,
-                    numericInput(ns("rr_value_cutoff"), "P-value cutoff", value=0.05, min=0, max=1)
+                    textInput(ns("cushmap_title"), "Title", value=NULL)
                   )
                 ),
-                DT::dataTableOutput(ns('rr_select_table')),
-                actionButton(ns('add_rr'), "Add terms")
-              ),
-              # delete result/terms from heatmap
-              tabPanel(title="Delete", 
+                DT::dataTableOutput(ns('cushmap_select_table')),
+                actionButton(ns('cushmap_add_rr'), "Add terms")
+              )
+            ),
+            # Delete result/terms from custom heatmap
+            shinyjs::hidden(tags$div(id=ns("delete_custom_hmap_box"),
+              box(title="Delete", status="info", width=NULL, solidHeader=TRUE,
                 selectInput(ns("rr_delete_select"), "Select enrichment result", choices=NULL, multiple=FALSE),
                 selectInput(ns("rr_term_delete_select"), "Select terms to delete", choices=NULL, multiple=TRUE),
                 fluidRow(
@@ -154,13 +153,16 @@ rrVisTabUI <- function(id, tabName) {
                     actionButton(ns('delete_rr'), "Delete entire result")
                   )
                 )
-              )
-            ),
-            br(),
-            box(title="Enrichment Result Heatmap", status="info", width=NULL,
-                solidHeader = TRUE,
-                plotlyOutput(ns('rr_hmap'), height="800px")
-            )
+            ))),
+            # The actual heatmap plots
+            shinyjs::hidden(tags$div(id=ns("top_hmap_box"),
+              box(title="Top Terms Heatmap", status="info", width=NULL, solidHeader=TRUE,
+                plotlyOutput(ns('topterm_hmap'), height="800px")
+            ))),
+            shinyjs::hidden(tags$div(id=ns("custom_hmap_box"),
+              box(title="Custom Terms Heatmap", status="info", width=NULL, solidHeader=TRUE,
+                plotlyOutput(ns('custom_hmap'), height="800px")
+            )))
           )
         )
       )
@@ -194,9 +196,12 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     # Local reactive objects
     rr_custom_list_reactive <- reactiveValues(labels=NULL)
     rr_term_vec_reactive <- reactiveValues()
+    tt_custom_data_reactive <- reactiveValues(df = data.frame())
     custom_data_reactive <- reactiveValues(df = data.frame())
+    top_hmap_df_reactive <- reactiveValues(df = data.frame())
     
-    value_by_reactive <- reactiveVal()
+    tt_valueby_reactive <- reactiveVal()
+    cus_valueby_reactive <- reactiveVal()
     
     # update select inputs based on # file inputs
     observe ({
@@ -205,16 +210,30 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       updateSelectInput(session=getDefaultReactiveDomain(), 'select_dot', choices=u_rrnames_reactive())
       updateSelectInput(session=getDefaultReactiveDomain(), 'select_net', choices=u_rrnames_reactive())
       updateSelectInput(session=getDefaultReactiveDomain(), 'select_table', choices=u_rrnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'ez_add_select', choices=u_rrnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'rr_add_select', choices=u_rrnames_reactive())
+      updateSelectInput(session=getDefaultReactiveDomain(), 'select_tophmap', choices=u_rrnames_reactive())
+      updateSelectInput(session=getDefaultReactiveDomain(), 'select_cushmap', choices=u_rrnames_reactive())
       updateSelectInput(session=getDefaultReactiveDomain(), 'rr_delete_select', choices=rr_custom_list_reactive$labels)
     })
     
+    # <!----- SHINYJS LOGIC -----!>
+    # Don't show list of rr if none uploaded
     observe ({
       if (is.null(u_big_rrdf[['df']])) {
         shinyjs::hide('rrlist_box')
       } else {
         shinyjs::show("rrlist_box")
+      }
+    })
+    # Toggle which heatmap box is shown
+    observeEvent(input$edit_hmap_box, {
+      if (input$edit_hmap_box == "Top terms") {
+        shinyjs::show('top_hmap_box')
+        shinyjs::hide('custom_hmap_box')
+        shinyjs::hide('delete_custom_hmap_box')
+      } else {
+        shinyjs::hide('top_hmap_box')
+        shinyjs::show('custom_hmap_box')
+        shinyjs::show('delete_custom_hmap_box')
       }
     })
     
@@ -228,21 +247,21 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
         ext <- tools::file_ext(input$rr_files$name[i])
         path <- input$rr_files$datapath[i]
         
-        # try to read file as csv
+        # Try to read file as csv
         csv_ncol <- tryCatch({
           csvdf <- read.csv(path)
           ncol(csvdf)
         }, error = function(err) {
           0
         })
-        # try to read file as tsv
+        # Try to read file as tsv
         tsv_ncol <- tryCatch({
           tsvdf <- read.delim(path)
           ncol(tsvdf)
         }, error = function(err) {
           0
         })
-        # decide which df to store
+        # Decide which df to store
         if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
           df <- read.csv(path)
         } else {
@@ -250,9 +269,10 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
         }
         
         #u_rrdfs[[lab]] <- select_required_columns(df) # set u_rrdfs
-        u_rrdfs[[lab]] <- df # set u_rrdfs
-        u_rrnames$labels <- c(u_rrnames$labels, lab) # set u_rrnames
-        u_big_rrdf[['df']] <- add_file_rrdf(df=u_big_rrdf[['df']], name=lab, file=TRUE)
+        u_rrdfs[[lab]] <- df # Add datafrane to u_rrdfs
+        u_rrnames$labels <- c(u_rrnames$labels, lab) # Add df name to u_rrnames
+        u_big_rrdf[['df']] <- add_file_rrdf(df=u_big_rrdf[['df']], 
+                                            name=lab, file=TRUE) # Add to big rr list
       }
       
     })
@@ -280,14 +300,13 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
         new_name <- v
         old_name <- u_big_rrdf[['df']][i, j]
         if (nchar(new_name) > 0 && nchar(old_name) > 0) {
-          u_rrnames$labels <- c(u_rrnames$labels, new_name)
-          u_rrnames$labels <- setdiff(u_rrnames$labels, old_name) # remove old name
+          u_rrnames$labels <- c(u_rrnames$labels, new_name) # Add new name
+          u_rrnames$labels <- setdiff(u_rrnames$labels, old_name) # Remove old name
           
-          u_rrdfs[[new_name]] <- u_rrdfs[[old_name]]
-          u_rrdfs <- setdiff(names(u_rrdfs), old_name)
+          u_rrdfs[[new_name]] <- u_rrdfs[[old_name]] # Add df under new name
+          u_rrdfs <- setdiff(names(u_rrdfs), old_name) # Remove old df
         }
       }
-      
       u_big_rrdf[['df']][i, j] <<- DT::coerceValue(v, u_big_rrdf[['df']][i, j])
     })
     
@@ -308,6 +327,17 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       rm_vec <- u_big_rrdf[['df']][input$rr_list_table_rows_selected, ]
       u_big_rrdf[['df']] <- rm_file_rrdf(u_big_rrdf[['df']], rm_vec)
     })
+    
+    # PLOTS
+    
+    get_rr_table <- reactive ({
+      req(input$select_table)
+      df <- u_rrdfs[[input$select_table]]
+      return(df)
+    })
+    output$rr_table <- DT::renderDT(
+      get_rr_table(), filter="top"
+    )
     
     get_rr_barplot <- reactive ({
       req(input$select_bar)
@@ -343,98 +373,159 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       get_rr_dotplot()
     })
     
-    get_rr_table <- reactive ({
-      req(input$select_table)
-      df <- u_rrdfs[[input$select_table]]
-      return(df)
-    })
-    output$rr_table <- DT::renderDataTable({
-      get_rr_table()
-    })
     
-    # Enrichment Result Heatmap
-    # quick make
-    # ez_listen <- reactive({
-    #   list(input$ez_add_select, input$ez_value_by, input$ez_nterms, input$ez_value_cutoff)
-    # })
+    # Enrichment Result Heatmaps
+    # Top Terms
     observeEvent({
-      c(input$ez_add_select, input$ez_value_by, input$ez_nterms, input$ez_value_cutoff)
+      # Update heatmap whenever these change
+      c(input$select_tophmap, input$tophmap_valtype, input$tophmap_cutoff, input$tophmap_nterms)
     }, {
-      req(input$ez_add_select)
-      req(input$edit_hmap_box == "Quick make")
-      # reset custom_data and the list of added genesets and terms
-      value_by_reactive(input$ez_value_by)
+      req(input$edit_hmap_box == "Top terms")
       
-      if (input$ez_nterms != 0) {
-        custom_data_reactive$df <- data.frame()
-        rr_custom_list_reactive <- NULL
-        rr_term_vec_reactive <- NULL
+      # Set value_by
+      tt_valueby_reactive(input$tophmap_valtype)
+      
+      # Reset custom_data and the list of added genesets and terms
+      tt_custom_data_reactive$df <- data.frame()
+      top_hmap_df_reactive$df <- data.frame()
+      
+      if (!is.null(input$select_tophmap)) {
         
-        for (i in seq_along(input$ez_add_select)) {
-          gs <- u_rrdfs[[input$ez_add_select[i]]]
+        for (i in seq_along(input$select_tophmap)) {
+          gs <- u_rrdfs[[input$select_tophmap[i]]]
+          gs_name <- input$select_tophmap[i]
           
           # add gs to list only if there exist values smaller than cutoff
-          if (any(gs[, value_by_reactive()] < input$rr_value_cutoff)) {
-            gs <- filter(gs, gs[, value_by_reactive()]<input$ez_value_cutoff)
-            sliced_gs <- arrange(gs, value_by_reactive())
-            sliced_gs <- slice_head(sliced_gs, n=input$ez_nterms)
-            term_vec <- sliced_gs$Term
-            
-            # add gs to custom_data_reactive
-            custom_data_reactive$df <- add_gs(custom_data=custom_data_reactive$df, gs=gs, 
-                                              gs_name=input$ez_add_select[i], term_vec=term_vec)
-            # add terms to rr_term_vec_reactive
-            rr_term_vec_reactive[[input$ez_add_select[i]]] <- term_vec
-            # add gs name to rr_custom_list_reactive
-            rr_custom_list_reactive$labels <- c(rr_custom_list_reactive$labels, input$ez_add_select[i])
-            print(input$ez_add_select[i])
-            print("...")
-            print(rr_custom_list_reactive$labels)
+          if (any(gs[, tt_valueby_reactive()] < input$tophmap_cutoff)) {
+            # Add gs to custom_data_reactive
+            if (input$tophmap_nterms != 0) {
+              tt_custom_data_reactive$df <- add_topterm_gs(custom_data=tt_custom_data_reactive$df, 
+                                                            gs=gs, 
+                                                            gs_name=gs_name, 
+                                                            value_type=tt_valueby_reactive(), 
+                                                            value_cutoff=input$tophmap_cutoff, 
+                                                            top_nterms=input$tophmap_nterms)
+            }
+            # Add gs to top_hmap_df_reactive
+            top_hmap_df_reactive$df <- add_rr_tophmap(df=top_hmap_df_reactive$df, 
+                                                      name=gs_name, 
+                                                      value_type=tt_valueby_reactive(), 
+                                                      value_cutoff=input$tophmap_cutoff,
+                                                      top_nterms=input$tophmap_nterms)
           }
         }
       }
       
     })
     
-    # add
-    # reactively update which rr table is read based on selection
+    # Reactively update top_hmap_df
+    top_hmap_to_table <- reactive ({
+      req(!is.null(top_hmap_df_reactive))
+      return(top_hmap_df_reactive$df)
+    })
+    # Plot tabled list of gs in top terms hmap
+    output$tophmap_table = DT::renderDT(
+      top_hmap_to_table(), 
+      editable = list(target='cell', disable=list(columns = c(1:2)))
+    )
+    # Table editing code
+    proxy = dataTableProxy('tophmap_table')
+    observeEvent(input$tophmap_table_cell_edit, {
+      info = input$tophmap_table_cell_edit
+      str(info)
+      i = info$row
+      j = info$col
+      v = info$value
+      
+      top_hmap_df_reactive$df[i, j] <<- DT::coerceValue(v, top_hmap_df_reactive$df[i, j])
+      gs_name <- top_hmap_df_reactive$df[i, 1]
+      top_nterms <- top_hmap_df_reactive$df[i, 4]
+
+      if (top_nterms != 0) {
+        tt_custom_data_reactive$df <- tryCatch ({
+          add_topterm_gs(custom_data=tt_custom_data_reactive$df,
+                         gs=u_rrdfs[[gs_name]],
+                         gs_name=gs_name,
+                         value_type=tt_valueby_reactive(),
+                         value_cutoff=top_hmap_df_reactive$df[i, 3],
+                         top_nterms=top_hmap_df_reactive$df[i, 4])
+        }, error = function(e) {
+          showModal(modalDialog(
+            title = "Input error",
+            e$message,
+            easyClose = TRUE
+          ))
+          return(tt_custom_data_reactive$df)
+        })
+      } else {
+        showModal(modalDialog(
+          title = "Input error",
+          "Please input a non-zero number of top terms.",
+          easyClose = TRUE
+        ))
+      }
+    })
+    
+    
+    # Custom terms heatmap
+    # Reactively update custom term select table based on selection
     rr_to_table <- reactive ({
-      req(input$rr_add_select)
-      df <- u_rrdfs[[input$rr_add_select]]
+      req(input$select_cushmap)
+      df <- u_rrdfs[[input$select_cushmap]]
       return(df)
     })
-    # output rr table
-    output$rr_select_table = DT::renderDataTable(
-      rr_to_table()
+    # Plot custom term select table
+    output$cushmap_select_table = DT::renderDT(
+      rr_to_table(),
+      filter = "top",
+      options = list(
+        pageLength = 5
+      ),
     )
     
-    # add selected terms to heatmap
-    observeEvent(input$add_rr, {
-      req(input$rr_select_table_rows_selected)
+    # Add custom selected terms to heatmap
+    observeEvent(input$cushmap_add_rr, {
+      req(input$select_cushmap)
+      req(input$cushmap_select_table_rows_selected)
       
-      # set value_by
-      value_by_reactive(input$rr_top_value_by)
+      # Set value_by
+      cus_valueby_reactive(input$cushmap_valtype)
       
-      gs <- u_rrdfs[[input$rr_add_select]] # store df of selected rr
+      gs_name <- input$select_cushmap
+      gs <- u_rrdfs[[gs_name]] # Store df of selected rr
       
-      # ensure there exist values smaller than cutoff before filtering
-      if (any(gs[, value_by_reactive()] < input$rr_value_cutoff)) {
-        gs <- filter(gs, gs[, value_by_reactive()]<input$rr_value_cutoff)
-        term_vec <- gs[input$rr_select_table_rows_selected, ] # subset df with selected rows
-        term_vec <- term_vec$Term # get only Term column of subsetted df
+      term_df <- gs[input$cushmap_select_table_rows_selected, ] # Subset df with selected term rows
+      term_vec <- term_df$Term # get only Term column of subsetted df
+      
+      # Add gs to custom_data_reactive
+      custom_data_reactive$df <- add_gs(custom_data=custom_data_reactive$df, 
+                                        gs=gs, 
+                                        gs_name=gs_name, 
+                                        term_vec=term_vec)
+      
+      # Add only unique terms to rr_term_vec_reactive
+      # If gs already added
+      if (gs_name %in% names(rr_term_vec_reactive)) {
+        unique_term_vec <- setdiff(term_vec, rr_term_vec_reactive[[gs_name]])
+        rr_term_vec_reactive[[gs_name]] <- c(rr_term_vec_reactive[[gs_name]], unique_term_vec)
         
-        # add gs to custom_data_reactive
-        custom_data_reactive$df <- add_gs(custom_data=custom_data_reactive$df, gs=gs, 
-                                          gs_name=input$rr_add_select, term_vec=term_vec)
-        
-        # add terms to rr_term_vec_reactive
-        rr_term_vec_reactive[[input$rr_add_select]] <- term_vec
-        # add gs name to rr_custom_list_reactive
-        rr_custom_list_reactive$labels <- c(rr_custom_list_reactive$labels, input$rr_add_select)
+        # Update selectInput if gs is currently selected in delete box
+        if (input$rr_delete_select == gs_name) {
+          updateSelectInput(session=getDefaultReactiveDomain(), 'rr_term_delete_select',
+                            choices=rr_term_vec_reactive[[gs_name]])
+        }
+      } 
+      # No previous term_vec_reactive for that gs
+      else {
+        rr_term_vec_reactive[[gs_name]] <- term_vec
       }
+      
+      # Add gs name to rr_custom_list_reactive
+      rr_custom_list_reactive$labels <- c(rr_custom_list_reactive$labels, input$select_cushmap)
       
     })
     
+    # Update term delete select based on rr selected
     observeEvent(input$rr_delete_select, {
       req(input$rr_delete_select)
       if (!is.null(rr_term_vec_reactive)) {
@@ -443,46 +534,61 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       }
     })
     
-    # remove selected terms from heatmap
+    # Remove selected terms from heatmap
     observeEvent(input$delete_rr_terms, {
       req(input$rr_term_delete_select)
       req(input$rr_delete_select)
-      custom_data_reactive$df <- remove_gs(custom_data_reactive$df, input$rr_delete_select, input$rr_term_delete_select)
       
-      tmp <- rr_term_vec_reactive[[input$rr_delete_select]]
-      rr_term_vec_reactive[[input$rr_delete_select]] <- tmp[-which(tmp %in% input$rr_term_delete_select)]
+      custom_data_reactive$df <- remove_gs(custom_data=custom_data_reactive$df, 
+                                           gs_name=input$rr_delete_select, 
+                                           term_vec=input$rr_term_delete_select)
       
+      # Remove terms from rr_term_vec_reactive
+      prev_terms <- rr_term_vec_reactive[[input$rr_delete_select]]
+      rr_term_vec_reactive[[input$rr_delete_select]] <- prev_terms[-which(prev_terms %in% input$rr_term_delete_select)]
+      
+      # Reflect new changes
       updateSelectInput(session=getDefaultReactiveDomain(), 'rr_term_delete_select',
                         choices=rr_term_vec_reactive[[input$rr_delete_select]])
     })
     
-    # delete entire result from heatmap
+    # Delete entire result from heatmap
     observeEvent(input$delete_rr, {
       req(input$rr_delete_select)
-      gs <- u_rrdfs[[input$rr_delete_select]]
+      gs_name <- input$rr_delete_select
+      gs <- u_rrdfs[[gs_name]]
       all_terms <- gs$Term
-      custom_data_reactive$df <- remove_gs(custom_data=custom_data_reactive$df, gs_name=input$rr_delete_select, 
-                                           input$rr_term_delete_select, all_terms)
-      # remove result name from list
-      rr_custom_list_reactive$labels <- setdiff(rr_custom_list_reactive$labels, input$rr_delete_select)
+      custom_data_reactive$df <- remove_gs(custom_data=custom_data_reactive$df, 
+                                           gs_name=gs_name, 
+                                           term_vec=input$rr_term_delete_select, 
+                                           delete_all=TRUE)
+      # Remove result name from list
+      rr_custom_list_reactive$labels <- setdiff(rr_custom_list_reactive$labels, gs_name)
     })
     
-    # Debugging delete terms...
-    observeEvent({
-      input$edit_hmap_box == "Delete"
-    }, {
-      print(rr_custom_list_reactive)
-      print(rr_custom_list_reactive$labels)
+    # Reactively update whenever valtype changes
+    observeEvent(input$cushmap_valtype, {
+      cus_valueby_reactive(input$cushmap_valtype)
     })
     
-    # plot enrichment result heatmap
-    plot_custom_hmap <- reactive({
-      if (nrow(custom_data_reactive$df) != 0) {
-        hmap <- custom_hmap(custom_data=custom_data_reactive$df, value_type=value_by_reactive())
+    # Plot enrichment result heatmaps
+    plot_topterm_heatmap <- reactive({
+      if (nrow(tt_custom_data_reactive$df) != 0) {
+        hmap <- custom_hmap(custom_data=tt_custom_data_reactive$df, value_type=tt_valueby_reactive())
         return(hmap)
       }
     })
-    output$rr_hmap <- renderPlotly({
+    output$topterm_hmap <- renderPlotly({
+      plot_topterm_heatmap()
+    })
+    
+    plot_custom_hmap <- reactive({
+      if (nrow(custom_data_reactive$df) != 0) {
+        hmap <- custom_hmap(custom_data=custom_data_reactive$df, value_type=cus_valueby_reactive())
+        return(hmap)
+      }
+    })
+    output$custom_hmap <- renderPlotly({
       plot_custom_hmap()
     })
     

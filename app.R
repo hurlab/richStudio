@@ -30,7 +30,7 @@ library(shinyWidgets) # Installed from GitHub
 # base_dir = dirname(current_path)
 # output = "output/"
 
-# Set working directory with config.yml (Fix later)
+# Set working directory with config.yml
 config_vars <- config::get("hurlab-server")
 setwd(config_vars$project_directory)
 

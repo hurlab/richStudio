@@ -13,7 +13,7 @@ add_file_degdf <- function(df, name, new_df) {
     return(df)
   } 
   
-  possible_geneID <- c("GeneID", "gene_id", "gene", "gene list") # Possible "GeneID" colnames
+  possible_geneID <- c("GeneID", "gene_id", "gene", "gene list", "symbol") # Possible "GeneID" colnames
   geneIDmatches <- grep(paste(possible_geneID, collapse="|"), colnames(new_df), ignore.case=TRUE)
   
   # Make expr_data checking better later
@@ -138,3 +138,32 @@ rm_file_clusdf <- function(df, rm_vec) {
   }
   return(df)
 }
+
+
+# Add rr to top term hmap table
+add_rr_tophmap <- function(df, name, value_type, value_cutoff, top_nterms) {
+  new_rr_vec <- c(name=name, value_type=value_type, value_cutoff=value_cutoff, top_nterms=top_nterms)
+  # If df is null OR is atomic and name already present, replace entire df
+  if (is.null(df) || is.atomic(df) && name %in% df) {
+    df <- new_rr_vec
+    df <- base::t(df)
+    df <- as.data.frame(df)
+    rownames(df) <- NULL
+    return(df)
+  }
+  # If name already present in df, replace that row with new_rr_vec
+  else if (name %in% df$name) {
+    df[which(df$name %in% name), ] <- new_rr_vec
+    return(df)
+  }
+  # Else, just rbind
+  else { 
+    df <- rbind(df, new_rr_vec)
+    names(df) <- c("name", "value_type", "value_cutoff", "top_nterms")
+    rownames(df) <- NULL
+    return(df)
+  } 
+}
+
+
+

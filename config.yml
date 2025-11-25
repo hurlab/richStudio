@@ -1,6 +1,0 @@
-default:
-  hurlab-server:
-    project_directory: '/home/sarah/shinyapps/enrichment-analysis'
-    port: '3838'
-    secure: false
-    

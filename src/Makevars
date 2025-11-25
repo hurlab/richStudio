@@ -1,0 +1,15 @@
+# List all source files
+SOURCES=$(wildcard *.cpp)
+
+# Define objects from sources
+OBJECTS=$(SOURCES:.cpp=.o)
+
+# Add additional flags if needed
+PKG_CPPFLAGS=-I.
+
+# Define the rule for making the shared library
+all: $(SHLIB)
+
+# Clean up objects after build
+clean:
+	@rm -f $(OBJECTS) $(SHLIB)

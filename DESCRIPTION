@@ -1,0 +1,37 @@
+Package: RichStudio
+Type: Package
+Title: Interface for Visualizing Gene Enrichment and Clustering
+Version: 0.1.0
+Author: Sarah Hong
+Maintainer: Sarah Hong <ssh2198@columbia.edu>
+Description: The new version!
+Imports:
+    Rcpp,
+    shiny,
+    shinydashboard,
+    shinyjs,
+    cpp11,
+    config,
+    tidyverse,
+    readxl,
+    data.table,
+    ggplot2,
+    dplyr,
+    plotly,
+    heatmaply,
+    DT,
+    stringdist,
+    richR,
+    bioAnno,
+    shinyjqui,
+    shinyWidgets,
+    writexl
+License: What license is it under?
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.1
+LinkingTo: Rcpp
+SystemRequirements: C++11
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3

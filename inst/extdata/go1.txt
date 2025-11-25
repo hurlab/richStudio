@@ -1,0 +1,330 @@
+Annot	Term	Annotated	Significant	Pvalue	Padj	GeneID
+GO:0006084	acetyl-CoA metabolic process	30	4	2.27E-08	2.36E-05	"Acly,Acaca,Fasn,Acss2"
+GO:0006637	acyl-CoA metabolic process	72	4	8.28E-07	0.00023812	"Acly,Acaca,Fasn,Acss2"
+GO:0035383	thioester metabolic process	72	4	8.28E-07	0.00023812	"Acly,Acaca,Fasn,Acss2"
+GO:0006631	fatty acid metabolic process	344	6	1.03E-06	0.00023812	"Acsbg1,Acly,Acaca,Fasn,Acss2,Cpt1a"
+GO:0006629	lipid metabolic process	1160	9	1.14E-06	0.00023812	"Acsbg1,Angptl4,Acly,Acaca,Fasn,Hmgcs2,Lipf,Acss2,Cpt1a"
+GO:0044710	single-organism metabolic process	3622	14	1.80E-06	0.000311696	"Acsbg1,Aldh1l1,Angptl4,Acly,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Lipf,Acss2,Ntrk3,Cpt1a,Slc5a3"
+GO:0044281	small molecule metabolic process	1735	10	3.58E-06	0.000532071	"Acsbg1,Aldh1l1,Acly,Acaca,Fasn,Hmgcs2,Adcyap1r1,Acss2,Cpt1a,Slc5a3"
+GO:0044283	small molecule biosynthetic process	444	6	4.48E-06	0.000583566	"Acly,Acaca,Fasn,Hmgcs2,Adcyap1r1,Acss2"
+GO:0006633	fatty acid biosynthetic process	121	4	6.61E-06	0.000764754	"Acly,Acaca,Fasn,Acss2"
+GO:0006732	coenzyme metabolic process	285	5	9.00E-06	0.000936604	"Aldh1l1,Acly,Acaca,Fasn,Acss2"
+GO:0032787	monocarboxylic acid metabolic process	513	6	1.02E-05	0.000968643	"Acsbg1,Acly,Acaca,Fasn,Acss2,Cpt1a"
+GO:0019752	carboxylic acid metabolic process	803	7	1.12E-05	0.000968643	"Acsbg1,Aldh1l1,Acly,Acaca,Fasn,Acss2,Cpt1a"
+GO:0043436	oxoacid metabolic process	862	7	1.77E-05	0.001314948	"Acsbg1,Aldh1l1,Acly,Acaca,Fasn,Acss2,Cpt1a"
+GO:0044255	cellular lipid metabolic process	862	7	1.77E-05	0.001314948	"Acsbg1,Acly,Acaca,Fasn,Hmgcs2,Acss2,Cpt1a"
+GO:0006082	organic acid metabolic process	874	7	1.93E-05	0.001341945	"Acsbg1,Aldh1l1,Acly,Acaca,Fasn,Acss2,Cpt1a"
+GO:0051186	cofactor metabolic process	348	5	2.35E-05	0.001532204	"Aldh1l1,Acly,Acaca,Fasn,Acss2"
+GO:0072330	monocarboxylic acid biosynthetic process	170	4	2.53E-05	0.001547901	"Acly,Acaca,Fasn,Acss2"
+GO:0016053	organic acid biosynthetic process	250	4	0.00011322	0.006203266	"Acly,Acaca,Fasn,Acss2"
+GO:0046394	carboxylic acid biosynthetic process	250	4	0.00011322	0.006203266	"Acly,Acaca,Fasn,Acss2"
+GO:0044711	single-organism biosynthetic process	1174	7	0.000126226	0.006397594	"Acly,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Acss2"
+GO:0008610	lipid biosynthetic process	499	5	0.000129956	0.006397594	"Acly,Acaca,Fasn,Hmgcs2,Acss2"
+GO:0006085	acetyl-CoA biosynthetic process	17	2	0.000135204	0.006397594	"Acly,Acss2"
+GO:0006790	sulfur compound metabolic process	265	4	0.000141674	0.006412269	"Acly,Acaca,Fasn,Acss2"
+GO:0035384	thioester biosynthetic process	20	2	0.000188534	0.007850541	"Acly,Acss2"
+GO:0071616	acyl-CoA biosynthetic process	20	2	0.000188534	0.007850541	"Acly,Acss2"
+GO:0044763	single-organism cellular process	9986	19	0.000288226	0.011540142	"Acsbg1,Arntl,Aldh1l1,Angptl4,Tppp3,Acly,F7,Ddit3,Tst,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Ntrk3,Acss2,Cpt1a,Slc5a3,Ankrd2"
+GO:0050927	positive regulation of positive chemotaxis	26	2	0.000321285	0.012387311	"F7,Ntrk3"
+GO:0050926	regulation of positive chemotaxis	27	2	0.000346771	0.01289244	"F7,Ntrk3"
+GO:0045662	negative regulation of myoblast differentiation	28	2	0.000373212	0.013397028	"Ddit3,Ankrd2"
+GO:1902531	regulation of intracellular signal transduction	1533	7	0.000647877	0.02248133	"Arntl,F7,Ddit3,S100a4,Adcyap1r1,Ntrk3,Ankrd2"
+GO:0050918	positive chemotaxis	41	2	0.000803066	0.026967466	"F7,Ntrk3"
+GO:0043618	regulation of transcription from RNA polymerase II promoter in response to stress	45	2	0.000967136	0.028032476	"Ddit3,Ankrd2"
+GO:0071704	organic substance metabolic process	9785	18	0.000978832	0.028032476	"Acsbg1,Arntl,Aldh1l1,Angptl4,Acly,F7,Ddit3,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Lipf,Ntrk3,Acss2,Cpt1a,Slc5a3,Ankrd2"
+GO:0044324	regulation of transcription involved in anterior/posterior axis specification	1	1	0.00102328	0.028032476	Ddit3
+GO:0048687	positive regulation of sprouting of injured axon	1	1	0.00102328	0.028032476	Ntrk3
+GO:0048691	positive regulation of axon extension involved in regeneration	1	1	0.00102328	0.028032476	Ntrk3
+GO:0061476	response to anticoagulant	1	1	0.00102328	0.028032476	F7
+GO:1905217	response to astaxanthin	1	1	0.00102328	0.028032476	F7
+GO:0043620	regulation of DNA-templated transcription in response to stress	49	2	0.001145976	0.030588734	"Ddit3,Ankrd2"
+GO:0045599	negative regulation of fat cell differentiation	50	2	0.00119298	0.031047297	"Arntl,Ddit3"
+GO:0044699	single-organism process	13406	21	0.001511102	0.037358307	"Acsbg1,Arntl,Aldh1l1,Angptl4,Tppp3,Acly,F7,Ddit3,Tst,S100a4,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Lipf,Ntrk3,Acss2,Cpt1a,Slc5a3,Ankrd2"
+GO:0045661	regulation of myoblast differentiation	58	2	0.001601775	0.037358307	"Ddit3,Ankrd2"
+GO:0006066	alcohol metabolic process	242	3	0.001870774	0.037358307	"Hmgcs2,Adcyap1r1,Slc5a3"
+GO:1903036	positive regulation of response to wounding	63	2	0.001886584	0.037358307	"F7,Ntrk3"
+GO:0051259	protein oligomerization	534	4	0.001965811	0.037358307	"Angptl4,Ddit3,Acaca,Cpt1a"
+GO:0008152	metabolic process	10301	18	0.002009098	0.037358307	"Acsbg1,Arntl,Aldh1l1,Angptl4,Acly,F7,Ddit3,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Lipf,Ntrk3,Acss2,Cpt1a,Slc5a3,Ankrd2"
+GO:0009258	10-formyltetrahydrofolate catabolic process	2	1	0.002045556	0.037358307	Aldh1l1
+GO:0009397	folic acid-containing compound catabolic process	2	1	0.002045556	0.037358307	Aldh1l1
+GO:0015798	myo-inositol transport	2	1	0.002045556	0.037358307	Slc5a3
+GO:0019413	acetate biosynthetic process	2	1	0.002045556	0.037358307	Acss2
+GO:0019427	acetyl-CoA biosynthetic process from acetate	2	1	0.002045556	0.037358307	Acss2
+GO:0019542	propionate biosynthetic process	2	1	0.002045556	0.037358307	Acss2
+GO:0042560	pteridine-containing compound catabolic process	2	1	0.002045556	0.037358307	Aldh1l1
+GO:0044268	multicellular organismal protein metabolic process	2	1	0.002045556	0.037358307	Acaca
+GO:0048686	regulation of sprouting of injured axon	2	1	0.002045556	0.037358307	Ntrk3
+GO:0048690	regulation of axon extension involved in regeneration	2	1	0.002045556	0.037358307	Ntrk3
+GO:2000016	negative regulation of determination of dorsal identity	2	1	0.002045556	0.037358307	Ddit3
+GO:0060191	regulation of lipase activity	68	2	0.00219368	0.039372769	"Angptl4,Adcyap1r1"
+GO:0051148	negative regulation of muscle cell differentiation	70	2	0.00232271	0.040982049	"Ddit3,Ankrd2"
+GO:0031667	response to nutrient levels	275	3	0.002689211	0.046657819	"Angptl4,F7,Ddit3"
+GO:0019541	propionate metabolic process	3	1	0.003066829	0.04911645	Acss2
+GO:0035928	rRNA import into mitochondrion	3	1	0.003066829	0.04911645	Tst
+GO:0048677	axon extension involved in regeneration	3	1	0.003066829	0.04911645	Ntrk3
+GO:0048682	sprouting of injured axon	3	1	0.003066829	0.04911645	Ntrk3
+GO:1990442	intrinsic apoptotic signaling pathway in response to nitrosative stress	3	1	0.003066829	0.04911645	Ddit3
+GO:0019751	polyol metabolic process	85	2	0.003401614	0.052198221	"Adcyap1r1,Slc5a3"
+GO:0035914	skeletal muscle cell differentiation	85	2	0.003401614	0.052198221	"Arntl,Ankrd2"
+GO:0043648	dicarboxylic acid metabolic process	86	2	0.003480436	0.052198221	"Acly,Aldh1l1"
+GO:0009991	response to extracellular stimulus	303	3	0.003533901	0.052198221	"Angptl4,F7,Ddit3"
+GO:0001676	long-chain fatty acid metabolic process	87	2	0.003560109	0.052198221	"Acsbg1,Cpt1a"
+GO:0045445	myoblast differentiation	87	2	0.003560109	0.052198221	"Ddit3,Ankrd2"
+GO:0051260	protein homooligomerization	318	3	0.004046244	0.053856611	"Angptl4,Acaca,Cpt1a"
+GO:0044272	sulfur compound biosynthetic process	93	2	0.004055954	0.053856611	"Acly,Acss2"
+GO:0006083	acetate metabolic process	4	1	0.004087101	0.053856611	Acss2
+GO:0008292	acetylcholine biosynthetic process	4	1	0.004087101	0.053856611	Slc5a7
+GO:0010641	positive regulation of platelet-derived growth factor receptor signaling pathway	4	1	0.004087101	0.053856611	F7
+GO:0051790	short-chain fatty acid biosynthetic process	4	1	0.004087101	0.053856611	Acss2
+GO:0090403	oxidative stress-induced premature senescence	4	1	0.004087101	0.053856611	Arntl
+GO:1900620	acetate ester biosynthetic process	4	1	0.004087101	0.053856611	Slc5a7
+GO:0009108	coenzyme biosynthetic process	94	2	0.004141546	0.053891866	"Acly,Acss2"
+GO:0065008	regulation of biological quality	3362	9	0.004296272	0.054782568	"Arntl,Angptl4,F7,Ddit3,Acaca,Adcyap1r1,Slc5a7,Ntrk3,Cpt1a"
+GO:0046165	alcohol biosynthetic process	96	2	0.004315246	0.054782568	"Hmgcs2,Adcyap1r1"
+GO:0008611	ether lipid biosynthetic process	5	1	0.005106372	0.058414655	Fasn
+GO:0009256	10-formyltetrahydrofolate metabolic process	5	1	0.005106372	0.058414655	Aldh1l1
+GO:0015871	choline transport	5	1	0.005106372	0.058414655	Slc5a7
+GO:0035927	RNA import into mitochondrion	5	1	0.005106372	0.058414655	Tst
+GO:0046504	glycerol ether biosynthetic process	5	1	0.005106372	0.058414655	Fasn
+GO:0051005	negative regulation of lipoprotein lipase activity	5	1	0.005106372	0.058414655	Angptl4
+GO:0060137	maternal process involved in parturition	5	1	0.005106372	0.058414655	Arntl
+GO:1901503	ether biosynthetic process	5	1	0.005106372	0.058414655	Fasn
+GO:2000015	regulation of determination of dorsal identity	5	1	0.005106372	0.058414655	Ddit3
+GO:0045596	negative regulation of cell differentiation	705	4	0.005326997	0.059780721	"Arntl,Ddit3,Ntrk3,Ankrd2"
+GO:0010646	regulation of cell communication	2850	8	0.005725384	0.059780721	"Arntl,F7,Ddit3,S100a4,Adcyap1r1,Ntrk3,Cpt1a,Ankrd2"
+GO:0097305	response to alcohol	112	2	0.005824055	0.059780721	"F7,Acaca"
+GO:0035556	intracellular signal transduction	2248	7	0.005888949	0.059780721	"Arntl,F7,Ddit3,S100a4,Adcyap1r1,Ntrk3,Ankrd2"
+GO:0033993	response to lipid	729	4	0.005992684	0.059780721	"Arntl,F7,Acaca,Acsbg1"
+GO:0023051	regulation of signaling	2872	8	0.006001262	0.059780721	"Arntl,F7,Ddit3,S100a4,Adcyap1r1,Ntrk3,Cpt1a,Ankrd2"
+GO:0014070	response to organic cyclic compound	731	4	0.006050564	0.059780721	"Arntl,F7,Acaca,Acsbg1"
+GO:0006461	protein complex assembly	1181	5	0.006122822	0.059780721	"Angptl4,Tppp3,Ddit3,Acaca,Cpt1a"
+GO:0032792	negative regulation of CREB transcription factor activity	6	1	0.006124644	0.059780721	Ddit3
+GO:0051029	rRNA transport	6	1	0.006124644	0.059780721	Tst
+GO:0071500	cellular response to nitrosative stress	6	1	0.006124644	0.059780721	Ddit3
+GO:2000074	regulation of type B pancreatic cell development	6	1	0.006124644	0.059780721	Arntl
+GO:2000323	negative regulation of glucocorticoid receptor signaling pathway	6	1	0.006124644	0.059780721	Arntl
+GO:2001016	positive regulation of skeletal muscle cell differentiation	6	1	0.006124644	0.059780721	Arntl
+GO:0055088	lipid homeostasis	115	2	0.006130225	0.059780721	"Angptl4,Acaca"
+GO:0070271	protein complex biogenesis	1182	5	0.006144608	0.059780721	"Angptl4,Tppp3,Ddit3,Acaca,Cpt1a"
+GO:0044238	primary metabolic process	9301	16	0.006785619	0.065201345	"Acsbg1,Arntl,Angptl4,Acly,F7,Ddit3,Acaca,Fasn,Hmgcs2,Adcyap1r1,Lipf,Ntrk3,Acss2,Cpt1a,Slc5a3,Ankrd2"
+GO:0001955	blood vessel maturation	7	1	0.007141916	0.065201345	Ddit3
+GO:0008291	acetylcholine metabolic process	7	1	0.007141916	0.065201345	Slc5a7
+GO:0090400	stress-induced premature senescence	7	1	0.007141916	0.065201345	Arntl
+GO:0097384	cellular lipid biosynthetic process	7	1	0.007141916	0.065201345	Fasn
+GO:1900619	acetate ester metabolic process	7	1	0.007141916	0.065201345	Slc5a7
+GO:1903026	negative regulation of RNA polymerase II regulatory region sequence-specific DNA binding	7	1	0.007141916	0.065201345	Ddit3
+GO:0045598	regulation of fat cell differentiation	125	2	0.007202838	0.065201345	"Arntl,Ddit3"
+GO:0030001	metal ion transport	775	4	0.007420811	0.066595378	"Ddit3,Slc5a7,Adcyap1r1,Slc5a3"
+GO:0050921	positive regulation of chemotaxis	128	2	0.00754007	0.067087291	"F7,Ntrk3"
+GO:0060402	calcium ion transport into cytosol	130	2	0.007768813	0.068536729	"Ddit3,Adcyap1r1"
+GO:0030223	neutrophil differentiation	8	1	0.008158191	0.070306084	Fasn
+GO:0051775	response to redox state	8	1	0.008158191	0.070306084	Arntl
+GO:1901615	organic hydroxy compound metabolic process	410	3	0.008171985	0.070306084	"Hmgcs2,Adcyap1r1,Slc5a3"
+GO:0051188	cofactor biosynthetic process	135	2	0.008354301	0.070705911	"Acly,Acss2"
+GO:0051896	regulation of protein kinase B signaling	135	2	0.008354301	0.070705911	"F7,Ddit3"
+GO:0044723	single-organism carbohydrate metabolic process	420	3	0.008727663	0.072345312	"Cpt1a,Adcyap1r1,Slc5a3"
+GO:0071822	protein complex subunit organization	1294	5	0.008952638	0.072345312	"Angptl4,Tppp3,Ddit3,Acaca,Cpt1a"
+GO:0060401	cytosolic calcium ion transport	141	2	0.009082367	0.072345312	"Ddit3,Adcyap1r1"
+GO:0007567	parturition	9	1	0.009173469	0.072345312	Arntl
+GO:0015791	polyol transport	9	1	0.009173469	0.072345312	Slc5a3
+GO:0032000	positive regulation of fatty acid beta-oxidation	9	1	0.009173469	0.072345312	Cpt1a
+GO:0046485	ether lipid metabolic process	9	1	0.009173469	0.072345312	Fasn
+GO:0048680	positive regulation of axon regeneration	9	1	0.009173469	0.072345312	Ntrk3
+GO:0051409	response to nitrosative stress	9	1	0.009173469	0.072345312	Ddit3
+GO:0009967	positive regulation of signal transduction	1307	5	0.00932838	0.072490728	"Arntl,F7,S100a4,Adcyap1r1,Ntrk3"
+GO:0045834	positive regulation of lipid metabolic process	143	2	0.009331179	0.072490728	"Angptl4,Cpt1a"
+GO:0009966	regulation of signal transduction	2456	7	0.009516443	0.073382348	"Arntl,F7,Ddit3,S100a4,Adcyap1r1,Ntrk3,Ankrd2"
+GO:0009058	biosynthetic process	5313	11	0.010149062	0.076298191	"Arntl,Aldh1l1,Acly,Ddit3,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Acss2,Ankrd2"
+GO:0048262	determination of dorsal/ventral asymmetry	10	1	0.010187751	0.076298191	Ddit3
+GO:0048263	determination of dorsal identity	10	1	0.010187751	0.076298191	Ddit3
+GO:0070572	positive regulation of neuron projection regeneration	10	1	0.010187751	0.076298191	Ntrk3
+GO:0042594	response to starvation	152	2	0.010488283	0.077987875	"Angptl4,Ddit3"
+GO:0097164	ammonium ion metabolic process	154	2	0.010753666	0.078256913	"Slc5a7,Cpt1a"
+GO:1902533	positive regulation of intracellular signal transduction	871	4	0.011095276	0.078256913	"F7,S100a4,Adcyap1r1,Ntrk3"
+GO:0006020	inositol metabolic process	11	1	0.011201037	0.078256913	Slc5a3
+GO:0006983	ER overload response	11	1	0.011201037	0.078256913	Ddit3
+GO:0043619	regulation of transcription from RNA polymerase II promoter in response to oxidative stress	11	1	0.011201037	0.078256913	Ankrd2
+GO:0043649	dicarboxylic acid catabolic process	11	1	0.011201037	0.078256913	Aldh1l1
+GO:0046459	short-chain fatty acid metabolic process	11	1	0.011201037	0.078256913	Acss2
+GO:1990440	positive regulation of transcription from RNA polymerase II promoter in response to endoplasmic reticulum stress	11	1	0.011201037	0.078256913	Ddit3
+GO:2000322	regulation of glucocorticoid receptor signaling pathway	11	1	0.011201037	0.078256913	Arntl
+GO:0043491	protein kinase B signaling	161	2	0.011705838	0.081238515	"F7,Ddit3"
+GO:0009437	carnitine metabolic process	12	1	0.01221333	0.082915559	Cpt1a
+GO:1903025	regulation of RNA polymerase II regulatory region sequence-specific DNA binding	12	1	0.01221333	0.082915559	Ddit3
+GO:2000291	regulation of myoblast proliferation	12	1	0.01221333	0.082915559	Ankrd2
+GO:1903034	regulation of response to wounding	165	2	0.012266087	0.082915559	"F7,Ntrk3"
+GO:0050796	regulation of insulin secretion	171	2	0.013128226	0.086583895	"Arntl,Cpt1a"
+GO:0006662	glycerol ether metabolic process	13	1	0.013224629	0.086583895	Fasn
+GO:0042136	neurotransmitter biosynthetic process	13	1	0.013224629	0.086583895	Slc5a7
+GO:0060192	negative regulation of lipase activity	13	1	0.013224629	0.086583895	Angptl4
+GO:0060732	positive regulation of inositol phosphate biosynthetic process	13	1	0.013224629	0.086583895	Adcyap1r1
+GO:0016054	organic acid catabolic process	175	2	0.013717357	0.088194712	"Aldh1l1,Cpt1a"
+GO:0046395	carboxylic acid catabolic process	175	2	0.013717357	0.088194712	"Aldh1l1,Cpt1a"
+GO:0050920	regulation of chemotaxis	176	2	0.013866423	0.088194712	"F7,Ntrk3"
+GO:0051093	negative regulation of developmental process	934	4	0.014057832	0.088194712	"Arntl,Ddit3,Ntrk3,Ankrd2"
+GO:0006107	oxaloacetate metabolic process	14	1	0.014234937	0.088194712	Acly
+GO:0006577	amino-acid betaine metabolic process	14	1	0.014234937	0.088194712	Cpt1a
+GO:0009109	coenzyme catabolic process	14	1	0.014234937	0.088194712	Aldh1l1
+GO:0018904	ether metabolic process	14	1	0.014234937	0.088194712	Fasn
+GO:0071380	cellular response to prostaglandin E stimulus	14	1	0.014234937	0.088194712	Acaca
+GO:0051147	regulation of muscle cell differentiation	179	2	0.014317874	0.088194712	"Ddit3,Ankrd2"
+GO:0005975	carbohydrate metabolic process	510	3	0.014733791	0.089950166	"Cpt1a,Adcyap1r1,Slc5a3"
+GO:0060828	regulation of canonical Wnt signaling pathway	182	2	0.014775676	0.089950166	"Arntl,Ddit3"
+GO:0042921	glucocorticoid receptor signaling pathway	15	1	0.015244252	0.091202682	Arntl
+GO:0051004	regulation of lipoprotein lipase activity	15	1	0.015244252	0.091202682	Angptl4
+GO:0070723	response to cholesterol	15	1	0.015244252	0.091202682	F7
+GO:0007519	skeletal muscle tissue development	187	2	0.015552685	0.091990597	"Arntl,Ankrd2"
+GO:0007623	circadian rhythm	187	2	0.015552685	0.091990597	"Arntl,Ntrk3"
+GO:0065003	macromolecular complex assembly	1491	5	0.015892245	0.093467948	"Angptl4,Tppp3,Ddit3,Acaca,Cpt1a"
+GO:1901617	organic hydroxy compound biosynthetic process	191	2	0.016186792	0.09347477	"Hmgcs2,Adcyap1r1"
+GO:0010919	regulation of inositol phosphate biosynthetic process	16	1	0.016252578	0.09347477	Adcyap1r1
+GO:0042219	cellular modified amino acid catabolic process	16	1	0.016252578	0.09347477	Aldh1l1
+GO:0071379	cellular response to prostaglandin stimulus	16	1	0.016252578	0.09347477	Acaca
+GO:2000021	regulation of ion homeostasis	193	2	0.01650798	0.093581094	"Ddit3,Adcyap1r1"
+GO:0060538	skeletal muscle organ development	195	2	0.016831909	0.093581094	"Arntl,Ankrd2"
+GO:0044237	cellular metabolic process	9150	15	0.016865772	0.093581094	"Acsbg1,Arntl,Aldh1l1,Acly,Ddit3,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Ntrk3,Acss2,Cpt1a,Slc5a3,Ankrd2"
+GO:0007202	activation of phospholipase C activity	17	1	0.017259914	0.093581094	Adcyap1r1
+GO:0010832	negative regulation of myotube differentiation	17	1	0.017259914	0.093581094	Ankrd2
+GO:0031958	corticosteroid receptor signaling pathway	17	1	0.017259914	0.093581094	Arntl
+GO:0036314	response to sterol	17	1	0.017259914	0.093581094	F7
+GO:0046321	positive regulation of fatty acid oxidation	17	1	0.017259914	0.093581094	Cpt1a
+GO:0048712	negative regulation of astrocyte differentiation	17	1	0.017259914	0.093581094	Ntrk3
+GO:0051450	myoblast proliferation	17	1	0.017259914	0.093581094	Ankrd2
+GO:2000251	positive regulation of actin cytoskeleton reorganization	17	1	0.017259914	0.093581094	Ntrk3
+GO:0006812	cation transport	1007	4	0.018077601	0.096930471	"Ddit3,Adcyap1r1,Slc5a7,Slc5a3"
+GO:0010941	regulation of cell death	1542	5	0.01815688	0.096930471	"Angptl4,Ddit3,Adcyap1r1,Ntrk3,Ankrd2"
+GO:0031998	regulation of fatty acid beta-oxidation	18	1	0.018266261	0.096930471	Cpt1a
+GO:0042789	mRNA transcription from RNA polymerase II promoter	18	1	0.018266261	0.096930471	Ddit3
+GO:0010647	positive regulation of cell communication	1546	5	0.01834323	0.096930471	"Arntl,F7,S100a4,Adcyap1r1,Ntrk3"
+GO:0033554	cellular response to stress	1551	5	0.018577981	0.097052089	"Arntl,Angptl4,Ddit3,Ntrk3,Ankrd2"
+GO:0030073	insulin secretion	206	2	0.018661994	0.097052089	"Arntl,Cpt1a"
+GO:0023056	positive regulation of signaling	1554	5	0.018719801	0.097052089	"Arntl,F7,S100a4,Adcyap1r1,Ntrk3"
+GO:1901575	organic substance catabolic process	1556	5	0.018814752	0.097052089	"Arntl,Aldh1l1,Ddit3,Lipf,Cpt1a"
+GO:0006814	sodium ion transport	207	2	0.018832394	0.097052089	"Slc5a7,Slc5a3"
+GO:0010640	regulation of platelet-derived growth factor receptor signaling pathway	19	1	0.019271621	0.097298684	F7
+GO:0034695	response to prostaglandin E	19	1	0.019271621	0.097298684	Acaca
+GO:0035994	response to muscle stretch	19	1	0.019271621	0.097298684	Ankrd2
+GO:0051187	cofactor catabolic process	19	1	0.019271621	0.097298684	Aldh1l1
+GO:0090276	regulation of peptide hormone secretion	210	2	0.019347577	0.097298684	"Arntl,Cpt1a"
+GO:0032148	activation of protein kinase B activity	20	1	0.020275994	0.10099191	Ntrk3
+GO:0046653	tetrahydrofolate metabolic process	20	1	0.020275994	0.10099191	Aldh1l1
+GO:0048878	chemical homeostasis	1051	4	0.020818869	0.103202106	"Angptl4,Ddit3,Acaca,Adcyap1r1"
+GO:0030855	epithelial cell differentiation	584	3	0.021073713	0.103513249	"Arntl,Tst,Ntrk3"
+GO:0003323	type B pancreatic cell development	21	1	0.021279381	0.103513249	Arntl
+GO:0034694	response to prostaglandin	21	1	0.021279381	0.103513249	Acaca
+GO:2000678	negative regulation of transcription regulatory region DNA binding	21	1	0.021279381	0.103513249	Ddit3
+GO:0045444	fat cell differentiation	224	2	0.021829797	0.105696833	"Arntl,Ddit3"
+GO:0036003	positive regulation of transcription from RNA polymerase II promoter in response to stress	22	1	0.022281783	0.107385816	Ddit3
+GO:0009725	response to hormone	599	3	0.022516421	0.108016562	"Arntl,Acsbg1,Acaca"
+GO:0043576	regulation of respiratory gaseous exchange	23	1	0.023283202	0.110674944	Slc5a3
+GO:1902932	positive regulation of alcohol biosynthetic process	23	1	0.023283202	0.110674944	Adcyap1r1
+GO:0034599	cellular response to oxidative stress	233	2	0.023492126	0.111160469	"Arntl,Ankrd2"
+GO:0044249	cellular biosynthetic process	5145	10	0.023667667	0.111425942	"Arntl,Acly,Ddit3,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Acss2,Ankrd2"
+GO:0043933	macromolecular complex subunit organization	1652	5	0.023762305	0.111425942	"Angptl4,Tppp3,Ddit3,Acaca,Cpt1a"
+GO:0060070	canonical Wnt signaling pathway	237	2	0.02424735	0.112352294	"Arntl,Ddit3"
+GO:0006760	folic acid-containing compound metabolic process	24	1	0.024283637	0.112352294	Aldh1l1
+GO:0009299	mRNA transcription	24	1	0.024283637	0.112352294	Ddit3
+GO:0010863	positive regulation of phospholipase C activity	25	1	0.02528309	0.114933175	Adcyap1r1
+GO:0030194	positive regulation of blood coagulation	25	1	0.02528309	0.114933175	F7
+GO:0032958	inositol phosphate biosynthetic process	25	1	0.02528309	0.114933175	Adcyap1r1
+GO:1900048	positive regulation of hemostasis	25	1	0.02528309	0.114933175	F7
+GO:0044282	small molecule catabolic process	244	2	0.025592942	0.115334425	"Aldh1l1,Cpt1a"
+GO:0048545	response to steroid hormone	244	2	0.025592942	0.115334425	"Arntl,Acsbg1"
+GO:0042221	response to chemical	3693	8	0.025970512	0.115928418	"Arntl,Acsbg1,F7,Ddit3,Acaca,Fasn,Ntrk3,Ankrd2"
+GO:0044262	cellular carbohydrate metabolic process	247	2	0.02617886	0.115928418	"Adcyap1r1,Slc5a3"
+GO:0002068	glandular epithelial cell development	26	1	0.026281563	0.115928418	Arntl
+GO:0042634	regulation of hair cycle	26	1	0.026281563	0.115928418	Arntl
+GO:0042753	positive regulation of circadian rhythm	26	1	0.026281563	0.115928418	Arntl
+GO:1901576	organic substance biosynthetic process	5234	10	0.026517554	0.116226883	"Arntl,Acly,Ddit3,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Acss2,Ankrd2"
+GO:0030111	regulation of Wnt signaling pathway	249	2	0.026572525	0.116226883	"Arntl,Ddit3"
+GO:0071353	cellular response to interleukin-4	27	1	0.027279055	0.116805022	Fasn
+GO:1902253	regulation of intrinsic apoptotic signaling pathway by p53 class mediator	27	1	0.027279055	0.116805022	Ankrd2
+GO:2000772	regulation of cellular senescence	27	1	0.027279055	0.116805022	Arntl
+GO:0061061	muscle structure development	646	3	0.027383273	0.116805022	"Arntl,Ddit3,Ankrd2"
+GO:0030072	peptide hormone secretion	255	2	0.027768049	0.116805022	"Arntl,Cpt1a"
+GO:0030224	monocyte differentiation	28	1	0.028275567	0.116805022	Fasn
+GO:0048643	positive regulation of skeletal muscle tissue development	28	1	0.028275567	0.116805022	Arntl
+GO:0048679	regulation of axon regeneration	28	1	0.028275567	0.116805022	Ntrk3
+GO:0050820	positive regulation of coagulation	28	1	0.028275567	0.116805022	F7
+GO:0050996	positive regulation of lipid catabolic process	28	1	0.028275567	0.116805022	Cpt1a
+GO:1900274	regulation of phospholipase C activity	28	1	0.028275567	0.116805022	Adcyap1r1
+GO:1903131	mononuclear cell differentiation	28	1	0.028275567	0.116805022	Fasn
+GO:2000352	negative regulation of endothelial cell apoptotic process	28	1	0.028275567	0.116805022	Angptl4
+GO:2001014	regulation of skeletal muscle cell differentiation	28	1	0.028275567	0.116805022	Arntl
+GO:0032103	positive regulation of response to external stimulus	260	2	0.028780811	0.118105491	"F7,Ntrk3"
+GO:0003309	type B pancreatic cell differentiation	29	1	0.029271102	0.118105491	Arntl
+GO:0008299	isoprenoid biosynthetic process	29	1	0.029271102	0.118105491	Hmgcs2
+GO:0042133	neurotransmitter metabolic process	29	1	0.029271102	0.118105491	Slc5a7
+GO:0070306	lens fiber cell differentiation	29	1	0.029271102	0.118105491	Ntrk3
+GO:0070670	response to interleukin-4	29	1	0.029271102	0.118105491	Fasn
+GO:0016042	lipid catabolic process	267	2	0.030223533	0.121477599	"Lipf,Cpt1a"
+GO:0000038	very long-chain fatty acid metabolic process	31	1	0.031259239	0.122533463	Acsbg1
+GO:0006984	ER-nucleus signaling pathway	31	1	0.031259239	0.122533463	Ddit3
+GO:0042558	pteridine-containing compound metabolic process	31	1	0.031259239	0.122533463	Aldh1l1
+GO:0045686	negative regulation of glial cell differentiation	31	1	0.031259239	0.122533463	Ntrk3
+GO:2000249	regulation of actin cytoskeleton reorganization	31	1	0.031259239	0.122533463	Ntrk3
+GO:0007204	positive regulation of cytosolic calcium ion concentration	273	2	0.031482925	0.122533463	"Ddit3,Adcyap1r1"
+GO:0022607	cellular component assembly	2420	6	0.031625547	0.122533463	"Angptl4,Tppp3,Ddit3,Acaca,Ntrk3,Cpt1a"
+GO:0046883	regulation of hormone secretion	274	2	0.031694846	0.122533463	"Arntl,Cpt1a"
+GO:0097193	intrinsic apoptotic signaling pathway	276	2	0.03212041	0.122533463	"Ddit3,Ankrd2"
+GO:0007274	neuromuscular synaptic transmission	32	1	0.032251843	0.122533463	Slc5a7
+GO:0033144	negative regulation of intracellular steroid hormone receptor signaling pathway	32	1	0.032251843	0.122533463	Arntl
+GO:0035883	enteroendocrine cell differentiation	32	1	0.032251843	0.122533463	Arntl
+GO:0048710	regulation of astrocyte differentiation	32	1	0.032251843	0.122533463	Ntrk3
+GO:0055090	acylglycerol homeostasis	32	1	0.032251843	0.122533463	Angptl4
+GO:0070328	triglyceride homeostasis	32	1	0.032251843	0.122533463	Angptl4
+GO:0070887	cellular response to chemical stimulus	2444	6	0.033004901	0.124483653	"Arntl,F7,Ddit3,Acaca,Fasn,Ankrd2"
+GO:0006101	citrate metabolic process	33	1	0.033243473	0.124483653	Acly
+GO:0046320	regulation of fatty acid oxidation	33	1	0.033243473	0.124483653	Cpt1a
+GO:0070570	regulation of neuron projection regeneration	33	1	0.033243473	0.124483653	Ntrk3
+GO:0006730	one-carbon metabolic process	34	1	0.034234129	0.12592837	Aldh1l1
+GO:0048665	neuron fate specification	34	1	0.034234129	0.12592837	Ntrk3
+GO:0051154	negative regulation of striated muscle cell differentiation	34	1	0.034234129	0.12592837	Ankrd2
+GO:0071398	cellular response to fatty acid	34	1	0.034234129	0.12592837	Acaca
+GO:0090342	regulation of cell aging	34	1	0.034234129	0.12592837	Arntl
+GO:0030851	granulocyte differentiation	36	1	0.036212524	0.132736751	Fasn
+GO:0009056	catabolic process	1855	5	0.036891222	0.134750041	"Arntl,Aldh1l1,Ddit3,Lipf,Cpt1a"
+GO:0045923	positive regulation of fatty acid metabolic process	37	1	0.037200264	0.134931968	Cpt1a
+GO:0072350	tricarboxylic acid metabolic process	37	1	0.037200264	0.134931968	Acly
+GO:0032879	regulation of localization	2516	6	0.037384591	0.135129719	"Arntl,F7,Ddit3,Adcyap1r1,Ntrk3,Cpt1a"
+GO:0019216	regulation of lipid metabolic process	301	2	0.03762965	0.135544863	"Angptl4,Cpt1a"
+GO:0007271	"synaptic transmission, cholinergic"	38	1	0.038187034	0.137078284	Slc5a7
+GO:0048511	rhythmic process	306	2	0.03877264	0.138702126	"Arntl,Ntrk3"
+GO:1902930	regulation of alcohol biosynthetic process	39	1	0.039172835	0.139334827	Adcyap1r1
+GO:0044712	single-organism catabolic process	744	3	0.039217199	0.139334827	"Aldh1l1,Lipf,Cpt1a"
+GO:0010518	positive regulation of phospholipase activity	40	1	0.040157667	0.141708921	Adcyap1r1
+GO:0031103	axon regeneration	40	1	0.040157667	0.141708921	Ntrk3
+GO:0044765	single-organism transport	2566	6	0.040643653	0.141815679	"Arntl,Ddit3,Tst,Adcyap1r1,Cpt1a,Slc5a3"
+GO:0009987	cellular process	15212	20	0.040848869	0.141815679	"Acsbg1,Arntl,Aldh1l1,Angptl4,Tppp3,Acly,F7,Ddit3,Tst,S100a4,Acaca,Fasn,Hmgcs2,Adcyap1r1,Slc5a7,Ntrk3,Acss2,Cpt1a,Slc5a3,Ankrd2"
+GO:0051480	regulation of cytosolic calcium ion concentration	316	2	0.04109852	0.141815679	"Ddit3,Adcyap1r1"
+GO:0008219	cell death	1910	5	0.041106965	0.141815679	"Angptl4,Ddit3,Adcyap1r1,Ntrk3,Ankrd2"
+GO:0032757	positive regulation of interleukin-8 production	41	1	0.041141532	0.141815679	Ddit3
+GO:0046173	polyol biosynthetic process	41	1	0.041141532	0.141815679	Adcyap1r1
+GO:0051898	negative regulation of protein kinase B signaling	41	1	0.041141532	0.141815679	Ddit3
+GO:0048584	positive regulation of response to stimulus	1922	5	0.042065299	0.144248462	"Arntl,F7,S100a4,Adcyap1r1,Ntrk3"
+GO:0042755	eating behavior	42	1	0.042124431	0.144248462	Cpt1a
+GO:0043161	proteasome-mediated ubiquitin-dependent protein catabolic process	323	2	0.042757754	0.145865491	"Arntl,Ddit3"
+GO:0048583	regulation of response to stimulus	3308	7	0.042876888	0.145865491	"Arntl,F7,Ddit3,S100a4,Adcyap1r1,Ntrk3,Ankrd2"
+GO:0006695	cholesterol biosynthetic process	43	1	0.043106364	0.146168484	Hmgcs2
+GO:0010033	response to organic substance	2614	6	0.043943779	0.148048105	"Arntl,Acsbg1,F7,Ddit3,Acaca,Fasn"
+GO:0097306	cellular response to alcohol	44	1	0.044087332	0.148048105	Acaca
+GO:1902653	secondary alcohol biosynthetic process	44	1	0.044087332	0.148048105	Hmgcs2
+GO:0044085	cellular component biogenesis	2623	6	0.044581475	0.148936817	"Angptl4,Tppp3,Ddit3,Acaca,Ntrk3,Cpt1a"
+GO:0046879	hormone secretion	332	2	0.044927958	0.148936817	"Arntl,Cpt1a"
+GO:0019933	cAMP-mediated signaling	45	1	0.045067336	0.148936817	Adcyap1r1
+GO:1904036	negative regulation of epithelial cell apoptotic process	45	1	0.045067336	0.148936817	Angptl4
+GO:2000351	regulation of endothelial cell apoptotic process	45	1	0.045067336	0.148936817	Angptl4
+GO:0043647	inositol phosphate metabolic process	46	1	0.046046378	0.151212238	Adcyap1r1
+GO:0070542	response to fatty acid	46	1	0.046046378	0.151212238	Acaca
+GO:0009914	hormone transport	339	2	0.046644083	0.152693365	"Arntl,Cpt1a"
+GO:0014014	negative regulation of gliogenesis	47	1	0.047024458	0.152976439	Ntrk3
+GO:2000677	regulation of transcription regulatory region DNA binding	47	1	0.047024458	0.152976439	Ddit3
+GO:0045773	positive regulation of axon extension	48	1	0.048001576	0.155668663	Ntrk3
+GO:0010517	regulation of phospholipase activity	49	1	0.048977734	0.156398226	Adcyap1r1
+GO:0010524	positive regulation of calcium ion transport into cytosol	49	1	0.048977734	0.156398226	Adcyap1r1
+GO:0031018	endocrine pancreas development	49	1	0.048977734	0.156398226	Arntl
+GO:0072577	endothelial cell apoptotic process	49	1	0.048977734	0.156398226	Angptl4
+GO:0090398	cellular senescence	49	1	0.048977734	0.156398226	Arntl
+GO:0007267	cell-cell signaling	1379	4	0.049361763	0.157142493	"Arntl,Ddit3,Slc5a7,Cpt1a"
+GO:0016126	sterol biosynthetic process	50	1	0.049952933	0.158057762	Hmgcs2
+GO:0043392	negative regulation of DNA binding	50	1	0.049952933	0.158057762	Ddit3

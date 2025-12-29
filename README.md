@@ -2,7 +2,7 @@
 R Shiny app for integrative enrichment analysis and visualization of multiple gene datasets
 
 How to use the app:
-1. Visit hosted version on http://hurlab.med.und.edu:3838/RichStudio
+1. Visit hosted version on http://hurlab.med.und.edu:3838/richStudio
 2. Clone the repository and running the following in R console:
 
 ```R
@@ -22,13 +22,13 @@ You can upload either DEG sets or enrichment results to the app from your local 
 
 File upload automatically guesses element delimiter based on file type, but can also be specified.
 
-Also accepts text input list of significant genes, which can be delimited by any non-alphanumeric character.
+Also accepts a text input list of significant genes, which can be delimited by any non-alphanumeric character.
 
 Valid input examples:
 -	 “Xkr4, Rp1, Sox17,    Mrpl15” 
 -	“Xkr4, () Rp1, Sox17,  &* Mrpl15”
 
-Uploaded and created files can be exported as .txt, .csv, and .tsv file format.
+Uploaded and created files can be exported as .txt, .csv, and .tsv file formats.
 
  
 ### Enrichment
@@ -62,7 +62,7 @@ Network plot
 Heatmap
 
 ### Cluster
-Uses Cohen's Kappa (basd on geneID overlap) as a similarity metric between biological terms for use in clustering enriched terms.
+Uses Cohen's Kappa (bassd on geneID overlap) as a similarity metric between biological terms for use in clustering enriched terms.
 
 <img width="172" alt="image" src="https://github.com/hyuncat/RichStudio/assets/114366569/9568791e-eba4-4fa3-bd14-defda223ef91">
 
@@ -72,7 +72,10 @@ Comprehensive cluster heatmap
 
 <img width="303" alt="image" src="https://github.com/hyuncat/RichStudio/assets/114366569/cf36a6ec-ec08-456d-8b4c-d042c8dc9cbb">
 
+### Team
+Junguk Hur, Ph.D. (Principal Investigator)
+Kai Guo, Ph.D. (Software developer; lead)
+Sarah Hong (Software developer)
+Jane Kim (Software developer)
 
-Individual term heatmap
 
-<img width="468" alt="image" src="https://github.com/hyuncat/RichStudio/assets/114366569/1039c37b-1fe3-4973-aa13-114b85898024">

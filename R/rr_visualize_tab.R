@@ -347,7 +347,10 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
           u_rrnames$labels <- c(u_rrnames$labels, new_name)
         }
       }
-      u_big_rrdf[['df']][i, j] <<- DT::coerceValue(v, u_big_rrdf[['df']][i, j])
+      # Fix anti-pattern: Modify data frame locally, then assign once
+      updated_df <- u_big_rrdf[['df']]
+      updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
+      u_big_rrdf[['df']] <- updated_df
     })
 
     # Remove rr from uploaded rich results
@@ -478,7 +481,10 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       j = info$col
       v = info$value
 
-      top_hmap_df_reactive$df[i, j] <<- DT::coerceValue(v, top_hmap_df_reactive$df[i, j])
+      # Fix anti-pattern: Modify data frame locally, then assign once
+      updated_df <- top_hmap_df_reactive$df
+      updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
+      top_hmap_df_reactive$df <- updated_df
       gs_name <- top_hmap_df_reactive$df[i, 1]
       top_nterms <- top_hmap_df_reactive$df[i, 4]
 

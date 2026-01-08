@@ -276,7 +276,10 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         }
       }
 
-      u_big_rrdf[['df']][i, j] <<- DT::coerceValue(v, u_big_rrdf[['df']][i, j])
+      # Fix anti-pattern: Modify data frame locally, then assign once
+      updated_df <- u_big_rrdf[['df']]
+      updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
+      u_big_rrdf[['df']] <- updated_df
     })
 
     # Remove rr from uploaded rich results
@@ -407,8 +410,10 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           u_clusnames$labels <- c(u_clusnames$labels, new_name)
         }
       }
-      # Update u_big_clusdf
-      u_big_clusdf[['df']][i, j] <<- DT::coerceValue(v, u_big_clusdf[['df']][i, j])
+      # Update u_big_clusdf - Fix anti-pattern: Modify data frame locally, then assign once
+      updated_df <- u_big_clusdf[['df']]
+      updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
+      u_big_clusdf[['df']] <- updated_df
     })
 
     # Remove clus from list of created cluster results

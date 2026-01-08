@@ -291,7 +291,10 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         }
       }
 
-      u_big_degdf[['df']][i, j] <<- DT::coerceValue(v, u_big_degdf[['df']][i, j])
+      # Fix anti-pattern: Modify data frame locally, then assign once
+      updated_df <- u_big_degdf[['df']]
+      updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
+      u_big_degdf[['df']] <- updated_df
     })
 
     # Remove deg from uploaded degs
@@ -449,7 +452,10 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         }
       }
 
-      u_big_rrdf[['df']][i, j] <<- DT::coerceValue(v, u_big_rrdf[['df']][i, j])
+      # Fix anti-pattern: Modify data frame locally, then assign once
+      updated_df <- u_big_rrdf[['df']]
+      updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
+      u_big_rrdf[['df']] <- updated_df
     })
 
     # Remove rr from uploaded rich results

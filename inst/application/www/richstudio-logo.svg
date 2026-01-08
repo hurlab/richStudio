@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="70" viewBox="0 0 240 70" role="img" aria-label="richStudio logo">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f6fc5" />
+      <stop offset="100%" stop-color="#21c4b6" />
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#grad)" stroke-width="3" stroke-linecap="round">
+    <circle cx="32" cy="20" r="10" fill="#e7f6ed" />
+    <circle cx="18" cy="46" r="10" fill="#eaf2fb" />
+    <circle cx="52" cy="48" r="10" fill="#eafbf7" />
+    <line x1="27" y1="29" x2="22" y2="39" />
+    <line x1="37" y1="26" x2="47" y2="38" />
+  </g>
+  <text x="80" y="34" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-weight="700" font-size="26" fill="#0f6fc5">
+    rich<tspan fill="#21c4b6">Studio</tspan>
+  </text>
+  <text x="80" y="52" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="12" fill="#44546a">
+    Enrichment · Clustering · Visualization
+  </text>
+</svg>

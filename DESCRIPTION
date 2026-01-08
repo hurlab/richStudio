@@ -1,0 +1,78 @@
+Package: richStudio
+Type: Package
+Title: Interactive Visualization and Clustering of Functional Enrichment Results
+Version: 0.1.5
+Date: 2025-12-05
+Authors@R: c(
+    person("Junguk", "Hur", email = "hurlabshared@gmail.com",
+           role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0736-2149")),
+    person("Sarah", "Hong", email = "ssh2198@columbia.edu", role = "aut"),
+    person("Jane", "Kim", role = "ctb")
+  )
+Description: A Shiny application for integrative enrichment analysis and
+    visualization of multiple gene datasets. richStudio enables users to perform
+    functional enrichment analysis (GO, KEGG, Reactome), cluster functionally
+    related terms using multiple algorithms (richR, hierarchical, DAVID), and
+    visualize results through interactive plots including bar plots, dot plots,
+    heatmaps, and network graphs. Supports session save/load for reproducible
+    analyses.
+License: GPL-3
+URL: https://github.com/hurlab/richStudio
+BugReports: https://github.com/hurlab/richStudio/issues
+Depends:
+    R (>= 4.0.0)
+Imports:
+    shiny (>= 1.7.0),
+    shinydashboard,
+    shinyjs,
+    shinyWidgets,
+    shinyjqui,
+    Rcpp,
+    richR,
+    bioAnno,
+    dplyr,
+    tidyr,
+    tidyverse,
+    ggplot2,
+    plotly,
+    heatmaply,
+    reshape2,
+    rlang,
+    DT,
+    data.table,
+    readxl,
+    writexl,
+    jsonlite,
+    zip,
+    stringdist,
+    config
+Suggests:
+    richCluster,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    devtools
+LinkingTo: Rcpp
+SystemRequirements: C++11
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.3
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Remotes:
+    guokai8/richR,
+    guokai8/bioAnno
+biocViews:
+    Software,
+    GeneSetEnrichment,
+    Clustering,
+    Visualization,
+    GO,
+    KEGG,
+    Reactome,
+    GUI,
+    ShinyApps,
+    FunctionalGenomics,
+    GeneExpression,
+    Pathways

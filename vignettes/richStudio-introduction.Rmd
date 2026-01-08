@@ -1,0 +1,145 @@
+---
+title: "Introduction to richStudio"
+author:
+  - name: Junguk Hur
+    affiliation: University of North Dakota
+    email: hurlabshared@gmail.com
+  - name: Sarah Hong
+    affiliation: Columbia University
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Introduction to richStudio}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  eval = TRUE,
+  message = FALSE,
+  warning = FALSE
+)
+```
+
+# Introduction
+
+**richStudio** is an interactive Shiny application for integrative functional
+enrichment analysis and visualization. It provides researchers with tools to:
+1. Perform functional enrichment analysis (GO, KEGG, Reactome)
+2. Cluster functionally related terms using multiple algorithms
+3. Visualize results through interactive plots
+4. Save and reload analysis sessions
+
+This vignette demonstrates the programmatic interface to richStudio's core
+functions. For the interactive Shiny application, use `launch_richStudio()`.
+
+# Installation
+
+```{r install, eval=FALSE}
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("richStudio")
+```
+# Loading the Package
+
+```{r load-package}
+library(richStudio)
+```
+
+# Core Functions
+
+## Merging Enrichment Results
+
+The `merge_genesets()` function combines multiple enrichment results for
+comparative analysis. Each input should be a data frame with columns including
+`Term`, `GeneID`, `Pvalue`, and `Padj`.
+```{r merge-example}
+# Load example enrichment results
+go1 <- read.delim(system.file("extdata", "go1.txt", package = "richStudio"))
+go2 <- read.delim(system.file("extdata", "go2.txt", package = "richStudio"))
+kegg1 <- read.delim(system.file("extdata", "kegg1.txt", package = "richStudio"))
+
+# View structure of input data
+head(go1[, c("Term", "Pvalue", "Padj")], 3)
+
+# Merge multiple enrichment results
+genesets <- list(GO_Sample1 = go1, GO_Sample2 = go2, KEGG_Sample = kegg1)
+merged <- merge_genesets(genesets)
+
+# View merged result structure
+dim(merged)
+head(merged[, c("Term", "Pvalue", "Padj")], 3)
+```
+
+## Clustering Enrichment Results
+
+The `perform_clustering()` function groups functionally related terms. Three
+methods are available:
+
+1. **richR**: Kappa-based clustering (original method)
+2. **hierarchical**: Hierarchical clustering with flexible linkage
+3. **david**: DAVID-style functional clustering
+
+```{r clustering-example}
+# Perform clustering using the richR method
+params <- list(cutoff = 0.5, overlap = 0.5, minSize = 2)
+result <- perform_clustering(
+  merged_gs = merged,
+  method = "richR",
+  params = params,
+  gs_names = names(genesets)
+)
+
+# View clustering results
+if (nrow(result$cluster_df) > 0) {
+  cat("Number of clusters:", length(unique(result$cluster_df$Cluster)), "\n")
+  cat("Total terms clustered:", nrow(result$cluster_df), "\n")
+  head(result$cluster_summary, 5)
+} else {
+  cat("No clusters found with current parameters.\n")
+  cat("Try adjusting the cutoff or overlap thresholds.\n")
+}
+```
+
+## Available Clustering Methods
+
+Use `get_clustering_methods()` to see which methods are available:
+
+```{r methods}
+methods <- get_clustering_methods()
+for (name in names(methods)) {
+  cat(sprintf("- %s: %s (Available: %s)\n",
+              name,
+              methods[[name]]$description,
+              methods[[name]]$available))
+}
+```
+
+# Launching the Interactive Application
+
+For full functionality including visualization and session management,
+launch the interactive Shiny application:
+
+```{r launch, eval=FALSE}
+launch_richStudio()
+```
+
+The application provides:
+
+- **Home tab**: Welcome page with instructions
+- **Enrichment tab**: Upload DEGs and run enrichment analysis
+- **Clustering tab**: Select method, set parameters, and cluster terms
+- **Visualization tab**: Interactive bar plots, dot plots, heatmaps, networks
+- **Save/Load tab**: Session persistence and result export
+
+# Session Information
+
+```{r session-info}
+sessionInfo()
+```

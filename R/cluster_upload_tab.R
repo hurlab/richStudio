@@ -119,25 +119,13 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
   moduleServer(id, function(input, output, session) {
 
-    # create reactive objs to make accessible in other modules
-    u_degnames_reactive <- reactive(u_degnames$labels)
-    u_degdfs_reactive <- reactive(u_degdfs)
-
+    # Create reactive wrappers for select input updates
     u_rrnames_reactive <- reactive(u_rrnames$labels)
-    u_rrdfs_reactive <- reactive(u_rrdfs)
-    u_big_rrdf_reactive <- reactive(u_big_rrdf)
-
     u_clusnames_reactive <- reactive(u_clusnames$labels)
-    u_clusdfs_reactive <- reactive(u_clusdfs)
-    u_big_clusdf_reactive <- reactive(u_big_clusdf)
-    u_cluslists_reactive <- reactive(u_cluslists)
 
 
     # update select inputs based on # cluster results
     observe({
-      updateSelectInput(session=getDefaultReactiveDomain(), 'selected_rrs', choices=u_rrnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'clusdf_select', choices=u_clusnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'cluslist_select', choices=u_clusnames_reactive())
       updateSelectInput(session=getDefaultReactiveDomain(), 'rr_table_select', choices=u_rrnames_reactive())
       updateSelectInput(session=getDefaultReactiveDomain(), 'clus_table_select', choices=u_clusnames_reactive())
     })
@@ -186,6 +174,16 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       req(input$rr_files) # Make sure file uploaded
 
       for (i in seq_along(input$rr_files$name)) {
+        # Validate file size before processing
+        file_size_mb <- file.info(input$rr_files$datapath[i])$size / (1024 * 1024)
+        if (file_size_mb > 100) {
+          showNotification(
+            paste0("File '", input$rr_files$name[i], "' too large (max 100MB)"),
+            type = "error"
+          )
+          next
+        }
+
         lab <- input$rr_files$name[i]
 
         ext <- tools::file_ext(input$rr_files$name[i])
@@ -317,7 +315,7 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     output$download_rr <- downloadHandler(
       filename = function() {
         req(input$rr_table_select)
-        paste0(input$rr_table_select, input$rr_export_type)
+        paste0(sanitize_filename(input$rr_table_select), input$rr_export_type)
       },
       content = function(file) {
         ext_type <- input$rr_export_type
@@ -331,50 +329,8 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       }
     )
 
-    # <!----- CLUSTERING LOGIC -----!>
-    # Clustering
-    observeEvent(input$cluster, {
-      req(input$selected_rrs) # Require rich result selection
-      req(input$cluster_name) # Require cluster name
-
-      withProgress(message="Clustering...", value=0, {
-        genesets <- list()
-        gs_names <- c()
-        for (i in seq_along(input$selected_rrs)) {
-          tmp <- input$selected_rrs[i]
-          genesets <- c(genesets, list(u_rrdfs[[tmp]]))
-        }
-        names(genesets) <- input$selected_rrs
-        gs_names <- names(genesets)
-
-        merged_gs <- merge_genesets(genesets)
-        incProgress(0.2, message=NULL, "Done merging")
-        clustered_gs <- tryCatch(
-          cluster(merged_gs=merged_gs, cutoff=input$cutoff, overlap=input$overlap,
-                  minSize=input$min_size),
-          error = function(e) {
-            showNotification(e$message)
-            return(NULL)
-          }
-        )
-        if(!is.null(clustered_gs)) {
-          incProgress(0.5, message=NULL, "Done clustering")
-          cluster_list <- get_cluster_list(clustered_gs=clustered_gs, merged_gs=merged_gs,
-                                           gs_names=gs_names) # get cluster info
-          final_data <- hmap_prepare(clustered_gs, gs_names=gs_names) # final data
-          final_data <- change_finaldata_valueby(final_data=final_data,
-                                                 cluster_list=cluster_list, value_by="mean")
-
-          # Store in reactive
-          lab <- input$cluster_name
-          u_clusdfs[[lab]] <- final_data # set u_clusdfs
-          u_cluslists[[lab]] <- cluster_list # set u_cluslists
-          u_clusnames$labels <- c(u_clusnames$labels, lab) # set u_clusnames
-          u_big_clusdf[['df']] <- add_file_clusdf(df=u_big_clusdf[['df']], clusdf=final_data,
-                                                  name=lab, from_vec=input$selected_rrs) # add to u_big_clusdf
-        }
-      })
-    })
+    # NOTE: Old clustering logic removed. Clustering is now handled by cluster_tab module
+    # which uses perform_clustering() from rr_cluster.R
 
     # Reactively update created cluster result dataframe
     big_clusdf_to_table <- reactive({
@@ -437,36 +393,6 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     })
 
 
-    # Reactively update which rr table is read based on selection
-    rr_to_table <- reactive ({
-      req(input$rr_table_select)
-      df <- u_rrdfs[[input$rr_table_select]]
-      return(df)
-    })
-
-    # output rr table
-    output$rr_table = DT::renderDataTable({
-      rr_to_table()
-    })
-
-    # download rr
-    output$download_rr <- downloadHandler(
-      filename = function() {
-        req(input$rr_table_select)
-        paste0(input$rr_table_select, input$rr_export_type)
-      },
-      content = function(file) {
-        ext_type <- input$rr_export_type
-        if (ext_type == ".txt") {
-          write.table(u_rrdfs[[input$rr_table_select]], file, sep='\t', row.names=FALSE)
-        } else if (ext_type == ".csv") {
-          write.csv(u_rrdfs[[input$rr_table_select]], file, row.names=FALSE)
-        } else if (ext_type == ".tsv") {
-          write.table(u_rrdfs[[input$rr_table_select]], file, sep='\t', row.names=FALSE)
-        }
-      }
-    )
-
     # Reactively update which cluster result is read based on selection
     clusdf_to_table <- reactive ({
       req(input$clus_table_select)
@@ -482,7 +408,7 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     output$download_clus <- downloadHandler(
       filename = function() {
         req(input$clus_table_select)
-        paste0(input$clus_table_select, input$clus_export_type)
+        paste0(sanitize_filename(input$clus_table_select), input$clus_export_type)
       },
       content = function(file) {
         ext_type <- input$clus_export_type

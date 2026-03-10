@@ -5,6 +5,23 @@
 #
 # @author richStudio Development Team
 
+#' Sanitize a string for safe use as a filename
+#'
+#' Removes path separators, shell-dangerous characters, and leading dots
+#' to prevent path traversal and hidden file creation.
+#'
+#' @param name Character string to sanitize
+#' @return A safe filename string
+sanitize_filename <- function(name) {
+  # Remove path separators and dangerous characters
+  name <- gsub("[/\\\\:*?\"<>|]", "_", name)
+  # Remove leading dots (hidden files)
+  name <- gsub("^\\.+", "", name)
+  # Fallback if empty
+  if (nchar(name) == 0) name <- "export"
+  return(name)
+}
+
 #' Save Tab UI
 #'
 #' @param id Module namespace ID
@@ -30,7 +47,9 @@ saveTabUI <- function(id, tabName) {
           ),
           hr(),
           textInput(ns('session_name'), "Session name",
-                   value = paste0("richstudio_session_", format(Sys.Date(), "%Y%m%d"))),
+                   value = paste0("richstudio_session_",
+                                  format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
+                                  paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = ""))),
           radioButtons(ns('save_format'), "Save format:",
             choices = c(
               "RDS (Recommended)" = "rds",
@@ -169,7 +188,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     output$download_session <- downloadHandler(
       filename = function() {
         ext <- if (input$save_format == "rds") ".rds" else ".json"
-        paste0(input$session_name, ext)
+        paste0(sanitize_filename(input$session_name), ext)
       },
       content = function(file) {
         # Collect all session data
@@ -184,6 +203,15 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           clusdfs = reactiveValuesToList(u_clusdfs),
           cluslists = reactiveValuesToList(u_cluslists)
         )
+
+        # Use advisory file locking to prevent concurrent write corruption
+        lock_path <- paste0(file, ".lock")
+        lock_conn <- tryCatch(file(lock_path, open = "w"), error = function(e) NULL)
+        if (is.null(lock_conn)) {
+          showNotification("Could not acquire file lock. Save aborted.", type = "error")
+          return(NULL)
+        }
+        on.exit({ close(lock_conn); unlink(lock_path) }, add = TRUE)
 
         if (input$save_format == "rds") {
           saveRDS(session_data, file)
@@ -216,6 +244,27 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       tryCatch({
         file_path <- input$load_session_file$datapath
         file_ext <- tools::file_ext(input$load_session_file$name)
+
+        # Check for advisory lock from a concurrent save operation
+        lock_path <- paste0(file_path, ".lock")
+        if (file.exists(lock_path)) {
+          # Wait briefly for lock to clear (up to 3 seconds)
+          lock_cleared <- FALSE
+          for (i in seq_len(6)) {
+            Sys.sleep(0.5)
+            if (!file.exists(lock_path)) {
+              lock_cleared <- TRUE
+              break
+            }
+          }
+          if (!lock_cleared) {
+            showNotification(
+              "Session file is currently being written. Please try again shortly.",
+              type = "warning"
+            )
+            return(NULL)
+          }
+        }
 
         if (tolower(file_ext) == "rds") {
           session_data <- readRDS(file_path)
@@ -289,7 +338,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     output$export_rr <- downloadHandler(
       filename = function() {
         req(input$export_rr_select)
-        paste0(input$export_rr_select, ".", input$export_rr_format)
+        paste0(sanitize_filename(input$export_rr_select), ".", input$export_rr_format)
       },
       content = function(file) {
         req(input$export_rr_select)
@@ -325,7 +374,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     output$export_clus <- downloadHandler(
       filename = function() {
         req(input$export_clus_select)
-        paste0(input$export_clus_select, ".", input$export_clus_format)
+        paste0(sanitize_filename(input$export_clus_select), ".", input$export_clus_format)
       },
       content = function(file) {
         req(input$export_clus_select)
@@ -360,11 +409,14 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     # Export all results as ZIP
     output$export_all <- downloadHandler(
       filename = function() {
-        paste0("richstudio_export_", format(Sys.Date(), "%Y%m%d"), ".zip")
+        paste0("richstudio_export_", format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
+               paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = ""), ".zip")
       },
       content = function(file) {
-        # Create temporary directory
-        temp_dir <- tempdir()
+        # Create a unique temporary directory per export to avoid collisions
+        temp_dir <- tempfile(pattern = "richstudio_export_")
+        dir.create(temp_dir, showWarnings = FALSE, recursive = TRUE)
+        on.exit(unlink(temp_dir, recursive = TRUE), add = TRUE)
         export_dir <- file.path(temp_dir, "richstudio_export")
         dir.create(export_dir, showWarnings = FALSE, recursive = TRUE)
 
@@ -404,11 +456,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           }
         }
 
-        # Create ZIP file
+        # Create ZIP file (use on.exit to safely restore working directory)
         old_wd <- getwd()
+        on.exit(setwd(old_wd), add = TRUE)
         setwd(temp_dir)
         zip::zip(file, files = "richstudio_export", recurse = TRUE)
-        setwd(old_wd)
 
         showNotification("All results exported!", type = "message")
       }

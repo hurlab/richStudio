@@ -90,7 +90,9 @@ merge_genesets <- function(genesets) {
     stop("No genesets provided for merging")
   }
 
-  genesets <- lapply(genesets, normalize_geneset)
+  for (i in seq_along(genesets)) {
+    genesets[[i]] <- normalize_geneset(genesets[[i]])
+  }
 
   if (is.null(names(genesets))) {
     names(genesets) <- paste0("geneset_", seq_along(genesets))
@@ -132,44 +134,56 @@ merge_genesets <- function(genesets) {
     colnames(genesets[[i]]) <- non_term_cols
   }
 
-  # Initialize merged_gs with first geneset
-  merged_gs <- genesets[[1]]
+  # Save geneset names before merge (needed for column lookups after rm)
+  gs_names_clean <- clean_names
 
   # Merge genesets
-  if (length(genesets) > 1) {
-    for (i in seq_len(length(genesets) - 1) + 1) {
-      merged_gs <- base::merge(merged_gs, genesets[[i]], by = 'Term', all = TRUE)
+  if (length(genesets) == 1) {
+    merged_gs <- genesets[[1]]
+  } else {
+    merged_gs <- Reduce(function(a, b) base::merge(a, b, by = 'Term', all = TRUE), genesets)
+  }
+  # Free original geneset copies now that merge is complete
+  rm(genesets)
+
+  # Combine unique 'GeneID' elements
+  geneid_cols <- paste('GeneID', gs_names_clean, sep = "_")
+  geneid_cols_present <- geneid_cols[geneid_cols %in% colnames(merged_gs)]
+  if (length(geneid_cols_present) > 0) {
+    if (length(geneid_cols_present) == 1) {
+      merged_gs$GeneID <- merged_gs[[geneid_cols_present]]
+    } else {
+      # Paste all GeneID columns, then deduplicate per row
+      raw_ids <- do.call(paste, c(merged_gs[geneid_cols_present], sep = ","))
+      merged_gs$GeneID <- vapply(strsplit(raw_ids, ","), function(x) {
+        paste(unique(x[!is.na(x) & x != "NA" & nzchar(x)]), collapse = ",")
+      }, character(1))
     }
   }
 
-  # Combine unique 'GeneID' elements
-  geneid_cols <- paste('GeneID', names(genesets), sep = "_")
-  geneid_cols_present <- geneid_cols[geneid_cols %in% colnames(merged_gs)]
-  if (length(geneid_cols_present) > 0) {
-    merged_gs$GeneID <- apply(merged_gs[, geneid_cols_present, drop = FALSE], 1, function(x) {
-      paste(unique(na.omit(unlist(strsplit(as.character(x), ",")))), collapse = ',')
-    })
-  }
-
   # Combine unique 'Annot' elements
-  annot_cols <- paste('Annot', names(genesets), sep = "_")
+  annot_cols <- paste('Annot', gs_names_clean, sep = "_")
   annot_cols_present <- annot_cols[annot_cols %in% colnames(merged_gs)]
   if (length(annot_cols_present) > 0) {
-    merged_gs$Annot <- apply(merged_gs[, annot_cols_present, drop = FALSE], 1, function(x) {
-      paste(unique(na.omit(as.character(x))), collapse = ',')
-    })
+    if (length(annot_cols_present) == 1) {
+      merged_gs$Annot <- merged_gs[[annot_cols_present]]
+    } else {
+      merged_gs$Annot <- apply(merged_gs[, annot_cols_present, drop = FALSE], 1, function(x) {
+        paste(unique(na.omit(as.character(x))), collapse = ',')
+      })
+    }
     merged_gs <- dplyr::select(merged_gs, -dplyr::any_of(annot_cols_present))
   }
 
   # Average Pvalue
-  pval_cols <- paste('Pvalue', names(genesets), sep = "_")
+  pval_cols <- paste('Pvalue', gs_names_clean, sep = "_")
   pval_cols_present <- pval_cols[pval_cols %in% colnames(merged_gs)]
   if (length(pval_cols_present) > 0) {
     merged_gs$Pvalue <- rowMeans(merged_gs[, pval_cols_present, drop = FALSE], na.rm = TRUE)
   }
 
   # Average Padj
-  padj_cols <- paste('Padj', names(genesets), sep = "_")
+  padj_cols <- paste('Padj', gs_names_clean, sep = "_")
   padj_cols_present <- padj_cols[padj_cols %in% colnames(merged_gs)]
   if (length(padj_cols_present) > 0) {
     merged_gs$Padj <- rowMeans(merged_gs[, padj_cols_present, drop = FALSE], na.rm = TRUE)
@@ -310,6 +324,22 @@ cluster_richR <- function(merged_gs, params, gs_names) {
     clustered_gs <- clustered_gs[order(as.numeric(clustered_gs$AnnotationCluster)), ]
   }
 
+  # For single enrichment results, merged_gs has Pvalue/Padj/GeneID directly
+  # (not Pvalue_name/Padj_name). Add suffixed copies so get_cluster_list_richR
+  # and downstream visualization (comprehensive_hmap) work correctly.
+  if (!is.null(gs_names) && length(gs_names) == 1) {
+    gs <- gs_names[1]
+    if ("Pvalue" %in% colnames(merged_gs) && !paste0("Pvalue_", gs) %in% colnames(merged_gs)) {
+      merged_gs[[paste0("Pvalue_", gs)]] <- merged_gs$Pvalue
+    }
+    if ("Padj" %in% colnames(merged_gs) && !paste0("Padj_", gs) %in% colnames(merged_gs)) {
+      merged_gs[[paste0("Padj_", gs)]] <- merged_gs$Padj
+    }
+    if ("GeneID" %in% colnames(merged_gs) && !paste0("GeneID_", gs) %in% colnames(merged_gs)) {
+      merged_gs[[paste0("GeneID_", gs)]] <- merged_gs$GeneID
+    }
+  }
+
   # Build cluster list with term details
   cluster_list <- get_cluster_list_richR(clustered_gs, merged_gs, gs_names)
 
@@ -352,17 +382,74 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
   }
   enrichment_list <- lapply(enrichment_list, normalize_geneset)
 
-  # Perform clustering
-  cluster_result <- richCluster::cluster(
-    enrichment_results = enrichment_list,
-    df_names = names(enrichment_list),
-    min_terms = min_terms,
-    min_value = min_value,
-    distance_metric = distance_metric,
-    distance_cutoff = distance_cutoff,
-    linkage_method = linkage_method,
-    linkage_cutoff = linkage_cutoff
-  )
+  # Pre-filter by Pvalue before passing to richCluster
+  enrichment_list <- lapply(enrichment_list, function(df) {
+    if ("Pvalue" %in% names(df)) {
+      df[!is.na(df$Pvalue) & df$Pvalue < min_value, , drop = FALSE]
+    } else {
+      df
+    }
+  })
+  # Remove any empty dataframes after filtering
+  enrichment_list <- enrichment_list[vapply(enrichment_list, function(df) nrow(df) > 0, logical(1))]
+  if (length(enrichment_list) == 0) {
+    return(list(
+      cluster_df = data.frame(),
+      cluster_summary = data.frame(),
+      raw_result = NULL,
+      distance_matrix = NULL
+    ))
+  }
+
+  # Workaround for richCluster::cluster() bug: when only 1 enrichment result
+  # is provided, merge_enrichment_results renames Pvalue->Pvalue_1 but never
+  # creates a merged Pvalue column, causing filter(Pvalue < min_value) to fail.
+  # Fix: bypass richCluster::cluster() entirely for single results and call
+  # runRichCluster directly with pre-merged data.
+  if (length(enrichment_list) == 1) {
+    single_df <- enrichment_list[[1]]
+    term_vec <- single_df$Term
+    geneID_vec <- single_df$GeneID
+
+    rc_result <- richCluster::runRichCluster(
+      terms = term_vec,
+      geneIDs = geneID_vec,
+      distanceMetric = distance_metric,
+      distanceCutoff = distance_cutoff,
+      linkageMethod = linkage_method,
+      linkageCutoff = linkage_cutoff
+    )
+
+    # Build merged_df with Pvalue/GeneID columns (what cluster() would produce)
+    merged_df <- single_df
+    cluster_result <- rc_result
+    cluster_result$df_list <- enrichment_list
+    cluster_result$merged_df <- merged_df
+    cluster_result$cluster_options <- list(
+      min_terms = min_terms, min_value = min_value,
+      distance_metric = distance_metric, distance_cutoff = distance_cutoff,
+      linkage_method = linkage_method, linkage_cutoff = linkage_cutoff
+    )
+    cluster_result$df_names <- names(enrichment_list)
+    cluster_result$final_clusters <- richCluster::filter_clusters(
+      cluster_result$all_clusters, min_terms
+    )
+    cluster_result$cluster_df <- richCluster:::make_full_clusterdf(
+      cluster_result$final_clusters, merged_df
+    )
+  } else {
+    # For multiple results, richCluster::cluster() works correctly
+    cluster_result <- richCluster::cluster(
+      enrichment_results = enrichment_list,
+      df_names = names(enrichment_list),
+      min_terms = min_terms,
+      min_value = 1,
+      distance_metric = distance_metric,
+      distance_cutoff = distance_cutoff,
+      linkage_method = linkage_method,
+      linkage_cutoff = linkage_cutoff
+    )
+  }
 
   # Convert to standard format
   cluster_df <- cluster_result$cluster_df
@@ -379,6 +466,21 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
 
   # Add geneset-specific columns if gs_names provided
   if (!is.null(gs_names) && length(gs_names) > 0) {
+    # For single enrichment results, merged_gs has Pvalue/Padj/GeneID directly
+    # (not Pvalue_name/Padj_name). Add suffixed copies so add_geneset_columns
+    # and downstream visualization (comprehensive_hmap) work correctly.
+    if (length(gs_names) == 1) {
+      gs <- gs_names[1]
+      if ("Pvalue" %in% colnames(merged_gs) && !paste0("Pvalue_", gs) %in% colnames(merged_gs)) {
+        merged_gs[[paste0("Pvalue_", gs)]] <- merged_gs$Pvalue
+      }
+      if ("Padj" %in% colnames(merged_gs) && !paste0("Padj_", gs) %in% colnames(merged_gs)) {
+        merged_gs[[paste0("Padj_", gs)]] <- merged_gs$Padj
+      }
+      if ("GeneID" %in% colnames(merged_gs) && !paste0("GeneID_", gs) %in% colnames(merged_gs)) {
+        merged_gs[[paste0("GeneID_", gs)]] <- merged_gs$GeneID
+      }
+    }
     cluster_df <- add_geneset_columns(cluster_df, merged_gs, gs_names)
   }
 
@@ -420,15 +522,52 @@ cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
   }
   enrichment_list <- lapply(enrichment_list, normalize_geneset)
 
-  # Perform DAVID clustering
-  cluster_result <- richCluster::david_cluster(
-    enrichment_results = enrichment_list,
-    df_names = names(enrichment_list),
-    similarity_threshold = similarity_threshold,
-    initial_group_membership = initial_group_membership,
-    final_group_membership = final_group_membership,
-    multiple_linkage_threshold = multiple_linkage_threshold
-  )
+  # Workaround for richCluster::david_cluster() bug: when only 1 enrichment
+  # result is provided, merge_enrichment_results renames Pvalue->Pvalue_1 but
+  # never creates a merged Pvalue column, causing downstream failures.
+  # Fix: bypass david_cluster() for single results and call
+  # runDavidClustering directly with pre-merged data.
+  if (length(enrichment_list) == 1) {
+    single_df <- enrichment_list[[1]]
+    term_vec <- single_df$Term
+    geneID_vec <- single_df$GeneID
+
+    rc_result <- richCluster:::runDavidClustering(
+      term_vec,
+      geneID_vec,
+      similarity_threshold,
+      initial_group_membership,
+      final_group_membership,
+      multiple_linkage_threshold
+    )
+
+    # Build merged_df with Pvalue/GeneID columns (what david_cluster() would produce)
+    merged_df <- single_df
+    cluster_result <- rc_result
+    cluster_result$df_list <- enrichment_list
+    cluster_result$merged_df <- merged_df
+    cluster_result$cluster_options <- list(
+      similarity_threshold = similarity_threshold,
+      initial_group_membership = initial_group_membership,
+      final_group_membership = final_group_membership,
+      multiple_linkage_threshold = multiple_linkage_threshold
+    )
+    cluster_result$df_names <- names(enrichment_list)
+    cluster_result$final_clusters <- rc_result$clusters
+    cluster_result$cluster_df <- richCluster:::make_full_clusterdf(
+      cluster_result$final_clusters, merged_df
+    )
+  } else {
+    # For multiple results, richCluster::david_cluster() works correctly
+    cluster_result <- richCluster::david_cluster(
+      enrichment_results = enrichment_list,
+      df_names = names(enrichment_list),
+      similarity_threshold = similarity_threshold,
+      initial_group_membership = initial_group_membership,
+      final_group_membership = final_group_membership,
+      multiple_linkage_threshold = multiple_linkage_threshold
+    )
+  }
 
   # Convert to standard format
   cluster_df <- cluster_result$cluster_df
@@ -444,6 +583,21 @@ cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
 
   # Add geneset-specific columns if gs_names provided
   if (!is.null(gs_names) && length(gs_names) > 0) {
+    # For single enrichment results, merged_gs has Pvalue/Padj/GeneID directly
+    # (not Pvalue_name/Padj_name). Add suffixed copies so add_geneset_columns
+    # and downstream visualization (comprehensive_hmap) work correctly.
+    if (length(gs_names) == 1) {
+      gs <- gs_names[1]
+      if ("Pvalue" %in% colnames(merged_gs) && !paste0("Pvalue_", gs) %in% colnames(merged_gs)) {
+        merged_gs[[paste0("Pvalue_", gs)]] <- merged_gs$Pvalue
+      }
+      if ("Padj" %in% colnames(merged_gs) && !paste0("Padj_", gs) %in% colnames(merged_gs)) {
+        merged_gs[[paste0("Padj_", gs)]] <- merged_gs$Padj
+      }
+      if ("GeneID" %in% colnames(merged_gs) && !paste0("GeneID_", gs) %in% colnames(merged_gs)) {
+        merged_gs[[paste0("GeneID_", gs)]] <- merged_gs$GeneID
+      }
+    }
     cluster_df <- add_geneset_columns(cluster_df, merged_gs, gs_names)
   }
 

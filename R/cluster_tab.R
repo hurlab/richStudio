@@ -331,59 +331,51 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       req(input$selected_rrs)
       req(input$cluster_name)
 
-      withProgress(message = "Clustering enrichment results...", value = 0, {
-        # Collect selected enrichment results
-        selected_rrs <- as.vector(input$selected_rrs)
-        genesets <- list()
-        for (rr_name in selected_rrs) {
-          genesets[[rr_name]] <- u_rrdfs[[rr_name]]
-        }
+      # 1. Collect ALL reactive inputs before future
+      selected_rrs <- as.vector(input$selected_rrs)
+      cluster_name <- input$cluster_name
+      method <- input$clustering_method
+      params <- build_cluster_params(input, method)
+
+      # Collect enrichment dataframes from reactive values
+      genesets <- list()
+      for (rr_name in selected_rrs) {
+        genesets[[rr_name]] <- u_rrdfs[[rr_name]]
+      }
+
+      # 2. Clear stale intermediate results from previous runs
+      # This prevents orphaned entries from accumulating across clustering sessions
+      intermed_keys <- c("DistanceMatrix", "cluster_summary", "cluster_df", "method", "params")
+      for (key in intermed_keys) {
+        clus_intermed[[key]] <- NULL
+      }
+
+      # 3. Disable button and show notification
+      shinyjs::disable("cluster")
+      showNotification("Clustering running in background...",
+                       id = "cluster_progress", duration = NULL, type = "message")
+
+      # 4. Launch future with ALL computation
+      p <- future::future({
         gs_names <- names(genesets)
 
-        incProgress(0.1, detail = "Merging genesets...")
-
-        # Merge genesets (used for richR and summaries)
-        merged_gs <- tryCatch({
-          if (length(genesets) == 1) {
-            normalize_geneset(genesets[[1]])
-          } else {
-            merge_genesets(genesets)
-          }
-        }, error = function(e) {
-          showNotification(paste("Error merging genesets:", e$message), type = "error")
-          return(NULL)
-        })
-
-        if (is.null(merged_gs)) return()
-
-        incProgress(0.3, detail = "Running clustering algorithm...")
-
-        # Build parameters based on method
-        method <- input$clustering_method
-        params <- build_cluster_params(input, method)
+        # Merge genesets
+        merged_gs <- if (length(genesets) == 1) {
+          normalize_geneset(genesets[[1]])
+        } else {
+          merge_genesets(genesets)
+        }
 
         # Run clustering
-        cluster_result <- tryCatch({
-          perform_clustering(merged_gs, method = method, params = params, gs_names = gs_names, raw_genesets = genesets)
-        }, error = function(e) {
-          showNotification(paste("Clustering failed:", e$message), type = "error")
-          return(NULL)
-        })
+        cluster_result <- perform_clustering(merged_gs, method = method,
+                                             params = params, gs_names = gs_names,
+                                             raw_genesets = genesets)
 
-        if (is.null(cluster_result)) return()
-
-        incProgress(0.6, detail = "Processing results...")
-
-        # Store results
-        cluster_name <- input$cluster_name
-
-        incProgress(0.7, detail = "Assigning representative terms...")
-
-        # Store cluster dataframe (for visualization)
+        # Process results (all pure data manipulation, no reactive access)
         cluster_df <- cluster_result$cluster_df
+
         if (!is.null(cluster_df) && nrow(cluster_df) > 0) {
           # Add Representative_Term for visualization compatibility
-          # Handle case where Padj column might not exist or have all NAs
           if ("Padj" %in% colnames(cluster_df)) {
             cluster_df <- cluster_df %>%
               dplyr::group_by(Cluster) %>%
@@ -413,24 +405,32 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
               ) %>%
               dplyr::ungroup()
           } else {
-            # No p-value column, just use first term
             cluster_df <- cluster_df %>%
               dplyr::group_by(Cluster) %>%
               dplyr::mutate(Representative_Term = Term[1]) %>%
               dplyr::ungroup()
           }
 
-          incProgress(0.8, detail = "Storing results...")
+          # Build summary data (one row per cluster) for visualization heatmap
+          pval_padj_cols <- grep("^(Pvalue_|Padj_)", colnames(cluster_df), value = TRUE)
+          summary_cols <- c("Cluster", "Representative_Term", pval_padj_cols)
+          available_summary_cols <- intersect(summary_cols, colnames(cluster_df))
 
-          u_clusdfs[[cluster_name]] <- cluster_df
-          u_clusnames$labels <- unique(c(u_clusnames$labels, cluster_name))
+          if (length(available_summary_cols) >= 2) {
+            summary_df <- cluster_df %>%
+              dplyr::group_by(Cluster) %>%
+              dplyr::slice(1) %>%
+              dplyr::ungroup()
+            summary_df <- as.data.frame(summary_df[, available_summary_cols, drop = FALSE])
+          } else {
+            summary_df <- cluster_df %>%
+              dplyr::group_by(Cluster) %>%
+              dplyr::slice(1) %>%
+              dplyr::ungroup()
+            summary_df <- as.data.frame(summary_df[, intersect(c("Cluster", "Representative_Term"), colnames(cluster_df)), drop = FALSE])
+          }
 
-          # Store cluster list (detailed per-term info)
-          u_cluslists[[cluster_name]] <- cluster_df
-
-          incProgress(0.9, detail = "Finalizing...")
-
-          # Update big_clusdf for tracking
+          # Build tracking row
           new_row <- data.frame(
             name = cluster_name,
             method = method,
@@ -439,37 +439,77 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
             stringsAsFactors = FALSE
           )
 
-          if (is.null(u_big_clusdf[['df']])) {
-            u_big_clusdf[['df']] <- new_row
-          } else {
-            u_big_clusdf[['df']] <- rbind(u_big_clusdf[['df']], new_row)
-          }
-
-          # Store intermediate results if available
-          if (!is.null(cluster_result$distance_matrix)) {
-            clus_intermed[['DistanceMatrix']] <- cluster_result$distance_matrix
-          }
-          clus_intermed[['cluster_summary']] <- cluster_result$cluster_summary
-          clus_intermed[['cluster_df']] <- cluster_df
-          clus_intermed[['method']] <- method
-          clus_intermed[['params']] <- params
-
-          incProgress(1, detail = "Done!")
-          showNotification(
-            paste("Clustering complete!", length(unique(cluster_df$Cluster)), "clusters found with",
-                  nrow(cluster_df), "terms"),
-            type = "message"
+          list(
+            success = TRUE,
+            cluster_name = cluster_name,
+            summary_df = summary_df,
+            cluster_df = as.data.frame(cluster_df),
+            cluster_result = cluster_result,
+            method = method,
+            params = params,
+            new_row = new_row,
+            gs_names = gs_names
           )
-
-          # Show results boxes (use ns() for namespaced IDs)
-          shinyjs::show(id = "cluster_results_box", anim = TRUE)
-          shinyjs::show(id = "cluster_intermediate_box", anim = TRUE)
-
         } else {
-          showNotification("No clusters found with current parameters. Try adjusting thresholds.",
-                          type = "warning")
+          list(success = FALSE)
         }
+      }, seed = TRUE)
+
+      # 5. Update reactive values on success
+      promises::then(p,
+        onFulfilled = function(result) {
+          if (result$success) {
+            u_clusdfs[[result$cluster_name]] <- result$summary_df
+            u_clusnames$labels <- unique(c(u_clusnames$labels, result$cluster_name))
+            u_cluslists[[result$cluster_name]] <- result$cluster_df
+
+            # Update big_clusdf for tracking
+            if (is.null(u_big_clusdf[['df']])) {
+              u_big_clusdf[['df']] <- result$new_row
+            } else {
+              u_big_clusdf[['df']] <- rbind(u_big_clusdf[['df']], result$new_row)
+            }
+
+            # Store intermediate results
+            if (!is.null(result$cluster_result$distance_matrix)) {
+              clus_intermed[['DistanceMatrix']] <- result$cluster_result$distance_matrix
+            }
+            clus_intermed[['cluster_summary']] <- result$cluster_result$cluster_summary
+            clus_intermed[['cluster_df']] <- result$cluster_df
+            clus_intermed[['method']] <- result$method
+            clus_intermed[['params']] <- result$params
+
+            removeNotification("cluster_progress")
+            showNotification(
+              paste("Clustering complete!", result$new_row$n_clusters,
+                    "clusters found with", result$new_row$n_terms, "terms"),
+              type = "message"
+            )
+
+            shinyjs::show(id = "cluster_results_box", anim = TRUE)
+            shinyjs::show(id = "cluster_intermediate_box", anim = TRUE)
+          } else {
+            removeNotification("cluster_progress")
+            showNotification(
+              "No clusters found with current parameters. Try adjusting thresholds.",
+              type = "warning"
+            )
+          }
+        },
+        onRejected = function(err) {
+          removeNotification("cluster_progress")
+          showNotification(paste("Clustering error:", conditionMessage(err)),
+                           type = "error", duration = 10)
+        }
+      )
+
+      # 6. Always re-enable button
+      promises::finally(p, function() {
+        shinyjs::enable("cluster")
       })
+
+      # Return NULL so Shiny knows this observer is async
+      NULL
     })
 
     # Cluster summary table output
@@ -491,11 +531,22 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       info
     })
 
-    # Distance matrix table
+    # Distance matrix table (cap at 200x200 to prevent browser crash)
     output$distanceMatrix_table <- DT::renderDT({
       req(clus_intermed[['DistanceMatrix']])
-      clus_intermed[['DistanceMatrix']]
-    }, options = list(pageLength = 10, scrollX = TRUE))
+      dm <- clus_intermed[['DistanceMatrix']]
+      max_dim <- 200
+      if (nrow(dm) > max_dim || ncol(dm) > max_dim) {
+        dm <- dm[seq_len(min(nrow(dm), max_dim)), seq_len(min(ncol(dm), max_dim)), drop = FALSE]
+        showNotification(
+          paste("Distance matrix truncated to", max_dim, "x", max_dim,
+                "for display. Full matrix is", nrow(clus_intermed[['DistanceMatrix']]),
+                "x", ncol(clus_intermed[['DistanceMatrix']])),
+          type = "warning"
+        )
+      }
+      round(as.data.frame(dm), 4)
+    }, options = list(pageLength = 10, scrollX = TRUE), server = TRUE)
 
     # Cluster details table
     output$cluster_details_table <- DT::renderDT({

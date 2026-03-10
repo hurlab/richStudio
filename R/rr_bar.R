@@ -1,17 +1,24 @@
-# Function to create bar plot from enrichment result
-
-# example
-# x <- read.delim("data/try-this/GO_HF12wk_vs_WT12wk.txt")
-# y <- read.delim("data/try-this/GO_WT36wk_vs_WT12wk.txt")
-# xylist <- list(x, y)
-
-# testnetmap <- ggnetwork(x, gene=x$GeneID)
-# ggtestnetmap <- ggplotly(testnetmap)
-
-# ggdot <- ggdot(x)
-
-
-# x: rich result dataframe
+#' Create a bar plot from enrichment results
+#'
+#' Generates an interactive bar plot (via plotly) from a functional enrichment
+#' result dataframe. Can display either rich scores or -log10 transformed
+#' p-values for the top enriched terms.
+#'
+#' This function follows the \code{rr_} naming convention used across richStudio
+#' plot functions, where \code{rr} stands for "rich result" (enrichment result).
+#' The name is referenced by Shiny UI modules and must not be renamed without
+#' updating all call sites.
+#'
+#' @param x A data frame of enrichment results containing columns: Term,
+#'   Significant, Annotated, and the column specified by \code{value_type}.
+#' @param top Integer. Maximum number of top terms to display. Default 25.
+#' @param pvalue Numeric. P-value cutoff for filtering terms. Default 0.05.
+#' @param value_type Character. Column name for significance values, typically
+#'   \code{"Padj"} or \code{"Pvalue"}. Default \code{"Padj"}.
+#' @param view Character. Plot view mode: \code{"rich"} for rich score or
+#'   \code{"value"} for -log10 transformed significance values. Default
+#'   \code{"rich"}.
+#' @return A plotly bar plot object.
 rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
   
   x <- filter(x, x[, value_type]<pvalue)
@@ -23,7 +30,7 @@ rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
   
   # rename padj/pval col to "final_value"
   suppressWarnings({
-    x <- dplyr::rename(x, final_value = any_of(value_type), value_type)
+    x <- dplyr::rename(x, final_value = any_of(value_type))
   })
   
   x$final_value <- -log10(as.numeric(x$final_value))

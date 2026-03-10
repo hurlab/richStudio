@@ -195,14 +195,15 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
     # Update heatmap when cluster result selection changes
     observeEvent(input$clusdf_select, {
       req(input$clusdf_select)
-      
+
       df <- u_clusdfs[[input$clusdf_select]]
+      req(df, nrow(df) > 0)
       term_vec_reactive(unique(df$Representative_Term))
-      
-      df <- u_clusdfs[[input$clusdf_select]]
+
       cluslist_df <- u_cluslists[[input$clusdf_select]]
-      
-      hmap <- comprehensive_hmap(final_data=df, cluster_list=cluslist_df, 
+      req(cluslist_df, nrow(cluslist_df) > 0)
+
+      hmap <- comprehensive_hmap(final_data=df, cluster_list=cluslist_df,
                                  value_type=input$big_value_type, value_by=input$value_by)
       
       output$clusdf_hmap <- renderPlotly({
@@ -212,10 +213,11 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
     
     # plot indiv cluster hmap
     plot_cluslist_hmap <- reactive({
-      req(input$indiv_clus_select)
-      
+      req(input$indiv_clus_select, input$clusdf_select)
+
       df <- u_clusdfs[[input$clusdf_select]]
       cluslist_df <- u_cluslists[[input$clusdf_select]]
+      req(df, cluslist_df)
       
       hmap <- cluster_hmap(cluster_list=cluslist_df, term_vec=input$indiv_clus_select, 
                            final_data=df, value_type=input$small_value_type)
@@ -230,6 +232,7 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
     cluslist_to_table <- reactive ({
       req(input$cluslist_select)
       df <- u_cluslists[[input$cluslist_select]]
+      req(df)
       return(df)
     })
     # Output cluslist table

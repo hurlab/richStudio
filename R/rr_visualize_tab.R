@@ -377,6 +377,7 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     get_rr_table <- reactive ({
       req(input$select_table)
       df <- u_rrdfs[[input$select_table]]
+      req(df)
       return(df)
     })
     output$rr_table <- DT::renderDT(
@@ -386,6 +387,7 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     get_rr_barplot <- reactive ({
       req(input$select_bar)
       df <- u_rrdfs[[input$select_bar]]
+      req(df, nrow(df) > 0)
       mybar <- rr_bar(x=df, top=input$bar_nterms, pvalue=input$bar_pvalue, value_type=input$bar_valtype, view=input$bar_type)
       return(mybar)
     })
@@ -396,6 +398,7 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     get_rr_dotplot <- reactive ({
       req(input$select_dot)
       df <- u_rrdfs[[input$select_dot]]
+      req(df, nrow(df) > 0)
       mydot <- rr_dot(x=df, top=input$dot_nterms, value_cutoff=input$dot_cutoff, value_type=input$dot_valtype)
       return(mydot)
     })
@@ -406,17 +409,13 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     get_rr_network <- reactive ({
       req(input$select_net)
       df <- u_rrdfs[[input$select_net]]
+      req(df, nrow(df) > 0)
       mynet <- rr_network(rr=df, deg=NULL)
       return(mynet)
     })
     output$network <- renderPlot ({
       get_rr_network()
     })
-
-    output$dotplot <- renderPlotly ({
-      get_rr_dotplot()
-    })
-
 
     # Enrichment Result Heatmaps
     # Top Terms

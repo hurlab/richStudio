@@ -138,15 +138,15 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     u_big_rrdf_reactive <- reactive(u_big_rrdf)
 
     # Tab-local reactive objects
-    deg_colnames_reactive <- reactiveVal(NULL)
+    deg_colnames_reactive <- shiny::reactiveVal(NULL)
 
     # Update select inputs based on # file inputs
     observe ({
-      updateSelectInput(session=getDefaultReactiveDomain(), 'deg_table_select', choices= u_degnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'degs_to_enrich', choices= u_degnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'deg_header_select', choices= deg_colnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'deg_filter_by', choices= deg_colnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'rr_table_select', choices= u_rrnames_reactive())
+      updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'deg_table_select', choices= u_degnames_reactive())
+      updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'degs_to_enrich', choices= u_degnames_reactive())
+      updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'deg_header_select', choices= deg_colnames_reactive())
+      updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'deg_filter_by', choices= deg_colnames_reactive())
+      updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'rr_table_select', choices= u_rrnames_reactive())
     })
 
     observe ({
@@ -171,7 +171,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     })
 
     observeEvent(input$deglist_help, {
-      showModal(modalDialog(
+      shiny::showModal(shiny::modalDialog(
         title="Help",
         "'GeneID_header' value indicates the column name containing relevant geneID
         information, and 'has_expr_data' value indicates whether relevant gene expression
@@ -179,7 +179,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       ))
     })
     observeEvent(input$rrlist_help, {
-      showModal(modalDialog(
+      shiny::showModal(shiny::modalDialog(
         title="Help",
         "If annotation, ontology, keytype, or species data is marked with '?', you
         can update it by double-clicking on the relevant cell. If you started from
@@ -192,6 +192,16 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     # When deg upload button clicked
     observeEvent(input$deg_files, {
       for (i in seq_along(input$deg_files$name)) {
+        # Validate file size before processing
+        file_size_mb <- file.info(input$deg_files$datapath[i])$size / (1024 * 1024)
+        if (file_size_mb > 100) {
+          showNotification(
+            paste0("File '", input$deg_files$name[i], "' too large (max 100MB)"),
+            type = "error"
+          )
+          next
+        }
+
         lab <- input$deg_files$name[i]
 
         ext <- tools::file_ext(input$deg_files$name[i])
@@ -267,7 +277,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       editable = list(target='cell', disable=list(columns = c(3)))
     )
     # Code from https://github.com/rstudio/DT/pull/480
-    proxy = dataTableProxy('deg_list_table')
+    proxy <- DT::dataTableProxy('deg_list_table')
     observeEvent(input$deg_list_table_cell_edit, {
       info = input$deg_list_table_cell_edit
       # Debug: str(info)
@@ -321,6 +331,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     deg_to_table <- reactive ({
       req(input$deg_table_select)
       df <- u_degdfs[[input$deg_table_select]]
+      req(df)
       #df <- round_tbl(df, 3)
       return(df)
     })
@@ -330,31 +341,20 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       deg_to_table()
     })
 
-    # observeEvent(input$deg_table_select, {
-    #   req(input$deg_table_select)
-    #   df <- u_degdfs[[input$deg_table_select]]
-    #   deg_colnames_reactive(colnames(df))
-    #   if (!is.null(input$deg_filter_cutoff)) {
-    #     df <- tryCatch ({
-    #       rm_rows <- df[input$deg_filter_by] < input$deg_filter_cutoff
-    #       df <- df[!rm_rows, ] # Filter out rows
-    #     }, error = function(e) {
-    #       showModal(modalDialog(
-    #         title = "Input error",
-    #         e$message,
-    #         easyClose = TRUE
-    #       ))
-    #       return(df)
-    #     })
-    #   }
-    #   deg_to_table(df)
-    # })
+    # Update column names when DEG table selection changes
+    observeEvent(input$deg_table_select, {
+      req(input$deg_table_select)
+      df <- u_degdfs[[input$deg_table_select]]
+      if (!is.null(df)) {
+        deg_colnames_reactive(colnames(df))
+      }
+    })
 
     # download deg
-    output$download_deg <- downloadHandler(
+    output$download_deg <- shiny::downloadHandler(
       filename = function() {
         req(input$deg_table_select)
-        paste0(input$deg_table_select, input$deg_export_type)
+        paste0(sanitize_filename(input$deg_table_select), input$deg_export_type)
       },
       content = function(file) {
         ext_type <- input$deg_export_type
@@ -375,48 +375,89 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     observeEvent(input$enrich_deg, {
       req(input$degs_to_enrich)
 
-      withProgress(message="Enriching DEG sets...", value=0, {
+      # 1. Collect ALL reactive inputs BEFORE entering future
+      deg_inputs <- lapply(input$degs_to_enrich, function(name) {
+        x <- u_degdfs[[name]]
+        big_df <- u_big_degdf[['df']]
+        gene_hdr <- big_df[big_df$name %in% name, "GeneID_header"]
+        list(name = name, df = x, gene_header = gene_hdr)
+      })
+      species_val <- input$species_select
+      anntype_val <- input$anntype_select
+      keytype_val <- input$keytype_select
+      ontology_val <- input$ont_select
+      cutoff_val <- input$deg_filter_cutoff
+      if (is.null(cutoff_val) || is.na(cutoff_val)) cutoff_val <- 0.05
 
-        for (i in seq_along(input$degs_to_enrich)) {
-          x <- u_degdfs[[input$degs_to_enrich[i]]]
+      # 2. Disable button and show notification
+      shinyjs::disable("enrich_deg")
+      showNotification("Enrichment analysis running in background...",
+                       id = "enrich_progress", duration = NULL, type = "message")
 
-          lab <- input$degs_to_enrich[i]
-          big_degdf <- u_big_degdf[['df']]
+      # 3. Launch future (no reactive reads inside)
+      p <- future::future({
+        results <- list()
+        for (i in seq_along(deg_inputs)) {
+          inp <- deg_inputs[[i]]
+          x_use <- inp$df
 
-          gene_header <- big_degdf[big_degdf$name %in% lab, ]
-          gene_header <- gene_header$GeneID_header
-
-          # Basic filtering: if padj/pvalue columns exist, filter to significant genes
-          x_use <- x
-          cutoff <- input$deg_filter_cutoff
-          if (is.null(cutoff) || is.na(cutoff)) cutoff <- 0.05
-          if ("padj" %in% colnames(x_use)) {
-            x_use <- x_use[!is.na(x_use$padj) & x_use$padj < cutoff, , drop = FALSE]
-          } else if ("pvalue" %in% colnames(x_use)) {
-            x_use <- x_use[!is.na(x_use$pvalue) & x_use$pvalue < cutoff, , drop = FALSE]
+          # Case-insensitive column matching for filtering
+          col_lower <- tolower(colnames(x_use))
+          padj_idx <- which(col_lower == "padj")
+          pval_idx <- which(col_lower == "pvalue")
+          if (length(padj_idx) > 0) {
+            padj_col <- colnames(x_use)[padj_idx[1]]
+            x_use <- x_use[!is.na(x_use[[padj_col]]) & x_use[[padj_col]] < cutoff_val, , drop = FALSE]
+          } else if (length(pval_idx) > 0) {
+            pval_col <- colnames(x_use)[pval_idx[1]]
+            x_use <- x_use[!is.na(x_use[[pval_col]]) & x_use[[pval_col]] < cutoff_val, , drop = FALSE]
           }
-          # If filtering removed everything, fall back to unfiltered with a note
-          if (nrow(x_use) == 0) {
-            showNotification(paste("No genes passed the cutoff for", lab, "- using all genes."), type = "warning")
-            x_use <- x
-          }
+          if (nrow(x_use) == 0) x_use <- inp$df
 
-          # enrich
-          df <- shiny_enrich(x=x_use, header=gene_header, species=input$species_select,
-                             anntype=as.character(input$anntype_select), keytype=as.character(input$keytype_select), ontology=as.character(input$ont_select))
-          incProgress(1/length(input$degs_to_enrich), message=NULL, detail=paste("Done enriching", input$degs_to_enrich[i]))
-
-          u_big_rrdf[['df']] <- add_file_rrdf(u_big_rrdf[['df']], name=lab, annot=as.character(input$anntype_select),
-                                              keytype=as.character(input$keytype_select), ontology=as.character(input$ont_select),
-                                              species=input$species_select, file=FALSE)
-          lab <- paste0(lab, "_enriched")
-          u_rrdfs[[lab]] <- df@result # set u_rrdfs
-          u_rrnames$labels <- c(u_rrnames$labels, lab) # set u_rrnames
-
+          enriched <- shiny_enrich(x = x_use, header = inp$gene_header,
+                                   species = species_val, anntype = anntype_val,
+                                   keytype = keytype_val, ontology = ontology_val)
+          results[[i]] <- list(
+            name = inp$name,
+            result = enriched@result,
+            anntype = anntype_val,
+            keytype = keytype_val,
+            ontology = ontology_val,
+            species = species_val
+          )
         }
+        results
+      }, seed = TRUE)
 
+      # 4. Handle promise resolution (runs in Shiny session context)
+      promises::then(p,
+        onFulfilled = function(results) {
+          for (res in results) {
+            lab <- paste0(res$name, "_enriched")
+            u_rrdfs[[lab]] <- res$result
+            u_rrnames$labels <- unique(c(u_rrnames$labels, lab))
+            u_big_rrdf[['df']] <- add_file_rrdf(u_big_rrdf[['df']],
+              name = res$name, annot = res$anntype, keytype = res$keytype,
+              ontology = res$ontology, species = res$species, file = FALSE)
+          }
+          shiny::removeNotification("enrich_progress")
+          showNotification(paste(length(results), "DEG set(s) enriched successfully!"),
+                           type = "message")
+        },
+        onRejected = function(err) {
+          shiny::removeNotification("enrich_progress")
+          showNotification(paste("Enrichment error:", conditionMessage(err)),
+                           type = "error", duration = 10)
+        }
+      )
+
+      # 5. Always re-enable button
+      promises::finally(p, function() {
+        shinyjs::enable("enrich_deg")
       })
 
+      # Return NULL so Shiny knows this observer is async
+      NULL
     })
 
     # Reactively update uploaded file dataframe
@@ -428,7 +469,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       big_rrdf_to_table(), editable='cell'
     )
     # Table editing code
-    proxy = dataTableProxy('rr_list_table')
+    proxy <- DT::dataTableProxy('rr_list_table')
     observeEvent(input$rr_list_table_cell_edit, {
       info = input$rr_list_table_cell_edit
       # Debug: str(info)
@@ -481,6 +522,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     rr_to_table <- reactive ({
       req(input$rr_table_select)
       df <- u_rrdfs[[input$rr_table_select]]
+      req(df)
       return(df)
     })
 
@@ -490,10 +532,10 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     })
 
     # download rr
-    output$download_rr <- downloadHandler(
+    output$download_rr <- shiny::downloadHandler(
       filename = function() {
         req(input$rr_table_select)
-        paste0(input$rr_table_select, input$rr_export_type)
+        paste0(sanitize_filename(input$rr_table_select), input$rr_export_type)
       },
       content = function(file) {
         ext_type <- input$rr_export_type

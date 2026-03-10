@@ -44,9 +44,15 @@ best_match <- function(target, candidates) {
 
 select_required_columns <- function(df) {
 
+  df_colnames <- names(df)
+  # Pre-build a set for fast O(1) membership testing
+  df_colname_set <- df_colnames
+
   matched_columns <- sapply(names(expanded_col_dictionary), function(required) {
     potential_matches <- expanded_col_dictionary[[required]]
-    found_cols <- base::intersect(names(df), potential_matches)
+    # Use %in% for vectorized set membership instead of intersect
+    found_mask <- df_colname_set %in% potential_matches
+    found_cols <- df_colname_set[found_mask]
 
     if (length(found_cols) == 1) {
       return(found_cols)
@@ -54,7 +60,7 @@ select_required_columns <- function(df) {
       return(best_match(required, found_cols))
     } else {
       # If no exact match is found, use partial matching
-      best_candidate <- best_match(required, names(df))
+      best_candidate <- best_match(required, df_colnames)
       if (min(stringdist::stringdistmatrix(required, best_candidate)) <= 4) {
         return(best_candidate)  # Only allow matches with a small distance
       } else {
@@ -72,11 +78,17 @@ select_required_columns <- function(df) {
     df_selected[[col]] <- NA
   }
 
-  # Identify the correct standard names for the matched columns
-  # Replace the matched columns in df_selected with their correct standard names
-  correct_names <- names(matched_columns)
-  df_selected <- df[, unlist(matched_columns, use.names = FALSE)]
-  names(df_selected) <- correct_names
+  # Rename matched columns to their standard names
+  matched_valid <- matched_columns[!is.na(matched_columns)]
+  correct_names <- names(matched_valid)
+  original_names <- unlist(matched_valid, use.names = FALSE)
+
+  # Rename columns in df_selected to standard names using vectorized match()
+  idx_vec <- match(original_names, colnames(df_selected))
+  valid <- !is.na(idx_vec)
+  if (any(valid)) {
+    colnames(df_selected)[idx_vec[valid]] <- correct_names[valid]
+  }
 
   return(df_selected)
 }

@@ -40,26 +40,31 @@ add_file_degdf <- function(df, name, new_df) {
     expr_data <- "False"
   }
 
-  # If one GeneID column matched
+  # Determine GeneID column
   if (length(geneIDmatches) == 1) {
-    geneIDcol <-  names(new_df[geneIDmatches])
-    num_genes <- length(new_df[, geneIDcol]) # Count # genes
-
-    new_file_vec <- c(name=name, GeneID_header=geneIDcol, num_genes=num_genes, has_expr_data=expr_data)
-    if (!is.null(df)) { # Rbind if df already exists
-      df <- rbind(df, new_file_vec)
-      names(df) <- c("name", "GeneID_header", "num_genes", "has_expr_data")
-      rownames(df) <- NULL
-    } else { # Else set df to the new file vector
-      df <- new_file_vec
-      df <- base::t(df)
-      df <- as.data.frame(df)
-      rownames(df) <- NULL
-    }
-    return(df) # Return appended df on success
+    geneIDcol <- names(new_df[geneIDmatches])
+  } else if (length(geneIDmatches) > 1) {
+    # Multiple matches: use the first match
+    geneIDcol <- names(new_df[geneIDmatches[1]])
   } else {
-    return(geneIDmatches) # Return list of possible geneID col matches if multiple/none
+    # No match: use the first column as fallback
+    geneIDcol <- names(new_df)[1]
   }
+
+  num_genes <- length(new_df[, geneIDcol])
+
+  new_file_vec <- c(name=name, GeneID_header=geneIDcol, num_genes=num_genes, has_expr_data=expr_data)
+  if (!is.null(df)) { # Rbind if df already exists
+    df <- rbind(df, new_file_vec)
+    names(df) <- c("name", "GeneID_header", "num_genes", "has_expr_data")
+    rownames(df) <- NULL
+  } else { # Else set df to the new file vector
+    df <- new_file_vec
+    df <- base::t(df)
+    df <- as.data.frame(df)
+    rownames(df) <- NULL
+  }
+  return(df)
 }
 
 #' Remove DEG Set from File Table

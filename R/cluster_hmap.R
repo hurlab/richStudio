@@ -1,5 +1,10 @@
 # Functions to create comprehensive and individual term heatmaps for cluster results
 
+# Named constants for heatmap configuration
+HMAP_ROUND_DIGITS <- 4L
+HMAP_COLOR_LOW <- "green"
+HMAP_COLOR_HIGH <- "red"
+
 
 # Prepare cluster result for heatmap
 hmap_prepare <- function(clustered_gs, gs_names) {
@@ -80,8 +85,26 @@ comprehensive_hmap <- function(final_data, cluster_list, value_type="Padj", valu
   melted_data <- reshape2::melt(subsetted_final_data, id.vars = c("Cluster", "Representative_Term"))
   melted_data$Cluster <- as.numeric(melted_data$Cluster)
   melted_data <- melted_data[order(melted_data$Cluster), ] # order by cluster #
+  raw_hmap_value <- melted_data$value
+  melted_data$value <- withCallingHandlers(
+    as.numeric(melted_data$value),
+    warning = function(w) {
+      if (grepl("NAs introduced by coercion", conditionMessage(w)))
+        invokeRestart("muffleWarning")
+    }
+  )
+  # Detect values that were non-NA strings but became NA after numeric conversion
+  coerced_na <- is.na(melted_data$value) & !is.na(raw_hmap_value) & nzchar(as.character(raw_hmap_value))
+  if (any(coerced_na)) {
+    warning(
+      sprintf("comprehensive_hmap: %d non-numeric value(s) coerced to NA in heatmap data",
+              sum(coerced_na)),
+      call. = FALSE
+    )
+  }
+  melted_data$value[is.na(melted_data$value) | melted_data$value <= 0] <- 1
   melted_data$value <- -log10(melted_data$value)
-  melted_data$value <- round(melted_data$value, 4)
+  melted_data$value <- round(melted_data$value, HMAP_ROUND_DIGITS)
   my_nticks <- length(unique(melted_data$Representative_Term)) # get # of clusters to show on y axis
   
   p <- plot_ly (
@@ -90,14 +113,14 @@ comprehensive_hmap <- function(final_data, cluster_list, value_type="Padj", valu
     y = ~Representative_Term,
     z = ~value,
     type = "heatmap",
-    colors = c('green', 'red'),
+    colors = c(HMAP_COLOR_LOW, HMAP_COLOR_HIGH),
     text = ~paste0("Cluster ", Cluster, "<br>", Representative_Term, "<br>", "-log10(", value_type, "): ", value),
     colorbar = list(title = paste0("-log10(", value_type, ")")),
     hoverinfo = "text"
   ) %>%
     layout (
       title = paste0("-log10(", value_type, ") by Cluster"),
-      xaxis = list(title = 'Geneset'), 
+      xaxis = list(title = 'Geneset'),
       yaxis = list(title = 'Representative Term for Cluster', categoryorder = "trace", nticks = my_nticks)
     )
     return(p)
@@ -129,9 +152,25 @@ cluster_hmap <- function(cluster_list, term_vec, final_data, value_type="Padj") 
   melted_chmap_data <- reshape2::melt(cluster_hmap, id.vars = c("Cluster", "Term"))
   
   
-  melted_chmap_data$value <- as.numeric(melted_chmap_data$value)
+  raw_chmap_value <- melted_chmap_data$value
+  melted_chmap_data$value <- withCallingHandlers(
+    as.numeric(melted_chmap_data$value),
+    warning = function(w) {
+      if (grepl("NAs introduced by coercion", conditionMessage(w)))
+        invokeRestart("muffleWarning")
+    }
+  )
+  # Detect values that were non-NA strings but became NA after numeric conversion
+  coerced_chmap_na <- is.na(melted_chmap_data$value) & !is.na(raw_chmap_value) & nzchar(as.character(raw_chmap_value))
+  if (any(coerced_chmap_na)) {
+    warning(
+      sprintf("cluster_hmap: %d non-numeric value(s) coerced to NA in heatmap data",
+              sum(coerced_chmap_na)),
+      call. = FALSE
+    )
+  }
   melted_chmap_data$value <- -log10(melted_chmap_data$value)
-  melted_chmap_data$value <- round(melted_chmap_data$value, 4)
+  melted_chmap_data$value <- round(melted_chmap_data$value, HMAP_ROUND_DIGITS)
   
   melted_chmap_data$Cluster <- as.numeric(melted_chmap_data$Cluster)
   melted_chmap_data <- melted_chmap_data[order(melted_chmap_data$Cluster), ] # Order by cluster #
@@ -146,7 +185,7 @@ cluster_hmap <- function(cluster_list, term_vec, final_data, value_type="Padj") 
     y = ~Term,
     z = ~value,
     type = "heatmap",
-    colors = c('green', 'red'),
+    colors = c(HMAP_COLOR_LOW, HMAP_COLOR_HIGH),
     text = ~paste0("Cluster ", Cluster, "<br>", Term, "<br>", "-log10(", value_type, "): ", value),  # Customize hover text
     colorbar = list(title = paste0("-log10(", value_type, ")")),
     hoverinfo = "text"
@@ -161,8 +200,21 @@ cluster_hmap <- function(cluster_list, term_vec, final_data, value_type="Padj") 
     distinct(Cluster, Term) %>%
     arrange(Cluster)
   
-  clusty <- cluster_hmap[, !(colnames(cluster_hmap) %in% c("Cluster", "Term"))]
-  clusty <- apply(clusty, c(1, 2), function(x) -log10(x))
+  clusty <- cluster_hmap[, !(colnames(cluster_hmap) %in% c("Cluster", "Term")), drop = FALSE]
+  # Convert to numeric matrix with explicit NA handling before log transform
+  clusty <- as.data.frame(lapply(clusty, function(col) {
+    num_col <- suppressWarnings(as.numeric(col))
+    coerced <- is.na(num_col) & !is.na(col) & nzchar(as.character(col))
+    if (any(coerced)) {
+      warning(
+        sprintf("cluster_hmap: %d non-numeric value(s) found in heatmap columns",
+                sum(coerced)),
+        call. = FALSE
+      )
+    }
+    num_col
+  }))
+  clusty <- apply(clusty, c(1, 2), function(x) -log10(as.numeric(x)))
   rownames(clusty) <- clusty_annot$Term
   
   my_hm <- heatmaply(

@@ -1,8 +1,26 @@
 # Functions to create integrative heatmaps from multiple enrichment results
 # (No clustering)
+#
+# Naming conventions in this file:
+# - *_gs functions: geneset manipulation helpers (add, remove geneset data)
+# - *_hmap functions: heatmap plot generators
+# These names are used by Shiny UI modules and must not be renamed without
+# updating all call sites.
 
 
-# Add geneset and custom selected terms to combined dataframe
+#' Add custom-selected terms from a geneset to the combined dataframe
+#'
+#' Merges user-selected terms from a geneset into the cumulative
+#' \code{custom_data} dataframe used for integrative heatmap construction.
+#' Handles first-time addition, repeat additions, and GeneID column merging.
+#'
+#' @param custom_data A data frame (possibly empty) accumulating terms across
+#'   genesets. Must contain columns Annot, Term, and GeneID when non-empty.
+#' @param gs A data frame for one enrichment result (geneset).
+#' @param gs_name Character. Label for this geneset, appended as a suffix to
+#'   column names to distinguish sources.
+#' @param term_vec Character vector. Terms selected by the user to include.
+#' @return Updated \code{custom_data} data frame with the new terms merged in.
 add_custom_gs <- function(custom_data=NULL, gs, gs_name, term_vec) {
   
   # Subset gs by rows with gs$Term in term_vec
@@ -66,6 +84,21 @@ add_custom_gs <- function(custom_data=NULL, gs, gs_name, term_vec) {
 }
 
 
+#' Add top-ranked terms from a geneset to the combined dataframe
+#'
+#' Filters a geneset by significance threshold and selects the top N terms,
+#' then merges them into the cumulative \code{custom_data} dataframe. Replaces
+#' any previously added data for the same geneset.
+#'
+#' @param custom_data A data frame accumulating terms across genesets.
+#' @param gs A data frame for one enrichment result (geneset).
+#' @param gs_name Character. Label for this geneset, appended as a suffix to
+#'   column names to distinguish sources.
+#' @param value_type Character. Column name for significance values
+#'   (\code{"Padj"} or \code{"Pvalue"}).
+#' @param value_cutoff Numeric. P-value cutoff for filtering.
+#' @param top_nterms Integer. Number of top terms to include.
+#' @return Updated \code{custom_data} data frame with the top terms merged in.
 add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, top_nterms) {
   
   # Make sure value_cutoff, top_nterms are numeric
@@ -142,9 +175,19 @@ add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, t
 }
 
 
-# Remove selected terms/geneset from combined dataframe
-# term_vec <- c("Steroid biosynthesis", "Lysosome")
-# delete_all <- c("Steroid biosynthesis", "Lysosome", "Toxoplasmosis", "Prion diseases", "Terpenoid backbone biosynthesis", "Metabolic pathways")
+#' Remove selected terms or an entire geneset from the combined dataframe
+#'
+#' Removes specific terms from \code{custom_data}, or removes an entire
+#' geneset's columns and associated term rows when \code{delete_all} is
+#' provided.
+#'
+#' @param custom_data A data frame accumulating terms across genesets.
+#' @param gs_name Character. Label of the geneset to operate on.
+#' @param term_vec Character vector. Terms to remove (used when
+#'   \code{delete_all} is \code{NULL}).
+#' @param delete_all Character vector or \code{NULL}. If provided, all columns
+#'   for \code{gs_name} and all rows matching these terms are removed.
+#' @return Updated \code{custom_data} data frame with terms/geneset removed.
 remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL) {
   # delete entire geneset if passed term_vec arg "delete_all" w/ all terms
   if (!is.null(delete_all)) {
@@ -166,8 +209,17 @@ remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL) {
 }
 
 
-# Create custom heatmap from combined dataframe
-# value_type <- "Padj"
+#' Create a custom integrative heatmap from the combined dataframe
+#'
+#' Generates an interactive heatmap (via plotly) showing -log10 transformed
+#' significance values for user-selected terms across multiple genesets.
+#' Uses \code{custom_data} built by \code{add_custom_gs}.
+#'
+#' @param custom_data A data frame built by \code{add_custom_gs} or
+#'   \code{add_topterm_gs}, containing multi-geneset enrichment data.
+#' @param value_type Character. Column prefix for significance values,
+#'   typically \code{"Padj"} or \code{"Pvalue"}.
+#' @return A plotly heatmap object.
 custom_hmap <- function(custom_data, value_type) {
   
   # Grab either Pvalue or Padj based on value_type
@@ -210,8 +262,18 @@ custom_hmap <- function(custom_data, value_type) {
 
 
 
-# Create custom heatmap from combined dataframe (top terms)
-# This function handles mixed Pvalue/Padj columns
+#' Create an integrative heatmap from top-ranked terms
+#'
+#' Generates an interactive heatmap (via plotly) showing -log10 transformed
+#' significance values for top-ranked terms across multiple genesets. Unlike
+#' \code{custom_hmap}, this function handles mixed Pvalue/Padj column prefixes.
+#' Uses \code{custom_data} built by \code{add_topterm_gs}.
+#'
+#' @param custom_data A data frame built by \code{add_topterm_gs}, containing
+#'   multi-geneset enrichment data with Pvalue_ and/or Padj_ prefixed columns.
+#' @param value_type Character. Preferred significance column type, used for
+#'   plot labels. Default \code{"Padj"}.
+#' @return A plotly heatmap object.
 topterm_hmap <- function(custom_data, value_type = "Padj") {
 
   # Grab either Pvalue or Padj based on value_type
@@ -240,12 +302,12 @@ topterm_hmap <- function(custom_data, value_type = "Padj") {
     z = ~value,
     type = "heatmap",
     colors = c('green', 'red'),
-    text = ~paste0(Term, "<br>", "-log10(P-value): ", value, "<br>"),  # Customize hover text
-    colorbar = list(title = "-log10(P-value)"),
+    text = ~paste0(Term, "<br>", "-log10(", value_type, "): ", value, "<br>"),  # Customize hover text
+    colorbar = list(title = paste0("-log10(", value_type, ")")),
     hoverinfo = "text"
   ) %>%
     layout (
-      title = "-log10(P-value) by Term",
+      title = paste0("-log10(", value_type, ") by Term"),
       xaxis = list(title = 'Geneset'),
       yaxis = list(title = 'Term', categoryorder = "trace", nticks = my_nticks)
     )

@@ -4,7 +4,7 @@
 \alias{cluster_hierarchical}
 \title{Hierarchical clustering using richCluster package}
 \usage{
-cluster_hierarchical(merged_gs, params, gs_names)
+cluster_hierarchical(merged_gs, params, gs_names, raw_genesets = NULL)
 }
 \arguments{
 \item{merged_gs}{Merged geneset dataframe}

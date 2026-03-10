@@ -7,9 +7,22 @@
 get_clustering_methods()
 }
 \value{
-Named list with method IDs as names and descriptions as values
+A named list where each element contains:
+  \itemize{
+    \item name: Display name for the method
+    \item description: Detailed description of the method
+    \item available: Logical indicating if the method can be used
+  }
 }
 \description{
 Returns a list of available clustering methods with descriptions
 for display in the UI.
+}
+\examples{
+methods <- get_clustering_methods()
+names(methods)
+
+# Check which methods are available
+vapply(methods, function(m) m$available, logical(1))
+
 }

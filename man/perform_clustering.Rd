@@ -8,7 +8,8 @@ perform_clustering(
   merged_gs,
   method = "richR",
   params = list(),
-  gs_names = NULL
+  gs_names = NULL,
+  raw_genesets = NULL
 )
 }
 \arguments{
@@ -16,18 +17,47 @@ perform_clustering(
 
 \item{method}{Clustering method: "richR" (original), "hierarchical", or "david"}
 
-\item{params}{List of clustering parameters (varies by method)}
+\item{params}{List of clustering parameters (varies by method):
+\itemize{
+  \item richR: cutoff, overlap, minSize
+  \item hierarchical: distance_metric, distance_cutoff, linkage_method,
+    linkage_cutoff, min_terms, min_value
+  \item david: similarity_threshold, initial_group_membership,
+    final_group_membership, multiple_linkage_threshold
+}}
 
 \item{gs_names}{Character vector of geneset names (for output formatting)}
 }
 \value{
 A list containing clustering results with components:
-  - cluster_df: Dataframe with cluster assignments and term details
-  - cluster_summary: Summary dataframe with cluster representative terms
-  - method: The clustering method used
-  - params: Parameters used for clustering
+  \itemize{
+    \item cluster_df: Dataframe with cluster assignments and term details
+    \item cluster_summary: Summary dataframe with cluster representative terms
+    \item method: The clustering method used
+    \item params: Parameters used for clustering
+  }
 }
 \description{
 This is the main clustering dispatcher function that routes to the appropriate
 clustering implementation based on the selected method.
+}
+\examples{
+# Load and merge example data
+go1 <- read.delim(system.file("extdata", "go1.txt", package = "richStudio"))
+go2 <- read.delim(system.file("extdata", "go2.txt", package = "richStudio"))
+genesets <- list(GO1 = go1, GO2 = go2)
+merged <- merge_genesets(genesets)
+
+# Perform clustering with richR method
+params <- list(cutoff = 0.5, overlap = 0.5, minSize = 2)
+result <- perform_clustering(merged, method = "richR", params = params)
+
+# View results
+if (nrow(result$cluster_df) > 0) {
+  head(result$cluster_summary)
+}
+
+}
+\seealso{
+\code{\link{merge_genesets}}, \code{\link{get_clustering_methods}}
 }

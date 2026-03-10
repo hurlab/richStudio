@@ -45,7 +45,9 @@ Imports:
     jsonlite,
     zip,
     stringdist,
-    config
+    config,
+    future,
+    promises
 Suggests:
     richCluster,
     testthat (>= 3.0.0),

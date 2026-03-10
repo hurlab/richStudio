@@ -39,7 +39,7 @@ An R List object containing the following elements:
 }
 }
 \description{
-This function clusters terms within an enrichment result based on gene 
+This function clusters terms within an enrichment result with based on gene 
 similarity using specified distance metrics and merging strategies. It 
 integrates the following steps:
 \enumerate{

@@ -19,3 +19,17 @@ Combines multiple enrichment result dataframes by merging on the Term column.
 GeneIDs are combined (unique), p-values are averaged, and columns are suffixed
 with the geneset name for traceability.
 }
+\examples{
+# Load example enrichment results
+go1 <- read.delim(system.file("extdata", "go1.txt", package = "richStudio"))
+go2 <- read.delim(system.file("extdata", "go2.txt", package = "richStudio"))
+
+# Merge the genesets
+genesets <- list(GO1 = go1, GO2 = go2)
+merged <- merge_genesets(genesets)
+head(merged[, c("Term", "Pvalue", "Padj")])
+
+}
+\seealso{
+\code{\link{perform_clustering}}
+}

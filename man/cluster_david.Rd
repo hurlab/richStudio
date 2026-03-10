@@ -4,7 +4,7 @@
 \alias{cluster_david}
 \title{DAVID functional clustering}
 \usage{
-cluster_david(merged_gs, params, gs_names)
+cluster_david(merged_gs, params, gs_names, raw_genesets = NULL)
 }
 \arguments{
 \item{merged_gs}{Merged geneset dataframe}

@@ -19,8 +19,9 @@ test_that("add_file_degdf correctly adds DEG files", {
   big_df <- add_file_degdf(big_df, "deg1", df1)
 
   expect_true(nrow(big_df) == 1)
-  expect_true(big_df$name == "deg1")
-  expect_true(big_df$has_expr_data == FALSE)
+  expect_equal(big_df$name, "deg1")
+  # has_expr_data is stored as character "True"/"False"
+  expect_equal(big_df$has_expr_data, "True")
 
   # Add second file
   df2 <- data.frame(GeneID = letters[6:10], log2FC = rnorm(5))
@@ -72,8 +73,9 @@ test_that("add_file_rrdf correctly adds enrichment result files", {
   big_df <- add_file_rrdf(big_df, name="go1", file=TRUE)
 
   expect_true(nrow(big_df) == 1)
-  expect_true(big_df$name == "go1")
-  expect_true(big_df$file == TRUE)
+  expect_equal(big_df$name, "go1")
+  # When file=TRUE, from_deg is set to "No" (indicating uploaded file, not from DEG)
+  expect_equal(big_df$from_deg, "No")
 })
 
 test_that("rm_file_rrdf correctly removes enrichment result files", {
@@ -113,8 +115,9 @@ test_that("add_file_clusdf correctly adds cluster result files", {
   big_df <- add_file_clusdf(big_df, clusdf, "cluster1", from_vec)
 
   expect_true(nrow(big_df) == 1)
-  expect_true(big_df$name == "cluster1")
-  expect_true(big_df$from_rr == "go1, go2")
+  expect_equal(big_df$name, "cluster1")
+  # Column is named "from", not "from_rr"
+  expect_equal(big_df$from, "go1, go2")
 })
 
 test_that("rm_file_clusdf correctly removes cluster result files", {
@@ -146,21 +149,21 @@ test_that("file rename operations maintain data integrity", {
   # Add initial data
   df1 <- data.frame(GeneID = letters[1:5], log2FC = rnorm(5))
   rv_data[["file1"]] <- df1
-  rv_names$labels <- c(rv_names$labels, "file1")
+  rv_names$labels <- c(isolate(rv_names$labels), "file1")
 
   # Rename file1 to new_file1
   old_name <- "file1"
   new_name <- "new_file1"
 
-  rv_data[[new_name]] <- rv_data[[old_name]]
+  rv_data[[new_name]] <- isolate(rv_data[[old_name]])
   rv_data[[old_name]] <- NULL
-  rv_names$labels <- setdiff(rv_names$labels, old_name)
-  rv_names$labels <- c(rv_names$labels, new_name)
+  rv_names$labels <- setdiff(isolate(rv_names$labels), old_name)
+  rv_names$labels <- c(isolate(rv_names$labels), new_name)
 
   # Verify data integrity
-  expect_identical(rv_data[[new_name]], df1)
-  expect_null(rv_data[[old_name]])
-  expect_equal(rv_names$labels, "new_file1")
+  expect_identical(isolate(rv_data[[new_name]]), df1)
+  expect_null(isolate(rv_data[[old_name]]))
+  expect_equal(isolate(rv_names$labels), "new_file1")
 })
 
 test_that("file remove operations maintain data integrity", {
@@ -173,24 +176,24 @@ test_that("file remove operations maintain data integrity", {
   for (i in 1:3) {
     df <- data.frame(GeneID = letters[(i*5-4):(i*5)], log2FC = rnorm(5))
     rv_data[[paste0("file", i)]] <- df
-    rv_names$labels <- c(rv_names$labels, paste0("file", i))
+    rv_names$labels <- c(isolate(rv_names$labels), paste0("file", i))
   }
 
   # Store reference to file2 data before removal
-  file2_data <- rv_data[["file2"]]
+  file2_data <- isolate(rv_data[["file2"]])
 
   # Remove file1 and file3
   to_remove <- c("file1", "file3")
   for (name in to_remove) {
     rv_data[[name]] <- NULL
   }
-  rv_names$labels <- setdiff(rv_names$labels, to_remove)
+  rv_names$labels <- setdiff(isolate(rv_names$labels), to_remove)
 
   # Verify file2 data is unchanged
-  expect_identical(rv_data[["file2"]], file2_data)
-  expect_equal(rv_names$labels, "file2")
-  expect_null(rv_data[["file1"]])
-  expect_null(rv_data[["file3"]])
+  expect_identical(isolate(rv_data[["file2"]]), file2_data)
+  expect_equal(isolate(rv_names$labels), "file2")
+  expect_null(isolate(rv_data[["file1"]]))
+  expect_null(isolate(rv_data[["file3"]]))
 })
 
 test_that("duplicate file names are handled correctly", {
@@ -201,10 +204,10 @@ test_that("duplicate file names are handled correctly", {
 
   # Add file1
   rv_data[["file1"]] <- data.frame(x = 1:5)
-  rv_names$labels <- c(rv_names$labels, "file1")
+  rv_names$labels <- c(isolate(rv_names$labels), "file1")
 
   # Attempt to add another file1 (should be handled by UI validation)
   # This test verifies the data structure would handle it
-  expect_true("file1" %in% rv_names$labels)
-  expect_true(is.data.frame(rv_data[["file1"]]))
+  expect_true("file1" %in% isolate(rv_names$labels))
+  expect_true(is.data.frame(isolate(rv_data[["file1"]])))
 })

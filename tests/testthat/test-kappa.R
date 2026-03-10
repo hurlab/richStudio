@@ -1,7 +1,22 @@
+# Helper to resolve extdata path in both installed and development modes
+resolve_extdata <- function(filename) {
+  path <- system.file("extdata", filename, package = "richStudio")
+  if (path == "") {
+    # Fallback for development mode
+    path <- file.path(getwd(), "..", "..", "inst", "extdata", filename)
+  }
+  path
+}
+
 test_that("merge_genesets works correctly", {
   # Load test data
-  gs1 <- read.delim(system.file("extdata", "go1.txt", package = "richStudio"))
-  gs2 <- read.delim(system.file("extdata", "go2.txt", package = "richStudio"))
+  go1_path <- resolve_extdata("go1.txt")
+  go2_path <- resolve_extdata("go2.txt")
+  skip_if(!file.exists(go1_path), "Test data file go1.txt not found")
+  skip_if(!file.exists(go2_path), "Test data file go2.txt not found")
+
+  gs1 <- read.delim(go1_path)
+  gs2 <- read.delim(go2_path)
 
   # Test with named list
 
@@ -17,7 +32,10 @@ test_that("merge_genesets works correctly", {
 })
 
 test_that("merge_genesets handles single geneset", {
-  gs1 <- read.delim(system.file("extdata", "go1.txt", package = "richStudio"))
+  go1_path <- resolve_extdata("go1.txt")
+  skip_if(!file.exists(go1_path), "Test data file go1.txt not found")
+
+  gs1 <- read.delim(go1_path)
 
   mergelist <- list(single = gs1)
   merged <- merge_genesets(mergelist)
@@ -60,9 +78,13 @@ test_that("perform_clustering validates input", {
 
 test_that("perform_clustering works with richR method", {
   # Load and merge test data
+  go1_path <- resolve_extdata("go1.txt")
+  go2_path <- resolve_extdata("go2.txt")
+  skip_if(!file.exists(go1_path), "Test data file go1.txt not found")
+  skip_if(!file.exists(go2_path), "Test data file go2.txt not found")
 
-  gs1 <- read.delim(system.file("extdata", "go1.txt", package = "richStudio"))
-  gs2 <- read.delim(system.file("extdata", "go2.txt", package = "richStudio"))
+  gs1 <- read.delim(go1_path)
+  gs2 <- read.delim(go2_path)
 
   mergelist <- list(gs1 = gs1, gs2 = gs2)
   merged <- merge_genesets(mergelist)
@@ -86,7 +108,7 @@ test_that("perform_clustering works with richR method", {
 
 test_that("is_richCluster_available returns logical",
 {
-  result <- is_richCluster_available()
+  result <- richStudio:::is_richCluster_available()
   expect_true(is.logical(result))
   expect_length(result, 1)
 })

@@ -26,14 +26,14 @@ test_that("DEG file upload workflow completes successfully", {
 
   # Execute upload steps (simulating enrich_tab.R logic)
   u_degdfs[[lab]] <- df
-  u_degnames$labels <- c(u_degnames$labels, lab)
-  u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
+  u_degnames$labels <- c(isolate(u_degnames$labels), lab)
+  u_big_degdf[['df']] <- add_file_degdf(isolate(u_big_degdf[['df']]), lab, df)
 
   # Verify all updates
-  expect_true(lab %in% u_degnames$labels)
-  expect_true(is.data.frame(u_degdfs[[lab]]))
-  expect_equal(nrow(u_big_degdf[['df']]), 1)
-  expect_true(u_big_degdf[['df']]$name == lab)
+  expect_true(lab %in% isolate(u_degnames$labels))
+  expect_true(is.data.frame(isolate(u_degdfs[[lab]])))
+  expect_equal(nrow(isolate(u_big_degdf[['df']])), 1)
+  expect_true(isolate(u_big_degdf[['df']])$name == lab)
 })
 
 test_that("Multiple DEG files upload workflow completes successfully", {
@@ -53,14 +53,14 @@ test_that("Multiple DEG files upload workflow completes successfully", {
     )
 
     u_degdfs[[lab]] <- df
-    u_degnames$labels <- c(u_degnames$labels, lab)
-    u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
+    u_degnames$labels <- c(isolate(u_degnames$labels), lab)
+    u_big_degdf[['df']] <- add_file_degdf(isolate(u_big_degdf[['df']]), lab, df)
   }
 
   # Verify all files uploaded
-  expect_equal(length(u_degnames$labels), 3)
-  expect_equal(nrow(u_big_degdf[['df']]), 3)
-  expect_true(all(c("deg1", "deg2", "deg3") %in% u_degnames$labels))
+  expect_equal(length(isolate(u_degnames$labels)), 3)
+  expect_equal(nrow(isolate(u_big_degdf[['df']])), 3)
+  expect_true(all(c("deg1", "deg2", "deg3") %in% isolate(u_degnames$labels)))
 })
 
 test_that("Enrichment result upload workflow completes successfully", {
@@ -80,13 +80,13 @@ test_that("Enrichment result upload workflow completes successfully", {
 
   # Execute upload steps (simulating enrich_tab.R logic)
   u_rrdfs[[lab]] <- df
-  u_rrnames$labels <- c(u_rrnames$labels, lab)
-  u_big_rrdf[['df']] <- add_file_rrdf(df=u_big_rrdf[['df']], name=lab, file=TRUE)
+  u_rrnames$labels <- c(isolate(u_rrnames$labels), lab)
+  u_big_rrdf[['df']] <- add_file_rrdf(df=isolate(u_big_rrdf[['df']]), name=lab, file=TRUE)
 
   # Verify upload
-  expect_true(lab %in% u_rrnames$labels)
-  expect_true(is.data.frame(u_rrdfs[[lab]]))
-  expect_equal(nrow(u_big_rrdf[['df']]), 1)
+  expect_true(lab %in% isolate(u_rrnames$labels))
+  expect_true(is.data.frame(isolate(u_rrdfs[[lab]])))
+  expect_equal(nrow(isolate(u_big_rrdf[['df']])), 1)
 })
 
 test_that("Clustering upload workflow completes successfully", {
@@ -106,13 +106,13 @@ test_that("Clustering upload workflow completes successfully", {
     )
 
     u_rrdfs[[lab]] <- df
-    u_rrnames$labels <- c(u_rrnames$labels, lab)
-    u_big_rrdf[['df']] <- add_file_rrdf(df=u_big_rrdf[['df']], name=lab, file=TRUE)
+    u_rrnames$labels <- c(isolate(u_rrnames$labels), lab)
+    u_big_rrdf[['df']] <- add_file_rrdf(df=isolate(u_big_rrdf[['df']]), name=lab, file=TRUE)
   }
 
   # Verify all enrichment results uploaded
-  expect_equal(length(u_rrnames$labels), 3)
-  expect_true(all(c("go1", "go2", "go3") %in% u_rrnames$labels))
+  expect_equal(length(isolate(u_rrnames$labels)), 3)
+  expect_true(all(c("go1", "go2", "go3") %in% isolate(u_rrnames$labels)))
 })
 
 test_that("Upload workflow handles file format detection", {
@@ -159,7 +159,11 @@ test_that("Upload workflow handles demo data loading", {
 
   for (file in sample_files) {
     path <- system.file("extdata", file, package = "richStudio")
-    if (path != "") {
+    if (path == "") {
+      # Fallback for development mode
+      path <- file.path(getwd(), "..", "..", "inst", "extdata", file)
+    }
+    if (file.exists(path)) {
       expect_true(file.exists(path))
 
       # Try to read the file
@@ -186,15 +190,15 @@ test_that("Upload workflow maintains data consistency across reactive values", {
   )
 
   u_degdfs[[lab]] <- original_df
-  u_degnames$labels <- c(u_degnames$labels, lab)
-  u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, original_df)
+  u_degnames$labels <- c(isolate(u_degnames$labels), lab)
+  u_big_degdf[['df']] <- add_file_degdf(isolate(u_big_degdf[['df']]), lab, original_df)
 
   # Retrieve and compare
-  stored_df <- u_degdfs[[lab]]
+  stored_df <- isolate(u_degdfs[[lab]])
   expect_identical(stored_df, original_df)
 
   # Verify metadata in big dataframe
-  expect_true(u_big_degdf[['df']]$name == lab)
+  expect_true(isolate(u_big_degdf[['df']])$name == lab)
 })
 
 test_that("Upload workflow error handling works correctly", {

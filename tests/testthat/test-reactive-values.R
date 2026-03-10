@@ -20,13 +20,14 @@ test_that("reactiveValues properly handle single assignment pattern", {
   v <- "updated"
 
   # Correct pattern: Modify locally, then assign once
-  updated_df <- rv$df
+  updated_df <- isolate(rv$df)
   updated_df[i, j] <- v
   rv$df <- updated_df
 
   # Verify the update worked
-  expect_equal(rv$df[2, 1], "updated")
-  expect_equal(rv$df[1, 1], 1)  # Other rows unchanged
+  expect_equal(isolate(rv$df)[2, 1], "updated")
+  # Note: assigning a character to an integer column coerces entire column to character
+  expect_equal(isolate(rv$df)[1, 1], "1")  # Other rows unchanged (coerced to character)
 })
 
 test_that("reactiveValues properly handle multiple sequential edits", {
@@ -38,22 +39,22 @@ test_that("reactiveValues properly handle multiple sequential edits", {
   ))
 
   # First edit
-  updated_df <- rv$df
+  updated_df <- isolate(rv$df)
   updated_df[1, 2] <- 10
   rv$df <- updated_df
 
   # Second edit
-  updated_df <- rv$df
+  updated_df <- isolate(rv$df)
   updated_df[2, 2] <- 20
   rv$df <- updated_df
 
   # Third edit
-  updated_df <- rv$df
+  updated_df <- isolate(rv$df)
   updated_df[3, 2] <- 30
   rv$df <- updated_df
 
   # Verify all edits persisted
-  expect_equal(rv$df$value, c(10, 20, 30))
+  expect_equal(isolate(rv$df)$value, c(10, 20, 30))
 })
 
 test_that("reactiveValues properly handle rename operations", {
@@ -70,18 +71,18 @@ test_that("reactiveValues properly handle rename operations", {
   new_name <- "new_file1"
 
   # Copy data to new name
-  rv_data[[new_name]] <- rv_data[[old_name]]
+  rv_data[[new_name]] <- isolate(rv_data[[old_name]])
   # Remove old name
   rv_data[[old_name]] <- NULL
   # Update labels
-  rv_names$labels <- setdiff(rv_names$labels, old_name)
-  rv_names$labels <- c(rv_names$labels, new_name)
+  rv_names$labels <- setdiff(isolate(rv_names$labels), old_name)
+  rv_names$labels <- c(isolate(rv_names$labels), new_name)
 
   # Verify rename worked
-  expect_null(rv_data[["file1"]])
-  expect_true(is.data.frame(rv_data[["new_file1"]]))
-  expect_false("file1" %in% rv_names$labels)
-  expect_true("new_file1" %in% rv_names$labels)
+  expect_null(isolate(rv_data[["file1"]]))
+  expect_true(is.data.frame(isolate(rv_data[["new_file1"]])))
+  expect_false("file1" %in% isolate(rv_names$labels))
+  expect_true("new_file1" %in% isolate(rv_names$labels))
 })
 
 test_that("reactiveValues properly handle remove operations", {
@@ -98,13 +99,13 @@ test_that("reactiveValues properly handle remove operations", {
   for (name in to_remove) {
     rv_data[[name]] <- NULL
   }
-  rv_names$labels <- setdiff(rv_names$labels, to_remove)
+  rv_names$labels <- setdiff(isolate(rv_names$labels), to_remove)
 
   # Verify removals worked
-  expect_null(rv_data[["file1"]])
-  expect_true(is.data.frame(rv_data[["file2"]]))
-  expect_null(rv_data[["file3"]])
-  expect_equal(rv_names$labels, "file2")
+  expect_null(isolate(rv_data[["file1"]]))
+  expect_true(is.data.frame(isolate(rv_data[["file2"]])))
+  expect_null(isolate(rv_data[["file3"]]))
+  expect_equal(isolate(rv_names$labels), "file2")
 })
 
 test_that("reactiveValues handle DT::coerceValue correctly", {
@@ -120,13 +121,13 @@ test_that("reactiveValues handle DT::coerceValue correctly", {
   j <- 2
   v <- "10"  # String that should be coerced to numeric
 
-  updated_df <- rv$df
+  updated_df <- isolate(rv$df)
   updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
   rv$df <- updated_df
 
   # Verify coercion worked
-  expect_equal(rv$df[1, 2], 10)
-  expect_type(rv$df[1, 2], "double")
+  expect_equal(isolate(rv$df)[1, 2], 10)
+  expect_type(isolate(rv$df)[1, 2], "double")
 })
 
 test_that("reactiveValues maintain data integrity after edits", {
@@ -138,18 +139,18 @@ test_that("reactiveValues maintain data integrity after edits", {
     value = rnorm(5)
   ))
 
-  original_ncol <- ncol(rv$df)
-  original_nrow <- nrow(rv$df)
+  original_ncol <- ncol(isolate(rv$df))
+  original_nrow <- nrow(isolate(rv$df))
 
   # Perform edit
-  updated_df <- rv$df
+  updated_df <- isolate(rv$df)
   updated_df[3, 3] <- 999
   rv$df <- updated_df
 
   # Verify structure maintained
-  expect_equal(ncol(rv$df), original_ncol)
-  expect_equal(nrow(rv$df), original_nrow)
-  expect_equal(names(rv$df), names(data.frame(id = 1, category = "A", value = 1)))
+  expect_equal(ncol(isolate(rv$df)), original_ncol)
+  expect_equal(nrow(isolate(rv$df)), original_nrow)
+  expect_equal(names(isolate(rv$df)), names(data.frame(id = 1, category = "A", value = 1)))
 })
 
 test_that("reactiveValues handle edge cases correctly", {
@@ -157,21 +158,21 @@ test_that("reactiveValues handle edge cases correctly", {
 
   # Empty data frame
   rv_empty <- reactiveValues(df = data.frame())
-  updated_df <- rv_empty$df
+  updated_df <- isolate(rv_empty$df)
   # Attempt to edit empty frame should not crash
   expect_true(nrow(updated_df) == 0)
 
   # Single row data frame
   rv_single <- reactiveValues(df = data.frame(x = 1))
-  updated_df <- rv_single$df
+  updated_df <- isolate(rv_single$df)
   updated_df[1, 1] <- 100
   rv_single$df <- updated_df
-  expect_equal(rv_single$df[1, 1], 100)
+  expect_equal(isolate(rv_single$df)[1, 1], 100)
 
   # Single column data frame
   rv_single_col <- reactiveValues(df = data.frame(x = 1:5))
-  updated_df <- rv_single_col$df
+  updated_df <- isolate(rv_single_col$df)
   updated_df[3, 1] <- 999
   rv_single_col$df <- updated_df
-  expect_equal(rv_single_col$df[3, 1], 999)
+  expect_equal(isolate(rv_single_col$df)[3, 1], 999)
 })

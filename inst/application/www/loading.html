@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>richStudio - Loading</title>
+  <link rel="icon" type="image/svg+xml" href="/richStudio_3/favicon.svg">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #f1f5f9;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .loading-container { text-align: center; max-width: 400px; padding: 2rem; }
+    .logo { width: 72px; height: 72px; margin: 0 auto 1.5rem; animation: pulse 2s ease-in-out infinite; }
+    .logo img { width: 100%; height: 100%; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(0.96); }
+    }
+    .app-name { font-size: 1.75rem; font-weight: 700; color: #0f6fc5; margin-bottom: 0.5rem; }
+    .loading-text { font-size: 1rem; color: #1e293b; margin-bottom: 2rem; }
+    .spinner {
+      width: 44px; height: 44px;
+      border: 4px solid #e2e8f0; border-top: 4px solid #0f6fc5;
+      border-radius: 50%; margin: 0 auto 1.5rem;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .hint { font-size: 0.8125rem; color: #64748b; line-height: 1.5; }
+    .error-message { font-size: 0.875rem; color: #dc2626; margin-top: 1rem; display: none; }
+  </style>
+</head>
+<body>
+  <div class="loading-container">
+    <div class="logo">
+      <img src="/richStudio_3/favicon.svg" alt="richStudio logo">
+    </div>
+    <div class="app-name">richStudio</div>
+    <div class="loading-text">Loading application...</div>
+    <div class="spinner" id="spinner"></div>
+    <div class="hint" id="hint">This may take up to 30 seconds on first visit...</div>
+    <div class="error-message" id="error">Taking longer than expected... Please <a href="" onclick="location.reload();return false;">refresh</a>.</div>
+  </div>
+
+  <script>
+    (function() {
+      var appUrl = window.location.origin + '/richStudio_3/';
+      var MAX_TIMEOUT = 120000;
+      var POLL_INTERVAL = 2000;
+      var startTime = Date.now();
+
+      function poll() {
+        if (Date.now() - startTime > MAX_TIMEOUT) {
+          document.getElementById('spinner').style.display = 'none';
+          document.getElementById('hint').style.display = 'none';
+          document.getElementById('error').style.display = 'block';
+          return;
+        }
+
+        fetch(appUrl, {
+          method: 'GET',
+          cache: 'no-store',
+          redirect: 'follow',
+          headers: { 'Cache-Control': 'no-cache', 'Pragma': 'no-cache' }
+        })
+        .then(function(response) {
+          if (!response.ok) throw new Error('Not ready');
+          return response.text();
+        })
+        .then(function(html) {
+          // Check for Shiny-specific content (not present in this loading page)
+          if (html.indexOf('shinyapps') !== -1 || html.indexOf('Shiny.') !== -1 || html.indexOf('shiny-server') !== -1) {
+            window.location.reload();
+          } else {
+            setTimeout(poll, POLL_INTERVAL);
+          }
+        })
+        .catch(function() {
+          setTimeout(poll, POLL_INTERVAL);
+        });
+      }
+
+      // Start polling after a brief delay
+      setTimeout(poll, POLL_INTERVAL);
+    })();
+  </script>
+</body>
+</html>

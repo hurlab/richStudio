@@ -1182,10 +1182,13 @@ pre, .shiny-text-output {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
 }
 
 .link-list-compact li {
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .link-list-compact a {

@@ -116,6 +116,16 @@ ui <- function(request) {
     ),
 
     dashboardBody(
+      # Loading overlay — shows immediately, hides when Shiny connects
+      div(id = "loading-overlay",
+        div(class = "loading-content",
+          tags$img(src = "favicon.svg", height = "48", width = "48", class = "loading-logo"),
+          h3("richStudio", class = "loading-title"),
+          div(class = "loading-spinner"),
+          p("Loading application...", class = "loading-text")
+        )
+      ),
+
       # Enable shinyjs
       shinyjs::useShinyjs(),
 
@@ -134,6 +144,12 @@ ui <- function(request) {
         tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
         tags$script(HTML("
           $(document).on('shiny:connected', function() {
+            // Hide loading overlay with fade
+            var $overlay = $('#loading-overlay');
+            if ($overlay.length) {
+              $overlay.addClass('loaded');
+              setTimeout(function() { $overlay.remove(); }, 600);
+            }
             // Breadcrumb mapping
             var breadcrumbs = {
               'home_tab': 'Home',

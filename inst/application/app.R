@@ -82,7 +82,10 @@ app_version <- "0.1.5"
 # UI Definition
 ui <- function(request) {
   dashboardPage(
-    dashboardHeader(title = paste0("richStudio v", app_version)),
+    dashboardHeader(title = tags$span(
+      tags$img(src = "favicon.svg", height = "20", style = "margin-right: 8px; vertical-align: middle;"),
+      "richStudio"
+    )),
     dashboardSidebar(
       sidebarMenu(
         menuItem("Home", icon = icon("house"), tabName = "home_tab"),

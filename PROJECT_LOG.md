@@ -89,6 +89,25 @@
 - `217d9dd` fix(ui): Remove version from header, add favicon icon to sidebar logo
 - `f64a25b` feat(ui): Add breadcrumb nav, empty states, heading consistency, bump to v0.1.6
 
+### Phase 11: Code Review Bug Fixes
+
+**Deep reconnaissance** via parallel agent review of all 21 R source files. Found 3 critical, 5 high, 13 medium, 9 low issues.
+
+**Critical fixes:**
+- `R/rr_hmap.R:56`: `!which()` logic error causing data corruption in custom heatmaps
+- `R/rr_hmap.R:54`: Unqualified `drop_na()` — fixed to `tidyr::drop_na()`
+- `R/cluster_hmap.R:13`: Unqualified `as_tibble()` — fixed to `tibble::as_tibble()`
+
+**High fixes:**
+- 7 unsafe `-which()` patterns across 4 files replaced with logical negation
+- NULL guard added for `custom_data` parameter in heatmap functions
+
+**Dependency fixes:**
+- Installed richCluster v1.0.2 from CRAN
+- Added `tibble` to DESCRIPTION Imports
+
+- `532201b` fix: Critical bug fixes from code review
+
 ---
 
 ## Session 2026-03-08 15:00 CDT — Comprehensive Code Review and Fix Session

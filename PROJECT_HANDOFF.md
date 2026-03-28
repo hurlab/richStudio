@@ -86,6 +86,7 @@ richStudio is an R Shiny application for functional enrichment analysis and gene
 | Phase 8: Second Review Round | Completed | 2026-03-10 |
 | Phase 9: UI/UX Modernization | Completed | 2026-03-28 |
 | Phase 10: UI Audit & Polish (v0.1.6) | Completed | 2026-03-28 |
+| Phase 11: Code Review Bug Fixes | Completed | 2026-03-28 |
 
 All Critical (CRIT-001 through CRIT-007), High (HIGH-001 through HIGH-011), and Medium (MED-001 through MED-015) issues are resolved.
 
@@ -118,6 +119,15 @@ All Critical (CRIT-001 through CRIT-007), High (HIGH-001 through HIGH-011), and 
 - Consistent h4 sizing (16px/600) inside box bodies across all pages
 - Tightened home page bottom spacing and empty-state padding
 - Version bumped to 0.1.6
+
+### Phase 11: Code Review Bug Fixes — Completed 2026-03-28
+- **CRIT-R1**: Fixed `!which()` logic error in rr_hmap.R:56 — negating integer indices from `which()` produces wrong boolean results, causing data corruption in custom heatmaps
+- **CRIT-R2**: Added `tidyr::` namespace qualifier to `drop_na()` in rr_hmap.R (was unqualified, would crash at runtime)
+- **CRIT-R3**: Added `tibble::` namespace qualifier to `as_tibble()` in cluster_hmap.R (same issue)
+- **HIGH-R1**: Fixed all 7 unsafe `-which()` patterns across 4 files (file_handling.R, rr_hmap.R, rr_visualize_tab.R) — `df[-integer(0),]` silently returns all rows instead of none
+- **HIGH-R2**: Added `is.null()` guard for `custom_data` parameter in heatmap functions (NULL default would crash `nrow()`)
+- **DEP-R1**: Installed richCluster v1.0.2 from CRAN (enables Hierarchical + DAVID clustering methods)
+- **DEP-R2**: Added `tibble` to DESCRIPTION Imports
 
 ## 4. Outstanding Work
 

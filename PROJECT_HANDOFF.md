@@ -4,9 +4,10 @@
 
 richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
 
-- **Last updated:** 2026-03-10 CDT
+- **Last updated:** 2026-03-28 CDT
 - **Last coding CLI used:** Claude Code CLI (claude-opus-4-6)
-- **Branch:** feature/SPEC-REFACTOR-001
+- **Branch:** main
+- **Version:** 0.1.6
 
 ## 2. Current State
 
@@ -83,6 +84,8 @@ richStudio is an R Shiny application for functional enrichment analysis and gene
 | Phase 6: Reactive Refactor | Completed | 2026-01-08 |
 | Phase 7: Medium Fixes & Tests | Completed | 2026-03-09 |
 | Phase 8: Second Review Round | Completed | 2026-03-10 |
+| Phase 9: UI/UX Modernization | Completed | 2026-03-28 |
+| Phase 10: UI Audit & Polish (v0.1.6) | Completed | 2026-03-28 |
 
 All Critical (CRIT-001 through CRIT-007), High (HIGH-001 through HIGH-011), and Medium (MED-001 through MED-015) issues are resolved.
 
@@ -96,6 +99,25 @@ All Critical (CRIT-001 through CRIT-007), High (HIGH-001 through HIGH-011), and 
 - **B4**: Removed 7 unused `dataTableProxy()` variables across 5 files
 - **B5**: Added error for invalid `view` parameter in rr_bar.R
 - **B6**: Removed dead test file (compare_david_clustering.R)
+
+### Phase 9: UI/UX Modernization — Completed 2026-03-28
+- CSS design token system (23 variables), consistent component styling
+- Sidebar flexbox layout with sticky footer (Hur Lab link always visible)
+- Landing page condensed to single viewport (3-column layout)
+- Fixed logo SVG truncation, bookmark button restyled as menu item
+- Deduplicated box headings on visualization tabs
+- Fixed "Not currently supported" help text on cluster visualize
+
+### Phase 10: UI Audit & Polish (v0.1.6) — Completed 2026-03-28
+- Breadcrumb navigation in top navbar showing current section/page
+- Favicon icon in sidebar logo via CSS pseudo-element
+- Fixed browser tab title (was showing raw HTML)
+- Empty-state placeholders on visualization pages when no data loaded
+- Standardized all page titles to h2 with consistent 22px/700 sizing
+- Cluster tab: changed from solidHeader box to plain h2 + box layout
+- Consistent h4 sizing (16px/600) inside box bodies across all pages
+- Tightened home page bottom spacing and empty-state padding
+- Version bumped to 0.1.6
 
 ## 4. Outstanding Work
 

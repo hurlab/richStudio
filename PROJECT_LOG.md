@@ -1,5 +1,96 @@
 # richStudio Project Log
 
+## Session 2026-03-28 CDT — UI/UX Audit, Modernization & v0.1.6 Release
+
+- **Coding CLI used:** Claude Code CLI (claude-opus-4-6)
+- **Phase(s) worked on:** Phase 9 (UI/UX Modernization), Phase 10 (UI Audit & Polish)
+
+### Infrastructure
+- Restored renv environment (165 packages) via `renv::restore()` with system R 4.5.2
+- Shiny Server confirmed running richStudio_3 as user `juhur` on port 3838
+
+### Phase 9: UI/UX Modernization (3 commits)
+
+**Sidebar fixes:**
+- Sidebar now uses flexbox layout; "Hur Lab" footer pinned at viewport bottom without page scroll
+- Removed `position: absolute` / `padding-bottom: 70px` anti-pattern
+- Bookmark button restyled as sidebar menu item (was bordered button)
+
+**Landing page:**
+- Condensed from 4 boxes (2 columns) to 3 boxes (3 equal columns): Key Features, Quick Links, About
+- Hero banner compacted (`home-hero-compact` class, 16px padding, 24px font)
+- Quick Start step descriptions shortened to single lines
+- Fixed logo SVG truncation (viewBox widened from 240 to 340)
+
+**Visualization tabs:**
+- Deduplicated box headings: config boxes renamed "Selection"/"Options", result boxes keep original names
+- Fixed confusing "Not currently supported" text on cluster visualize upload
+- Removed global inline `.box-title { font-size: 20px }` override from clus_visualize_tab.R
+
+**Header:**
+- Favicon icon added to sidebar logo (later moved to CSS pseudo-element)
+- Version removed from header text
+
+### Phase 10: UI Audit & Polish — v0.1.6
+
+**Breadcrumb navigation:**
+- JavaScript breadcrumb injected into navbar via `tags$script` in app.R
+- Updates on tab change (`shown.bs.tab`) and sidebar click events
+- Maps all 8 tabs to readable paths (e.g. "Enrichment / Enrich", "Clustering / Visualize")
+- Favicon icon shown before breadcrumb text via CSS `::before` pseudo-element
+
+**Empty states:**
+- Added empty-state divs with icons and messages to all visualization result boxes
+- Enrichment Visualize: Table, Bar Plot, Dot Plot, Network boxes
+- Cluster Visualize: Cluster Heatmap, Term Heatmap boxes
+- Removed unnecessary `br()` elements between boxes
+
+**Heading consistency:**
+- All page titles standardized to `h2()` (was mix of h2/h3)
+- Cluster tab: changed from `box(title=..., solidHeader=TRUE)` to standalone `h2()` + plain `box()`
+- Added CSS for `.tab-pane > h2` to ensure consistent 22px/700 styling
+- Added `.box-body h4` rule for consistent 16px/600 section headings
+
+**Spacing:**
+- Tightened `.empty-state` padding (40px -> 24px) and icon size (48px -> 36px)
+- Home section box margin reduced to 12px
+- Workflow stepper margin reduced
+
+**Browser title fix:**
+- Reverted `dashboardHeader(title=)` from `tags$span(tags$img(...))` to plain string "richStudio"
+- Favicon in sidebar logo now via CSS `::before` pseudo-element instead of inline HTML
+
+**Version bump:**
+- `DESCRIPTION`: 0.1.5 -> 0.1.6
+- `inst/application/app.R`: app_version 0.1.5 -> 0.1.6
+- `R/home_tab.R`: default app_version 0.1.5 -> 0.1.6
+
+### Files Modified
+- `DESCRIPTION` — Version bump
+- `R/home_tab.R` — Compact hero, 3-column layout, version bump
+- `R/rr_visualize_tab.R` — h2 title, deduplicated headings, empty states
+- `R/clus_visualize_tab.R` — h2 title, deduplicated headings, empty states, removed inline CSS
+- `R/cluster_tab.R` — Plain h2 + box layout
+- `inst/application/app.R` — Breadcrumb JS, plain title, version bump
+- `inst/application/www/custom.css` — Sidebar flex, breadcrumb, compact hero, link-list-compact, empty-state sizing, heading consistency, bookmark restyle, favicon pseudo-element
+- `inst/application/www/richstudio-logo.svg` — Widened viewBox
+
+### Verification
+- All R files parse successfully
+- Playwright visual audit of all 8 pages: breadcrumb updates correctly on every navigation
+- Empty states display on visualization pages
+- Headings consistent across all pages (h2 at 22px)
+- Browser tab title shows "richStudio" (clean, no HTML)
+- Favicon visible in sidebar logo and breadcrumb
+- Version shows v0.1.6 on home page
+
+### Commits
+- `43c84a9` fix(ui): Condense landing page, fix sidebar footer, and polish UX
+- `217d9dd` fix(ui): Remove version from header, add favicon icon to sidebar logo
+- `f64a25b` feat(ui): Add breadcrumb nav, empty states, heading consistency, bump to v0.1.6
+
+---
+
 ## Session 2026-03-08 15:00 CDT — Comprehensive Code Review and Fix Session
 
 - **Coding CLI used:** Claude Code CLI (claude-opus-4-6)

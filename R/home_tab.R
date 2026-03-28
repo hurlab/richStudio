@@ -11,7 +11,9 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
           tags$img(src = "richstudio-logo.svg", alt = "richStudio logo", class = "home-logo"),
           div(
             h1("Welcome to richStudio", class = "home-title"),
-            p("Integrative enrichment analysis, clustering, and visualization for functional genomics.",
+            p("An interactive platform for functional enrichment analysis, gene set clustering, and visualization.",
+              class = "home-subtitle"),
+            p("Run GO, KEGG, or Reactome enrichment directly, or import results from tools like clusterProfiler or DAVID. Cluster functionally related terms using multiple algorithms and explore results through interactive plots.",
               class = "home-subtitle"),
             span(class = "version-pill", paste0("v", app_version))
           )

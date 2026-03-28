@@ -30,6 +30,11 @@ inst/doc/
 doc/
 Meta/
 
+# Manuscript (private, not for public repo)
+inst/manuscript/
+docs/competitive_landscape_analysis.md
+docs/competitive-landscape-analysis.md
+
 # Other
 .DS_Store
 Thumbs.db

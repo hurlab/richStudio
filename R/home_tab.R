@@ -86,6 +86,13 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
             p("Developed by the",
               tags$a(href = "http://hurlab.med.und.edu/", target = "_blank", "Hur Lab"),
               "at UND School of Medicine & Health Sciences."),
+            tags$strong("Team"),
+            tags$ul(class = "home-list",
+              tags$li("Junguk Hur (Lead)"),
+              tags$li("Sarah Hong"),
+              tags$li("Jane Kim"),
+              tags$li("Kai Guo")
+            ),
             div(class = "citation-block",
               tags$strong("Citation:"),
               br(),

@@ -179,12 +179,17 @@ hr {
   margin: 8px 16px;
 }
 
+/* Sidebar flex layout for sticky footer */
+.main-sidebar .sidebar {
+  display: flex !important;
+  flex-direction: column !important;
+  height: calc(100vh - 50px) !important;
+  overflow: hidden !important;
+}
+
 /* Sidebar footer */
 .sidebar-footer {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  flex-shrink: 0;
   padding: 14px 16px;
   border-top: 1px solid rgba(255,255,255,0.08);
   background: rgba(0,0,0,0.15);
@@ -222,9 +227,11 @@ hr {
   color: var(--rs-accent);
 }
 
-/* Ensure sidebar has room for footer */
+/* Sidebar menu scrollable area */
 .sidebar-menu {
-  padding-bottom: 70px;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding-bottom: 8px;
 }
 
 /* --- 5. Content Area --- */
@@ -801,14 +808,14 @@ input[type="number"].form-control {
 
 /* Workflow Stepper */
 .workflow-stepper {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .workflow-stepper h3 {
   font-size: 18px;
   font-weight: 700;
   color: var(--rs-text);
-  margin: 0 0 16px;
+  margin: 0 0 10px;
 }
 
 .stepper-container {
@@ -1068,13 +1075,16 @@ pre, .shiny-text-output {
 #ss-bookmark-btn,
 [id$="bookmark-btn"] {
   background: transparent !important;
-  border: 1px solid rgba(255,255,255,0.15) !important;
+  border: none !important;
   color: var(--rs-sidebar-text) !important;
-  border-radius: var(--rs-radius-sm) !important;
-  margin: 8px 16px;
-  width: calc(100% - 32px);
-  font-size: 12px;
-  padding: 8px;
+  border-radius: 0 !important;
+  border-left: 3px solid transparent !important;
+  margin: 0;
+  width: 100%;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 12px 16px 12px 18px;
+  text-align: left;
   transition: all var(--rs-transition);
 }
 
@@ -1082,7 +1092,74 @@ pre, .shiny-text-output {
 [id$="bookmark-btn"]:hover {
   background: var(--rs-sidebar-hover) !important;
   color: #ffffff !important;
-  border-color: rgba(255,255,255,0.25) !important;
+  border-left-color: var(--rs-accent) !important;
+}
+
+/* Compact home hero */
+.home-hero-compact {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--rs-primary-lighter), #f0fafb);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-lg);
+  padding: 16px 24px;
+  margin-bottom: 16px;
+}
+
+.home-hero-compact .home-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--rs-text);
+}
+
+.home-hero-compact .home-subtitle {
+  margin: 4px 0 6px;
+  color: var(--rs-text-secondary);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.home-hero-compact .home-logo {
+  height: 60px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+/* Compact link list */
+.link-list-compact {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.link-list-compact li {
+  margin-bottom: 6px;
+}
+
+.link-list-compact a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: var(--rs-radius-sm);
+  text-decoration: none;
+  color: var(--rs-text);
+  font-size: 13px;
+  font-weight: 500;
+  transition: all var(--rs-transition);
+}
+
+.link-list-compact a:hover {
+  background: var(--rs-primary-lighter);
+  color: var(--rs-primary);
+}
+
+.link-list-compact .fa, .link-list-compact .fas, .link-list-compact .fab {
+  color: var(--rs-primary);
+  width: 16px;
+  text-align: center;
 }
 
 /* --- 21. Responsive --- */
@@ -1091,6 +1168,12 @@ pre, .shiny-text-output {
     flex-direction: column;
     text-align: center;
     padding: 20px;
+  }
+
+  .home-hero-compact {
+    flex-direction: column;
+    text-align: center;
+    padding: 14px;
   }
 
   .stepper-container {

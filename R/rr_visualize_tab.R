@@ -48,7 +48,7 @@ rrVisTabUI <- function(id, tabName) {
 
           # Table
           tabPanel("Table",
-            box(title="Table View", width=NULL, status='primary', collapsible=TRUE,
+            box(title="Selection", width=NULL, status='primary', collapsible=TRUE,
               selectInput(ns('select_table'), "Select enrichment result to view", choices=NULL, multiple=FALSE),
             ),
             box(title='Table View', width=NULL, status='info', solidHeader=TRUE,
@@ -58,7 +58,7 @@ rrVisTabUI <- function(id, tabName) {
 
           # Bar plot
           tabPanel("Bar Plot",
-            box(title="Bar Plot", width=NULL, status='primary', collapsible=TRUE,
+            box(title="Options", width=NULL, status='primary', collapsible=TRUE,
               br(),
               selectInput(ns('select_bar'), "Select enrichment result to view", choices=NULL, multiple=FALSE),
               fluidRow(
@@ -82,7 +82,7 @@ rrVisTabUI <- function(id, tabName) {
 
           # Dot plot
           tabPanel("Dot Plot",
-            box(title="Dot Plot", width=NULL, status='primary', collapsible=TRUE,
+            box(title="Options", width=NULL, status='primary', collapsible=TRUE,
               br(),
               selectInput(ns('select_dot'), "Select enrichment result to view", choices=NULL, multiple=FALSE),
               fluidRow(
@@ -103,7 +103,7 @@ rrVisTabUI <- function(id, tabName) {
 
           # Network
           tabPanel("Network",
-            box(title="Network", width=NULL, status='primary', collapsible=TRUE,
+            box(title="Options", width=NULL, status='primary', collapsible=TRUE,
               br(),
               selectInput(ns('select_net'), "Select enrichment result to view", choices=NULL, multiple=FALSE),
               fluidRow(

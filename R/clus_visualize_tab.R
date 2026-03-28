@@ -6,7 +6,7 @@ clusVisTabUI <- function(id, tabName) {
       column(width = 4,
         tabBox(title="Load cluster result", width=NULL,
           tabPanel("File upload",
-            helpText("Accepted formats: .txt, .csv, .tsv (Not currently supported)"),
+            helpText("File upload for cluster results is not yet supported. Use the Clustering tab to generate results."),
             fileInput(ns('clus_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt'))
           ),
           tabPanel("Text input",
@@ -32,7 +32,7 @@ clusVisTabUI <- function(id, tabName) {
           tabPanel("Heatmap",
                    
             # Cluster heatmap
-            box(title = "Cluster Heatmap", status = "primary", width = NULL, collapsible = TRUE,
+            box(title = "Options", status = "primary", width = NULL, collapsible = TRUE,
               p("Select cluster result to view comprehensive heatmap displaying values for each cluster"),
               selectInput(ns("clusdf_select"), "Select cluster result", choices=NULL, multiple=FALSE),
               fluidRow(
@@ -50,7 +50,7 @@ clusVisTabUI <- function(id, tabName) {
             ),
             br(),
             # Term heatmap
-            box(title = "Term Heatmap", status = "primary", width = NULL, collapsible = TRUE,
+            box(title = "Options", status = "primary", width = NULL, collapsible = TRUE,
               p("Select individual clusters to view heatmap of values for each term in cluster"),
               selectInput(ns("indiv_clus_select"), "Select individual clusters", choices=NULL, multiple=TRUE),
               selectInput(ns('small_value_type'), "Select value to show", choices=c("Padj", "Pvalue"))
@@ -85,11 +85,6 @@ clusVisTabUI <- function(id, tabName) {
         )
       )
     ),
-    tags$head(
-      tags$style(
-        HTML(".box-title { font-size: 20px; }")  # Adjust the font size as needed
-      )
-    )
   )
 }
 

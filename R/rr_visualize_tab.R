@@ -324,7 +324,6 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       big_rrdf_to_table(), editable='cell'
     )
     # Table editing code
-    proxy = dataTableProxy('rr_list_table')
     observeEvent(input$rr_list_table_cell_edit, {
       info = input$rr_list_table_cell_edit
       # Debug: str(info)
@@ -472,7 +471,6 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       editable = list(target='cell', disable=list(columns = c(1:2)))
     )
     # Table editing code
-    proxy = dataTableProxy('tophmap_table')
     observeEvent(input$tophmap_table_cell_edit, {
       info = input$tophmap_table_cell_edit
       # Debug: str(info)

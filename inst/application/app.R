@@ -22,6 +22,9 @@ if (!is.null(pkg_root) && file.exists(file.path(pkg_root, "DESCRIPTION"))) {
   }
 }
 
+# Enable async processing for long-running operations
+future::plan(future::multisession, workers = 2)
+
 library(shiny)
 library(shinydashboard)
 library(shinyjs)
@@ -83,19 +86,32 @@ ui <- function(request) {
     dashboardSidebar(
       sidebarMenu(
         menuItem("Home", icon = icon("house"), tabName = "home_tab"),
+        tags$li(class = "header", "ANALYSIS"),
         menuItem("Enrichment", icon = icon("flask"), tabName = "enrich_tab_group",
-          menuSubItem("Enrich", icon = icon("upload"), tabName = "enrich_tab"),
+          menuSubItem("Enrich", icon = icon("play-circle"), tabName = "enrich_tab"),
           menuSubItem("Visualize", icon = icon("chart-bar"), tabName = "rr_visualize_tab")
         ),
         menuItem("Clustering", icon = icon("layer-group"), tabName = "cluster_tab_group",
-          menuSubItem("Upload files", icon = icon("upload"), tabName = "cluster_upload_tab"),
+          menuSubItem("Upload files", icon = icon("file-arrow-up"), tabName = "cluster_upload_tab"),
           menuSubItem("Cluster", icon = icon("vials"), tabName = "cluster_tab"),
           menuSubItem("Visualize", icon = icon("chart-line"), tabName = "clus_visualize_tab")
         ),
+        tags$li(class = "header", "TOOLS"),
         menuItem("Manage Files", icon = icon("folder-open"), tabName = "update_tab"),
-        menuItem("Save/Load", icon = icon("save"), tabName = "save_tab"),
+        menuItem("Save/Load", icon = icon("floppy-disk"), tabName = "save_tab"),
         hr(),
         bookmarkButton()
+      ),
+      # Sidebar footer with lab homepage link
+      div(class = "sidebar-footer",
+        tags$a(href = "http://hurlab.med.und.edu/", target = "_blank",
+          icon("flask-vial", class = "lab-icon"),
+          div(
+            span("Hur Lab", class = "lab-name"),
+            br(),
+            span("UND School of Medicine", class = "lab-dept")
+          )
+        )
       )
     ),
 
@@ -114,18 +130,8 @@ ui <- function(request) {
         saveTabUI("save", tabName = "save_tab")
       ),
       tags$head(
-        tags$style(
-          HTML('
-            .content-wrapper { overflow: auto; }
-            .dataTables_wrapper { overflow-x: scroll; }
-            .box-title { font-size: 18px; }
-            .btn-primary { margin-right: 10px; }
-            .help-block { font-size: 12px; color: #777; }
-          ')
-        ),
-        tags$link(
-          rel = "stylesheet", type = "text/css", href = "custom.css"
-        )
+        tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
+        tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
       )
     )
   )
@@ -147,6 +153,29 @@ server <- function(input, output, session) {
   u_big_clusdf <- reactiveValues()              # list of created cluster results with info
   u_cluslists <- reactiveValues()               # cluster info lists
   clus_intermed <- reactiveValues()             # cluster intermediate results
+
+  # Generate unique session ID for debugging concurrent issues
+  session_id <- paste0("rs_", format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
+                       substr(digest::digest(runif(1)), 1, 8))
+  message("[richStudio] Session started: ", session_id)
+
+  # Clean up large reactive values when session ends to free memory
+  session$onSessionEnded(function() {
+    message("[richStudio] Session ended: ", session_id)
+    # Clear contents of each reactiveValues store
+    for (nm in names(u_degdfs))   u_degdfs[[nm]]   <- NULL
+    for (nm in names(u_rrdfs))    u_rrdfs[[nm]]     <- NULL
+    for (nm in names(u_clusdfs))  u_clusdfs[[nm]]   <- NULL
+    for (nm in names(u_cluslists)) u_cluslists[[nm]] <- NULL
+    for (nm in names(clus_intermed)) clus_intermed[[nm]] <- NULL
+    for (nm in names(u_degnames)) u_degnames[[nm]]  <- NULL
+    for (nm in names(u_rrnames))  u_rrnames[[nm]]   <- NULL
+    for (nm in names(u_clusnames)) u_clusnames[[nm]] <- NULL
+    for (nm in names(u_big_degdf)) u_big_degdf[[nm]] <- NULL
+    for (nm in names(u_big_rrdf))  u_big_rrdf[[nm]]  <- NULL
+    for (nm in names(u_big_clusdf)) u_big_clusdf[[nm]] <- NULL
+    gc()
+  })
 
   # Initialize module servers
   homeTabServer("home")

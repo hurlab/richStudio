@@ -208,55 +208,103 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     # REMOVE FUNCTIONS
     # ============================================
 
-    # Remove DEG sets
+    # Remove DEG sets - show confirmation dialog
     observeEvent(input$remove_deg_btn, {
       to_remove <- input$remove_deg_select
-
       if (is.null(to_remove) || length(to_remove) == 0) {
         showNotification("Please select DEG sets to remove", type = "warning")
         return()
       }
+      ns <- session$ns
+      showModal(modalDialog(
+        title = "Confirm Removal",
+        div(class = "modal-confirm",
+          p(icon("triangle-exclamation"),
+            sprintf("Remove %d DEG set(s)?", length(to_remove))),
+          tags$ul(lapply(to_remove, tags$li))
+        ),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton(ns("confirm_remove_deg"), "Remove", class = "btn-danger")
+        ),
+        easyClose = TRUE
+      ))
+    })
 
+    observeEvent(input$confirm_remove_deg, {
+      to_remove <- input$remove_deg_select
       for (name in to_remove) {
         u_degdfs[[name]] <- NULL
       }
       u_degnames$labels <- setdiff(u_degnames$labels, to_remove)
-
+      removeModal()
       showNotification(paste("Removed", length(to_remove), "DEG set(s)"), type = "message")
     })
 
-    # Remove enrichment results
+    # Remove enrichment results - show confirmation dialog
     observeEvent(input$remove_rr_btn, {
       to_remove <- input$remove_rr_select
-
       if (is.null(to_remove) || length(to_remove) == 0) {
         showNotification("Please select enrichment results to remove", type = "warning")
         return()
       }
+      ns <- session$ns
+      showModal(modalDialog(
+        title = "Confirm Removal",
+        div(class = "modal-confirm",
+          p(icon("triangle-exclamation"),
+            sprintf("Remove %d enrichment result(s)?", length(to_remove))),
+          tags$ul(lapply(to_remove, tags$li))
+        ),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton(ns("confirm_remove_rr"), "Remove", class = "btn-danger")
+        ),
+        easyClose = TRUE
+      ))
+    })
 
+    observeEvent(input$confirm_remove_rr, {
+      to_remove <- input$remove_rr_select
       for (name in to_remove) {
         u_rrdfs[[name]] <- NULL
       }
       u_rrnames$labels <- setdiff(u_rrnames$labels, to_remove)
-
+      removeModal()
       showNotification(paste("Removed", length(to_remove), "enrichment result(s)"), type = "message")
     })
 
-    # Remove cluster results
+    # Remove cluster results - show confirmation dialog
     observeEvent(input$remove_clus_btn, {
       to_remove <- input$remove_clus_select
-
       if (is.null(to_remove) || length(to_remove) == 0) {
         showNotification("Please select cluster results to remove", type = "warning")
         return()
       }
+      ns <- session$ns
+      showModal(modalDialog(
+        title = "Confirm Removal",
+        div(class = "modal-confirm",
+          p(icon("triangle-exclamation"),
+            sprintf("Remove %d cluster result(s)?", length(to_remove))),
+          tags$ul(lapply(to_remove, tags$li))
+        ),
+        footer = tagList(
+          modalButton("Cancel"),
+          actionButton(ns("confirm_remove_clus"), "Remove", class = "btn-danger")
+        ),
+        easyClose = TRUE
+      ))
+    })
 
+    observeEvent(input$confirm_remove_clus, {
+      to_remove <- input$remove_clus_select
       for (name in to_remove) {
         u_clusdfs[[name]] <- NULL
         u_cluslists[[name]] <- NULL
       }
       u_clusnames$labels <- setdiff(u_clusnames$labels, to_remove)
-
+      removeModal()
       showNotification(paste("Removed", length(to_remove), "cluster result(s)"), type = "message")
     })
   })

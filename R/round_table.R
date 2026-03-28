@@ -1,5 +1,4 @@
 # Functions to round off decimal places in dataframe tables
-library(knitr)
 
 
 # n_dec <- function(x) {

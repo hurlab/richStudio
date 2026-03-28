@@ -58,9 +58,11 @@ clusterTabUI <- function(id, tabName) {
       hr(),
       fluidRow(
         column(width = 12,
-          actionButton(ns('cluster'), "Run Clustering", class = "btn-primary btn-lg"),
-          span(style = "margin-left: 20px;"),
-          actionButton(ns('reset_params'), "Reset to Defaults", class = "btn-default")
+          actionButton(ns('cluster'), "Run Clustering",
+                       icon = icon("play"), class = "btn-action-hero"),
+          span(style = "margin-left: 16px;"),
+          actionButton(ns('reset_params'), "Reset to Defaults",
+                       icon = icon("rotate-left"), class = "btn-default")
         )
       )
     ),

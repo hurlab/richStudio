@@ -139,7 +139,6 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       big_clusdf_to_table(), editable='cell'
     )
     # Cluslist table editing code
-    proxy = dataTableProxy('clus_list_table')
     observeEvent(input$clus_list_table_cell_edit, {
       info = input$clus_list_table_cell_edit
       # Debug: str(info)

@@ -44,7 +44,7 @@
 #' @useDynLib richStudio
 #' @import shiny
 #' @import shinydashboard
-#' @importFrom dplyr filter arrange rename any_of
+#' @importFrom dplyr filter arrange rename any_of slice_head
 #' @importFrom plotly plot_ly layout
 #' @importFrom reshape2 melt
 #' @importFrom jsonlite read_json write_json

@@ -34,7 +34,9 @@ rr_dot <- function(x, top=30, value_cutoff=0.05, value_type="Padj") {
   x$final_value <- -log10(as.numeric(x$final_value))
   x$final_value <- round(x$final_value, 4)
   
-  x$rich <- as.numeric(x$Significant)/as.numeric(x$Annotated)
+  annotated <- as.numeric(x$Annotated)
+  annotated[annotated == 0] <- NA
+  x$rich <- as.numeric(x$Significant) / annotated
   x$rich <- round(x$rich, 4)
   
   x$Term <- factor(x$Term,levels=x$Term[order(x$final_value)])

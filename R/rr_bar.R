@@ -36,11 +36,13 @@ rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
   x$final_value <- -log10(as.numeric(x$final_value))
   x$final_value <- round(x$final_value, 4)
   
-  x$rich <- as.numeric(x$Significant)/as.numeric(x$Annotated)
+  annotated <- as.numeric(x$Annotated)
+  annotated[annotated == 0] <- NA
+  x$rich <- as.numeric(x$Significant) / annotated
   x$rich <- round(x$rich, 4)
-  
+
   x$Term <- factor(x$Term,levels=x$Term[order(x$final_value)])
-  
+
   # view rich score
   if (view == "rich") {
     p <- plot_ly(
@@ -56,7 +58,7 @@ rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
         xaxis = list(title = "Rich Score"),
         yaxis = list(title = "Term", categoryorder = "trace", nticks = top)
       )
-  } 
+  }
   # view -log10(value_type)
   else if (view == "value") {
     p <- plot_ly(
@@ -71,7 +73,9 @@ rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
         xaxis = list(title = paste0("-log10(", value_type, ")")),
         yaxis = list(title = "Term", categoryorder = "trace", nticks = top)
       )
+  } else {
+    stop("Invalid view parameter: '", view, "'. Must be 'rich' or 'value'.")
   }
   return(p)
-  
+
 }

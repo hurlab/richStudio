@@ -250,7 +250,6 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       big_rrdf_to_table(), editable='cell'
     )
     # Table editing code
-    proxy = dataTableProxy('rr_list_table')
     observeEvent(input$rr_list_table_cell_edit, {
       info = input$rr_list_table_cell_edit
       # Debug: str(info)
@@ -341,7 +340,6 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       big_clusdf_to_table(), editable='cell'
     )
     # Cluslist table editing code
-    proxy = dataTableProxy('clus_list_table')
     observeEvent(input$clus_list_table_cell_edit, {
       info = input$clus_list_table_cell_edit
       # Debug: str(info)

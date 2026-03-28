@@ -33,16 +33,22 @@ enrichTabUI <- function(id, tabName) {
           selectInput(ns('degs_to_enrich'), "Select DEG sets to enrich", choices=NULL, multiple=TRUE),
           selectInput(ns('anntype_select'), "Select annotation source", c("GO", "KEGG", "Reactome")),
           selectInput(ns('keytype_select'), "Select keytype",
-                      c("ACCNUM", "ALIAS", "ENSEMBL", "ENSEMBLPROT", "ENSEMBLTRANS",
-                        "ENTREZID", "ENZYME", "EVIDENCE", "EVIDENCEALL", "FLYBASE",
-                        "FLYBASECG", "FLYBASEPROT", "GENENAME", "GO", "GOALL", "MAP",
-                        "ONTOLOGY", "ONTOLOGYALL", "PATH", "PMID", "REFSEQ", "SYMBOL",
-                        "UNIGENE", "UNIPROT"), selected="SYMBOL"),
+                      c("SYMBOL", "ENSEMBL", "ENTREZID", "REFSEQ", "UNIPROT", "GENENAME",
+                        "ACCNUM", "ALIAS", "ENSEMBLPROT", "ENSEMBLTRANS",
+                        "ENZYME", "EVIDENCE", "EVIDENCEALL", "FLYBASE",
+                        "FLYBASECG", "FLYBASEPROT", "GO", "GOALL", "MAP",
+                        "ONTOLOGY", "ONTOLOGYALL", "PATH", "PMID",
+                        "UNIGENE"), selected="SYMBOL"),
           selectInput(ns('ont_select'), "Select ontology", c("BP", "MF", "CC")),
-          selectInput(ns('species_select'), "Select species", c('anopheles', 'arabidopsis', 'bovine', 'celegans', 'canine', 'fly', 'zebrafish',
-                                                                'ecoli', 'chicken', 'human', 'mouse', 'rhesus', 'malaria', 'chipm', 'rat',
-                                                                'toxoplasma', 'sco', 'pig', 'yeast', 'xenopus'), selected='human'),
-          actionButton(ns('enrich_deg'), "Enrich")
+          selectInput(ns('species_select'), "Select species",
+                      c('human', 'mouse', 'rat', 'zebrafish', 'fly', 'celegans', 'yeast',
+                        'chicken', 'bovine', 'pig', 'canine', 'xenopus', 'rhesus',
+                        'arabidopsis', 'anopheles', 'ecoli', 'malaria', 'chipm',
+                        'toxoplasma', 'sco'), selected='human'),
+          br(),
+          actionButton(ns('enrich_deg'), "Run Enrichment",
+                       icon = icon("play"),
+                       class = "btn-action-hero btn-block")
         )
       ),
     ),
@@ -276,8 +282,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       big_degdf_to_table(),
       editable = list(target='cell', disable=list(columns = c(3)))
     )
-    # Code from https://github.com/rstudio/DT/pull/480
-    proxy <- DT::dataTableProxy('deg_list_table')
+    # Table editing code (ref: https://github.com/rstudio/DT/pull/480)
     observeEvent(input$deg_list_table_cell_edit, {
       info = input$deg_list_table_cell_edit
       # Debug: str(info)
@@ -376,6 +381,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       req(input$degs_to_enrich)
 
       # 1. Collect ALL reactive inputs BEFORE entering future
+      req(u_big_degdf[['df']])
       deg_inputs <- lapply(input$degs_to_enrich, function(name) {
         x <- u_degdfs[[name]]
         big_df <- u_big_degdf[['df']]
@@ -469,7 +475,6 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       big_rrdf_to_table(), editable='cell'
     )
     # Table editing code
-    proxy <- DT::dataTableProxy('rr_list_table')
     observeEvent(input$rr_list_table_cell_edit, {
       info = input$rr_list_table_cell_edit
       # Debug: str(info)

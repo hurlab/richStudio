@@ -3,6 +3,10 @@
 .RData
 .Rproj.user
 .Ruserdata
+
+# Claude Code / MoAI development tooling (not part of the application)
+.claude/
+.mcp.json
 .Renviron
 
 # Compiled outputs (Bioconductor requirement)

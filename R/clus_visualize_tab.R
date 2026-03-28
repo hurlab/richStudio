@@ -26,7 +26,7 @@ clusVisTabUI <- function(id, tabName) {
         ))
       ),
       column(width = 8,
-        h3("Cluster Result Visualization"),
+        h2("Cluster Result Visualization"),
         tabsetPanel(
           # HEATMAP
           tabPanel("Heatmap",
@@ -44,20 +44,27 @@ clusVisTabUI <- function(id, tabName) {
                 )
               )
             ),
-            br(),
             box(title = "Cluster Heatmap", status = "info", width = NULL, solidHeader = TRUE,
+              div(id = ns("clusdf_hmap_empty"), class = "empty-state",
+                icon("chart-bar", class = "empty-icon"),
+                h4("No cluster data loaded"),
+                p("Select a cluster result above to view the heatmap.")
+              ),
               plotlyOutput(ns('clusdf_hmap'), height="800px")
             ),
-            br(),
             # Term heatmap
             box(title = "Options", status = "primary", width = NULL, collapsible = TRUE,
               p("Select individual clusters to view heatmap of values for each term in cluster"),
               selectInput(ns("indiv_clus_select"), "Select individual clusters", choices=NULL, multiple=TRUE),
               selectInput(ns('small_value_type'), "Select value to show", choices=c("Padj", "Pvalue"))
             ),
-            br(),
             box(title = "Term Heatmap", status = "info", width = NULL,
               solidHeader = TRUE,
+              div(id = ns("indiv_hmap_empty"), class = "empty-state",
+                icon("chart-bar", class = "empty-icon"),
+                h4("No clusters selected"),
+                p("Select individual clusters above to view the term heatmap.")
+              ),
               plotlyOutput(ns('indiv_clus_hmap'))
             )
           ),

@@ -1,5 +1,5 @@
 
-homeTabUI <- function(id, tabName, app_version = "0.1.5") {
+homeTabUI <- function(id, tabName, app_version = "0.1.6") {
   ns <- NS(id)
   tabItem(
     tabName = tabName,

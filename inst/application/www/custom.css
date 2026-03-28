@@ -81,6 +81,19 @@ hr {
   letter-spacing: 0.3px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   color: #ffffff;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.skin-blue .main-header .logo::before {
+  content: '';
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  background: url('favicon.svg') no-repeat center/contain;
+  flex-shrink: 0;
 }
 
 .skin-blue .main-header .logo:hover {
@@ -99,6 +112,32 @@ hr {
 .skin-blue .main-header .navbar .sidebar-toggle:hover {
   background: var(--rs-bg) !important;
   color: var(--rs-primary) !important;
+}
+
+/* Navbar breadcrumb */
+.navbar-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 16px;
+  color: var(--rs-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.navbar-breadcrumb .bc-icon::before {
+  content: '';
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background: url('favicon.svg') no-repeat center/contain;
+  margin-right: 10px;
+  vertical-align: middle;
+}
+
+.navbar-breadcrumb .bc-text {
+  color: var(--rs-text);
+  font-weight: 600;
 }
 
 /* --- 4. Sidebar --- */
@@ -246,7 +285,9 @@ hr {
 
 /* Page headings */
 .content > h2,
-.content > h3 {
+.content > h3,
+.tab-pane > h2,
+.tab-pane > .row > .col-sm-12 > h2 {
   margin-top: 0;
   margin-bottom: 16px;
   font-size: 22px;
@@ -287,6 +328,15 @@ hr {
 
 .box-body {
   padding: 16px !important;
+}
+
+/* Consistent section headings inside boxes */
+.box-body h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rs-text);
+  margin-top: 8px;
+  margin-bottom: 12px;
 }
 
 /* Box status colors - headers only */
@@ -989,12 +1039,12 @@ input[type="number"].form-control {
 /* --- 15. Empty States --- */
 .empty-state {
   text-align: center;
-  padding: 40px 20px;
+  padding: 24px 16px;
   color: var(--rs-text-muted);
 }
 
 .empty-state .empty-icon {
-  font-size: 48px;
+  font-size: 36px;
   margin-bottom: 16px;
   color: var(--rs-border);
 }
@@ -1237,4 +1287,13 @@ pre, .shiny-text-output {
 
 .bttn-material-circle:hover {
   box-shadow: var(--rs-shadow-md) !important;
+}
+
+/* --- 25. Tighten home page bottom --- */
+.tab-content > .tab-pane > .row:last-child {
+  margin-bottom: 0;
+}
+
+.home-section .box {
+  margin-bottom: 12px;
 }

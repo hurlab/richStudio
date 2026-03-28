@@ -26,7 +26,8 @@ clusterTabUI <- function(id, tabName) {
   ns <- NS(id)
   tabItem(tabName = tabName,
     # Main clustering configuration box
-    box(title = "Cluster Enrichment Results", width = NULL, status = "primary", solidHeader = TRUE,
+    h2("Cluster Enrichment Results"),
+    box(width = NULL,
       fluidRow(
         column(width = 6,
           h4("Select enrichment results"),

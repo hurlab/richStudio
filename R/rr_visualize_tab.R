@@ -43,7 +43,7 @@ rrVisTabUI <- function(id, tabName) {
 
       # VISUALIZATION
       column(width = 8,
-        h3("Enrichment Result Visualization"),
+        h2("Enrichment Result Visualization"),
         tabsetPanel(
 
           # Table
@@ -52,6 +52,11 @@ rrVisTabUI <- function(id, tabName) {
               selectInput(ns('select_table'), "Select enrichment result to view", choices=NULL, multiple=FALSE),
             ),
             box(title='Table View', width=NULL, status='info', solidHeader=TRUE,
+              div(id = ns("table_empty"), class = "empty-state",
+                icon("table", class = "empty-icon"),
+                h4("No data to display"),
+                p("Select an enrichment result above.")
+              ),
               DT::dataTableOutput(ns('rr_table'))
             )
           ),
@@ -75,7 +80,11 @@ rrVisTabUI <- function(id, tabName) {
               sliderInput(ns("bar_nterms"), "Number of terms to display", value=25, min=0, max=100)
             ),
             box(title='Bar Plot', width=NULL, status='info', solidHeader=TRUE,
-              br(),
+              div(id = ns("bar_empty"), class = "empty-state",
+                icon("chart-bar", class = "empty-icon"),
+                h4("No data to display"),
+                p("Select an enrichment result and configure options above.")
+              ),
               jqui_resizable(plotlyOutput(ns("barplot")))
             )
           ),
@@ -96,7 +105,11 @@ rrVisTabUI <- function(id, tabName) {
               sliderInput(ns("dot_nterms"), "Number of terms to display", value=25, min=0, max=100)
             ),
             box(title='Dot Plot', width=NULL, status='info', solidHeader=TRUE,
-              br(),
+              div(id = ns("dot_empty"), class = "empty-state",
+                icon("chart-line", class = "empty-icon"),
+                h4("No data to display"),
+                p("Select an enrichment result and configure options above.")
+              ),
               jqui_resizable(plotlyOutput(ns("dotplot")))
             )
           ),
@@ -117,7 +130,11 @@ rrVisTabUI <- function(id, tabName) {
               sliderInput(ns("net_nterms"), "Number of terms to display", value=25, min=0, max=100)
             ),
             box(title='Network', width=NULL, status='info', solidHeader=TRUE,
-              br(),
+              div(id = ns("net_empty"), class = "empty-state",
+                icon("project-diagram", class = "empty-icon"),
+                h4("No data to display"),
+                p("Select an enrichment result and configure options above.")
+              ),
               jqui_resizable(plotOutput(ns("network")))
             )
           ),

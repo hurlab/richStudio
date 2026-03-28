@@ -77,15 +77,12 @@ if (requireNamespace("richCluster", quietly = TRUE)) {
   message("Install from CRAN with: install.packages('richCluster')")
 }
 
-app_version <- "0.1.5"
+app_version <- "0.1.6"
 
 # UI Definition
 ui <- function(request) {
   dashboardPage(
-    dashboardHeader(title = tags$span(
-      tags$img(src = "favicon.svg", height = "20", style = "margin-right: 8px; vertical-align: middle;"),
-      "richStudio"
-    )),
+    dashboardHeader(title = "richStudio"),
     dashboardSidebar(
       sidebarMenu(
         menuItem("Home", icon = icon("house"), tabName = "home_tab"),
@@ -134,7 +131,41 @@ ui <- function(request) {
       ),
       tags$head(
         tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
-        tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+        tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+        tags$script(HTML("
+          $(document).on('shiny:connected', function() {
+            // Breadcrumb mapping
+            var breadcrumbs = {
+              'home_tab': 'Home',
+              'enrich_tab': 'Enrichment / Enrich',
+              'rr_visualize_tab': 'Enrichment / Visualize',
+              'cluster_upload_tab': 'Clustering / Upload Files',
+              'cluster_tab': 'Clustering / Cluster',
+              'clus_visualize_tab': 'Clustering / Visualize',
+              'update_tab': 'Manage Files',
+              'save_tab': 'Save / Load'
+            };
+            // Create breadcrumb element in navbar
+            var $bc = $('<div class=\"navbar-breadcrumb\"><span class=\"bc-icon\"></span><span class=\"bc-text\">Home</span></div>');
+            $('.navbar-custom-menu').before($bc);
+            // Update on tab change
+            $(document).on('shown.bs.tab', 'a[data-toggle=\"tab\"]', function() {
+              var href = $(this).attr('href') || '';
+              var tab = href.replace('#shiny-tab-', '');
+              if (breadcrumbs[tab]) {
+                $bc.find('.bc-text').text(breadcrumbs[tab]);
+              }
+            });
+            // Also listen for sidebar menu clicks
+            $(document).on('click', '.sidebar-menu a[data-toggle=\"tab\"]', function() {
+              var href = $(this).attr('href') || '';
+              var tab = href.replace('#shiny-tab-', '');
+              if (breadcrumbs[tab]) {
+                $bc.find('.bc-text').text(breadcrumbs[tab]);
+              }
+            });
+          });
+        "))
       )
     )
   )

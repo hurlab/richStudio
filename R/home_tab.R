@@ -36,7 +36,7 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
               span(class = "step-number", "2"),
               div(class = "step-title", "Cluster"),
               p(class = "step-desc",
-                "Import enrichment results from any tool (clusterProfiler, DAVID, etc.) or enrich here first."),
+                "Import enrichment results from any tool (clusterProfiler, DAVID, etc.) or enrich here first at Step 1."),
               span(class = "step-arrow", icon("arrow-right"))
             ),
             div(class = "step-card",

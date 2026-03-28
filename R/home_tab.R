@@ -36,7 +36,7 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
               span(class = "step-number", "2"),
               div(class = "step-title", "Cluster"),
               p(class = "step-desc",
-                "Group results by functional similarity using multiple algorithms."),
+                "Upload enrichment results or use Step 1 output, then cluster by functional similarity."),
               span(class = "step-arrow", icon("arrow-right"))
             ),
             div(class = "step-card",
@@ -56,9 +56,9 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
         box(title = "Key Features", width = 12, status = "primary", solidHeader = TRUE,
           tags$ul(class = "home-list",
             tags$li("GO, KEGG, and Reactome enrichment via richR and bioAnno"),
+            tags$li("Import enrichment results from any tool, or enrich here"),
             tags$li("Three clustering algorithms (Hierarchical, DAVID, richR Kappa)"),
-            tags$li("Interactive bar, dot, heatmap, and network visualizations"),
-            tags$li("Session save/load and multi-format export")
+            tags$li("Interactive bar, dot, heatmap, and network visualizations")
           )
         )
       ),

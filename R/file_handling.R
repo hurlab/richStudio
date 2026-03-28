@@ -86,7 +86,7 @@ add_file_degdf <- function(df, name, new_df) {
 rm_file_degdf <- function(df, rm_vec) {
   #df <- df[df %!in% rm_vec]
   if(!is.atomic(df)){
-    df <- df[-which(df$name %in% rm_vec$name), ]
+    df <- df[!(df$name %in% rm_vec$name), ]
   } else {
     df <- NULL
   }
@@ -169,7 +169,7 @@ add_file_rrdf <- function(df, name, annot='?', keytype='?', ontology='?', specie
 rm_file_rrdf <- function(df, rm_vec) {
   #df <- df[df %!in% rm_vec]
   if(!is.atomic(df)){
-    df <- df[-which(df$name %in% rm_vec$name), ]
+    df <- df[!(df$name %in% rm_vec$name), ]
   } else {
     df <- NULL
   }
@@ -241,7 +241,7 @@ add_file_clusdf <- function(df, clusdf, name, from_vec) {
 rm_file_clusdf <- function(df, rm_vec) {
   #df <- df[df %!in% rm_vec]
   if(!is.atomic(df)){
-    df <- df[-which(df$name %in% rm_vec$name), ]
+    df <- df[!(df$name %in% rm_vec$name), ]
   } else {
     df <- NULL
   }

@@ -606,7 +606,7 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
 
       # Remove terms from rr_term_vec_reactive
       prev_terms <- rr_term_vec_reactive[[input$rr_delete_select]]
-      rr_term_vec_reactive[[input$rr_delete_select]] <- prev_terms[-which(prev_terms %in% input$rr_term_delete_select)]
+      rr_term_vec_reactive[[input$rr_delete_select]] <- prev_terms[!(prev_terms %in% input$rr_term_delete_select)]
 
       # Reflect new changes
       updateSelectInput(session=getDefaultReactiveDomain(), 'rr_term_delete_select',

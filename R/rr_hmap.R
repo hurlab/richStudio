@@ -32,7 +32,7 @@ add_custom_gs <- function(custom_data=NULL, gs, gs_name, term_vec) {
                          paste(colnames(gs), gs_name, sep="_"))
   
   # If custom_data empty, set it to gs
-  if (nrow(custom_data) == 0) {
+  if (is.null(custom_data) || nrow(custom_data) == 0) {
     custom_data <- gs
   } else {
     # Match anything + _ + (gs_name)
@@ -51,9 +51,9 @@ add_custom_gs <- function(custom_data=NULL, gs, gs_name, term_vec) {
       # Create dataframe of already added terms (term already added, gsname_cols are not NA)
       added_term_df <- custom_data[which(custom_data$Term %in% term_vec), ]
       added_term_df <- added_term_df[, c('Term', which(colnames(custom_data) %in% gsname_cols))]
-      added_term_df <- drop_na(added_term_df) 
+      added_term_df <- tidyr::drop_na(added_term_df)
       
-      gs <- gs[!which(gs$Term %in% added_term_df$Term), ] # Exclude already added terms from gs
+      gs <- gs[!(gs$Term %in% added_term_df$Term), ] # Exclude already added terms from gs
       
       custom_data <- rbind(custom_data, gs) # Rbind
     }
@@ -138,7 +138,7 @@ add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, t
   custom_data <- custom_data[, !same_gs_cols]
   
   # If no other gs in custom_data...
-  if (nrow(custom_data) == 0 || length(colnames(custom_data)) == 3) {
+  if (is.null(custom_data) || nrow(custom_data) == 0 || length(colnames(custom_data)) == 3) {
     custom_data <- gs # Set gs as the new custom_data
   } else { # Else, merge
     custom_data <- base::merge(custom_data, gs, by=c('Annot', 'Term'), all=TRUE)
@@ -194,8 +194,8 @@ remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL) {
     # match anything + _ + (gs_name)
     gs_cols <- c(grep(paste0(".*_", gs_name), colnames(custom_data), value=TRUE))
     # filter out gs columns and term rows
-    custom_data2 <- custom_data[, -which(colnames(custom_data) %in% gs_cols)]
-    custom_data2 <- custom_data2[-which(custom_data2$Term %in% delete_all), ]
+    custom_data2 <- custom_data[, !(colnames(custom_data) %in% gs_cols)]
+    custom_data2 <- custom_data2[!(custom_data2$Term %in% delete_all), ]
     if (nrow(custom_data2) == 0) {
       custom_data2 <- data.frame()
     }
@@ -203,7 +203,7 @@ remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL) {
   # else only delete selected terms
   else {
     # subset custom_data by terms to delete
-    custom_data2 <- custom_data[-which(custom_data$Term %in% term_vec), ]
+    custom_data2 <- custom_data[!(custom_data$Term %in% term_vec), ]
   }
   return(custom_data2)
 }

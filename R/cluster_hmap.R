@@ -10,7 +10,7 @@ HMAP_COLOR_HIGH <- "red"
 hmap_prepare <- function(clustered_gs, gs_names) {
   
   # Create tibble with Term and AnnotationCluster
-  x <- as_tibble(cbind(clustered_gs$AnnotationCluster, clustered_gs$Term))
+  x <- tibble::as_tibble(cbind(clustered_gs$AnnotationCluster, clustered_gs$Term))
   colnames(x) <- c('Cluster', 'Representative_Term')
   
   # Order clusters numerically

@@ -89,8 +89,7 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
             div(class = "citation-block",
               tags$strong("Citation:"),
               br(),
-              "Please cite the richStudio application note and underlying packages",
-              " (richR, richCluster, bioAnno)."
+              "Hur J, Hong S, Kim J, Guo K. richStudio: an interactive platform for functional enrichment clustering and visualization. Manuscript in preparation."
             ),
             p(tags$small(
               style = "color: var(--rs-text-muted);",

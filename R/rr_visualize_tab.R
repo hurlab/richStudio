@@ -275,30 +275,51 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       req(input$rr_files) # Make sure file uploaded
 
       for (i in seq_along(input$rr_files$name)) {
+        # Validate file size before processing
+        file_size_mb <- file.info(input$rr_files$datapath[i])$size / (1024 * 1024)
+        if (!is.na(file_size_mb) && file_size_mb > 100) {
+          showNotification(
+            paste0("File '", input$rr_files$name[i], "' too large (max 100MB)"),
+            type = "error"
+          )
+          next
+        }
+
         lab <- input$rr_files$name[i]
 
         ext <- tools::file_ext(input$rr_files$name[i])
         path <- input$rr_files$datapath[i]
 
-        # Try to read file as csv
-        csv_ncol <- tryCatch({
-          csvdf <- read.csv(path)
-          ncol(csvdf)
-        }, error = function(err) {
-          0
-        })
-        # Try to read file as tsv
-        tsv_ncol <- tryCatch({
-          tsvdf <- read.delim(path)
-          ncol(tsvdf)
-        }, error = function(err) {
-          0
-        })
-        # Decide which df to store
-        if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
-          df <- read.csv(path)
+        # Handle Excel files directly
+        if (tolower(ext) %in% c("xls", "xlsx")) {
+          df <- tryCatch({
+            as.data.frame(readxl::read_excel(path))
+          }, error = function(e) {
+            showNotification(paste0("Error reading '", lab, "': ", e$message), type = "error")
+            NULL
+          })
+          if (is.null(df)) next
         } else {
-          df <- read.delim(path)
+          # Try to read file as csv
+          csv_ncol <- tryCatch({
+            csvdf <- read.csv(path)
+            ncol(csvdf)
+          }, error = function(err) {
+            0
+          })
+          # Try to read file as tsv
+          tsv_ncol <- tryCatch({
+            tsvdf <- read.delim(path)
+            ncol(tsvdf)
+          }, error = function(err) {
+            0
+          })
+          # Decide which df to store
+          if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
+            df <- read.csv(path)
+          } else {
+            df <- read.delim(path)
+          }
         }
 
         u_rrdfs[[lab]] <- df # Add datafrane to u_rrdfs

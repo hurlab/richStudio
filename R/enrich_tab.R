@@ -10,8 +10,8 @@ enrichTabUI <- function(id, tabName) {
           tabPanel("File upload",
             h4('Upload files'),
             p('Upload gene differential expression data from local computer'),
-            helpText("Accepted formats: .txt, .csv, .tsv"),
-            fileInput(ns('deg_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt')),
+            helpText("Accepted formats: .txt, .csv, .tsv, .xls, .xlsx"),
+            fileInput(ns('deg_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.xlsx', '.txt')),
             hr(),
             h4('Load demo'),
             p("Loads sample DEG sets: 'deg_mouse1', 'deg_mouse2', 'deg_mouse3'"),
@@ -200,7 +200,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       for (i in seq_along(input$deg_files$name)) {
         # Validate file size before processing
         file_size_mb <- file.info(input$deg_files$datapath[i])$size / (1024 * 1024)
-        if (file_size_mb > 100) {
+        if (!is.na(file_size_mb) && file_size_mb > 100) {
           showNotification(
             paste0("File '", input$deg_files$name[i], "' too large (max 100MB)"),
             type = "error"
@@ -212,25 +212,37 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
 
         ext <- tools::file_ext(input$deg_files$name[i])
         path <- input$deg_files$datapath[i]
-        # try to read file as csv
-        csv_ncol <- tryCatch({
-          csvdf <- read.csv(path)
-          ncol(csvdf)
-        }, error = function(err) {
-          0
-        })
-        # try to read file as tsv
-        tsv_ncol <- tryCatch({
-          tsvdf <- read.delim(path)
-          ncol(tsvdf)
-        }, error = function(err) {
-          0
-        })
-        # decide which df to store
-        if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
-          df <- read.csv(path)
+
+        # Handle Excel files directly
+        if (tolower(ext) %in% c("xls", "xlsx")) {
+          df <- tryCatch({
+            as.data.frame(readxl::read_excel(path))
+          }, error = function(e) {
+            showNotification(paste0("Error reading '", lab, "': ", e$message), type = "error")
+            NULL
+          })
+          if (is.null(df)) next
         } else {
-          df <- read.delim(path)
+          # try to read file as csv
+          csv_ncol <- tryCatch({
+            csvdf <- read.csv(path)
+            ncol(csvdf)
+          }, error = function(err) {
+            0
+          })
+          # try to read file as tsv
+          tsv_ncol <- tryCatch({
+            tsvdf <- read.delim(path)
+            ncol(tsvdf)
+          }, error = function(err) {
+            0
+          })
+          # decide which df to store
+          if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
+            df <- read.csv(path)
+          } else {
+            df <- read.delim(path)
+          }
         }
 
         u_degdfs[[lab]] <- df # set u_degdfs

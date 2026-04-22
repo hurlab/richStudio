@@ -245,7 +245,7 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
     output$download_cluslist <- downloadHandler(
       filename = function() {
         req(input$cluslist_select)
-        paste0(input$cluslist_select, input$cluslist_export_type)
+        paste0(sanitize_filename(input$cluslist_select), input$cluslist_export_type)
       },
       content = function(file) {
         ext_type <- input$cluslist_export_type

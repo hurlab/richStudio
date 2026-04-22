@@ -7,6 +7,8 @@ Authors@R: c(
     person("Junguk", "Hur", email = "hurlabshared@gmail.com",
            role = c("aut", "cre"), comment = c(ORCID = "0000-0002-0736-2149")),
     person("Sarah", "Hong", email = "ssh2198@columbia.edu", role = "aut"),
+    person("Kai", "Guo", email = "kai.guo@med.umich.edu",
+           role = "aut", comment = c(affiliation = "University of Michigan")),
     person("Jane", "Kim", role = "ctb")
   )
 Description: A Shiny application for integrative enrichment analysis and

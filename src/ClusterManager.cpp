@@ -50,12 +50,6 @@ void ClusterManager::calculateDistanceScores(DistanceMetric distanceMetric) {
         if (distanceScore >= distanceMetric.getDistanceCutoff()) {
           seedMap.addTermPair(i, j);
 
-          // Print distance score information
-          std::cout << distanceMetric.getDistanceMethod() << " for (" << _termNames[i] << ", ";
-          std::cout << _termNames[j] << "): " << distanceScore << std::endl;
-
-          std::cout << _termNames[i] << " genes: " << _geneIDstrings[i] << ", ";
-          std::cout <<  _termNames[j] << " genes: " << _geneIDstrings[j] << std::endl;
         }
       }
     }

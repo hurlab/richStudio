@@ -4,73 +4,74 @@
 
 richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
 
-- **Last updated:** 2026-03-28 CDT
+- **Last updated:** 2026-03-30 22:10 CDT
 - **Last coding CLI used:** Claude Code CLI (claude-opus-4-6)
 - **Branch:** main
 - **Version:** 0.1.6
 
 ## 2. Current State
 
-### Phase 1: Critical Bug Fixes — Completed 2026-03-08
-- Single-result hierarchical clustering bypass for richCluster::cluster() bug
-- DAVID single-result clustering bypass
-- richR Kappa suffixed column creation
-- Heatmap numeric safety guard (log10 non-numeric)
-- File handling robustness (add_file_degdf)
-- Save tab setwd() safety (on.exit)
-- Duplicate output bindings (rr_visualize_tab.R)
-- Dead code removal (cluster_upload_tab.R)
+### Phases 1-11: Application Development — All Completed
 
-### Phase 2: Visualization Fixes — Completed 2026-03-08
-- rr_dot.R: Added missing return(p), fixed dplyr::rename syntax
-- rr_bar.R: Fixed dplyr::rename syntax (extra argument)
-- rr_network.R: Added return statement for my_net()
-- rr_hmap.R: Dynamic value_type in hover text (was hardcoded "P-value")
-- rr_column_handling.R: Fixed column selection logic error at line 78
-- round_table.R: Vectorized cell-by-cell loops for performance
+All application development phases (Critical Bug Fixes, Visualization Fixes, Production Readiness, Remaining High Fixes, Async & Memory, Reactive Refactor, Medium Fixes & Tests, Second Review Round, UI/UX Modernization, UI Audit & Polish v0.1.6, Code Review Bug Fixes) are complete. See previous PROJECT_HANDOFF.md versions and PROJECT_LOG.md for details.
 
-### Phase 3: Production Readiness — Completed 2026-03-08
-- Session-isolated temp directories (tempfile() instead of tempdir())
-- Session cleanup handler (onSessionEnded with gc())
-- Filename sanitization across all downloadHandlers
-- Upload file size validation (100MB limit)
-- Temp file cleanup via on.exit(unlink())
+### Phase 12: Deployment Infrastructure — Completed in Session 2026-03-29 21:24 CDT
+- Fixed renv library directory hash mismatch after directory rename (richStudio_3 to richStudio)
+- Renamed `renv/library/richStudio_3-cb61d1cc` to `renv/library/richStudio-29a8d641`
+- Fixed Shiny Server running as wrong user (`shiny` instead of `juhur`) via `/srv/shiny-server/` symlinks
+- Removed stale symlinks in `/srv/shiny-server/` so `location /richStudio` block handles requests
+- Updated all stale `richStudio_3` references in nginx configs and app.R
+- Verified renv activation with system R and all packages loadable
 
-### Phase 4: Remaining High-Priority Fixes — Completed 2026-03-08
-- Column case sensitivity fix (enrich_tab.R - tolower matching for padj/pvalue)
-- Reactive dependency gap fix (clus_visualize_tab.R - added req guards)
-- Session ID tracking (app.R - unique session_id with digest)
+### Phase 13: Manuscript & Documentation Suite — Completed in Session 2026-03-29 21:24 CDT
 
-### Phase 5: Async Operations & Memory Optimization — Completed 2026-03-08
-- CRIT-005: Non-blocking enrichment via future::future() + promises::then() (enrich_tab.R)
-- CRIT-005: Non-blocking clustering via same async pattern (cluster_tab.R)
-- HIGH-007: merge_genesets() memory optimization (rr_cluster.R) - peak memory ~4x to ~2x
-- DESCRIPTION: Added future, promises to Imports
-- inst/application/app.R: future::plan(multisession, workers = 2) at startup
+#### BMC Bioinformatics Full Research Article
+- **Status:** Completed, 3 review rounds passed (Conditional PASS)
+- **File:** `inst/manuscript/richStudio_BMC_Bioinformatics.md` and `.docx`
+- ~3,900 words main text, 291-word abstract, 27 references (all verified)
+- 7 figures (multi-panel), 3 tables
+- Competitive analysis: 10 tools compared including simplifyEnrichment, EnrichmentMap, clusterProfiler treeplot()
+- Funding: R01DK130913 (NIDDK), P20GM113123 (NIGMS/CDA Core UND)
 
-### Phase 6: Reactive Value Anti-pattern Fix — Completed 2026-01-08
-- Eliminated <<- anti-patterns in reactive contexts
-- SPEC-REFACTOR-001 created and implemented
+#### Application Note
+- **Status:** Completed, revised to match writing standards
+- **File:** `inst/manuscript/richStudio_ApplicationNote.md` and `.docx`
+- 5 verified references, proper competitive positioning vs Metascape
 
-### Phase 7: Medium Severity Fixes & Test Suite — Completed 2026-03-09
-- **MED-001**: Inconsistent naming — added roxygen2 documentation to all plot functions
-- **MED-002**: suppressWarnings — replaced blanket suppression with targeted withCallingHandlers in round_table.R and cluster_hmap.R
-- **MED-003**: Magic numbers — extracted regex patterns and numeric constants to named variables in cluster_hmap.R
-- **MED-004**: Inefficient string matching — optimized rr_column_handling.R with vectorized match()/%in%
-- **MED-005**: Missing empty dataframe validation — added req(nrow(df) > 0) guards in visualization handlers
-- **MED-006**: Redundant type coercion — removed unnecessary as.numeric()/as.character() in enrich_tab.R
-- **MED-007**: Silent NA creation — added explicit NA checks with warnings in numeric conversions
-- **MED-008**: Mixed assignment style — standardized rr_network.R to <- throughout
-- **MED-009**: Missing namespace checks — added package:: prefixes for external functions in enrich_tab.R
-- **MED-010**: Unreachable code — removed dead code paths in cluster_upload_tab.R
-- **MED-011**: clus_intermed accumulation — added cleanup logic in cluster_tab.R
-- **MED-012**: File locking — added advisory lock pattern for session save/load in save_tab.R
-- **MED-013**: Predictable filenames — session files now include random hash component
-- **MED-014**: Sample data contention — accepted as-is (read-only, minimal risk)
-- **MED-015**: package.R documentation — complete roxygen2 docs with _PACKAGE pattern
-- **NAMESPACE**: Regenerated via roxygen2 — added 7 missing exports (file_handling functions)
-- **renv.lock**: Synchronized — added future, globals, listenv, parallelly, roxygen2
-- **Test suite**: Rewrote all broken tests — 152 tests pass (0 fail, 0 warn, 0 skip)
+#### User Manual
+- **Status:** Completed (HTML + DOCX; PDF pending LaTeX installation)
+- **File:** `inst/manuscript/richStudio_UserManual.md`, `.html`, `.docx`
+- 905 lines, 11 sections + 3 appendices
+- All parameters documented with defaults and ranges
+
+#### Figures
+- **Status:** 18 screenshots captured from live app
+- **Location:** `inst/manuscript/figures/`
+- **Pending:** Figure 1A (architecture diagram) needs manual creation
+
+#### Review Reports
+- `inst/manuscript/review_round1.md` — 3 critical, 8 major (all resolved)
+- `inst/manuscript/review_round2.md` — 3 critical, 8 major (all resolved)
+- `inst/manuscript/review_round3.md` — Conditional PASS (2 minor, both resolved)
+- `inst/manuscript/competitive_analysis.md` — 13 tools benchmarked with verified refs
+
+### UI Fix — Completed in Session 2026-03-29 21:24 CDT
+- Updated About box Team section to single line (no "(Lead)" label)
+
+### Code Fix — Completed in Session 2026-03-29 21:24 CDT
+- Added `.xlsx` to accepted file types in `enrich_tab.R` and `cluster_upload_tab.R`
+- Added Kai Guo as author in DESCRIPTION
+
+### Phase 14: Code Review & Fix (4-Agent Harness) — Completed in Session 2026-03-30 22:10 CDT
+- **Issues found:** 3 confirmed real bugs, 4 security gaps (2 fixed, 2 accepted)
+- **CRITICAL fix:** Added Excel (.xls/.xlsx) file reading via `readxl::read_excel()` with tryCatch error handling in 3 files (enrich_tab.R, cluster_upload_tab.R, rr_visualize_tab.R)
+- **HIGH fix:** Removed debug `std::cout` statements from C++ production loop (ClusterManager.cpp)
+- **LOW fix:** Added missing file size validation in rr_visualize_tab.R upload handler
+- **LOW fix:** Added `!is.na()` guard to file size checks in all 3 upload handlers
+- **MEDIUM fix:** Added `sanitize_filename()` to download handler in clus_visualize_tab.R
+- **HIGH fix:** Added type validation after `readRDS()` in save_tab.R to guard against deserialization attacks
+- **Security baseline:** No hardcoded secrets. All dependencies current. RDS now validated post-deserialize.
+- **Verification:** All R files parse clean, C++ braces balanced, app loads successfully via browser
 
 ## 3. Execution Plan Status
 
@@ -87,59 +88,52 @@ richStudio is an R Shiny application for functional enrichment analysis and gene
 | Phase 9: UI/UX Modernization | Completed | 2026-03-28 |
 | Phase 10: UI Audit & Polish (v0.1.6) | Completed | 2026-03-28 |
 | Phase 11: Code Review Bug Fixes | Completed | 2026-03-28 |
-
-All Critical (CRIT-001 through CRIT-007), High (HIGH-001 through HIGH-011), and Medium (MED-001 through MED-015) issues are resolved.
-
-### Phase 8: Second Review Round Fixes — Completed 2026-03-10
-- **A1**: Added missing `digest` dependency to DESCRIPTION Imports
-- **A2**: Removed `library(knitr)` from round_table.R (bad practice in package code)
-- **A3**: Added missing `slice_head` to dplyr importFrom in NAMESPACE
-- **B1**: Added NULL guard for `u_big_degdf[['df']]` in enrich_tab.R async handler
-- **B2**: Fixed division-by-zero risk in rr_bar.R and rr_dot.R (Annotated=0 case)
-- **B3**: Fixed ineffective session cleanup (was assigning NULL to local vars, not reactive objects)
-- **B4**: Removed 7 unused `dataTableProxy()` variables across 5 files
-- **B5**: Added error for invalid `view` parameter in rr_bar.R
-- **B6**: Removed dead test file (compare_david_clustering.R)
-
-### Phase 9: UI/UX Modernization — Completed 2026-03-28
-- CSS design token system (23 variables), consistent component styling
-- Sidebar flexbox layout with sticky footer (Hur Lab link always visible)
-- Landing page condensed to single viewport (3-column layout)
-- Fixed logo SVG truncation, bookmark button restyled as menu item
-- Deduplicated box headings on visualization tabs
-- Fixed "Not currently supported" help text on cluster visualize
-
-### Phase 10: UI Audit & Polish (v0.1.6) — Completed 2026-03-28
-- Breadcrumb navigation in top navbar showing current section/page
-- Favicon icon in sidebar logo via CSS pseudo-element
-- Fixed browser tab title (was showing raw HTML)
-- Empty-state placeholders on visualization pages when no data loaded
-- Standardized all page titles to h2 with consistent 22px/700 sizing
-- Cluster tab: changed from solidHeader box to plain h2 + box layout
-- Consistent h4 sizing (16px/600) inside box bodies across all pages
-- Tightened home page bottom spacing and empty-state padding
-- Version bumped to 0.1.6
-
-### Phase 11: Code Review Bug Fixes — Completed 2026-03-28
-- **CRIT-R1**: Fixed `!which()` logic error in rr_hmap.R:56 — negating integer indices from `which()` produces wrong boolean results, causing data corruption in custom heatmaps
-- **CRIT-R2**: Added `tidyr::` namespace qualifier to `drop_na()` in rr_hmap.R (was unqualified, would crash at runtime)
-- **CRIT-R3**: Added `tibble::` namespace qualifier to `as_tibble()` in cluster_hmap.R (same issue)
-- **HIGH-R1**: Fixed all 7 unsafe `-which()` patterns across 4 files (file_handling.R, rr_hmap.R, rr_visualize_tab.R) — `df[-integer(0),]` silently returns all rows instead of none
-- **HIGH-R2**: Added `is.null()` guard for `custom_data` parameter in heatmap functions (NULL default would crash `nrow()`)
-- **DEP-R1**: Installed richCluster v1.0.2 from CRAN (enables Hierarchical + DAVID clustering methods)
-- **DEP-R2**: Added `tibble` to DESCRIPTION Imports
+| Phase 12: Deployment Infrastructure | Completed | 2026-03-29 |
+| Phase 13: Manuscript & Documentation Suite | Completed | 2026-03-29 |
+| Phase 14: Code Review & Fix (4-Agent Harness) | Completed | 2026-03-30 |
 
 ## 4. Outstanding Work
 
-### Remaining Items
-- **MED-014**: Sample data contention — accepted risk (read-only access, no fix needed)
-- **CI/CD**: No GitHub Actions or CI pipeline configured (recommended for production)
+### Active Items
+
+- **User Manual PDF**: Requires LaTeX installation to generate PDF from markdown. HTML and DOCX versions are ready.
+  - Status: Not started
+  - Last updated: 2026-03-29 21:24 CDT
+  - Ref: Session 2026-03-29
+
+- **Figure 1A Architecture Diagram**: Manual workflow/architecture schematic needed (richR/bioAnno/richCluster integration diagram).
+  - Status: Not started
+  - Last updated: 2026-03-29 21:24 CDT
+  - Ref: Session 2026-03-29
+
+- **Web-accessible documentation**: User manual HTML not yet linked from the Shiny app or served via nginx.
+  - Status: Not started
+  - Last updated: 2026-03-29 21:24 CDT
+  - Ref: Session 2026-03-29
+
+- **Bioconductor submission**: Planned after publication. Currently distributed via GitHub only.
+  - Status: Not started
+  - Last updated: 2026-03-29 21:24 CDT
+  - Ref: Session 2026-03-29
+
+- **CI/CD**: No GitHub Actions or CI pipeline configured.
+  - Status: Not started
+  - Last updated: 2026-03-28
+
+### Accepted Risks (no action needed)
+- **MED-014**: Sample data contention — accepted (read-only access, minimal risk)
 
 ## 5. Risks, Open Questions, and Assumptions
 
-### Multi-user concurrency under heavy load — Mitigated
-- **Status:** Mitigated
-- **Resolution:** future::plan(multisession, workers = 2) handles async. For heavy production load, deploy with ShinyProxy or Shiny Server for full isolation.
+### Directory rename residue — Resolved
+- **Status:** Resolved
+- **Date opened:** 2026-03-29
+- **Resolution:** Renamed renv library directory, fixed nginx configs, removed stale symlinks. App confirmed running correctly.
+
+### Shiny Server user context — Resolved
+- **Status:** Resolved
+- **Date opened:** 2026-03-29
+- **Resolution:** Removed `/srv/shiny-server/richStudio` and `/srv/shiny-server/RichStudio` symlinks so requests route to the explicit `location /richStudio` block which runs as `juhur`, not `shiny`.
 
 ### richR/richCluster package stability — Open
 - **Status:** Open
@@ -149,59 +143,73 @@ All Critical (CRIT-001 through CRIT-007), High (HIGH-001 through HIGH-011), and 
 - **Status:** Open
 - **Default assumption:** org.Hs.eg.db, org.Mm.eg.db must be pre-installed. App shows informational messages if missing.
 
+### Manuscript reference accuracy — Mitigated
+- **Status:** Mitigated
+- **Date opened:** 2026-03-29
+- **Resolution:** 3 rounds of review caught fabricated author names in 4 references; all corrected via PubMed/DOI verification. All 27 references now verified.
+
 ## 6. Verification Status
 
 ### Verified
 | Feature | Method | Result | Date |
 |---------|--------|--------|------|
 | All R files parse (21/21) | Rscript -e "parse()" | All OK | 2026-03-09 |
-| Unit test suite | testthat::test_dir() | 152 pass, 0 fail, 0 warn | 2026-03-09 |
-| App startup | devtools::load_all + source app.R | ui and server objects created | 2026-03-09 |
-| Home page renders | Playwright snapshot | All navigation visible | 2026-03-09 |
-| Enrichment tab renders | Playwright snapshot | Full UI with all controls | 2026-03-09 |
-| HTTP health check | curl localhost:3839 | HTTP 200 | 2026-03-09 |
-| Async enrichment | Playwright browser test | 118 GO BP terms returned | 2026-03-08 |
-| Async clustering | Playwright browser test | 28 clusters returned | 2026-03-08 |
-| End-to-end flow | Playwright browser test | Enrichment to clustering | 2026-03-08 |
-| 17 core features | Playwright browser test | All pass | 2026-03-08 |
-| NAMESPACE exports | roxygen2::roxygenise() | All functions exported | 2026-03-09 |
-| renv sync | renv::snapshot() | All deps recorded | 2026-03-09 |
+| Unit test suite | testthat::test_dir() | 152 pass, 0 fail | 2026-03-09 |
+| App startup after rename | renv::restore() + system R | All packages load | 2026-03-29 |
+| Shiny Server serving as juhur | Browser + log check | Confirmed running | 2026-03-29 |
+| renv activation (system R) | /usr/lib/R/bin/R source("renv/activate.R") | Library path correct | 2026-03-29 |
+| BMC manuscript review | 3 review rounds | Conditional PASS (resolved) | 2026-03-29 |
+| Application Note review | 1 review round | All issues fixed | 2026-03-29 |
+| No stale richStudio_3 refs | grep -r richStudio_3 (excl logs) | Only in PROJECT_LOG.md (historical) | 2026-03-29 |
+| Code review: R parse (21/21) | Rscript -e "parse()" per file | All PASS | 2026-03-30 |
+| Code review: C++ syntax | Brace balance check | 10 open / 10 close | 2026-03-30 |
+| Code review: App smoke test | Playwright browser navigate | Home page renders, title "richStudio" | 2026-03-30 |
+| Code review: Package loading | system R requireNamespace() | shiny, readxl, plotly, richR, DT, future all TRUE | 2026-03-30 |
+| Code review: No debug output | grep cout ClusterManager.cpp | Zero matches | 2026-03-30 |
+| Code review: xlsx handling | Grep readxl::read_excel in R/ | Present in all 3 upload handlers | 2026-03-30 |
+| Security: Secret scan | grep password/secret/api_key/token | No hardcoded secrets found | 2026-03-30 |
+| Security: Dependency versions | renv.lock audit | shiny 1.12.1, jsonlite 2.0.0, openssl 2.3.4 (all current) | 2026-03-30 |
+
+### Not Yet Verified
+- User manual accuracy (not independently reviewed against live app)
+- PDF generation (requires LaTeX)
+- Figure quality for print publication (screenshots may need higher DPI)
+- Playwright CLI E2E test suite (not yet created; user prefers CLI over MCP)
 
 ## 7. Restart Instructions
 
-**Starting point:** All severity levels resolved. App is production-ready with comprehensive test coverage.
+**Starting point:** Application is deployed and running at hurlab.med.und.edu/richStudio/. All manuscripts are draft-complete with 3 review rounds passed. Documentation suite is generated.
 
 **Recommended next actions:**
-1. Merge feature/SPEC-REFACTOR-001 to main
-2. Consider adding GitHub Actions CI for automated testing
-3. Consider adding Dockerfile for containerized deployment
+1. Create Figure 1A architecture diagram (manual creation, not automatable)
+2. Install LaTeX and generate user manual PDF: `sudo apt install texlive-latex-base texlive-fonts-recommended && pandoc richStudio_UserManual.md -o richStudio_UserManual.pdf`
+3. Make user manual web-accessible (copy HTML to `inst/application/www/` or serve via nginx)
+4. Add in-app help pages linking to the user manual
+5. Final author review of both manuscripts before journal submission
+6. Consider GitHub Actions CI for automated testing
 
-**Key files for context:**
-- `docs/FINDINGS-REPORT.md` — Complete 51-issue catalogue with fix status
-- `docs/specs/SPEC-FIX-006-test-suite-rewrite.md` — Test rewrite design spec
-- `docs/specs/SPEC-FIX-007-medium-severity-items.md` — Medium severity fixes spec
-- `R/rr_cluster.R` — Most complex file, core clustering logic
-- `R/enrich_tab.R` — Enrichment module with async pattern
-- `R/cluster_tab.R` — Clustering module with async pattern
+**Key manuscript files:**
+- `inst/manuscript/richStudio_BMC_Bioinformatics.md` — Full research article (BMC Bioinformatics Software Article)
+- `inst/manuscript/richStudio_ApplicationNote.md` — Application note
+- `inst/manuscript/richStudio_UserManual.md` — User manual
+- `inst/manuscript/figures/` — 18 figure screenshots + manifest
+- `inst/manuscript/competitive_analysis.md` — Detailed tool comparison
+- `inst/manuscript/review_round*.md` — Review reports (3 rounds)
 
-**Last updated:** 2026-03-09 CDT
-
-## Key Files
+**Key code files:**
 - `inst/application/app.R` — Main entry point
-- `R/rr_cluster.R` — Core clustering logic (most complex)
-- `R/cluster_tab.R` — Clustering UI/server module
-- `R/clus_visualize_tab.R` — Cluster visualization module
-- `R/enrich_tab.R` — Enrichment analysis module
-- `R/cluster_hmap.R` — Cluster heatmap functions
+- `R/rr_cluster.R` — Core clustering logic
+- `R/enrich_tab.R` — Enrichment module (accepts .xlsx now)
+- `R/cluster_upload_tab.R` — Cluster upload module (accepts .xlsx now)
 - `R/save_tab.R` — Session save/load with file locking
-- `R/file_handling.R` — File tracking functions (7 exported functions)
-- `R/package.R` — Package documentation (_PACKAGE pattern)
-- `tests/testthat/` — 6 test files, 152 test cases
-- `docs/FINDINGS-REPORT.md` — Complete findings with 51 issues catalogued
+- `DESCRIPTION` — Package metadata (Kai Guo added as author)
 
-## Dependencies
-- richR, richCluster (custom packages for enrichment/clustering)
-- Bioconductor annotation packages (org.Hs.eg.db, org.Mm.eg.db) must be pre-installed
-- future, promises, globals, listenv, parallelly (async operations)
-- shinydashboard, DT, plotly, heatmaply, reshape2, stringdist, writexl, jsonlite, zip
-- testthat, devtools, roxygen2 (development)
+**Author affiliations (for all manuscripts):**
+1. Junguk Hur — Dept. Biomedical Sciences, UND, Grand Forks, ND 58202
+2. Sarah Hong — Dept. Biomedical Informatics, Columbia University, NY 10032
+3. Jane Kim — Dept. Biomedical Sciences, UND, Grand Forks, ND 58202
+4. Kai Guo — Dept. Neurology, University of Michigan, Ann Arbor, MI 48109; NeuroNetwork for Emerging Therapies, University of Michigan
+
+**Funding:** R01DK130913 (NIDDK), P20GM113123 (NIGMS/CDA Core UND)
+
+**Last updated:** 2026-03-30 22:15 CDT

@@ -1,4 +1,4 @@
-# Thin wrapper so Shiny Server can serve the app from the repo root (e.g., /richStudio_3)
+# Thin wrapper so Shiny Server can serve the app from the repo root (e.g., /richStudio)
 if (file.exists("renv/activate.R")) {
   source("renv/activate.R")
 }

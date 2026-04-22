@@ -19,8 +19,8 @@ clusterUploadTabUI <- function(id, tabName) {
       column(width = 4,
         tabBox(title=span(icon("upload"), "Upload enrichment results for clustering"), width=NULL,
           tabPanel("File upload",
-            fileInput(ns('rr_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt')),
-            helpText("Accepted formats: .txt, .csv, .tsv"),
+            fileInput(ns('rr_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.xlsx', '.txt')),
+            helpText("Accepted formats: .txt, .csv, .tsv, .xls, .xlsx"),
             hr(),
             h4("Load demo"),
             p("Loads sample enrichment results: 'go1', 'go2', 'kegg1'"),
@@ -176,7 +176,7 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       for (i in seq_along(input$rr_files$name)) {
         # Validate file size before processing
         file_size_mb <- file.info(input$rr_files$datapath[i])$size / (1024 * 1024)
-        if (file_size_mb > 100) {
+        if (!is.na(file_size_mb) && file_size_mb > 100) {
           showNotification(
             paste0("File '", input$rr_files$name[i], "' too large (max 100MB)"),
             type = "error"
@@ -189,25 +189,36 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         ext <- tools::file_ext(input$rr_files$name[i])
         path <- input$rr_files$datapath[i]
 
-        # try to read file as csv
-        csv_ncol <- tryCatch({
-          csvdf <- read.csv(path)
-          ncol(csvdf)
-        }, error = function(err) {
-          0
-        })
-        # try to read file as tsv
-        tsv_ncol <- tryCatch({
-          tsvdf <- read.delim(path)
-          ncol(tsvdf)
-        }, error = function(err) {
-          0
-        })
-        # decide which df to store
-        if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
-          df <- read.csv(path)
+        # Handle Excel files directly
+        if (tolower(ext) %in% c("xls", "xlsx")) {
+          df <- tryCatch({
+            as.data.frame(readxl::read_excel(path))
+          }, error = function(e) {
+            showNotification(paste0("Error reading '", lab, "': ", e$message), type = "error")
+            NULL
+          })
+          if (is.null(df)) next
         } else {
-          df <- read.delim(path)
+          # try to read file as csv
+          csv_ncol <- tryCatch({
+            csvdf <- read.csv(path)
+            ncol(csvdf)
+          }, error = function(err) {
+            0
+          })
+          # try to read file as tsv
+          tsv_ncol <- tryCatch({
+            tsvdf <- read.delim(path)
+            ncol(tsvdf)
+          }, error = function(err) {
+            0
+          })
+          # decide which df to store
+          if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
+            df <- read.csv(path)
+          } else {
+            df <- read.delim(path)
+          }
         }
 
         #u_rrdfs[[lab]] <- select_required_columns(df) # set u_rrdfs

@@ -268,6 +268,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
         if (tolower(file_ext) == "rds") {
           session_data <- readRDS(file_path)
+          # Validate deserialized object is a plain list with expected structure
+          if (!is.list(session_data) || is.null(session_data$version)) {
+            showNotification("Invalid session file format", type = "error")
+            return(NULL)
+          }
         } else if (tolower(file_ext) == "json") {
           session_data <- jsonlite::read_json(file_path, simplifyVector = TRUE)
           # Convert lists back to data frames

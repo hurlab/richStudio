@@ -201,3 +201,7 @@ dist/
 *-key.*
 .AppleDouble
 *-backup/
+
+# MoAI / Claude tooling
+.moai/
+.agency/

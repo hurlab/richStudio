@@ -277,12 +277,6 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       u_degnames$labels <- c(u_degnames$labels, lab)
       u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
 
-      # Show file list
-      # if (!is.null(u_big_degdf[['df']])) {
-      #   shinyjs::show("list_box")
-      #   print("showing...")
-      # }
-
     })
 
     # Reactively update uploaded file dataframe
@@ -297,11 +291,9 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     # Table editing code (ref: https://github.com/rstudio/DT/pull/480)
     observeEvent(input$deg_list_table_cell_edit, {
       info = input$deg_list_table_cell_edit
-      # Debug: str(info)
       i = info$row
       j = info$col
       v = info$value
-      # Debug: print(info$col)
 
       # Rename deg if changing a value in column 1 (name col)
       if (info$col == 1) {
@@ -489,11 +481,9 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     # Table editing code
     observeEvent(input$rr_list_table_cell_edit, {
       info = input$rr_list_table_cell_edit
-      # Debug: str(info)
       i = info$row
       j = info$col
       v = info$value
-      # Debug: print(info$col)
 
       # Rename rr if changing a value in column 1 (name col)
       if (info$col == 1) {

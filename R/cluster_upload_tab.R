@@ -263,11 +263,9 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     # Table editing code
     observeEvent(input$rr_list_table_cell_edit, {
       info = input$rr_list_table_cell_edit
-      # Debug: str(info)
       i = info$row
       j = info$col
       v = info$value
-      # Debug: print(info$col)
 
       # Rename rr if changing a value in column 1 (name col)
       if (info$col == 1) {
@@ -353,11 +351,9 @@ clusterUploadTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     # Cluslist table editing code
     observeEvent(input$clus_list_table_cell_edit, {
       info = input$clus_list_table_cell_edit
-      # Debug: str(info)
       i = info$row
       j = info$col
       v = info$value
-      # Debug: print(info$col)
 
       # Rename clus if changing a value in column 1 (name col)
       if (info$col == 1) {

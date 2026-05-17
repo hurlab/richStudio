@@ -364,11 +364,9 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     # Table editing code
     observeEvent(input$rr_list_table_cell_edit, {
       info = input$rr_list_table_cell_edit
-      # Debug: str(info)
       i = info$row
       j = info$col
       v = info$value
-      # Debug: print(info$col)
 
       # Rename rr if changing a value in column 1 (name col)
       if (info$col == 1) {
@@ -511,7 +509,6 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     # Table editing code
     observeEvent(input$tophmap_table_cell_edit, {
       info = input$tophmap_table_cell_edit
-      # Debug: str(info)
       i = info$row
       j = info$col
       v = info$value

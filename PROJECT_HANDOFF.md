@@ -4,8 +4,8 @@
 
 richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
 
-- **Last updated:** 2026-03-30 22:10 CDT
-- **Last coding CLI used:** Claude Code CLI (claude-opus-4-6)
+- **Last updated:** 2026-05-17 CDT
+- **Last coding CLI used:** Claude Code CLI (claude-opus-4-7, 1M context)
 - **Branch:** main
 - **Version:** 0.1.6
 
@@ -73,6 +73,13 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 - **Security baseline:** No hardcoded secrets. All dependencies current. RDS now validated post-deserialize.
 - **Verification:** All R files parse clean, C++ braces balanced, app loads successfully via browser
 
+### Phase 15: Senior-Architect Review + Multi-Round Harness — In Progress (Session 2026-05-17)
+- **Review scope:** 21 R files (5757 LOC), 9 C++ files (987 LOC), inst/application/app.R, NAMESPACE/DESCRIPTION, 5 test files, 3 manuscript files
+- **Method:** 4 parallel domain agents (security, performance, quality, functional gap) + per-bundle 3-round review-revise harness
+- **Findings:** 8 security + 16 performance + 20 quality (TRUST 5) + 18 functional-gap = ~58 raw, deduplicated to ~50 distinct items, grouped into 8 SPEC bundles
+- **Bundle B1 (SPEC-QUICK-001) complete:** commit 774d019 — dead-code/debug stub removal, -110 / +1 lines across 6 R files
+- **Bundle B2 (SPEC-CRAN-001) complete:** commit 5305d49 — CRAN NAMESPACE hygiene, dropped tidyverse umbrella, added 13 missing importFroms (including the critical `shinyjqui::jqui_resizable` bare call that would have caused R CMD check ERROR), inline-comment magic-0.5 defaults in rr_cluster.R
+
 ## 3. Execution Plan Status
 
 | Phase | Status | Last Updated |
@@ -91,6 +98,7 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 | Phase 12: Deployment Infrastructure | Completed | 2026-03-29 |
 | Phase 13: Manuscript & Documentation Suite | Completed | 2026-03-29 |
 | Phase 14: Code Review & Fix (4-Agent Harness) | Completed | 2026-03-30 |
+| Phase 15: Senior-Architect Review + Harness B1+B2 | In Progress | 2026-05-17 |
 
 ## 4. Outstanding Work
 
@@ -119,6 +127,25 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 - **CI/CD**: No GitHub Actions or CI pipeline configured.
   - Status: Not started
   - Last updated: 2026-03-28
+
+- **renv R 4.6 rebuild**: System R was upgraded 4.5 → 4.6 between 2026-03-29 and 2026-05-17. Existing renv library at `renv/library/richStudio-29a8d641/R-4.5/` is stale; system R cannot resolve any packages. Required before running `testthat::test_dir()`, `R CMD check --as-cran`, or rebuilding the deployed Shiny app.
+  - Status: Not started
+  - Last updated: 2026-05-17
+  - Suggested command: `Rscript -e 'renv::restore()'` (will recompile against R 4.6; takes ~20-40 min)
+
+- **Phase 15 outstanding bundles**: 6 remaining SPEC bundles from the senior-architect review.
+  - **SPEC-SEC-001 (B3)**: Security hardening — path traversal in `export_all` ZIP loop, content-based file validation, nested RDS validation, `setBookmarkExclude`. Severity: HIGH (path traversal); deployment-relevant.
+  - **SPEC-PERF-R-001 (B4)**: R reactive performance — heatmap caching, observer decomposition, debounce, rbind-in-loop, network term-count guard. Severity: MED.
+  - **SPEC-STYLE-001 (B6)**: Style + extract `sniff_delimiter` utility, document `u_` prefix, internal `format_cells` alternative comments.
+  - **SPEC-PERF-CPP-001 (B5)**: C++ performance refactor — upper-triangle distance matrix (200 MB → 100 MB at n=5000), pre-cache per-term gene sets (eliminates 25M re-allocations), int-overflow guard. Requires `R CMD INSTALL` to verify. Severity: CRITICAL for the manuscript's "scales to 5000+ terms" claim.
+  - **SPEC-FUNC-001 (B7)**: Functional-gap code-side fixes — port network plot to plotly, expand Reactome species, set `shiny.maxRequestSize = 100MB`. Per user decision 2026-05-17.
+  - **SPEC-TEST-001 (B8)**: Test foundation rebuild — depends on B5 stability and on renv R-4.6 rebuild. Decompose 4 monolithic server functions (327-467 LOC), add shinytest2 integration tests, add C++ direct tests. Severity: CRITICAL for journal submission credibility.
+  - Status: Not started
+  - Last updated: 2026-05-17
+
+- **SPEC-CRAN-002 (architectural decision)**: 6 packages in DESCRIPTION Imports are used only via `library()` in `inst/application/app.R` — `shinyWidgets`, `ggplot2`, `data.table`, `config`, `digest`, `bioAnno`. Per CRAN policy these must either have NAMESPACE coverage (`@import pkg`) or move to `Suggests` with `requireNamespace()` guards. Triggers CRAN NOTEs in current state.
+  - Status: Not started
+  - Last updated: 2026-05-17
 
 ### Accepted Risks (no action needed)
 - **MED-014**: Sample data contention — accepted (read-only access, minimal risk)
@@ -212,4 +239,4 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 
 **Funding:** R01DK130913 (NIDDK), P20GM113123 (NIGMS/CDA Core UND)
 
-**Last updated:** 2026-03-30 22:15 CDT
+**Last updated:** 2026-05-17 CDT

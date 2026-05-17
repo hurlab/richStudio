@@ -1,5 +1,78 @@
 # richStudio Project Log
 
+## Session 2026-05-17 — 4-Agent Senior-Architect Review + B1/B2 Harness
+
+- **Coding CLI used:** Claude Code CLI (claude-opus-4-7, 1M context)
+- **Phase worked on:** Phase 15 (Senior-Architect Review + Multi-Round Harness Bundles B1+B2)
+
+### Senior-Architect Code Review (4 parallel domain agents)
+
+Comprehensive cross-cutting audit by independent specialists:
+- Security review: 8 findings (SEC-01..08); 2 HIGH (path traversal in `export_all` ZIP loop, extension-only file-type validation), 3 MED, 3 LOW/INFO
+- Performance review: 16 findings (P-01..16); 2 CRITICAL (C++ 200 MB n×n distance matrix; 25M unordered_set re-allocations in `ClusterManager::calculateDistanceScores`), 6 HIGH (heatmap recompute, monolithic observers, rbind-in-loop), 8 MED/LOW
+- Quality review (TRUST 5): 20 findings (T-01..20); 4 CRITICAL (test coverage 19/21 R files untested, 0 C++ tests, no E2E test, 4 monolithic 327–467-line server functions), 6 HIGH (tidyverse umbrella import, silent error swallowing, magic 0.5 constants, mixed `=`/`<-` style, 8 commented debug lines), 10 MED/LOW
+- Functional-gap analysis: 18 findings (G-01..18); 5 MAJOR (Reactome species count overstated, network plot is static ggplot not plotly, hierarchical+DAVID require optional richCluster, 100 MB file-size cap claim has no code enforcement)
+
+Consolidated into 8 SPEC bundles (B1..B8). See SPEC-QUICK-001 and SPEC-CRAN-001 for the first two.
+
+### Bundle B1 — SPEC-QUICK-001 (commit 774d019)
+
+Dead-code removal across 6 R files; net -110 / +1 line.
+
+- Removed 9 paired `# Debug: str(info)` / `# Debug: print(info$col)` stubs in cell-edit observers across clus_visualize_tab.R, cluster_upload_tab.R, enrich_tab.R, rr_visualize_tab.R
+- Removed commented feature-toggle block in enrich_tab.R (lines 280-284)
+- Removed multi-line example block in rr_column_handling.R (lines 97-107)
+- Removed 4 dead blocks in round_table.R: n_dec helper, Try-usage examples, Old-code block, abandoned round_tbl duplicate, orphaned `# n <- n_dec(tmp)` reference. The REAL `format_cells` and `round_tbl` functions preserved.
+
+Cross-validation overturned one false positive (T-18 launch_richStudio docs — already complete). Round 1 expanded scope based on reviewer follow-up (47 additional lines of dead code in round_table.R). Rounds 1+2+3 all PASS, High confidence.
+
+### Bundle B2 — SPEC-CRAN-001 (commit 5305d49)
+
+NAMESPACE hygiene and CRAN/Bioconductor compliance prep; +41 / -8 lines across DESCRIPTION, NAMESPACE, R/package.R, R/rr_cluster.R.
+
+- Removed `tidyverse` from DESCRIPTION Imports (pulled 25+ transitive packages; none of purrr/forcats/readr/stringr/lubridate used in R/)
+- Added `@importFrom` directives for 13 packages currently used in R/:
+  - **CRITICAL fix** — heatmaply::heatmaply (bare call at cluster_hmap.R:220) and shinyjqui::jqui_resizable (5 bare calls in rr_visualize_tab.R; would have caused `R CMD check` ERROR)
+  - Expanded shinyjs from `{hidden}` to `{disable, enable, hidden, hide, show}`
+  - Added richR::richCluster, tibble::as_tibble, tidyr::drop_na
+  - Added DT (5 symbols), future, promises (2), readxl, writexl, zip, stringdist
+- Added inline trailing comments documenting 6 magic 0.5 defaults in rr_cluster.R (kappa similarity, gene overlap, distance/linkage cutoffs, DAVID similarity/multi-linkage thresholds)
+- Fixed line 372 wording: "distance threshold" was semantically inverted for kappa (a similarity measure)
+
+Cross-validation: Round 1A initially FAILed (surfaced missing shinyjqui + tibble/tidyr/richR + wording inversion). Revision applied. Round 2A found one missed sync (`hidden` in package.R); fixed. Round 2B + Round 3 PASS, High confidence.
+
+### Tests
+
+testthat suite could not be re-baselined this session due to system R upgrade from 4.5 → 4.6 (renv lockfile was built against R-4.5, so packages don't resolve until `renv::restore()` is run against R-4.6). All 21 R source files and all 5 test files parse cleanly in R-4.6. The B1+B2 changes are pure comment/namespace edits with zero possible runtime effect.
+
+### Deferred to follow-up SPECs
+
+- **SPEC-CRAN-002** (architectural decision needed): packages in DESCRIPTION Imports used only via `library()` in inst/application/app.R — shinyWidgets, ggplot2, data.table, config, digest, bioAnno. Need either `@import pkg` declarations or move to `Suggests` with `requireNamespace()` guards. Current state will trigger CRAN NOTEs.
+- **SPEC-STYLE-001** (B6): style cleanup (mixed `=`/`<-`, internal `format_cells` alternative comments, `u_` prefix documentation)
+- **SPEC-SEC-001** (B3): security hardening (path traversal in `export_all`, content-based file validation, nested RDS validation, bookmark exclude)
+- **SPEC-PERF-R-001** (B4): R reactive performance (heatmap caching, observer split, debounce, rbind-in-loop)
+- **SPEC-PERF-CPP-001** (B5): C++ refactor (upper-triangle distance matrix, gene-set memoization, integer-overflow guards) — requires R CMD INSTALL
+- **SPEC-FUNC-001** (B7): functional gap closure (port network plot to plotly, expand Reactome species, set shiny.maxRequestSize = 100 MB)
+- **SPEC-TEST-001** (B8): test foundation rebuild (shinytest2 integration tests, C++ direct tests, server-function decomposition)
+
+### Files Modified
+
+- R/clus_visualize_tab.R, R/cluster_upload_tab.R, R/enrich_tab.R, R/rr_visualize_tab.R, R/round_table.R, R/rr_column_handling.R — dead-code removal (B1)
+- DESCRIPTION, NAMESPACE, R/package.R, R/rr_cluster.R — NAMESPACE hygiene + magic-constant comments (B2)
+- `.moai/specs/SPEC-QUICK-001/spec.md`, `.moai/specs/SPEC-CRAN-001/spec.md` — new SPEC artifacts (gitignored, not in repo)
+
+### Commits
+
+- `774d019` chore(R): remove dead comments and debug stubs [SPEC-QUICK-001]
+- `5305d49` chore(deps): tighten NAMESPACE, drop tidyverse umbrella [SPEC-CRAN-001]
+
+### Environment notes
+
+- System R upgraded 4.5 → 4.6 between 2026-03-29 and 2026-05-17; renv library `richStudio-29a8d641/R-4.5/` is stale. `renv::restore()` needs to be run against R-4.6 before tests can re-baseline.
+- The two locally-modified files `.gitignore` and `CLAUDE.md` shown in `git status` are pre-existing harness/config drift unrelated to this session's SPECs and were not staged.
+
+---
+
 ## Session 2026-03-28 CDT — UI/UX Audit, Modernization & v0.1.6 Release
 
 - **Coding CLI used:** Claude Code CLI (claude-opus-4-6)

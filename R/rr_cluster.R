@@ -297,8 +297,8 @@ perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_
 cluster_richR <- function(merged_gs, params, gs_names) {
 
   # Set defaults
-  cutoff <- params$cutoff %||% 0.5
-  overlap <- params$overlap %||% 0.5
+  cutoff <- params$cutoff %||% 0.5      # kappa similarity threshold (0-1); terms must meet this to join a cluster
+  overlap <- params$overlap %||% 0.5    # minimum fraction of shared genes (0-1) required to link two terms
   minSize <- params$minSize %||% 2
 
   # Perform clustering using richR
@@ -369,9 +369,9 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
 
   # Set defaults
   distance_metric <- params$distance_metric %||% "kappa"
-  distance_cutoff <- params$distance_cutoff %||% 0.5
+  distance_cutoff <- params$distance_cutoff %||% 0.5  # pairwise similarity cutoff (0-1) for kappa/Jaccard; pairs at or above this are considered connected
   linkage_method <- params$linkage_method %||% "average"
-  linkage_cutoff <- params$linkage_cutoff %||% 0.5
+  linkage_cutoff <- params$linkage_cutoff %||% 0.5    # dendrogram cut height (0-1) at which clusters are extracted
   min_terms <- params$min_terms %||% 2
   min_value <- params$min_value %||% 0.1
 
@@ -510,10 +510,10 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
 cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
 
   # Set defaults
-  similarity_threshold <- params$similarity_threshold %||% 0.5
+  similarity_threshold <- params$similarity_threshold %||% 0.5         # DAVID kappa-similarity threshold (0-1) for seeding initial groups
   initial_group_membership <- params$initial_group_membership %||% 3
   final_group_membership <- params$final_group_membership %||% 3
-  multiple_linkage_threshold <- params$multiple_linkage_threshold %||% 0.5
+  multiple_linkage_threshold <- params$multiple_linkage_threshold %||% 0.5  # min fraction of shared members (0-1) required to merge two groups
 
   # Prepare input
   enrichment_list <- raw_genesets %||% list(merged_gs)

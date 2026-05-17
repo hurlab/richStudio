@@ -45,9 +45,22 @@
 #' @import shiny
 #' @import shinydashboard
 #' @importFrom dplyr filter arrange rename any_of slice_head
-#' @importFrom plotly plot_ly layout
-#' @importFrom reshape2 melt
+#' @importFrom DT DTOutput coerceValue dataTableOutput renderDT renderDataTable
+#' @importFrom future future
+#' @importFrom heatmaply heatmaply
 #' @importFrom jsonlite read_json write_json
+#' @importFrom plotly plot_ly layout
+#' @importFrom promises finally then
+#' @importFrom readxl read_excel
+#' @importFrom reshape2 melt
+#' @importFrom richR richCluster
 #' @importFrom rlang .data
+#' @importFrom shinyjqui jqui_resizable
+#' @importFrom shinyjs disable enable hidden hide show
+#' @importFrom stringdist stringdistmatrix
+#' @importFrom tibble as_tibble
+#' @importFrom tidyr drop_na
 #' @importFrom utils head
+#' @importFrom writexl write_xlsx
+#' @importFrom zip zip
 "_PACKAGE"

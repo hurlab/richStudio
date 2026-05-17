@@ -35,7 +35,6 @@ Imports:
     dplyr,
     tibble,
     tidyr,
-    tidyverse,
     ggplot2,
     plotly,
     heatmaply,

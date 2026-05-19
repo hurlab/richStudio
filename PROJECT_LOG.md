@@ -696,3 +696,152 @@ Test suite: 152 tests, but all fail with "could not find function" errors becaus
 - Phase 14: Code Review & Fix session complete
 - 3 real bugs fixed, 2 security gaps addressed
 - All fixes verified
+
+---
+
+## Session 2026-05-18 → 2026-05-19 — Deployment Tooling + Sync Strategy Decision
+
+- **Coding CLI used:** Claude Code CLI (claude-opus-4-7, 1M context, xhigh effort)
+- **Phase(s) worked on:** Phase 15 (Senior-Architect Review continuation — deployment tooling + sync workflow)
+
+### Context
+
+Continuing the Phase 15 harness from Session 2026-05-17 (which completed B1=SPEC-QUICK-001 and B2=SPEC-CRAN-001). The user asked two pivotal questions this session:
+1. "How can we make sure nothing's going to break after the deployment?"
+2. "Should we use GitHub to copy new files to the remote server before the deployment? or scp/rsync?"
+
+These triggered a switch from immediate B3-B8 execution to a focused deployment-infrastructure subphase. The user's earlier decision (Session 2026-05-17) to defer the B1+B2 server deploy until B1-B5 can ship together meant this was the right moment to formalize the deploy mechanism before more code accumulates.
+
+### Concrete Changes Implemented
+
+**Deployment investigation (read-only):**
+- Discovered `/srv/shiny-server/richStudio` on this WSL2 dev machine is a symlink pointing to `/home/juhur/PROJECTS/richStudioCompare/richStudio_hurlab-server/` which does NOT exist on this box. Those symlinks are rsynced artifacts from the actual server's filesystem (sync state file shows last sync 2026-05-10).
+- The dev machine is NOT the deployment server — it is WSL2. The live deployment at hurlab.med.und.edu/richStudio/ is on a separate host.
+- Confirmed `smart-rsync` tool at `/home/juhur/.local/bin/smart-rsync` with state in `/home/juhur/PROJECTS/.smart-rsync-state.json`. Last sync 2026-05-10T01:47 UTC — pre-dates this entire Phase 15 work.
+- Confirmed nothing in R/ or inst/application/app.R uses purrr/forcats/readr/stringr/lubridate sub-packages, so B2's removal of `tidyverse` from DESCRIPTION Imports is safe for deployment.
+
+**Deployment tooling created (commit 7535bc2):**
+
+- `scripts/deploy.sh` (176 lines) — git-based deploy with the following safety guarantees:
+  - SSH connectivity precheck
+  - Verifies server is a git checkout; if not, instructs one-time setup
+  - Prints commits + diffstat for review before any change
+  - Hardlinked snapshot of current state to `<path>.PREV.<timestamp>` (near-instant, no disk overhead via `cp -al`)
+  - Stops shiny-server, `git reset --hard origin/<branch>`
+  - Runs `renv::restore()` and `Rcpp::compileAttributes()` as the `shiny` user
+  - Restarts shiny-server and curl-tests the public URL
+  - On mid-deploy failure: automatic `restore_from_snapshot()` reversion
+  - On post-deploy smoke-test failure (HTTP != 200/302): preserves snapshot and prints rollback command
+  - Configurable via env vars: `RICHSTUDIO_HOST`, `RICHSTUDIO_SSH_USER`, `RICHSTUDIO_PATH`, `RICHSTUDIO_RUNAS`, `RICHSTUDIO_URL`, `RICHSTUDIO_KEEP_PREV`
+  - Supports `--branch=<name>`, `--dry-run`, `--no-restart`
+  - Auto-prunes PREV snapshots beyond `RICHSTUDIO_KEEP_PREV` (default 3)
+  - Exit codes: 0 success / 1 arg error / 2 SSH failure / 3 deploy step failure / 4 smoke test failure
+
+- `scripts/rollback.sh` (124 lines):
+  - `--list` lists available PREV snapshots
+  - `--snapshot=<path>` allows selecting a non-latest snapshot
+  - Saves current (broken) state as `<path>.BAD.<timestamp>` for forensics before promoting snapshot
+  - Smoke-tests after restart
+  - Self-protecting: if promote fails, restores BAD as live before failing
+
+- `scripts/preview-deploy.sh` (74 lines):
+  - Read-only dry-run preview
+  - Shows commits, file diffstat, DESCRIPTION/NAMESPACE diff, C++ source diff
+  - Estimates post-deploy actions needed (renv::restore needed? Rcpp compile needed?)
+
+- `DEPLOYMENT.md` rewritten (+166 / -43 net):
+  - New "Deployment Model" section explaining git-based + PREV rollback (replaces rsync-as-primary)
+  - New "One-Time Setup" section for migrating an existing rsync deployment to a server-side git clone, with fallback for proxy-blocked servers (push to bare repo)
+  - New "Pre-deployment Safety Checklist" — 5-tier system (parse-check / R CMD check / staging slot / atomic swap / smoke test)
+  - New "Risk-by-change-type Reference" table mapping comment/R-logic/DESCRIPTION/src/cpp/renv.lock/app.R-UI to required mitigation level
+  - Legacy rsync method retained but marked deprecated, with proper `--exclude` flags
+
+**GitHub sync (4 commits pushed):**
+
+- Per user direction (AskUserQuestion answers): "Push to GitHub only — defer server sync (recommended)" and "Stage and commit MoAI-ADK template drift as separate chore commit".
+- Committed pre-existing local drift (`.gitignore`, `CLAUDE.md`) as commit 4eb9f96 with descriptive message ("chore: sync MoAI-ADK template files"). Diff: +569 / -839 — `.gitignore` adopted MoAI-ADK 0.33.0 distribution template (Go/Python/uv patterns added; R-relevant patterns preserved), CLAUDE.md consolidated from v3 (~1043 lines) to v14 (~361 lines) by externalizing rules to `.claude/rules/moai/`.
+- All 5 session commits pushed to `origin/main` via `git push` (no force, no skip-hooks). Resulting state: local 0 ahead, 0 behind origin/main. GitHub at commit 7535bc2.
+
+### Files/Modules/Functions Touched
+
+- `scripts/deploy.sh` (new, 7222 bytes, mode 755)
+- `scripts/rollback.sh` (new, 4639 bytes, mode 755)
+- `scripts/preview-deploy.sh` (new, 2931 bytes, mode 755)
+- `DEPLOYMENT.md` (rewritten; 369 lines after edit)
+- `.gitignore` (MoAI-ADK template adopted; 258 lines after edit)
+- `CLAUDE.md` (consolidated; 361 lines after edit)
+
+No application code (R/, src/, inst/, tests/) touched in this session — deployment surface only.
+
+### Key Technical Decisions and Rationale
+
+1. **Git pull as canonical deploy mechanism, not rsync** — reasoning:
+   - Versioned (every deploy is a known SHA; `git log` on server shows history)
+   - Atomic (per-commit)
+   - Self-documenting (commit messages explain what changed)
+   - Avoids accidentally rsyncing local cruft (renv/library/, .Rproj.user/)
+   - Standard practice for R packages
+   - rsync retained as fallback for the rare case of locally-generated untracked files
+
+2. **Hardlinked PREV snapshots via `cp -al`** — chosen over tar/git-tag because:
+   - Near-instant creation (just inode references, no data copying)
+   - Zero extra disk usage until files diverge
+   - One `mv` to roll back (no extraction or checkout step)
+   - Simple to reason about (snapshot directory IS the full app at that point in time)
+
+3. **Auto-rollback only on mid-deploy failure, NOT on smoke-test failure** — reasoning:
+   - Mid-deploy failures (e.g., renv::restore fails) leave inconsistent state, MUST auto-revert
+   - Post-deploy smoke-test failures may need human investigation before rollback (e.g., the new code might be correct but a transient network blip caused the curl; rolling back automatically could lose useful diagnostic state)
+   - Script preserves snapshot and prints the explicit rollback command instead
+
+4. **Defer B1+B2 server deploy** — per user choice, bundle B1-B5 into one coordinated update later. B1 and B2 changes alone have near-zero runtime risk (B1 is comment-only; B2 is NAMESPACE/DESCRIPTION + 6 inline comments with no R/ logic changes). Coordinating one deploy event with full Tier 1-4 mitigation (including Tier 2 staging slot for B5's C++ changes) is safer and lower-effort than 3-5 incremental deploys.
+
+5. **Commit MoAI-ADK template drift separately** — kept `.gitignore` and `CLAUDE.md` updates in their own commit (4eb9f96) so history remains bisectable. SPEC-QUICK-001 and SPEC-CRAN-001 commits cover only application code; chore commit covers framework tooling.
+
+### Problems Encountered and Resolutions
+
+1. **Initial syntax errors in shell scripts:**
+   - `scripts/rollback.sh` line 82 had unbalanced quote (double-quote ended early at `(no git info)"`)
+     - Fix: changed outer quoting from `"` to `'` for the echo fallback string.
+   - `scripts/deploy.sh` defined `restore_from_snapshot()` AFTER its callers — bash requires forward declaration.
+     - Fix: moved function definition to the helpers section near top (line 68) before any branch that calls it (130, 135, 139).
+   - Both caught by `bash -n` syntax check before commit.
+
+2. **Discovered server symlink staleness:**
+   - The `/srv/shiny-server/richStudio` symlinks present on this WSL2 dev machine point to `/home/juhur/PROJECTS/richStudioCompare/...` which does not exist locally. These symlinks were rsynced from the actual production server's filesystem.
+   - Confusing because PROJECT_HANDOFF Phase 12 (2026-03-29) had claimed "removed stale symlinks in /srv/shiny-server/". They may have been re-rsynced from the server after that fix, or Phase 12's note was inaccurate.
+   - Resolution: not actionable on this dev machine. Documented in deploy script + DEPLOYMENT.md. The actual server's `/srv/shiny-server/richStudio` content will be evaluated on first run of `scripts/preview-deploy.sh`.
+
+3. **User asked about "DB migration" earlier in this session continuation** — I had not seen any DB migration error and clarified that richStudio has no database. Most likely interpretation: the renv lockfile drift warning ("packages recorded in lockfile are not installed") is the R-package analog of a pending DB migration. User did not contradict this interpretation.
+
+### Items Explicitly Completed in This Session
+
+- Phase 15 deployment tooling: `scripts/deploy.sh`, `scripts/rollback.sh`, `scripts/preview-deploy.sh`, DEPLOYMENT.md restructure
+- GitHub sync: all 5 Phase 15 commits (B1, B2, Phase 15 docs, framework drift, deploy tooling) pushed to origin/main
+- Working tree fully clean — no uncommitted changes remaining
+- AskUserQuestion answers captured: B1+B2 server deploy deferred; chore commit strategy for framework drift; recommended git-pull mechanism over rsync
+
+### Items Explicitly Deferred (Active Outstanding Work)
+
+- Server deploy of B1+B2+B3+B4+B5 as one coordinated event (still requires B3-B5 implementation first)
+- One-time migration of server's `/srv/shiny-server/richStudio` from rsync-copy to git checkout
+- `renv::restore()` against R 4.6 to unblock testthat / R CMD check
+- Phase 15 bundles B6 (style), B3 (security), B4 (R perf), B5 (C++), B7 (functional gap), B8 (test foundation)
+- SPEC-CRAN-002 (architectural decision: shinyWidgets/ggplot2/data.table/config/digest/bioAnno Imports vs Suggests)
+- Pre-publication tasks: Figure 1A, user manual PDF, in-app help link
+
+### Verification Performed
+
+- `bash -n` syntax check on all 3 deploy scripts — all PASS after fixes
+- `git push origin main` succeeded, fast-forward push from `fc12497` to `7535bc2` (5 commits)
+- `git rev-list --left-right --count HEAD...origin/main` returned `0 0` (fully synced)
+- `git status --short` returned empty (clean working tree)
+- Visual review of DEPLOYMENT.md formatting and table integrity
+- Path verification: scripts directory permissions correct (executable bits set via `chmod +x`)
+
+### Commits This Session
+
+- `4eb9f96` chore: sync MoAI-ADK template files (.gitignore, CLAUDE.md)
+- `7535bc2` docs(deploy): add git-based deploy/rollback scripts + safety tiers
+
+(Earlier session 2026-05-17 added commits 774d019, 5305d49, 0748e67.)

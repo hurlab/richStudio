@@ -2,67 +2,130 @@
 
 This guide covers deploying richStudio on a remote server with Shiny Server.
 
+## Deployment Model
+
+richStudio uses a **git-based deployment** with **PREV-snapshot rollback**. The server holds a git clone of the repository; deploys are `git fetch + reset --hard` against a known SHA, preceded by a hardlinked snapshot of the previous state for instant rollback.
+
+This replaces the older rsync-based workflow described in earlier revisions of this document. rsync still works for one-off transfers (untracked files, generated artifacts), but git pull is the canonical mechanism for shipping new releases.
+
 ## Prerequisites
 
 - R (>= 4.0.0) installed on the server
 - Shiny Server installed and running
-- SSH access to the server
-- Basic familiarity with terminal commands
+- SSH access to the server with a key that allows passwordless login from your dev machine
+- `sudo` available on the server for the `shiny` user operations
+- `git` installed on the server
+- `bash` available locally (the deploy scripts in `scripts/` are bash)
 
-## Quick Deployment (Recommended)
+## Quick Deployment (Recommended) — Scripted
 
-### Step 1: Copy Files to Server
-
-From your local machine:
-
-```bash
-# Using scp
-scp -r richStudioJH2/ user@server:/srv/shiny-server/richStudio
-
-# Or using rsync (better for large files)
-rsync -avz --progress richStudioJH2/ user@server:/srv/shiny-server/richStudio
-```
-
-### Step 2: Install Dependencies Using renv
-
-SSH into the server and run:
+Three scripts under `scripts/` automate the workflow. Set environment variables once, then deploy with a single command:
 
 ```bash
-# Navigate to the app directory
-cd /srv/shiny-server/richStudio
+# One-time: set in your shell rc, or pass per-invocation
+export RICHSTUDIO_HOST=hurlab.med.und.edu
+export RICHSTUDIO_SSH_USER=juhur
+export RICHSTUDIO_PATH=/srv/shiny-server/richStudio
+export RICHSTUDIO_RUNAS=shiny
+export RICHSTUDIO_URL=https://hurlab.med.und.edu/richStudio/
 
-# Switch to shiny user (important for Shiny Server)
-sudo su - shiny -c "cd /srv/shiny-server/richStudio && R -e 'renv::restore()'"
+# Preview what would deploy (no changes)
+scripts/preview-deploy.sh
 
-# Compile C++ code
-sudo su - shiny -c "cd /srv/shiny-server/richStudio && R -e 'Rcpp::compileAttributes()'"
+# Deploy
+scripts/deploy.sh
+
+# Or deploy a specific branch / tag
+scripts/deploy.sh --branch=develop
+
+# If anything goes wrong, instant rollback
+scripts/rollback.sh
 ```
 
-**Why renv?**
-- Creates project-local library at `.renv/library/`
-- Isolated from other R projects
-- Ensures reproducible environment
-- Prevents package version conflicts
+The deploy script:
+1. SSH-checks connectivity
+2. Verifies server is a git checkout and prints what would deploy (commits + diffstat)
+3. Hardlinks current state to `<path>.PREV.<timestamp>` (near-instant; no extra disk)
+4. Stops shiny-server
+5. `git reset --hard origin/<branch>`
+6. Runs `renv::restore()` + `Rcpp::compileAttributes()` as the shiny user
+7. Restarts shiny-server
+8. Curl-tests the public URL; if HTTP != 200/302, leaves the snapshot in place for one-step rollback
+9. Prunes old PREV snapshots beyond `RICHSTUDIO_KEEP_PREV` (default 3)
 
-### Step 3: Set Permissions
+The rollback script:
+1. Lists or selects a PREV snapshot
+2. Moves current state aside as `<path>.BAD.<timestamp>` (for forensics)
+3. Promotes the snapshot to live
+4. Restarts shiny-server and smoke-tests
+
+## One-Time Setup — Migrating an Existing rsync Deployment to Git
+
+If the server's `/srv/shiny-server/richStudio` is currently a plain copy (not a git checkout), run this once:
 
 ```bash
-# Ensure shiny user owns the app directory
-sudo chown -R shiny:shiny /srv/shiny-server/richStudio
-
-# Ensure proper permissions
-sudo chmod -R 755 /srv/shiny-server/richStudio
+ssh user@server '
+  sudo systemctl stop shiny-server &&
+  sudo mv /srv/shiny-server/richStudio /srv/shiny-server/richStudio.OLD &&
+  sudo git clone https://github.com/hurlab/richStudio.git /srv/shiny-server/richStudio &&
+  sudo chown -R shiny:shiny /srv/shiny-server/richStudio &&
+  cd /srv/shiny-server/richStudio &&
+  sudo -u shiny git checkout main &&
+  sudo -u shiny R --quiet -e "renv::restore()" &&
+  sudo -u shiny R --quiet -e "Rcpp::compileAttributes()" &&
+  sudo systemctl start shiny-server
+'
 ```
 
-### Step 4: Restart Shiny Server
+After verification, delete `/srv/shiny-server/richStudio.OLD`.
+
+If the server is behind a corporate proxy or cannot reach GitHub, push from your dev machine to a bare repo on the server instead:
 
 ```bash
-sudo systemctl restart shiny-server
+ssh user@server 'sudo -u shiny git init --bare /srv/shiny-server/richStudio.git'
+git remote add server user@server:/srv/shiny-server/richStudio.git
+git push server main
+# then on server: clone from the bare repo
 ```
 
-### Step 5: Verify Deployment
+## Manual Deployment (Without Scripts)
 
-Visit: `http://your-server:3838/richStudio/`
+If you cannot run the scripts (e.g., from a CI runner without SSH agent), the equivalent SSH sequence is:
+
+```bash
+ssh user@server '
+  cd /srv/shiny-server/richStudio &&
+  sudo systemctl stop shiny-server &&
+  sudo -u shiny git fetch origin &&
+  sudo -u shiny git log --oneline HEAD..origin/main &&
+  sudo cp -al /srv/shiny-server/richStudio /srv/shiny-server/richStudio.PREV.$(date +%Y%m%d-%H%M%S) &&
+  sudo -u shiny git reset --hard origin/main &&
+  sudo -u shiny R --quiet -e "renv::restore()" &&
+  sudo -u shiny R --quiet -e "Rcpp::compileAttributes()" &&
+  sudo systemctl start shiny-server
+' && curl -sf https://hurlab.med.und.edu/richStudio/ -o /dev/null && echo "deploy OK"
+```
+
+## Legacy rsync Method (deprecated, still supported)
+
+For one-off transfers where you need to push untracked or locally-generated files:
+
+```bash
+rsync -avz --progress \
+  --exclude='.git/' --exclude='.renv/library/' --exclude='renv/library/' \
+  --exclude='*.Rproj.user/' --exclude='.Rhistory' \
+  richStudio/ user@server:/srv/shiny-server/richStudio/
+
+# Then on the server:
+ssh user@server "
+  sudo chown -R shiny:shiny /srv/shiny-server/richStudio &&
+  sudo -u shiny R --quiet -e 'renv::restore()' &&
+  sudo -u shiny R --quiet -e 'Rcpp::compileAttributes()' &&
+  sudo systemctl restart shiny-server
+"
+```
+
+The `--exclude` flags are essential: without them, your local `renv/library/` (R-version-specific) will overwrite the server's, and the wrong R version may resolve.
 
 ---
 
@@ -181,19 +244,36 @@ sudo su - shiny -c "R -e 'Rcpp::compileAttributes()'"
 
 ## Updating the App
 
-To update richStudio on the server:
+See "Quick Deployment (Recommended) — Scripted" above. The TL;DR is:
 
 ```bash
-# 1. Copy new files
-rsync -avz --progress richStudioJH2/ user@server:/srv/shiny-server/richStudio
-
-# 2. Update dependencies if needed
-sudo su - shiny -c "cd /srv/shiny-server/richStudio && R -e 'renv::restore()'"
-sudo su - shiny -c "cd /srv/shiny-server/richStudio && R -e 'Rcpp::compileAttributes()'"
-
-# 3. Restart Shiny Server
-sudo systemctl restart shiny-server
+scripts/preview-deploy.sh    # show what would deploy
+scripts/deploy.sh            # do it
+scripts/rollback.sh          # undo it
 ```
+
+## Pre-deployment Safety Checklist
+
+Before running `scripts/deploy.sh`, especially for the first time after substantial changes:
+
+1. **Parse-check locally**: `Rscript -e 'for(f in list.files("R","\\.R$",full.names=TRUE)) parse(f)'` — must show all OK.
+2. **Run tests locally**: `Rscript -e 'testthat::test_dir("tests/testthat")'` — requires renv restored against current R version on this machine.
+3. **Try `R CMD check --as-cran`** — surfaces NAMESPACE drift, undeclared imports, broken examples. ~5-10 min.
+4. **Preview the deploy**: `scripts/preview-deploy.sh` — shows commits, file diff, whether renv reconcile is needed.
+5. **Optional: staging slot** — for high-risk bundles, deploy to a parallel path (`/srv/shiny-server/richStudio_staging/`) configured in `shiny-server.conf` as a separate `location` block. Smoke-test, then swap with `mv`.
+
+After `scripts/deploy.sh` completes, the smoke test runs automatically. If it fails, the script preserves the snapshot and tells you the rollback command.
+
+## Risk-by-change-type Reference
+
+| Change type | renv reconcile needed? | Rcpp recompile needed? | Recommended safety tier |
+|---|---|---|---|
+| Comment-only / docs | No | No | Tier 3 (atomic swap) suffices |
+| R logic in `R/*.R` | No | No | Tier 3 + smoke test |
+| New `@importFrom` or DESCRIPTION change | Yes | No | Tier 3 + log tail post-deploy |
+| `src/*.cpp` or `src/*.h` change | No | Yes | Tier 2 (staging slot) recommended |
+| `renv.lock` update | Yes (significant) | Maybe | Tier 2 (staging slot) required |
+| `inst/application/app.R` UI change | No | No | Tier 3 + manual click-through |
 
 ---
 

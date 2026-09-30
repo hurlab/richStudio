@@ -385,3 +385,4 @@ docs/competitive-landscape-analysis.md
 /.github/workflows/label-sync.yml
 /.worktreeinclude
 /AGENTS.md
+/CLAUDE.md

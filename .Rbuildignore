@@ -26,3 +26,4 @@
 ^scripts$
 ^\.moai$
 ^tests/e2e$
+^workspace-quality-artifacts$

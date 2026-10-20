@@ -4,7 +4,7 @@
   "measurement_case": "upper",
   "measurement_fixture_sha256": "1765f1f73b5a085838bdcc22dd0aa384342d38a0cf39b8b4c8c67be1b54fe582",
   "measurement_script_sha256": "dfe77dd27b75c16370182b57b4749920b6f9f32d5e5fe3e6fdfdabc509003b36",
-  "review_status": "pending-independent-security-and-target-host-review",
+  "review_status": "approved-bounded-foundation-envelope",
   "limits": {
     "upload_bytes": 58183663,
     "rows": 50000,

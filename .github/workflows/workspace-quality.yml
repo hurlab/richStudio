@@ -4,6 +4,12 @@ on:
   push:
     branches: [main, 'WT-workspace-*']
   workflow_dispatch:
+    inputs:
+      negative_assertion:
+        description: Run the actual broken browser assertion and retain a failed job
+        type: boolean
+        required: false
+        default: false
 permissions:
   contents: read
 jobs:
@@ -14,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        mode: [prepare, full, browser, negative, diagnostics, scan]
+        mode: ${{ fromJSON((inputs.negative_assertion || endsWith(github.ref_name, '-negative-canary')) && '["browser"]' || '["prepare","full","browser","negative","diagnostics","scan","resources"]') }}
     env:
       CI: 'true'
       RENV_CONFIG_AUTOLOADER_ENABLED: 'FALSE'
@@ -109,9 +115,11 @@ jobs:
             npx --no-install ast-grep --version
             Rscript --vanilla -e 'print(R.version.string); print(.libPaths()); for(p in c("richR","richCluster","bioAnno","languageserver","lintr","rcmdcheck","covr","testthat")) cat(p,as.character(packageVersion(p)),find.package(p),"\n")'
           } > "$WORKSPACE_ARTIFACTS/tool-versions.txt" 2>&1
-          Rscript --vanilla -e 'jsonlite::write_json(as.data.frame(installed.packages()[,c("Package","Version","LibPath","Built")]),file.path(Sys.getenv("WORKSPACE_ARTIFACTS"),"installed-package-inventory.json"),pretty=TRUE)' 
+          Rscript --vanilla -e 'jsonlite::write_json(as.data.frame(installed.packages()[,c("Package","Version","LibPath","Built")]),file.path(Sys.getenv("WORKSPACE_ARTIFACTS"),"installed-package-inventory.json"),pretty=TRUE)'
       - name: Run required gate (skips and unavailable tools are failures)
         shell: bash
+        env:
+          WORKSPACE_NEGATIVE_ASSERTION: ${{ (inputs.negative_assertion || endsWith(github.ref_name, '-negative-canary')) && '1' || '0' }}
         run: bash scripts/test-workspace.sh '${{ matrix.mode }}'
       - name: Retain all diagnostics including failed and negative gates
         if: always()

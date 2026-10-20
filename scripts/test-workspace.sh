@@ -7,6 +7,7 @@ ARTIFACTS=${WORKSPACE_ARTIFACTS:-"$ROOT/.moai/reports/SPEC-WORKSPACE-001/impleme
 mkdir -p "$ARTIFACTS"
 ARTIFACTS=$(cd "$ARTIFACTS" && pwd -P)
 export ARTIFACTS
+export WORKSPACE_ARTIFACTS="$ARTIFACTS"
 MODE=${1:-scoped}
 export WORKSPACE_DIAGNOSTIC_PHASE=${2:-run}
 [[ "$WORKSPACE_DIAGNOSTIC_PHASE" == run || "$WORKSPACE_DIAGNOSTIC_PHASE" == sync ]] || { echo "Invalid diagnostic phase" >&2; exit 2; }
@@ -23,7 +24,7 @@ receipt() {
 import hashlib,json,pathlib,sys
 root,out=map(pathlib.Path,sys.argv[1:])
 paths=list(root.glob('R/*.R'))+list((root/'tests/fixtures/workspace').glob('*'))
-paths += [root/p for p in ('package-lock.json','tsconfig.json','playwright.config.ts','docs/quality/workspace-policy-bundle.json','inst/config/workspace-resources.json','scripts/test-workspace.sh')]
+paths += [root/p for p in ('package-lock.json','tsconfig.json','playwright.config.ts','docs/quality/workspace-policy-bundle.json','inst/config/workspace-resources.json','scripts/test-workspace.sh','scripts/measure-workspace-resources.R')]
 (out/'source-digests.json').write_text(json.dumps({p.relative_to(root).as_posix():hashlib.sha256(p.read_bytes()).hexdigest() for p in paths if p.is_file()},indent=2))
 PY
   Rscript --vanilla -e 'cat(R.version.string,"\n"); print(Sys.info()); print(.libPaths()); for(p in c("richStudio","richR","richCluster","bioAnno","testthat","covr","languageserver","lintr")) if(requireNamespace(p,quietly=TRUE)) cat(p,as.character(packageVersion(p)),find.package(p),"\n") else cat(p,"UNAVAILABLE\n")' > "$ARTIFACTS/runtime.txt" 2>&1
@@ -146,7 +147,9 @@ diagnostics() {
 import hashlib,json,os,pathlib,queue,subprocess,sys,tempfile,threading,time
 import yaml
 source,out,policy=map(pathlib.Path,sys.argv[1:])
-quality=yaml.safe_load((policy/'.moai/config/sections/quality.yaml').read_text())['constitution']['lsp_quality_gates']
+constitution=yaml.safe_load((policy/'.moai/config/sections/quality.yaml').read_text())['constitution']
+quality=constitution['lsp_quality_gates']
+regression=constitution['lsp_integration']['regression_detection']
 config=yaml.safe_load((policy/'.moai/config/sections/lsp.yaml').read_text())['lsp']
 if not quality['enabled']:
     raise SystemExit('Diagnostics policy disabled: explicit disposition required')
@@ -196,7 +199,7 @@ class Client:
         raise TimeoutError('Required language server response absent')
     def open(self,path):
         uri=path.as_uri()
-        self.send({'method':'textDocument/didOpen','params':{'textDocument':{'uri':uri,'languageId':'r','version':1,'text':path.read_text()}}})
+        self.send({'method':'textDocument/didOpen','params':{'textDocument':{'uri':uri,'languageId':'r','version':1,'text':path.read_bytes().decode('utf-8')}}})
         message=self.wait(lambda m:m.get('method')=='textDocument/publishDiagnostics' and m.get('params',{}).get('uri')==uri)
         result=message['params']
         if result.get('version',1)!=1:raise ValueError('Wrong diagnostics document version')
@@ -231,33 +234,54 @@ try:
         root=pathlib.Path(tmp)
         for stage in ('baseline','candidate'):
             stage_root=root/stage;stage_root.mkdir()
+            if stage=='baseline':
+                tracked=subprocess.check_output(['git','-C',str(source),'ls-tree','-r','--name-only',baseline_sha,'--','R'],text=True).splitlines()
+                intended=sorted(p for p in tracked if p.endswith(('.R','.r')))
+            else:
+                intended=sorted(p.relative_to(source).as_posix() for p in (source/'R').rglob('*') if p.is_file() and p.suffix in ('.R','.r'))
+            context=[]
+            for relative in ['DESCRIPTION','NAMESPACE','.lintr',*intended]:
+                if stage=='baseline':
+                    old=subprocess.run(['git','-C',str(source),'show',f'{baseline_sha}:{relative}'],capture_output=True)
+                    if old.returncode:
+                        if relative=='.lintr':continue
+                        raise ValueError('Required baseline package context missing: '+relative)
+                    data=old.stdout
+                else:
+                    original=source/relative
+                    if not original.is_file():
+                        if relative=='.lintr':continue
+                        raise ValueError('Required candidate package context missing: '+relative)
+                    data=original.read_bytes()
+                target=stage_root/relative;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(data)
+                context.append({'source_path':relative,'sha256':hashlib.sha256(data).hexdigest()})
             client=None;records=[]
             try:
                 client=Client(stage_root,stage)
                 canary=stage_root/'invalid-canary.R';canary.write_text('workspace_broken <- function( {\n')
                 observed=client.open(canary)
                 if not any(d.get('severity')==1 for d in observed['diagnostics']):raise ValueError('Invalid R canary did not produce an actual error')
-                receipt['stages'][stage]={'canary':observed,'files':records}
-                for path in sorted((source/'R').glob('*.R')):
-                    if stage=='baseline':
-                        old=subprocess.run(['git','-C',str(source),'show',f'{baseline_sha}:R/{path.name}'],capture_output=True,text=True)
-                        if old.returncode:continue
-                        text=old.stdout
-                    else:text=path.read_text()
-                    target=stage_root/path.name;target.write_text(text)
-                    record=client.open(target);record['source_path']='R/'+path.name;records.append(record)
+                canary.unlink()
+                receipt['stages'][stage]={'canary':observed,'staging':'package-context-DESCRIPTION-NAMESPACE-R-layout','context':context,'lintr_configuration':'present' if (stage_root/'.lintr').is_file() else 'absent-in-measured-source','files':records}
+                for relative in intended:
+                    record=client.open(stage_root/relative);record['source_path']=relative;records.append(record)
                 if not records:raise ValueError('No intended R files diagnosed')
             finally:
                 if client:client.close()
     def counts(stage):
         data=[d for f in receipt['stages'][stage]['files'] for d in f['diagnostics']]
-        return {'errors':sum(d.get('severity')==1 for d in data),'warnings':sum(d.get('severity')==2 for d in data),'lint_errors':sum(d.get('severity')==1 and d.get('source')=='lintr' for d in data)}
+        if any(d.get('severity') not in (1,2,3,4) for d in data):raise ValueError('Unrecognized diagnostic severity')
+        return {'errors':sum(d['severity']==1 for d in data),'warnings':sum(d['severity']==2 for d in data),'information':sum(d['severity']==3 for d in data),'hints':sum(d['severity']==4 for d in data),'total':len(data),'lint_errors':sum(d['severity']==1 and d.get('source')=='lintr' for d in data)}
     baseline,candidate=counts('baseline'),counts('candidate')
     receipt.update(baseline=baseline,candidate=candidate)
     run,sync=quality['run'],quality['sync']
-    run_ok = candidate['errors']<=run['max_errors'] and candidate['lint_errors']<=run['max_lint_errors'] and (run['allow_regression'] or all(candidate[k]<=baseline[k] for k in candidate))
-    sync_ok = candidate['errors']<=sync['max_errors'] and candidate['warnings']<=sync['max_warnings']
-    receipt['phase_assessments']={'run':{'status':'PASS' if run_ok else 'FAIL','policy':run},'sync':{'status':'PASS' if sync_ok else 'FAIL','policy':sync,'release_hold':not sync_ok}}
+    typescript_membership=json.loads((out/'typescript-membership.json').read_text())
+    if typescript_membership['missing']:raise ValueError('TypeScript inputs missing')
+    receipt['typecheck']={'tool':'tsc --noEmit --project tsconfig.json','observed_exit_code':0,'type_errors':0,'intended_inputs':typescript_membership['expected'],'r_static_type_checker':'not configured; dynamic R parse/lint diagnostics remain separate'}
+    has_regression = candidate['errors']-baseline['errors']>regression['error_increase_threshold'] or candidate['warnings']-baseline['warnings']>regression['warning_increase_threshold']
+    run_ok = candidate['errors']<=run['max_errors'] and candidate['lint_errors']<=run['max_lint_errors'] and receipt['typecheck']['type_errors']<=run['max_type_errors'] and (run['allow_regression'] or not has_regression)
+    sync_ok = candidate['errors']<=sync['max_errors'] and candidate['warnings']<=sync['max_warnings'] and (not sync['require_clean_lsp'] or candidate['total']==0)
+    receipt['phase_assessments']={'run':{'status':'PASS' if run_ok else 'FAIL','policy':run,'regression_policy':regression,'has_regression':has_regression},'sync':{'status':'PASS' if sync_ok else 'FAIL','policy':sync,'total_diagnostics':candidate['total'],'release_hold':not sync_ok}}
     phase=os.environ['WORKSPACE_DIAGNOSTIC_PHASE']
     receipt['evaluated_phase']=phase
     if not {'run':run_ok,'sync':sync_ok}[phase]:raise ValueError(f'Canonical {phase} diagnostic thresholds exceeded')
@@ -269,6 +293,18 @@ finally:
 if receipt['status']!='PASS':raise SystemExit(receipt['error'])
 print('Actual R JSON-RPC diagnostics and invalid canary verified')
 PY
+}
+
+resource_measurements() {
+  local resource_dir="$ARTIFACTS/resources"
+  mkdir -p "$resource_dir"
+  local measurement
+  for measurement in "$@"; do
+    timeout --kill-after=5s 120s /usr/bin/time -v -o "$resource_dir/$measurement.time.log" \
+      Rscript --vanilla "$ROOT/scripts/measure-workspace-resources.R" "$measurement" "$resource_dir/$measurement.json" \
+      > "$resource_dir/$measurement.stdout.log" 2> "$resource_dir/$measurement.stderr.log"
+    cat "$resource_dir/$measurement.stdout.log"
+  done
 }
 
 case "$MODE" in
@@ -290,8 +326,13 @@ case "$MODE" in
   scoped)
     install_candidate; installed; receipt; r_tests '^workspace-(baseline|resources)$'
     ;;
+  resources)
+    install_candidate; installed; receipt
+    resource_measurements small representative upper render worker worker-error
+    ;;
   browser)
     install_candidate; installed; receipt
+    resource_measurements render
     cd "$ROOT"; npx --no-install playwright test
     ;;
   negative)
@@ -348,5 +389,5 @@ if (!is.null(check_error)) stop("R CMD check failed")
 R
     (( test_result == 0 ))
     ;;
-  *) echo "Usage: $0 prepare|scoped|browser|negative|diagnostics|full|serve" >&2; exit 2 ;;
+  *) echo "Usage: $0 prepare|scoped|browser|negative|diagnostics|full|serve|resources" >&2; exit 2 ;;
 esac

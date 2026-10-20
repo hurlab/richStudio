@@ -179,7 +179,8 @@
               "R/round_table.R"
             ],
             "depends_on_children": [
-              "B0"
+              "B0",
+              "B7"
             ],
             "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
           },
@@ -239,10 +240,12 @@
             "locked_read_files": [
               "DESCRIPTION",
               "R/clus_visualize_tab.R",
+              "R/cluster_hmap.R",
+              "R/rr_network.R",
               "R/rr_visualize_tab.R"
             ],
             "depends_on_children": [],
-            "verification_scope": "installed namespace winning DT bindings/formals and table UI/render equality; generator replay"
+            "verification_scope": "winning DT binding/formal equality; only public richR::ggnetwork,dplyr::distinct,plotly::plotlyOutput/renderPlotly; direct installed before/after UI/module/actual rendering probes; no controlled-copy proof, private helper or science change; generator replay"
           },
           {
             "id": "B8",
@@ -286,7 +289,11 @@
               "NAMESPACE"
             ],
             "depends_on_children": [],
-            "verification_scope": "supported before/after compile object/symbol/public native result invariants; no algorithm change"
+            "verification_scope": "supported before/after compile object/symbol/public native result invariants; no algorithm change; declare only verified direct later/withr test use, no dependency pin/API change",
+            "direct_test_dependency_scope": [
+              "later",
+              "withr"
+            ]
           }
         ],
         "generator_serialization": "B1,B7,B8 generator execution is exclusive against each other and all readers of their snapshots; generated files outside approved writer targets must remain byte-identical.",
@@ -296,22 +303,91 @@
             "--as-cran"
           ],
           "error_on": "warning",
-          "only_scope_override": {
-            "_R_CHECK_CRAN_INCOMING_": "FALSE"
+          "master_incoming": "TRUE",
+          "only_permissive_remote_override": {
+            "_R_CHECK_CRAN_INCOMING_REMOTE_": "FALSE"
           },
-          "scope": "website application; no CRAN publication claim; all code/doc/build/example/test and canonical coverage/diagnostic criteria retained",
-          "authorization": "pending independent plan audit",
-          "retain_original_incoming_log": true,
+          "explicit_environment": {
+            "_R_CHECK_CRAN_INCOMING_": "TRUE",
+            "_R_CHECK_CRAN_INCOMING_REMOTE_": "FALSE",
+            "_R_CHECK_OVERWRITE_REGISTERED_S3_METHODS_": "TRUE",
+            "_R_CHECK_AUTOCONF_": "TRUE"
+          },
+          "excluded_remote_scope": [
+            "external CRAN repository availability and publication dependency eligibility",
+            "external URL/DOI/arXiv/ORCID/ROR liveness"
+          ],
+          "preserved_scope": [
+            "local parse/syntax",
+            "Rd database and local URI validation",
+            "code/exercise/S3/autoconf",
+            "examples/tests/build"
+          ],
+          "scope_limit": "No identical-all-documentation or CRAN-ready claim; no canonical gate or denominator change",
+          "authorization": "pending independent confirming plan audit and root review; frozen runner remains default-profile blocked",
+          "retain_original_incoming_and_master_false_evidence": true,
           "preparation_proof": {
-            "required": "complete installed-R strict code/doc/build/test control and check-section semantic closure against original --as-cran; paired bounded valid/invalid tool-canary package checks",
-            "known_strict_controls_to_preserve_explicitly_if_needed": [
-              "_R_CHECK_OVERWRITE_REGISTERED_S3_METHODS_",
-              "_R_CHECK_AUTOCONF_"
+            "R": "4.6.1; installed tools source/version/digests and effective-section inventory",
+            "cases": [
+              "valid",
+              "code",
+              "documentation",
+              "example",
+              "test",
+              "build",
+              "no-exercises"
             ],
-            "completeness": "examples only; unknown or lost required control fails PREP",
-            "only_permissive_scope": "CRAN submission-suitability and remote eligibility; no code/doc/build/example/test loss",
-            "failure_disposition": "G0 held; no weaker standard-check fallback",
-            "owner": "001 runner implementer with independent reviewer and QA"
+            "profiles": 2,
+            "expected_outcomes": 14,
+            "experimental_receipt": "workspace-g0-preparation/.moai/reports/SPEC-WORKSPACE-001/implementation/PREP/experimental-narrow-summary.json",
+            "actual_experiment": "all14 intended outcomes; not default approval or full package check",
+            "failure_disposition": "G0 held; no weaker fallback",
+            "owner": "001 runner implementer with independent reviewer/QA"
+          },
+          "local_url_companion": {
+            "owner": "001 existing runner only; no new target",
+            "fixed_installed_expression_indices": [
+              4,
+              9,
+              10,
+              12,
+              13,
+              14,
+              15,
+              18,
+              23,
+              24
+            ],
+            "guarded_identity": [
+              "exact installed R/tools version",
+              "complete source bodies and fixed shapes",
+              "CRAN mirror file",
+              "formatter",
+              "actual source URL enumerator",
+              "original severity wrapper"
+            ],
+            "prohibited": [
+              "network/header/HTTP/FTP replay",
+              "copied checker fork",
+              "tools modification",
+              "AST framework"
+            ],
+            "actual_source_evidence": "source snapshot/hash; URL database and From; complete before/added/combined findings; visible original formatter output",
+            "acceptance": {
+              "zero_findings": "CLEAN",
+              "real_local_notes": "PASS_WITH_NOTES with count and visible original NOTE; nonblocking under unchanged error_on=warning; never clean",
+              "warnings_errors": "unchanged severity and blocking behavior",
+              "guard_or_execution_unknown": "PREP/G0 held"
+            },
+            "controls": {
+              "valid": 4,
+              "intended_finding": 6,
+              "source": "actual disposable source URL databases, not synthetic diagnostic objects"
+            },
+            "recorded_actual_snapshot": "e2a8ac9f source:5 records,3unique,0findings; separate real-input findings1 NOTE/nonblocking; not future-source acceptance",
+            "preserve_prior_receipts": true,
+            "fresh_enumeration_required_on_composed_candidate": true,
+            "frozen_runner_sha256": "bab42edd5d8327cd253cf0e152194685b6f8b63e3c84e8cae5d377bd760543fe"
           }
         }
       }

@@ -23,6 +23,10 @@ if (!exists("%>%")) {
 
 #' Check if richCluster package is available
 #'
+#' @param require_package Function used to check whether richCluster can be loaded.
+#'   Defaults to \code{requireNamespace}.
+#' @param package_version Function used to obtain the installed richCluster version.
+#'   Defaults to \code{utils::packageVersion}.
 #' @return TRUE if richCluster is installed and loadable, FALSE otherwise
 #' @keywords internal
 is_richCluster_available <- function(require_package = requireNamespace,
@@ -210,6 +214,9 @@ merge_genesets <- function(genesets) {
 #'       final_group_membership, multiple_linkage_threshold
 #'   }
 #' @param gs_names Character vector of geneset names (for output formatting)
+#' @param raw_genesets Optional list of enrichment dataframes passed to the
+#'   hierarchical and DAVID methods. Defaults to \code{NULL}, which uses
+#'   \code{list(merged_gs)}. Ignored by the richR method.
 #'
 #' @return A list containing clustering results with components:
 #'   \itemize{

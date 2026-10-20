@@ -4,7 +4,17 @@
 \alias{is_richCluster_available}
 \title{Check if richCluster package is available}
 \usage{
-is_richCluster_available()
+is_richCluster_available(
+  require_package = requireNamespace,
+  package_version = utils::packageVersion
+)
+}
+\arguments{
+\item{require_package}{Function used to check whether richCluster can be loaded.
+Defaults to \code{requireNamespace}.}
+
+\item{package_version}{Function used to obtain the installed richCluster version.
+Defaults to \code{utils::packageVersion}.}
 }
 \value{
 TRUE if richCluster is installed and loadable, FALSE otherwise

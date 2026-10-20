@@ -27,6 +27,10 @@ perform_clustering(
 }}
 
 \item{gs_names}{Character vector of geneset names (for output formatting)}
+
+\item{raw_genesets}{Optional list of enrichment dataframes passed to the
+hierarchical and DAVID methods. Defaults to \code{NULL}, which uses
+\code{list(merged_gs)}. Ignored by the richR method.}
 }
 \value{
 A list containing clustering results with components:

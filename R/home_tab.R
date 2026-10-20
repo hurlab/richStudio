@@ -73,8 +73,8 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
               icon("github"), "richStudio on GitHub")),
             tags$li(tags$a(href = "https://github.com/hurlab/richCluster", target = "_blank",
               icon("github"), "richCluster")),
-            tags$li(tags$a(href = "https://github.com/guokai8/richR", target = "_blank",
-              icon("github"), "richR")),
+            tags$li(tags$a(href = "https://github.com/hurlab/richR", target = "_blank",
+              icon("github"), "richR (0.1.5+)")),
             tags$li(tags$a(href = "https://github.com/guokai8/bioAnno", target = "_blank",
               icon("github"), "bioAnno"))
           )

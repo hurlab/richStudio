@@ -30,7 +30,7 @@ Imports:
     shinyWidgets,
     shinyjqui,
     Rcpp,
-    richR,
+    richR (>= 0.1.5),
     bioAnno,
     dplyr,
     tibble,
@@ -52,7 +52,7 @@ Imports:
     future,
     promises
 Suggests:
-    richCluster,
+    richCluster (>= 2.0.1),
     testthat (>= 3.0.0),
     knitr,
     rmarkdown,
@@ -66,7 +66,8 @@ RoxygenNote: 7.3.3
 VignetteBuilder: knitr
 Config/testthat/edition: 3
 Remotes:
-    guokai8/richR,
+    hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25,
+    hurlab/richCluster@a0d1f630fbe64089ab38516116b78962672e6349,
     guokai8/bioAnno
 biocViews:
     Software,

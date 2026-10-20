@@ -4,12 +4,30 @@
 
 richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
 
-- **Last updated:** 2026-05-19 08:17 CDT
-- **Last coding CLI used:** Claude Code CLI (claude-opus-4-7, 1M context)
-- **Branch:** main (synced with origin/main at commit 7535bc2)
+- **Last updated:** 2026-10-20 (dependency migration in progress)
+- **Last coding CLI used:** Codex (dependency migration); earlier phase history used Claude Code
+- **Active worktree:** `.moai/worktrees/dependency-adoption`, branch `WT-dependency-adoption`, base `27aac71c679009c2b61bb2118325dde690994ef1`; migration edits are uncommitted
 - **Version:** 0.1.6
 
 ## 2. Current State
+
+### Dependency adoption — In progress (2026-10-20)
+
+The user authorized SPEC-DEPENDENCY-001 after coordination with richR and inspection of standalone richCluster. This bounded migration takes priority over the older recommended B6 sequence; it does not close unrelated B3–B8 or publication work. See [runtime guidance](docs/DEPENDENCY_RUNTIME.md), [SPEC](docs/specs/SPEC-DEPENDENCY-001/spec.md), and [deployment procedure](docs/DEPENDENCY_DEPLOYMENT.md).
+
+- Targets: official hurlab/richR 0.1.5 at `9be43abdae556d9f1df128149a70721f08ab7d25`; hurlab/richCluster 2.0.1 at `a0d1f630fbe64089ab38516116b78962672e6349`. bioAnno remains 0.99.45 at its existing lock revision.
+- All three pinned sources were installed into the new `/tmp/richstudio-dependency-adoption-v015-lib-20261020` under R 4.6.1; logs are `/tmp/richstudio-v015-logs-20261020/{archive-sha256,install,identity}.log`. The original 0.1.4 library remains protected as a baseline and read-only fallback for other dependencies, including the task-local Rcpp 1.1.2 overlay.
+- The historical lock still records R 4.5.2/Bioc 3.22; a full restore is unverified. Do not resume the old blanket `renv::restore()` recommendation without re-evaluating compatibility. The isolated library permits scoped verification without changing shared libraries.
+- Source compatibility work is underway: explicit richR dispatch/Reactome `object=`, empty/error handling, public standalone clustering entry points, preserved method-specific significance policy, and richR term-union gene background. Required consumer ACs, scoped regression tests and independent reviews are pending; no migration completion is claimed.
+- **Open consumer gates:** Earlier consumer audits returned FAIL. Corrections include dataset aliases, observer/save/reopen evidence, membership/index mapping and shared-term filtering. First/middle filtered-dataset identity mapping now passes focused installed 0.1.4 tests (`/tmp/richstudio-f7-green-final.log`); final 0.1.5 consumer build, required ACs, scoped quality checks and independent review are ongoing. No completion is claimed.
+- **Measured numerical baselines:** `numerical-baseline.md` now records all three identities: standalone 1.0.2/2.0.1 equal grouping with changed numeric values and deduplicated genes on one fixture, identical original-HEAD/current vendored results on another, and successful unequal-size richR 0.1.4 consumer/explicit-union equality. These do not assert universal historical equality. Earlier UI/server smoke covers only its historical installed build.
+- **Official upstream release:** 0.1.5 source pin `9be43abdae556d9f1df128149a70721f08ab7d25`, asset SHA256 `0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf`, size 2,769,042 bytes. The exact SPEC delta audit passed. Historical 0.1.4 balanced-Kappa and namespace-only KEGG failures remain recorded; direct 0.1.5 balanced/single-clique oracles now return expected scores, but installed wrapper AC-009 still needs the final consumer run.
+- **Deployment preparation:** Safety round 3 returned PASS-WITH-DEBT for its reviewed bytes; final 0.1.5 pin-delta review is running. No upload or sudo execution has occurred; staging remains gated on final consumer/script results and host execution remains unobserved.
+- No new GSEA, explicit-background UI, diagnostics dashboard or batch-status UX is included.
+- Read-only server inspection measured `100.94.67.89` (`Hurlab.und.nodak.edu`), `/home/juhur/shinyapps/richStudio`, HEAD `fc124971b004fcbc24a212a40636d34cc57fd587`, R 4.5.2, richR 0.0.40/richCluster 1.0.2. This replaces the old assumption that the live app must first become a git checkout. Deployment has not occurred.
+- Deployment protocol: finish required gates, prepare and thoroughly re-review a shell script, upload over Tailscale, and let the user run sudo. The script must save private temporary log/exit-status files; retrieve and inspect them before reporting deployment. Do not deploy on the home computer or execute sudo as an agent.
+
+Historical completion statements below remain dated records of their original baselines, not fresh verification of this migration.
 
 ### Phases 1-11: Application Development — All Completed
 
@@ -175,9 +193,9 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 - **Date opened:** 2026-03-29
 - **Resolution:** Removed `/srv/shiny-server/richStudio` and `/srv/shiny-server/RichStudio` symlinks so requests route to the explicit `location /richStudio` block which runs as `juhur`, not `shiny`.
 
-### richR/richCluster package stability — Open
-- **Status:** Open
-- **Default assumption:** These packages are stable for current use cases. Single-input edge cases bypassed with direct internal function calls.
+### richR/richCluster dependency adoption — In progress
+- **Status:** SPEC-DEPENDENCY-001 consumer verification pending (2026-10-20).
+- **Current policy:** Test the pinned releases and supported public standalone entry points. Historical single-input bypasses and universal numerical-equivalence assumptions are not a migration baseline.
 
 ### Bioconductor annotation package availability — Open
 - **Status:** Open
@@ -228,6 +246,10 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 - **B1 + B2 in live deployment** — code pushed to GitHub but not yet deployed to hurlab.med.und.edu/richStudio/. Live app is still on pre-Phase-15 code.
 
 ## 7. Restart Instructions
+
+**Current starting point (2026-10-20):** Continue SPEC-DEPENDENCY-001 in the isolated `dependency-adoption` worktree. Required consumer tests and independent reviews remain pending. Inspect current status and the runtime guide before trusting the older baseline or restore advice below. No commit, push or deployment is established by these in-progress notes. Preserve unrelated pending bundles and completed historical work.
+
+The following 2026-05-19 instructions describe the earlier plan; their deployment-path, library-readiness and priority assumptions are superseded by the current dependency-adoption section where they conflict.
 
 **Starting point (2026-05-19 08:17 CDT):**
 - Local working tree at `/home/juhur/PROJECTS/20_libs/richStudio` is clean and fully synced with `origin/main` at commit `7535bc2`.
@@ -302,4 +324,4 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 
 **Funding:** R01DK130913 (NIDDK), P20GM113123 (NIGMS/CDA Core UND)
 
-**Last updated:** 2026-05-19 08:17 CDT
+**Last updated:** 2026-10-20 (dependency migration in progress)

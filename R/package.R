@@ -53,7 +53,6 @@
 #' @importFrom promises finally then
 #' @importFrom readxl read_excel
 #' @importFrom reshape2 melt
-#' @importFrom richR richCluster
 #' @importFrom rlang .data
 #' @importFrom shinyjqui jqui_resizable
 #' @importFrom shinyjs disable enable hidden hide show

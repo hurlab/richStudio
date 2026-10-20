@@ -144,9 +144,11 @@ saveTabUI <- function(id, tabName) {
 #' @param u_clusnames Reactive values for cluster result names
 #' @param u_clusdfs Reactive values for cluster result dataframes
 #' @param u_cluslists Reactive values for cluster list details
+#' @param download_handler Download handler factory; defaults to Shiny's handler
 #' @export
 saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
-                          u_clusnames, u_clusdfs, u_cluslists) {
+                          u_clusnames, u_clusdfs, u_cluslists,
+                          download_handler = downloadHandler) {
 
   moduleServer(id, function(input, output, session) {
 
@@ -185,7 +187,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     })
 
     # Download session handler
-    output$download_session <- downloadHandler(
+    output$download_session <- download_handler(
       filename = function() {
         ext <- if (input$save_format == "rds") ".rds" else ".json"
         paste0(sanitize_filename(input$session_name), ext)

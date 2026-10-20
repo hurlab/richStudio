@@ -12,7 +12,8 @@ saveTabServer(
   u_rrdfs,
   u_clusnames,
   u_clusdfs,
-  u_cluslists
+  u_cluslists,
+  download_handler = downloadHandler
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ saveTabServer(
 \item{u_clusdfs}{Reactive values for cluster result dataframes}
 
 \item{u_cluslists}{Reactive values for cluster list details}
+
+\item{download_handler}{Download handler factory; defaults to Shiny's handler}
 }
 \description{
 Save Tab Server

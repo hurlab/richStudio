@@ -130,7 +130,7 @@ enrichTabUI <- function(id, tabName) {
 }
 
 
-enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_rrdfs, u_big_rrdf) {
+enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_rrdfs, u_big_rrdf, enrichment_runner = run_enrichment_jobs) {
 
   moduleServer(id, function(input, output, session) {
     # Create reactive objs to make accessible in other modules
@@ -405,39 +405,14 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
                        id = "enrich_progress", duration = NULL, type = "message")
 
       # 3. Launch future (no reactive reads inside)
-      p <- future::future({
-        results <- list()
-        for (i in seq_along(deg_inputs)) {
-          inp <- deg_inputs[[i]]
-          x_use <- inp$df
-
-          # Case-insensitive column matching for filtering
-          col_lower <- tolower(colnames(x_use))
-          padj_idx <- which(col_lower == "padj")
-          pval_idx <- which(col_lower == "pvalue")
-          if (length(padj_idx) > 0) {
-            padj_col <- colnames(x_use)[padj_idx[1]]
-            x_use <- x_use[!is.na(x_use[[padj_col]]) & x_use[[padj_col]] < cutoff_val, , drop = FALSE]
-          } else if (length(pval_idx) > 0) {
-            pval_col <- colnames(x_use)[pval_idx[1]]
-            x_use <- x_use[!is.na(x_use[[pval_col]]) & x_use[[pval_col]] < cutoff_val, , drop = FALSE]
-          }
-          if (nrow(x_use) == 0) x_use <- inp$df
-
-          enriched <- shiny_enrich(x = x_use, header = inp$gene_header,
-                                   species = species_val, anntype = anntype_val,
-                                   keytype = keytype_val, ontology = ontology_val)
-          results[[i]] <- list(
-            name = inp$name,
-            result = enriched@result,
-            anntype = anntype_val,
-            keytype = keytype_val,
-            ontology = ontology_val,
-            species = species_val
-          )
-        }
-        results
-      }, seed = TRUE)
+      p <- future::future(
+        enrichment_runner(
+          deg_inputs = deg_inputs, cutoff = cutoff_val, species = species_val,
+          anntype = anntype_val, keytype = keytype_val, ontology = ontology_val
+        ),
+        packages = "richR",
+        seed = TRUE
+      )
 
       # 4. Handle promise resolution (runs in Shiny session context)
       promises::then(p,

@@ -2577,6 +2577,21 @@
       "Maintainer": "Tyson Barrett <t.barrett88@gmail.com>",
       "Repository": "CRAN"
     },
+    "data.tree": {
+      "Package": "data.tree",
+      "Version": "1.2.0",
+      "Source": "Repository",
+      "Depends": [
+        "R (>= 3.5)"
+      ],
+      "Imports": [
+        "R6",
+        "stringi",
+        "methods"
+      ],
+      "NeedsCompilation": "no",
+      "Repository": "CRAN"
+    },
     "dbplyr": {
       "Package": "dbplyr",
       "Version": "2.5.1",
@@ -2729,6 +2744,16 @@
       "NeedsCompilation": "yes",
       "Author": "Dirk Eddelbuettel [aut, cre] (ORCID: <https://orcid.org/0000-0001-6419-907X>), Antoine Lucas [ctb] (ORCID: <https://orcid.org/0000-0002-8059-9767>), Jarek Tuszynski [ctb], Henrik Bengtsson [ctb] (ORCID: <https://orcid.org/0000-0002-7579-5165>), Simon Urbanek [ctb] (ORCID: <https://orcid.org/0000-0003-2297-1732>), Mario Frasca [ctb], Bryan Lewis [ctb], Murray Stokely [ctb], Hannes Muehleisen [ctb] (ORCID: <https://orcid.org/0000-0001-8552-0029>), Duncan Murdoch [ctb], Jim Hester [ctb] (ORCID: <https://orcid.org/0000-0002-2739-7082>), Wush Wu [ctb] (ORCID: <https://orcid.org/0000-0001-5180-0567>), Qiang Kou [ctb] (ORCID: <https://orcid.org/0000-0001-6786-5453>), Thierry Onkelinx [ctb] (ORCID: <https://orcid.org/0000-0001-8804-4216>), Michel Lang [ctb] (ORCID: <https://orcid.org/0000-0001-9754-0393>), Viliam Simko [ctb], Kurt Hornik [ctb] (ORCID: <https://orcid.org/0000-0003-4198-9911>), Radford Neal [ctb] (ORCID: <https://orcid.org/0000-0002-2473-3407>), Kendon Bell [ctb] (ORCID: <https://orcid.org/0000-0002-9093-8312>), Matthew de Queljoe [ctb], Dmitry Selivanov [ctb] (ORCID: <https://orcid.org/0000-0003-0492-6647>), Ion Suruceanu [ctb] (ORCID: <https://orcid.org/0009-0005-6446-4909>), Bill Denney [ctb] (ORCID: <https://orcid.org/0000-0002-5759-428X>), Dirk Schumacher [ctb], András Svraka [ctb] (ORCID: <https://orcid.org/0009-0008-8480-1329>), Sergey Fedorov [ctb] (ORCID: <https://orcid.org/0000-0002-5970-7233>), Will Landau [ctb] (ORCID: <https://orcid.org/0000-0003-1878-3253>), Floris Vanderhaeghe [ctb] (ORCID: <https://orcid.org/0000-0002-6378-6229>), Kevin Tappe [ctb], Harris McGehee [ctb], Tim Mastny [ctb], Aaron Peikert [ctb] (ORCID: <https://orcid.org/0000-0001-7813-818X>), Mark van der Loo [ctb] (ORCID: <https://orcid.org/0000-0002-9807-4686>), Chris Muir [ctb] (ORCID: <https://orcid.org/0000-0003-2555-3878>), Moritz Beller [ctb] (ORCID: <https://orcid.org/0000-0003-4852-0526>), Sebastian Campbell [ctb] (ORCID: <https://orcid.org/0009-0000-5948-4503>), Winston Chang [ctb] (ORCID: <https://orcid.org/0000-0002-1576-2126>), Dean Attali [ctb] (ORCID: <https://orcid.org/0000-0002-5645-3493>), Michael Chirico [ctb] (ORCID: <https://orcid.org/0000-0003-0787-087X>), Kevin Ushey [ctb] (ORCID: <https://orcid.org/0000-0003-2880-7407>), Carl Pearson [ctb] (ORCID: <https://orcid.org/0000-0003-0701-7860>)",
       "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
+      "Repository": "CRAN"
+    },
+    "dotCall64": {
+      "Package": "dotCall64",
+      "Version": "1.2",
+      "Source": "Repository",
+      "Depends": [
+        "R (>= 4.0)"
+      ],
+      "NeedsCompilation": "yes",
       "Repository": "CRAN"
     },
     "dplyr": {
@@ -3020,6 +3045,23 @@
       "NeedsCompilation": "yes",
       "Author": "Gennady Korotkevich [aut], Vladimir Sukhov [aut], Nikolay Budin [ctb], Nikita Gusak [ctb], Zieman Mark [ctb], Alexey Sergushichev [aut, cre]",
       "Maintainer": "Alexey Sergushichev <alsergbox@gmail.com>"
+    },
+    "fields": {
+      "Package": "fields",
+      "Version": "18.0",
+      "Source": "Repository",
+      "Depends": [
+        "R (>= 4.0.0)",
+        "methods",
+        "spam",
+        "viridisLite",
+        "RColorBrewer"
+      ],
+      "Imports": [
+        "maps"
+      ],
+      "NeedsCompilation": "yes",
+      "Repository": "CRAN"
     },
     "filelock": {
       "Package": "filelock",
@@ -4826,6 +4868,20 @@
       "Maintainer": "Lionel Henry <lionel@posit.co>",
       "Repository": "CRAN"
     },
+    "maps": {
+      "Package": "maps",
+      "Version": "3.4.3",
+      "Source": "Repository",
+      "Depends": [
+        "R (>= 3.5.0)"
+      ],
+      "Imports": [
+        "graphics",
+        "utils"
+      ],
+      "NeedsCompilation": "yes",
+      "Repository": "CRAN"
+    },
     "memoise": {
       "Package": "memoise",
       "Version": "2.0.1",
@@ -5020,6 +5076,23 @@
       "Encoding": "UTF-8",
       "NeedsCompilation": "yes",
       "Author": "Carter T. Butts [aut, cre], David Hunter [ctb], Mark Handcock [ctb], Skye Bender-deMoll [ctb], Jeffrey Horner [ctb], Li Wang [ctb], Pavel N. Krivitsky [ctb] (<https://orcid.org/0000-0002-9101-3362>), Brendan Knapp [ctb] (<https://orcid.org/0000-0003-3284-4972>), Michał Bojanowski [ctb] (<https://orcid.org/0000-0001-7503-852X>), Chad Klumb [ctb]",
+      "Repository": "CRAN"
+    },
+    "networkD3": {
+      "Package": "networkD3",
+      "Version": "0.4.1",
+      "Source": "Repository",
+      "Depends": [
+        "R (>= 3.0.0)"
+      ],
+      "Imports": [
+        "data.tree",
+        "htmlwidgets (>= 0.3.2)",
+        "igraph",
+        "jsonlite",
+        "magrittr"
+      ],
+      "NeedsCompilation": "no",
       "Repository": "CRAN"
     },
     "nlme": {
@@ -6086,9 +6159,49 @@
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
+    "richCluster": {
+      "Package": "richCluster",
+      "Version": "2.0.1",
+      "Source": "GitHub",
+      "Type": "Package",
+      "Title": "Clustering and network visualization tools",
+      "Depends": [
+        "R (>= 3.5.0)"
+      ],
+      "Imports": [
+        "dplyr",
+        "fields",
+        "heatmaply",
+        "igraph",
+        "magrittr",
+        "networkD3",
+        "plotly",
+        "Rcpp (>= 1.0.14)",
+        "stats",
+        "tidyr",
+        "viridis"
+      ],
+      "LinkingTo": [
+        "Rcpp"
+      ],
+      "Suggests": [
+        "devtools",
+        "knitr",
+        "rmarkdown",
+        "roxygen2",
+        "testthat"
+      ],
+      "NeedsCompilation": "yes",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "hurlab",
+      "RemoteRepo": "richCluster",
+      "RemoteRef": "a0d1f630fbe64089ab38516116b78962672e6349",
+      "RemoteSha": "a0d1f630fbe64089ab38516116b78962672e6349"
+    },
     "richR": {
       "Package": "richR",
-      "Version": "0.0.40",
+      "Version": "0.1.5",
       "Source": "GitHub",
       "Type": "Package",
       "Title": "Function Enrichment analysis and Network construction",
@@ -6101,6 +6214,7 @@
         "R (>= 3.5.0)"
       ],
       "Imports": [
+        "methods",
         "Rcpp",
         "ggplot2",
         "GO.db",
@@ -6111,7 +6225,6 @@
         "igraph",
         "visNetwork",
         "AnnotationDbi",
-        "reshape2",
         "intergraph",
         "fgsea",
         "ggrepel",
@@ -6127,18 +6240,22 @@
       "Suggests": [
         "knitr",
         "testthat",
-        "rmarkdown"
+        "rmarkdown",
+        "BiocParallel",
+        "plotly",
+        "org.Hs.eg.db",
+        "reactome.db"
       ],
       "VignetteBuilder": "knitr",
-      "RoxygenNote": "7.3.2",
+      "RoxygenNote": "7.3.3",
       "biocViews": "",
       "Encoding": "UTF-8",
       "RemoteType": "github",
       "RemoteHost": "api.github.com",
-      "RemoteUsername": "guokai8",
+      "RemoteUsername": "hurlab",
       "RemoteRepo": "richR",
-      "RemoteRef": "master",
-      "RemoteSha": "d746827803f1de905dcb528a1935dc88ab0ab96e"
+      "RemoteRef": "9be43abdae556d9f1df128149a70721f08ab7d25",
+      "RemoteSha": "9be43abdae556d9f1df128149a70721f08ab7d25"
     },
     "rlang": {
       "Package": "rlang",
@@ -6762,6 +6879,25 @@
       "RoxygenNote": "5.0.1",
       "BugReports": "https://github.com/kevinushey/sourcetools/issues",
       "Encoding": "UTF-8",
+      "NeedsCompilation": "yes",
+      "Repository": "CRAN"
+    },
+    "spam": {
+      "Package": "spam",
+      "Version": "2.11-4",
+      "Source": "Repository",
+      "Depends": [
+        "R (>= 4.0)"
+      ],
+      "Imports": [
+        "dotCall64",
+        "grid",
+        "methods",
+        "Rcpp (>= 1.0.8.3)"
+      ],
+      "LinkingTo": [
+        "Rcpp"
+      ],
       "NeedsCompilation": "yes",
       "Repository": "CRAN"
     },

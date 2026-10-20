@@ -10,16 +10,21 @@ pkg_root <- tryCatch(
   normalizePath(file.path(getwd(), "..", ".."), mustWork = TRUE),
   error = function(e) NULL
 )
+richStudio_namespace <- NULL
 
 if (!is.null(pkg_root) && file.exists(file.path(pkg_root, "DESCRIPTION"))) {
   options(richStudio.appdir = pkg_root)
   if (requireNamespace("richStudio", quietly = TRUE)) {
     library(richStudio)
+    richStudio_namespace <- asNamespace("richStudio")
   } else {
     r_dir <- file.path(pkg_root, "R")
     r_files <- list.files(r_dir, pattern = "\\.R$", full.names = TRUE)
     invisible(lapply(r_files, source, chdir = TRUE))
   }
+} else if (requireNamespace("richStudio", quietly = TRUE)) {
+  library(richStudio)
+  richStudio_namespace <- asNamespace("richStudio")
 }
 
 # Enable async processing for long-running operations
@@ -49,16 +54,21 @@ library(jsonlite)
 library(writexl)
 library(zip)
 
-# richR and bioAnno are suggested packages - check availability
+# richR and bioAnno are checked at startup so source-run apps can report missing dependencies.
 richR_available <- FALSE
 bioAnno_available <- FALSE
 
-if (requireNamespace("richR", quietly = TRUE)) {
+richR_installed <- requireNamespace("richR", quietly = TRUE)
+richR_supported <- richR_installed && utils::packageVersion("richR") >= "0.1.5"
+if (richR_supported) {
   library(richR)
   richR_available <- TRUE
+} else if (richR_installed) {
+  message("Note: richR 0.1.5 or newer is required for enrichment analysis.")
+  message("Update with: remotes::install_github('hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25')")
 } else {
   message("Note: richR package not installed. Enrichment analysis features will be limited.")
-  message("Install with: remotes::install_github('guokai8/richR')")
+  message("Install with: remotes::install_github('hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25')")
 }
 
 if (requireNamespace("bioAnno", quietly = TRUE)) {
@@ -69,9 +79,14 @@ if (requireNamespace("bioAnno", quietly = TRUE)) {
   message("Install with: remotes::install_github('guokai8/bioAnno')")
 }
 
-# richCluster is optional - load if available (now on CRAN)
-if (requireNamespace("richCluster", quietly = TRUE)) {
+# richCluster is optional - load the supported public API version if available
+richCluster_available <- requireNamespace("richCluster", quietly = TRUE) &&
+  utils::packageVersion("richCluster") >= "2.0.1"
+if (richCluster_available) {
   library(richCluster)
+} else if (requireNamespace("richCluster", quietly = TRUE)) {
+  message("Note: richCluster 2.0.1 or newer is required for hierarchical and DAVID clustering.")
+  message("Update with: install.packages('richCluster')")
 } else {
   message("Note: richCluster package not installed. Hierarchical and DAVID clustering methods will not be available.")
   message("Install from CRAN with: install.packages('richCluster')")
@@ -213,17 +228,17 @@ server <- function(input, output, session) {
   session$onSessionEnded(function() {
     message("[richStudio] Session ended: ", session_id)
     # Clear contents of each reactiveValues store
-    for (nm in names(u_degdfs))   u_degdfs[[nm]]   <- NULL
-    for (nm in names(u_rrdfs))    u_rrdfs[[nm]]     <- NULL
-    for (nm in names(u_clusdfs))  u_clusdfs[[nm]]   <- NULL
-    for (nm in names(u_cluslists)) u_cluslists[[nm]] <- NULL
-    for (nm in names(clus_intermed)) clus_intermed[[nm]] <- NULL
-    for (nm in names(u_degnames)) u_degnames[[nm]]  <- NULL
-    for (nm in names(u_rrnames))  u_rrnames[[nm]]   <- NULL
-    for (nm in names(u_clusnames)) u_clusnames[[nm]] <- NULL
-    for (nm in names(u_big_degdf)) u_big_degdf[[nm]] <- NULL
-    for (nm in names(u_big_rrdf))  u_big_rrdf[[nm]]  <- NULL
-    for (nm in names(u_big_clusdf)) u_big_clusdf[[nm]] <- NULL
+    for (nm in shiny::isolate(names(u_degdfs)))   u_degdfs[[nm]]   <- NULL
+    for (nm in shiny::isolate(names(u_rrdfs)))    u_rrdfs[[nm]]     <- NULL
+    for (nm in shiny::isolate(names(u_clusdfs)))  u_clusdfs[[nm]]   <- NULL
+    for (nm in shiny::isolate(names(u_cluslists))) u_cluslists[[nm]] <- NULL
+    for (nm in shiny::isolate(names(clus_intermed))) clus_intermed[[nm]] <- NULL
+    for (nm in shiny::isolate(names(u_degnames))) u_degnames[[nm]]  <- NULL
+    for (nm in shiny::isolate(names(u_rrnames)))  u_rrnames[[nm]]   <- NULL
+    for (nm in shiny::isolate(names(u_clusnames))) u_clusnames[[nm]] <- NULL
+    for (nm in shiny::isolate(names(u_big_degdf))) u_big_degdf[[nm]] <- NULL
+    for (nm in shiny::isolate(names(u_big_rrdf)))  u_big_rrdf[[nm]]  <- NULL
+    for (nm in shiny::isolate(names(u_big_clusdf))) u_big_clusdf[[nm]] <- NULL
     gc()
   })
 
@@ -274,6 +289,18 @@ server <- function(input, output, session) {
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs,
     u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists
   )
+}
+
+# Installed package applications run outside the package namespace by default.
+# Keep app-server lookups within richStudio so its private module servers remain
+# available without exporting those implementation functions.
+if (!is.null(richStudio_namespace)) {
+  ui_environment <- list2env(
+    list(app_version = app_version),
+    parent = richStudio_namespace
+  )
+  environment(ui) <- ui_environment
+  environment(server) <- richStudio_namespace
 }
 
 # Run the application

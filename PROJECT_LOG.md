@@ -1,5 +1,23 @@
 # richStudio Project Log
 
+## Session 2026-10-20 — Dependency adoption (in progress)
+
+- **Coding CLI used:** Codex; isolated `.moai/worktrees/dependency-adoption`, branch `WT-dependency-adoption`, base `27aac71c679009c2b61bb2118325dde690994ef1`.
+- **Authorization:** User approved richR 0.1.4 / standalone richCluster 2.0.1 adoption after the cross-session contract exchange. SPEC-DEPENDENCY-001 defines ten required consumer acceptance scenarios; unrelated B3–B8 work remains open.
+- **Dependency sources:** Official richR 0.1.5 `hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25`, richCluster `hurlab/richCluster@a0d1f630fbe64089ab38516116b78962672e6349`; bioAnno remains 0.99.45 at `3c8936033b806b9f40c7028faa80e4971f6d0859`.
+- **Measured runtime:** All three pinned sources are installed in new `/tmp/richstudio-dependency-adoption-v015-lib-20261020`; `/tmp/richstudio-v015-logs-20261020/{archive-sha256,install,identity}.log` records hashes, installs and resolved paths. Original 0.1.4 library remains protected, with other dependencies/Rcpp 1.1.2 as fallback. R 4.5.2/Bioc 3.22 lock metadata remains unchanged; full restore is unverified.
+- **Implementation scope:** Explicit richR calls and Reactome `object=`, errors versus valid empty results, preserved result/schema/session contracts, public standalone one/many-dataset clustering, strict per-dataset raw-Pvalue hierarchical policy, unfiltered DAVID significance policy, and richR term-union gene background. GSEA/background UI and new diagnostics/status features are excluded.
+- **Verification status:** Earlier consumer audits returned FAIL; consumer/output and acceptance-test corrections are in progress. First/middle filtered-dataset mapping now passes installed 0.1.4 tests (`/tmp/richstudio-f7-green-final.log`). Official richR 0.1.5 pin-delta plan audit passed; final installed 0.1.5 consumer build/tests, quality checks and review remain pending. Historical balanced-Kappa/namespace-only KEGG failures stay recorded; direct 0.1.5 oracles succeed but do not close wrapper AC-009.
+- **Measured local evidence:** Numerical report now covers all three engine identities: one-fixture standalone 1.0.2/2.0.1 equal grouping with changed numeric/dedup behavior, original-HEAD/current vendored equality, and unequal-size richR consumer/union equality. No universal historical equivalence is claimed; earlier UI/server smoke remains historical-build evidence.
+- **Deployment review:** Safety round 3 PASS-WITH-DEBT; final 0.1.5 pin-delta review running. No upload or sudo execution; staging remains gated. No migration completion, commit or push claim.
+- **Read-only server baseline:** Tailscale `100.94.67.89`, `Hurlab.und.nodak.edu`, app `/home/juhur/shinyapps/richStudio`, HEAD `fc124971b004fcbc24a212a40636d34cc57fd587`, R 4.5.2, richR 0.0.40/richCluster 1.0.2. No server deployment performed.
+- **Deployment agreement:** Prepare `.sh`, thoroughly review it again, upload over Tailscale, user alone executes sudo. Script records private server temporary logs and exit status; retrieve and inspect those files before any deployment claim. Existing project gates still apply; no deployment on this home computer.
+- **Documentation:** Added `docs/DEPENDENCY_RUNTIME.md`; updated handoff intent/baseline and preserved historical completed items. This old flat log is not rotated here; rotation remains for a future endsession invocation.
+
+---
+
+
+
 ## Session 2026-05-17 — 4-Agent Senior-Architect Review + B1/B2 Harness
 
 - **Coding CLI used:** Claude Code CLI (claude-opus-4-7, 1M context)

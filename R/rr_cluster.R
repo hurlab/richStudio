@@ -25,9 +25,10 @@ if (!exists("%>%")) {
 #'
 #' @return TRUE if richCluster is installed and loadable, FALSE otherwise
 #' @keywords internal
-is_richCluster_available <- function() {
-
-  requireNamespace("richCluster", quietly = TRUE)
+is_richCluster_available <- function(require_package = requireNamespace,
+                                     package_version = utils::packageVersion) {
+  require_package("richCluster", quietly = TRUE) &&
+    package_version("richCluster") >= "2.0.1"
 }
 
 #' Normalize enrichment dataframe
@@ -261,8 +262,8 @@ perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_
   # Check if richCluster is available for hierarchical/david methods
   if (method %in% c("hierarchical", "david") && !is_richCluster_available()) {
     stop(paste0(
-      "The richCluster package is required for the '", method, "' method but is not installed.\n",
-      "Install from CRAN with: install.packages('richCluster')"
+      "richCluster 2.0.1 or newer is required for the '", method, "' method.\n",
+      "Install or update it with: install.packages('richCluster')"
     ))
   }
 
@@ -304,7 +305,7 @@ cluster_richR <- function(merged_gs, params, gs_names) {
   # Perform clustering using richR
   clustered_gs <- richR::richCluster(
     x = merged_gs,
-    gene = TRUE,
+    gene = NULL,
     cutoff = cutoff,
     overlap = overlap,
     minSize = minSize
@@ -391,7 +392,9 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
     }
   })
   # Remove any empty dataframes after filtering
-  enrichment_list <- enrichment_list[vapply(enrichment_list, function(df) nrow(df) > 0, logical(1))]
+  enrichment_list <- enrichment_list[vapply(
+    enrichment_list, function(df) is.data.frame(df) && nrow(df) > 0, logical(1)
+  )]
   if (length(enrichment_list) == 0) {
     return(list(
       cluster_df = data.frame(),
@@ -401,55 +404,18 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
     ))
   }
 
-  # Workaround for richCluster::cluster() bug: when only 1 enrichment result
-  # is provided, merge_enrichment_results renames Pvalue->Pvalue_1 but never
-  # creates a merged Pvalue column, causing filter(Pvalue < min_value) to fail.
-  # Fix: bypass richCluster::cluster() entirely for single results and call
-  # runRichCluster directly with pre-merged data.
-  if (length(enrichment_list) == 1) {
-    single_df <- enrichment_list[[1]]
-    term_vec <- single_df$Term
-    geneID_vec <- single_df$GeneID
-
-    rc_result <- richCluster::runRichCluster(
-      terms = term_vec,
-      geneIDs = geneID_vec,
-      distanceMetric = distance_metric,
-      distanceCutoff = distance_cutoff,
-      linkageMethod = linkage_method,
-      linkageCutoff = linkage_cutoff
-    )
-
-    # Build merged_df with Pvalue/GeneID columns (what cluster() would produce)
-    merged_df <- single_df
-    cluster_result <- rc_result
-    cluster_result$df_list <- enrichment_list
-    cluster_result$merged_df <- merged_df
-    cluster_result$cluster_options <- list(
-      min_terms = min_terms, min_value = min_value,
-      distance_metric = distance_metric, distance_cutoff = distance_cutoff,
-      linkage_method = linkage_method, linkage_cutoff = linkage_cutoff
-    )
-    cluster_result$df_names <- names(enrichment_list)
-    cluster_result$final_clusters <- richCluster::filter_clusters(
-      cluster_result$all_clusters, min_terms
-    )
-    cluster_result$cluster_df <- richCluster:::make_full_clusterdf(
-      cluster_result$final_clusters, merged_df
-    )
-  } else {
-    # For multiple results, richCluster::cluster() works correctly
-    cluster_result <- richCluster::cluster(
-      enrichment_results = enrichment_list,
-      df_names = names(enrichment_list),
-      min_terms = min_terms,
-      min_value = 1,
-      distance_metric = distance_metric,
-      distance_cutoff = distance_cutoff,
-      linkage_method = linkage_method,
-      linkage_cutoff = linkage_cutoff
-    )
-  }
+  cluster_result <- richCluster::cluster(
+    enrichment_results = enrichment_list,
+    df_names = names(enrichment_list),
+    min_terms = min_terms,
+    min_value = 1,
+    filter_on = "Pvalue",
+    gene_delim = ",",
+    distance_metric = distance_metric,
+    distance_cutoff = distance_cutoff,
+    linkage_method = linkage_method,
+    linkage_cutoff = linkage_cutoff
+  )
 
   # Convert to standard format
   cluster_df <- cluster_result$cluster_df
@@ -481,7 +447,9 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
         merged_gs[[paste0("GeneID_", gs)]] <- merged_gs$GeneID
       }
     }
-    cluster_df <- add_geneset_columns(cluster_df, merged_gs, gs_names)
+    retained_names <- names(enrichment_list)
+    cluster_df <- add_geneset_columns(cluster_df, merged_gs, retained_names)
+    cluster_df <- drop_numeric_dataset_aliases(cluster_df, retained_names)
   }
 
   # Build cluster summary
@@ -522,52 +490,14 @@ cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
   }
   enrichment_list <- lapply(enrichment_list, normalize_geneset)
 
-  # Workaround for richCluster::david_cluster() bug: when only 1 enrichment
-  # result is provided, merge_enrichment_results renames Pvalue->Pvalue_1 but
-  # never creates a merged Pvalue column, causing downstream failures.
-  # Fix: bypass david_cluster() for single results and call
-  # runDavidClustering directly with pre-merged data.
-  if (length(enrichment_list) == 1) {
-    single_df <- enrichment_list[[1]]
-    term_vec <- single_df$Term
-    geneID_vec <- single_df$GeneID
-
-    rc_result <- richCluster:::runDavidClustering(
-      term_vec,
-      geneID_vec,
-      similarity_threshold,
-      initial_group_membership,
-      final_group_membership,
-      multiple_linkage_threshold
-    )
-
-    # Build merged_df with Pvalue/GeneID columns (what david_cluster() would produce)
-    merged_df <- single_df
-    cluster_result <- rc_result
-    cluster_result$df_list <- enrichment_list
-    cluster_result$merged_df <- merged_df
-    cluster_result$cluster_options <- list(
-      similarity_threshold = similarity_threshold,
-      initial_group_membership = initial_group_membership,
-      final_group_membership = final_group_membership,
-      multiple_linkage_threshold = multiple_linkage_threshold
-    )
-    cluster_result$df_names <- names(enrichment_list)
-    cluster_result$final_clusters <- rc_result$clusters
-    cluster_result$cluster_df <- richCluster:::make_full_clusterdf(
-      cluster_result$final_clusters, merged_df
-    )
-  } else {
-    # For multiple results, richCluster::david_cluster() works correctly
-    cluster_result <- richCluster::david_cluster(
-      enrichment_results = enrichment_list,
-      df_names = names(enrichment_list),
-      similarity_threshold = similarity_threshold,
-      initial_group_membership = initial_group_membership,
-      final_group_membership = final_group_membership,
-      multiple_linkage_threshold = multiple_linkage_threshold
-    )
-  }
+  cluster_result <- richCluster::david_cluster(
+    enrichment_results = enrichment_list,
+    df_names = names(enrichment_list),
+    similarity_threshold = similarity_threshold,
+    initial_group_membership = initial_group_membership,
+    final_group_membership = final_group_membership,
+    multiple_linkage_threshold = multiple_linkage_threshold
+  )
 
   # Convert to standard format
   cluster_df <- cluster_result$cluster_df
@@ -599,6 +529,7 @@ cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
       }
     }
     cluster_df <- add_geneset_columns(cluster_df, merged_gs, gs_names)
+    cluster_df <- drop_numeric_dataset_aliases(cluster_df, gs_names)
   }
 
   # Build cluster summary
@@ -688,26 +619,40 @@ add_geneset_columns <- function(cluster_df, merged_gs, gs_names) {
     return(cluster_df)
   }
 
-  # Match terms and add geneset-specific columns
-  for (gs_name in gs_names) {
-    pval_col <- paste0("Pvalue_", gs_name)
-    padj_col <- paste0("Padj_", gs_name)
-    geneid_col <- paste0("GeneID_", gs_name)
-
-    if (pval_col %in% colnames(merged_gs)) {
-      cluster_df[[pval_col]] <- merged_gs[[pval_col]][match(cluster_df$Term, merged_gs$Term)]
-    }
-    if (padj_col %in% colnames(merged_gs)) {
-      cluster_df[[padj_col]] <- merged_gs[[padj_col]][match(cluster_df$Term, merged_gs$Term)]
-    }
-    if (geneid_col %in% colnames(merged_gs)) {
-      cluster_df[[geneid_col]] <- merged_gs[[geneid_col]][match(cluster_df$Term, merged_gs$Term)]
+  # Read from an immutable snapshot because numeric dataset names can overlap
+  # upstream positional suffixes. Do not backfill from merged_gs: it predates
+  # per-dataset filtering and could restore excluded membership.
+  positional_source <- cluster_df
+  for (i in seq_along(gs_names)) {
+    gs_name <- gs_names[[i]]
+    for (field in c("Pvalue", "Padj", "GeneID")) {
+      named_col <- paste0(field, "_", gs_name)
+      positional_col <- paste0(field, "_", i)
+      if (positional_col %in% names(positional_source)) {
+        cluster_df[[named_col]] <- positional_source[[positional_col]]
+      }
     }
   }
 
-  return(cluster_df)
+  cluster_df
 }
 
+# Remove positional metric aliases unless a requested numeric dataset name uses
+# that exact column name. raw_result remains untouched for upstream inspection.
+drop_numeric_dataset_aliases <- function(cluster_df, gs_names) {
+  if (is.null(gs_names) || length(gs_names) == 0) {
+    return(cluster_df)
+  }
+
+  fields <- c("Pvalue", "Padj", "GeneID")
+  positional <- grep("^(Pvalue|Padj|GeneID)_[0-9]+$", names(cluster_df), value = TRUE)
+  named <- unlist(lapply(fields, function(field) paste0(field, "_", gs_names)), use.names = FALSE)
+  aliases <- setdiff(positional, named)
+  if (length(aliases) > 0) {
+    cluster_df <- cluster_df[, !names(cluster_df) %in% aliases, drop = FALSE]
+  }
+  cluster_df
+}
 
 #' Build cluster summary with representative terms
 #'

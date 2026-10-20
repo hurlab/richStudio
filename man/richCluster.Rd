@@ -51,6 +51,9 @@ integrates the following steps:
 }
 \examples{
 # Example usage
+termNames <- c("A", "B", "C", "D")
+geneIDs <- c("g1,g2,g3", "g1,g2,g4", "g5,g6,g7", "g5,g6,g8")
+pValues <- c(1e-8, 1e-7, 1e-6, 0.05)
 result <- richCluster("kappa", 0.5, "DAVID", 0.7, termNames, geneIDs, pValues)
 distanceMatrix <- result$DistanceMatrix
 seedMap <- result$SeedMap

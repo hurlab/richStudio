@@ -42,17 +42,18 @@
 #'
 #' @keywords internal
 #' @useDynLib richStudio
-#' @import shiny
+#' @rawNamespace import(shiny, except = c(dataTableOutput, renderDataTable))
 #' @import shinydashboard
-#' @importFrom dplyr filter arrange rename any_of slice_head
+#' @importFrom dplyr filter arrange rename any_of slice_head distinct
 #' @importFrom DT DTOutput coerceValue dataTableOutput renderDT renderDataTable
 #' @importFrom future future
 #' @importFrom heatmaply heatmaply
 #' @importFrom jsonlite read_json write_json
-#' @importFrom plotly plot_ly layout
+#' @importFrom plotly plot_ly layout plotlyOutput renderPlotly
 #' @importFrom promises finally then
 #' @importFrom readxl read_excel
 #' @importFrom reshape2 melt
+#' @importFrom richR ggnetwork
 #' @importFrom rlang .data
 #' @importFrom shinyjqui jqui_resizable
 #' @importFrom shinyjs disable enable hidden hide show

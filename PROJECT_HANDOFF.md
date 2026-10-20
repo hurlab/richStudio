@@ -4,25 +4,26 @@
 
 richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
 
-- **Last updated:** 2026-10-20 (dependency migration in progress)
+- **Last updated:** 2026-10-20 (dependency implementation accepted; verification debt and deployment pending)
 - **Last coding CLI used:** Codex (dependency migration); earlier phase history used Claude Code
-- **Active worktree:** `.moai/worktrees/dependency-adoption`, branch `WT-dependency-adoption`, base `27aac71c679009c2b61bb2118325dde690994ef1`; migration edits are uncommitted
+- **Active worktree:** `.moai/worktrees/dependency-adoption`, branch `WT-dependency-adoption`, initial base `27aac71c679009c2b61bb2118325dde690994ef1`; implementation commit `8d3dcfee405b8f79abb771337fa5425fe3c3e7d2`, documentation sync pending
 - **Version:** 0.1.6
 
 ## 2. Current State
 
-### Dependency adoption — In progress (2026-10-20)
+### Dependency adoption — Consumer acceptance passed with verification debt (2026-10-20)
 
 The user authorized SPEC-DEPENDENCY-001 after coordination with richR and inspection of standalone richCluster. This bounded migration takes priority over the older recommended B6 sequence; it does not close unrelated B3–B8 or publication work. See [runtime guidance](docs/DEPENDENCY_RUNTIME.md), [SPEC](docs/specs/SPEC-DEPENDENCY-001/spec.md), and [deployment procedure](docs/DEPENDENCY_DEPLOYMENT.md).
 
 - Targets: official hurlab/richR 0.1.5 at `9be43abdae556d9f1df128149a70721f08ab7d25`; hurlab/richCluster 2.0.1 at `a0d1f630fbe64089ab38516116b78962672e6349`. bioAnno remains 0.99.45 at its existing lock revision.
-- All three pinned sources were installed into the new `/tmp/richstudio-dependency-adoption-v015-lib-20261020` under R 4.6.1; logs are `/tmp/richstudio-v015-logs-20261020/{archive-sha256,install,identity}.log`. The original 0.1.4 library remains protected as a baseline and read-only fallback for other dependencies, including the task-local Rcpp 1.1.2 overlay.
+- All three pinned sources were installed into the new `/tmp/richstudio-dependency-adoption-v015-lib-20261020` under R 4.6.1; logs are `/tmp/richstudio-v015-logs-20261020/{archive-sha256,install,identity}.log`. The original 0.1.4 library remains protected as a baseline and fallback lookup path used without installing into it for other dependencies, including the task-local Rcpp 1.1.2 overlay.
 - The historical lock still records R 4.5.2/Bioc 3.22; a full restore is unverified. Do not resume the old blanket `renv::restore()` recommendation without re-evaluating compatibility. The isolated library permits scoped verification without changing shared libraries.
-- Source compatibility work is underway: explicit richR dispatch/Reactome `object=`, empty/error handling, public standalone clustering entry points, preserved method-specific significance policy, and richR term-union gene background. Required consumer ACs, scoped regression tests and independent reviews are pending; no migration completion is claimed.
-- **Open consumer gates:** Earlier consumer audits returned FAIL. Corrections include dataset aliases, observer/save/reopen evidence, membership/index mapping and shared-term filtering. First/middle filtered-dataset identity mapping now passes focused installed 0.1.4 tests (`/tmp/richstudio-f7-green-final.log`); final 0.1.5 consumer build, required ACs, scoped quality checks and independent review are ongoing. No completion is claimed.
-- **Measured numerical baselines:** `numerical-baseline.md` now records all three identities: standalone 1.0.2/2.0.1 equal grouping with changed numeric values and deduplicated genes on one fixture, identical original-HEAD/current vendored results on another, and successful unequal-size richR 0.1.4 consumer/explicit-union equality. These do not assert universal historical equality. Earlier UI/server smoke covers only its historical installed build.
-- **Official upstream release:** 0.1.5 source pin `9be43abdae556d9f1df128149a70721f08ab7d25`, asset SHA256 `0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf`, size 2,769,042 bytes. The exact SPEC delta audit passed. Historical 0.1.4 balanced-Kappa and namespace-only KEGG failures remain recorded; direct 0.1.5 balanced/single-clique oracles now return expected scores, but installed wrapper AC-009 still needs the final consumer run.
-- **Deployment preparation:** Safety round 3 returned PASS-WITH-DEBT for its reviewed bytes; final 0.1.5 pin-delta review is running. No upload or sudo execution has occurred; staging remains gated on final consumer/script results and host execution remains unobserved.
+- **Implementation:** `8d3dcfee405b8f79abb771337fa5425fe3c3e7d2` records the source baseline. Explicit richR/Reactome dispatch, valid-empty/error behavior, public standalone clustering, method-specific significance policy, term-union background, output mapping and save/reopen compatibility are implemented. This SHA is not a documentation-sync SHA or proof of push/deployment.
+- **Consumer acceptance:** Final independent review returned PASS-WITH-DEBT, all AC-001–AC-010 satisfied and F1–F7 closed. Scoped installed 0.1.5 tests and existing clustering regressions passed; logs are `/tmp/richstudio-v015-final-scoped-root.log` and `/tmp/richstudio-v015-existing-clustering-root.log`. GO/KEGG/Reactome worker traces resolve the new library. UI construction/server start/close passed in `/tmp/richstudio-v015-ui-smoke.log`.
+- **Quality debt:** Changed executable R lines covered 91/100 (91%); selected-test overall package/native coverage is 20.04%, not a full-suite coverage result. Default lintr found 26 changed-line style diagnostics and no warning/error diagnostics there. Full suite/check, overall coverage target, LSP, browser end-to-end, cross-platform consumer and server execution remain unverified. Earlier import/SystemRequirements warnings remain attributed to measured original-HEAD behavior.
+- **Measured numerical baselines:** `numerical-baseline.md` covers all three identities: standalone 1.0.2/2.0.1 equal grouping with changed numeric values/deduplicated genes on one fixture, original-HEAD/current vendored equality on another, and unequal-size richR 0.1.4 consumer/explicit-union equality. Historical 0.1.4 balanced-Kappa/namespace-only KEGG failures stay recorded. Final 0.1.5 consumer regressions and discriminating union oracle passed; no universal historical equality is claimed.
+- **Official upstream release:** 0.1.5 commit `9be43abdae556d9f1df128149a70721f08ab7d25`, release asset SHA256 `0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf`, 2,769,042 bytes; exact SPEC delta audit passed.
+- **Deployment preparation:** Final script safety review PASS; reviewed script SHA256 `106a1d9b05f5302e94e188a3b50a0c82aed052303a3db89c17bb92a4d605cda5`. No upload or sudo execution has occurred at this checkpoint. Final sync/push precede upload, and host execution/worker evidence must be retrieved before a deployed claim.
 - No new GSEA, explicit-background UI, diagnostics dashboard or batch-status UX is included.
 - Read-only server inspection measured `100.94.67.89` (`Hurlab.und.nodak.edu`), `/home/juhur/shinyapps/richStudio`, HEAD `fc124971b004fcbc24a212a40636d34cc57fd587`, R 4.5.2, richR 0.0.40/richCluster 1.0.2. This replaces the old assumption that the live app must first become a git checkout. Deployment has not occurred.
 - Deployment protocol: finish required gates, prepare and thoroughly re-review a shell script, upload over Tailscale, and let the user run sudo. The script must save private temporary log/exit-status files; retrieve and inspect them before reporting deployment. Do not deploy on the home computer or execute sudo as an agent.
@@ -194,7 +195,7 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 - **Resolution:** Removed `/srv/shiny-server/richStudio` and `/srv/shiny-server/RichStudio` symlinks so requests route to the explicit `location /richStudio` block which runs as `juhur`, not `shiny`.
 
 ### richR/richCluster dependency adoption — In progress
-- **Status:** SPEC-DEPENDENCY-001 consumer verification pending (2026-10-20).
+- **Status:** SPEC-DEPENDENCY-001 scoped consumer acceptance passed with verification debt (2026-10-20).
 - **Current policy:** Test the pinned releases and supported public standalone entry points. Historical single-input bypasses and universal numerical-equivalence assumptions are not a migration baseline.
 
 ### Bioconductor annotation package availability — Open
@@ -240,14 +241,14 @@ All application development phases (Critical Bug Fixes, Visualization Fixes, Pro
 - PDF generation (requires LaTeX)
 - Figure quality for print publication (screenshots may need higher DPI)
 - Playwright CLI E2E test suite (not yet created; user prefers CLI over MCP)
-- **testthat::test_dir() under R 4.6** — blocked by renv lockfile drift (built against R 4.5). Last verified pass was 152 / 0 fail on 2026-03-09 under R 4.5. Re-baseline pending `renv::restore()` against R 4.6.
+- **Full test suite under R 4.6** — unverified. Scoped installed 0.1.5 consumer tests and existing clustering regressions now pass using the isolated library; the full historical lock restore and full-suite baseline remain unverified. Do not substitute the historical 152-test count for a fresh full run.
 - **R CMD check --as-cran** — never run end-to-end; blocked by same renv drift. Will surface any remaining NAMESPACE NOTEs (especially the 6 packages flagged in SPEC-CRAN-002).
 - **`scripts/deploy.sh` end-to-end** — scripts pass `bash -n` syntax check but have not been executed against a live server. First-run will be the coordinated B1-B5 deploy event.
 - **B1 + B2 in live deployment** — code pushed to GitHub but not yet deployed to hurlab.med.und.edu/richStudio/. Live app is still on pre-Phase-15 code.
 
 ## 7. Restart Instructions
 
-**Current starting point (2026-10-20):** Continue SPEC-DEPENDENCY-001 in the isolated `dependency-adoption` worktree. Required consumer tests and independent reviews remain pending. Inspect current status and the runtime guide before trusting the older baseline or restore advice below. No commit, push or deployment is established by these in-progress notes. Preserve unrelated pending bundles and completed historical work.
+**Current starting point (2026-10-20):** Continue SPEC-DEPENDENCY-001 in the isolated `dependency-adoption` worktree. Consumer acceptance and scoped review passed with the verification debt listed above. Documentation sync/push and server upload/execution are not established at this checkpoint. Inspect current status and the runtime guide before trusting the older baseline or restore advice below. The implementation commit is recorded above; no documentation-sync commit, push or deployment is established by these notes. Preserve unrelated pending bundles and completed historical work.
 
 The following 2026-05-19 instructions describe the earlier plan; their deployment-path, library-readiness and priority assumptions are superseded by the current dependency-adoption section where they conflict.
 
@@ -324,4 +325,4 @@ The following 2026-05-19 instructions describe the earlier plan; their deploymen
 
 **Funding:** R01DK130913 (NIDDK), P20GM113123 (NIGMS/CDA Core UND)
 
-**Last updated:** 2026-10-20 (dependency migration in progress)
+**Last updated:** 2026-10-20 (dependency implementation accepted; verification debt and deployment pending)

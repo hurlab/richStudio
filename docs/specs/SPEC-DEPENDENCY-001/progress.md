@@ -8,7 +8,7 @@ Plan delta: the official richR 0.1.5 commit 9be43abdae556d9f1df128149a70721f08ab
 
 ## §E.2 Run-phase Evidence
 
-Implementation started after plan-auditor PASS. Tests used the installed `richStudio` build and the isolated library `/tmp/richstudio-dependency-adoption-lib-20261020`, with `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE` in each R command.
+Implementation started after plan-auditor PASS. Final acceptance tests used the installed `richStudio` build and isolated v0.1.5 library `/tmp/richstudio-dependency-adoption-v015-lib-20261020`, with `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE` in each R command. Historical 0.1.4 failure evidence remains separately attributed in its recorded logs.
 
 | AC | Status | Actual output / evidence |
 |---|---|---|
@@ -23,34 +23,73 @@ Implementation started after plan-auditor PASS. Tests used the installed `richSt
 | AC-009 | PASS | Installed richR 0.1.5 regressions pass in `/tmp/richstudio-v015-kappa-final.log`: the original 3-row assembly case, the explicit merged-GeneID-union oracle (distinct from `gene=TRUE` and an unrelated background), a balanced two-pair result with exact memberships `A,B` / `C,D` and measured scores `7.5` / `5.5`, and a single-cluster `A,B,C` result with score `7`. Each positive assembly fixture asserts the wrapper output equals the direct explicit-union oracle. The previously failing installed richR 0.1.4 case remains preserved as historical evidence. |
 | AC-010 | PASS | `.moai/reports/SPEC-DEPENDENCY-001/numerical-baseline.md` records attributed measured outputs for historical/current standalone richCluster, the richR consumer adapter plus explicit-union oracle, and vendored C++ current output against a source build of original HEAD. Engine-specific memberships and standalone numerical differences are explicit; no universal cross-engine equality is asserted. |
 
-Installed package build: `R CMD INSTALL --preclean -l /tmp/richstudio-dependency-adoption-v015-lib-20261020 .` completed with `* DONE (richStudio)` in `/tmp/richstudio-v015-install-final.log`. Exact integration command: `R_LIBS_USER=/tmp/richstudio-dependency-adoption-v015-lib-20261020:/tmp/richstudio-dependency-adoption-lib-20261020:/home/juhur/R/x86_64-pc-linux-gnu-library/4.6 RENV_CONFIG_AUTOLOADER_ENABLED=FALSE Rscript --vanilla -e 'testthat::test_file("tests/testthat/test-dependency-integration.R", package="richStudio", load_package="installed", reporter="summary")'`; `/tmp/richstudio-v015-integration-final.log` ends `══ DONE ═` and all worker routes report v0.1.5 from the new isolated library. The parallel kappa command using the analogous `test_file("tests/testthat/test-dependency-kappa.R", ...)` passes in `/tmp/richstudio-v015-kappa-final.log`. Root's broader affected dependency, file-management and reactive-values tests pass in `/tmp/richstudio-v015-final-scoped-root.log`; its existing kappa and clustering-state regressions pass in `/tmp/richstudio-v015-existing-clustering-root.log`, both exit 0. Installed UI construction and server start/close pass in `/tmp/richstudio-v015-ui-smoke.log`. The two Shiny/DT import-replacement warnings match measured original-HEAD baseline logs `/tmp/richstudio-vendored-head-baseline-install-20261020.log` and `/tmp/richstudio-numerical-vendored-head-20261020.log`. The existing C++11 SystemRequirements warning also appears in the source-built original-HEAD install log. Current changed-source/test hash binding is recorded in `/tmp/richstudio-consumer-audit-round4-binding-20261020.txt`.
+Installed package build: `R CMD INSTALL --preclean -l /tmp/richstudio-dependency-adoption-v015-lib-20261020 .` completed with `* DONE (richStudio)` in `/tmp/richstudio-v015-install-final.log`. Exact integration command: `R_LIBS_USER=/tmp/richstudio-dependency-adoption-v015-lib-20261020:/tmp/richstudio-dependency-adoption-lib-20261020:/home/juhur/R/x86_64-pc-linux-gnu-library/4.6 RENV_CONFIG_AUTOLOADER_ENABLED=FALSE Rscript --vanilla -e 'testthat::test_file("tests/testthat/test-dependency-integration.R", package="richStudio", load_package="installed", reporter="summary")'`; `/tmp/richstudio-v015-integration-final.log` ends `══ DONE ═` and all worker routes report v0.1.5 from the new isolated library. The parallel kappa command using the analogous `test_file("tests/testthat/test-dependency-kappa.R", ...)` passes in `/tmp/richstudio-v015-kappa-final.log`. Root's broader affected dependency, file-management and reactive-values tests pass in `/tmp/richstudio-v015-final-scoped-root.log`; its existing kappa and clustering-state regressions pass in `/tmp/richstudio-v015-existing-clustering-root.log`, both exit 0. Installed UI construction and server start/close pass in `/tmp/richstudio-v015-ui-smoke.log`. The two Shiny/DT import-replacement warnings match measured original-HEAD baseline logs `/tmp/richstudio-vendored-head-baseline-install-20261020.log` and `/tmp/richstudio-numerical-vendored-head-20261020.log`. The existing C++11 SystemRequirements warning also appears in the source-built original-HEAD install log. Final consumer review `.moai/reports/SPEC-DEPENDENCY-001/consumer-audit-v015-final.md` returned **PASS-WITH-DEBT**, with all ten ACs satisfied and F1–F7 closed on bound consumer evidence; the explicit debt is verification breadth. Final installed/source evidence was committed as `8d3dcfee405b8f79abb771337fa5425fe3c3e7d2` across 22 authorized files. Root's fresh pre-commit origin/main comparison was `0 0`; no push has occurred, so no post-push status is claimed. This progress update records run-phase evidence only; commit integration remains with root.
 
 ## §E.3 Run-phase Audit-Ready Signal
 
 ```yaml
-run_status: in_progress
-run_commit_sha: pending (no commit requested in this worktree)
+run_status: complete
+run_commit_sha: 8d3dcfee405b8f79abb771337fa5425fe3c3e7d2
 ac_pass_count: 10
 ac_fail_count: 0
-run_complete_at: null
+run_complete_at: 2026-10-20T15:26:16Z
 preserve_list_post_run_count: 0
-l44_pre_commit_fetch: not_applicable
+l44_pre_commit_fetch: "origin/main 0 0, observed by root before commit"
 l44_post_push_fetch: not_applicable
 new_warnings_or_lints_introduced: null
-warning_lint_note: "Combined warning/lint status remains unknown because default lintr reports 26 style findings on changed lines; strict changed-line text attribution overstates newly introduced diagnostics where existing naming/return conventions remain consistent. Lintr reported zero warning/error diagnostics. Two observed Shiny/DT import-replacement warnings match the measured original-HEAD baseline."
+warning_lint_note: "Combined warning/lint status remains unknown because default lintr reports 26 style findings on changed lines; strict changed-line text attribution overstates newly introduced diagnostics where existing naming/return conventions remain consistent. Lintr reported zero warning/error diagnostics on changed lines; the full current-source scan reports 12 warning diagnostics. Two observed Shiny/DT import-replacement warnings match the measured original-HEAD baseline."
 default_lintr_style_findings: 26
-default_lintr_warning_error_diagnostics: 0
+changed_line_default_lintr_warning_error_diagnostics: 0
+current_source_default_lintr_warning_diagnostics: 12
 changed_executable_line_coverage_percent: 91
 all_instrumented_package_coverage_percent: 20.04
-configured_overall_coverage_target_met: false
+configured_overall_coverage_target_met: null
+coverage_target_note: "Overall 85% target is unestablished; the selected test subset measured 20.04%, not a full-suite result."
 cross_platform_build:
   status: not_run
-total_run_phase_files: 13
-m1_to_mN_commit_strategy: no commits; root integration owns branch operations
+total_run_phase_files: 22
+m1_to_mN_commit_strategy: "single commit 8d3dcfee405b8f79abb771337fa5425fe3c3e7d2; not pushed"
 ```
 
-Run phase evidence records all ten ACs passing on the scoped installed tests. Covr measured 91/100 (91%) of added/changed executable R lines and 776/3,872 (20.04%) of all instrumented source/native executable lines. The configured overall 85% target is not established by this selected test subset. Default lintr reports 26 style findings on changed lines, zero warning/error diagnostics, and zero exact diagnostic-text matches against original HEAD; these are style findings, not verified functional regressions, and remain reported without source cleanup to preserve repository API/file conventions. Details are in `.moai/reports/SPEC-DEPENDENCY-001/quality-measurement.md`. The namespace roclet ran with roxygen2 8.1.1; the generated diff had unrelated import reformatting and a generated DESCRIPTION config entry, so `NAMESPACE` was restored to its existing style with only the intended `importFrom(richR,richCluster)` removal and DESCRIPTION retained its existing RoxygenNote. The observed Shiny/DT import-replacement warnings match the source-built original-HEAD baseline. No full package suite or deployment was run.
+The run-phase consumer audit returned PASS-WITH-DEBT with all ten ACs satisfied and F1–F7 closed on bound installed evidence. Covr measured 91/100 (91%) of added/changed executable R lines and 776/3,872 (20.04%) of all instrumented source/native executable lines. The configured overall 85% target remains unestablished because this was a selected test subset, not a full-suite measurement. Full-suite execution and LSP verification remain UNVERIFIED; no production deployment is certified. Default lintr reports 26 style findings on changed lines, zero warning/error diagnostics on changed lines, and zero exact diagnostic-text matches against original HEAD; its full current-source scan reports 12 warning diagnostics. These are style findings, not verified functional regressions, and remain reported without source cleanup to preserve repository API/file conventions. Details are in `.moai/reports/SPEC-DEPENDENCY-001/quality-measurement.md`. The namespace roclet ran with roxygen2 8.1.1; the generated diff had unrelated import reformatting and a generated DESCRIPTION config entry, so `NAMESPACE` was restored to its existing style with only the intended `importFrom(richR,richCluster)` removal and DESCRIPTION retained its existing RoxygenNote. The observed Shiny/DT import-replacement warnings match the source-built original-HEAD baseline. The change is committed but not pushed.
 
 ## §E.4 Sync-phase Audit-Ready Signal
 
-_<pending sync-phase>_
+```yaml
+sync_status: complete_pending_commit
+sync_complete_at: "2026-10-20"
+sync_commit_sha: pending-backfill
+publication_receipt: .moai/reports/SPEC-DEPENDENCY-001/publication-receipt.md
+implementation_commit_sha: 8d3dcfee405b8f79abb771337fa5425fe3c3e7d2
+consumer_audit_verdict: PASS-WITH-DEBT
+accepted_criteria: 10
+accepted_criteria_total: 10
+consumer_findings_F1_F7: closed
+script_safety_audit_verdict: PASS
+script_sha256: 106a1d9b05f5302e94e188a3b50a0c82aed052303a3db89c17bb92a4d605cda5
+full_suite_quality_and_lsp_gates: unverified
+changed_executable_line_coverage_percent: 91
+selected_test_package_native_coverage_percent: 20.04
+changed_line_default_lintr_style_findings: 26
+changed_line_default_lintr_warning_error_findings: 0
+full_current_source_default_lintr_warning_findings: 12
+b12_self_test_a: not_applicable_no_changelog_emission_authorized
+b12_self_test_b: not_applicable_no_changelog_emission_authorized
+b12_self_test_c: not_applicable_no_changelog_emission_authorized
+changelog_entry_position: not_applicable
+frontmatter_status_transitions:
+  spec.md: "in-progress -> completed; updated remains 2026-10-20"
+  plan.md: not_applicable_no_existing_frontmatter
+  acceptance.md: not_applicable_no_existing_frontmatter
+  progress.md: not_applicable_no_existing_frontmatter
+canary_compliance_check:
+  status: not_applicable_no_forward_policy_canary
+push_status: not_pushed
+deployment_status: not_uploaded_not_executed
+```
+
+Bounded local dependency adoption is complete on the reviewed consumer acceptance evidence, with the recorded verification debt. Final consumer audit `.moai/reports/SPEC-DEPENDENCY-001/consumer-audit-v015-final.md` accepts AC-001–AC-010 and closes F1–F7; final script review `.moai/reports/SPEC-DEPENDENCY-001/deployment-audit-v015-final.md` approves the exact script bytes for safety only. Neither verdict establishes the full suite, overall coverage target, LSP, browser end-to-end, cross-platform consumer or server-runtime gates. Default lintr's zero warning/error count applies only to changed lines; the full current-source scan has 12 warnings.
+
+Documentation synchronized: `docs/DEPENDENCY_RUNTIME.md`, `PROJECT_HANDOFF.md` and `PROJECT_LOG.md`. Historical 0.1.4 failure evidence, separate engine baselines and unrelated Phase 15 tasks remain recorded. The implementation baseline is `8d3dcfee405b8f79abb771337fa5425fe3c3e7d2`; `pending-backfill` is the explicit placeholder for the future sync commit and is not an asserted SHA. No sync commit, push, upload or privileged execution is claimed here. Deployment requires later user-only sudo execution and direct inspection of retrieved server log/status and worker evidence.
+
+Root records the actual sync commit SHA, push result and uploaded server paths in the publication receipt only after observing those actions. Until then, `pending-backfill` remains an honest placeholder; no future commit SHA or publication result is predicted.

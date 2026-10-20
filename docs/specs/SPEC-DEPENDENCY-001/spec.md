@@ -2,7 +2,7 @@
 id: SPEC-DEPENDENCY-001
 title: "Adopt current enrichment and clustering dependencies"
 version: "0.1.0"
-status: in-progress
+status: completed
 created: 2026-10-20
 updated: 2026-10-20
 author: manager-spec

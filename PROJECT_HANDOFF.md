@@ -4,12 +4,24 @@
 
 richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
 
-- **Last updated:** 2026-10-20 (dependency implementation accepted; verification debt and deployment pending)
-- **Last coding CLI used:** Codex (dependency migration); earlier phase history used Claude Code
-- **Active worktree:** `.moai/worktrees/dependency-adoption`, branch `WT-dependency-adoption`, initial base `27aac71c679009c2b61bb2118325dde690994ef1`; implementation commit `8d3dcfee405b8f79abb771337fa5425fe3c3e7d2`, documentation sync pending
+- **Last updated:** 2026-10-20 (workspace plan independently reviewed; implementation not started)
+- **Last coding CLI used:** Codex (workspace planning); earlier phase history retained below
+- **Active worktree:** `.moai/worktrees/workspace-evolution-plan`, branch `WT-workspace-evolution-plan`, application baseline `06206d050dcae02a2e773a709c5c6119d29f436e`; documentation-only plan independently reviewed
 - **Version:** 0.1.6
 
 ## 2. Current State
+
+### Workspace evolution — Planning complete; implementation not started (2026-10-20)
+
+The user requested all six recommended improvement areas using the Hur Harness hybrid team and independent review structure. [Master plan](docs/specs/SPEC-WORKSPACE-001/plan.md), [requirements](docs/specs/SPEC-WORKSPACE-001/spec.md), [design/state contracts](docs/specs/SPEC-WORKSPACE-001/design.md), [acceptance](docs/specs/SPEC-WORKSPACE-001/acceptance.md) and machine-readable dispatch registry now define twelve atomic leaf SPECs. All remain draft; dispatch is inactive. The next step is a separately authorized implementation, beginning with001 baseline/CI/resource policy and002 design handoff.
+
+Independent plan audit round2 returned PASS (score1.00), closing six formal/execution findings plus the failed-import generation ambiguity. Planning checks:13 requirement documents linted with exit0 and no findings; twelve graph nodes reachable, twenty-one shared-file lock pairs;59 leaf requirements map to50 acceptance scenarios. Full evidence and frozen hashes are under this worktree's ignored `.moai/reports/SPEC-WORKSPACE-001/`; no application runtime, browser or security scan success is inferred from planning checks.
+
+001 establishes the actual clean-CI baseline, policy/rule bundle and measured resource configuration.003–010 implement the workspace, scientific setup/background, jobs, projects, exploration, figures and clustering experience.012 separately owns bounded legacy bridge discovery and usable restoration; it does not block additive exploration but must pass before final011 release. Legacy data/results must survive; missing metadata remains unknown. Keep existing RDS parsing's trust limitation explicit until its replacement is proven. No ordinary subprocess is advertised as a sandbox, no ignored result as cancelled, and no hidden capability as delivered.
+
+The production dependency update was user-executed and verified before this planning task. Exact deployed app release is `06206d050dcae02a2e773a709c5c6119d29f436e`; prior evidence is in sibling `dependency-adoption/.moai/reports/SPEC-DEPENDENCY-001/deployed-verification/report.md`. Historical sections below retain their dated pre-deployment checkpoints. Original server app backup remains preserved.
+
+No new application implementation, commit, push or deployment occurred. Preserve the planning and dependency worktrees. Before implementation, version the reviewed plan and resolve the normal capability/configuration prerequisites; do not treat a planning PASS as runtime verification or release authorization. Future deployment remains user-manual sudo after reviewed preparation, followed by retrieved status/log and actual worker/library checks.
 
 ### Dependency adoption — Consumer acceptance passed with verification debt (2026-10-20)
 

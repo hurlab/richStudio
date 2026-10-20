@@ -1,0 +1,451 @@
+{
+  "schema_version": 1,
+  "nodes": [
+    {
+      "id": "SPEC-WS-001",
+      "spec_path": "docs/specs/SPEC-WS-001.md",
+      "depends_on": [],
+      "target_files": [
+        "DESCRIPTION",
+        ".Rbuildignore",
+        "tests/testthat.R",
+        ".github/workflows/workspace-quality.yml",
+        "package.json",
+        "package-lock.json",
+        "playwright.config.ts",
+        "tsconfig.json",
+        "tests/e2e/fixtures.ts",
+        "tests/e2e/baseline.spec.ts",
+        "tests/fixtures/workspace/README.md",
+        "tests/fixtures/workspace/annotation.tsv",
+        "tests/fixtures/workspace/query.tsv",
+        "tests/fixtures/workspace/background.tsv",
+        "tests/fixtures/workspace/imported-results.tsv",
+        "tests/fixtures/workspace/legacy-session-v1.json",
+        "tests/testthat/test-workspace-baseline.R",
+        "scripts/test-workspace.sh",
+        "scripts/export-workspace-policy.py",
+        "docs/quality/workspace-policy-bundle.json",
+        "inst/config/workspace-resources.json",
+        "R/workspace_resources.R",
+        "scripts/measure-workspace-resources.R",
+        "tests/testthat/test-workspace-resources.R",
+        "docs/quality/workspace-resource-baseline.md"
+      ],
+      "existing_target_files": [
+        "DESCRIPTION",
+        ".Rbuildignore",
+        "tests/testthat.R"
+      ],
+      "new_target_files": [
+        ".github/workflows/workspace-quality.yml",
+        "package.json",
+        "package-lock.json",
+        "playwright.config.ts",
+        "tsconfig.json",
+        "tests/e2e/fixtures.ts",
+        "tests/e2e/baseline.spec.ts",
+        "tests/fixtures/workspace/README.md",
+        "tests/fixtures/workspace/annotation.tsv",
+        "tests/fixtures/workspace/query.tsv",
+        "tests/fixtures/workspace/background.tsv",
+        "tests/fixtures/workspace/imported-results.tsv",
+        "tests/fixtures/workspace/legacy-session-v1.json",
+        "tests/testthat/test-workspace-baseline.R",
+        "scripts/test-workspace.sh",
+        "scripts/export-workspace-policy.py",
+        "docs/quality/workspace-policy-bundle.json",
+        "inst/config/workspace-resources.json",
+        "R/workspace_resources.R",
+        "scripts/measure-workspace-resources.R",
+        "tests/testthat/test-workspace-resources.R",
+        "docs/quality/workspace-resource-baseline.md"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "High",
+      "lane": "verification",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-002",
+      "spec_path": "docs/specs/SPEC-WS-002.md",
+      "depends_on": [
+        "SPEC-WS-001"
+      ],
+      "target_files": [
+        "inst/application/www/custom.css",
+        "R/workspace_components.R",
+        "docs/design/workspace-design-system.md",
+        "docs/design/workspace-screens.md",
+        "docs/design/workspace-handoff.md",
+        "tests/testthat/test-workspace-components.R",
+        "tests/e2e/design-system.spec.ts"
+      ],
+      "existing_target_files": [
+        "inst/application/www/custom.css"
+      ],
+      "new_target_files": [
+        "R/workspace_components.R",
+        "docs/design/workspace-design-system.md",
+        "docs/design/workspace-screens.md",
+        "docs/design/workspace-handoff.md",
+        "tests/testthat/test-workspace-components.R",
+        "tests/e2e/design-system.spec.ts"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "High",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-003",
+      "spec_path": "docs/specs/SPEC-WS-003.md",
+      "depends_on": [
+        "SPEC-WS-002"
+      ],
+      "target_files": [
+        "R/home_tab.R",
+        "inst/application/app.R",
+        "R/workspace_navigation.R",
+        "tests/testthat/test-workspace-navigation.R",
+        "tests/e2e/workspace-entry.spec.ts"
+      ],
+      "existing_target_files": [
+        "R/home_tab.R",
+        "inst/application/app.R"
+      ],
+      "new_target_files": [
+        "R/workspace_navigation.R",
+        "tests/testthat/test-workspace-navigation.R",
+        "tests/e2e/workspace-entry.spec.ts"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "Medium",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-004",
+      "spec_path": "docs/specs/SPEC-WS-004.md",
+      "depends_on": [
+        "SPEC-WS-001",
+        "SPEC-WS-003"
+      ],
+      "target_files": [
+        "R/enrich_tab.R",
+        "R/cluster_upload_tab.R",
+        "R/rr_visualize_tab.R",
+        "R/rr_column_handling.R",
+        "R/file_handling.R",
+        "R/input_review.R",
+        "tests/testthat/test-input-review.R",
+        "tests/e2e/input-review.spec.ts"
+      ],
+      "existing_target_files": [
+        "R/enrich_tab.R",
+        "R/cluster_upload_tab.R",
+        "R/rr_visualize_tab.R",
+        "R/rr_column_handling.R",
+        "R/file_handling.R"
+      ],
+      "new_target_files": [
+        "R/input_review.R",
+        "tests/testthat/test-input-review.R",
+        "tests/e2e/input-review.spec.ts"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "High",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-005",
+      "spec_path": "docs/specs/SPEC-WS-005.md",
+      "depends_on": [
+        "SPEC-WS-004",
+        "SPEC-WS-006"
+      ],
+      "target_files": [
+        "R/deg_enrich.R",
+        "R/enrich_tab.R",
+        "DESCRIPTION",
+        "renv.lock",
+        "docs/DEPENDENCY_RUNTIME.md",
+        "R/enrichment_background.R",
+        "tests/testthat/test-enrichment-background.R",
+        "tests/fixtures/workspace/universe-oracle.tsv"
+      ],
+      "existing_target_files": [
+        "R/deg_enrich.R",
+        "R/enrich_tab.R",
+        "DESCRIPTION",
+        "renv.lock",
+        "docs/DEPENDENCY_RUNTIME.md"
+      ],
+      "new_target_files": [
+        "R/enrichment_background.R",
+        "tests/testthat/test-enrichment-background.R",
+        "tests/fixtures/workspace/universe-oracle.tsv"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "High",
+      "lane": "implementation",
+      "external_dependencies": [
+        "hurlab/richR: official public contract; new release only when a verified gap requires it"
+      ]
+    },
+    {
+      "id": "SPEC-WS-006",
+      "spec_path": "docs/specs/SPEC-WS-006.md",
+      "depends_on": [
+        "SPEC-WS-004"
+      ],
+      "target_files": [
+        "inst/application/app.R",
+        "R/enrich_tab.R",
+        "R/cluster_tab.R",
+        "R/update_tab.R",
+        "R/workspace_jobs.R",
+        "R/run_records.R",
+        "tests/testthat/test-workspace-jobs.R",
+        "tests/e2e/job-lifecycle.spec.ts"
+      ],
+      "existing_target_files": [
+        "inst/application/app.R",
+        "R/enrich_tab.R",
+        "R/cluster_tab.R",
+        "R/update_tab.R"
+      ],
+      "new_target_files": [
+        "R/workspace_jobs.R",
+        "R/run_records.R",
+        "tests/testthat/test-workspace-jobs.R",
+        "tests/e2e/job-lifecycle.spec.ts"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "High",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-007",
+      "spec_path": "docs/specs/SPEC-WS-007.md",
+      "depends_on": [
+        "SPEC-WS-006"
+      ],
+      "target_files": [
+        "R/save_tab.R",
+        "inst/application/app.R",
+        "R/project_manifest.R",
+        "R/project_import.R",
+        "tests/testthat/test-project-manifest.R",
+        "tests/testthat/test-project-import.R",
+        "tests/e2e/project-roundtrip.spec.ts",
+        "docs/PROJECT_FORMAT.md"
+      ],
+      "existing_target_files": [
+        "R/save_tab.R",
+        "inst/application/app.R"
+      ],
+      "new_target_files": [
+        "R/project_manifest.R",
+        "R/project_import.R",
+        "tests/testthat/test-project-manifest.R",
+        "tests/testthat/test-project-import.R",
+        "tests/e2e/project-roundtrip.spec.ts",
+        "docs/PROJECT_FORMAT.md"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "High",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-008",
+      "spec_path": "docs/specs/SPEC-WS-008.md",
+      "depends_on": [
+        "SPEC-WS-003",
+        "SPEC-WS-004",
+        "SPEC-WS-007"
+      ],
+      "target_files": [
+        "inst/application/app.R",
+        "R/rr_visualize_tab.R",
+        "R/clus_visualize_tab.R",
+        "R/results_explorer.R",
+        "R/workspace_selection.R",
+        "tests/testthat/test-results-explorer.R",
+        "tests/e2e/results-explorer.spec.ts"
+      ],
+      "existing_target_files": [
+        "inst/application/app.R",
+        "R/rr_visualize_tab.R",
+        "R/clus_visualize_tab.R"
+      ],
+      "new_target_files": [
+        "R/results_explorer.R",
+        "R/workspace_selection.R",
+        "tests/testthat/test-results-explorer.R",
+        "tests/e2e/results-explorer.spec.ts"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "Medium",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-009",
+      "spec_path": "docs/specs/SPEC-WS-009.md",
+      "depends_on": [
+        "SPEC-WS-007",
+        "SPEC-WS-008"
+      ],
+      "target_files": [
+        "R/rr_visualize_tab.R",
+        "R/clus_visualize_tab.R",
+        "R/rr_bar.R",
+        "R/rr_dot.R",
+        "R/rr_hmap.R",
+        "R/rr_network.R",
+        "R/cluster_hmap.R",
+        "R/save_tab.R",
+        "R/figure_settings.R",
+        "tests/testthat/test-figure-settings.R",
+        "tests/e2e/figure-export.spec.ts"
+      ],
+      "existing_target_files": [
+        "R/rr_visualize_tab.R",
+        "R/clus_visualize_tab.R",
+        "R/rr_bar.R",
+        "R/rr_dot.R",
+        "R/rr_hmap.R",
+        "R/rr_network.R",
+        "R/cluster_hmap.R",
+        "R/save_tab.R"
+      ],
+      "new_target_files": [
+        "R/figure_settings.R",
+        "tests/testthat/test-figure-settings.R",
+        "tests/e2e/figure-export.spec.ts"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "Medium",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-010",
+      "spec_path": "docs/specs/SPEC-WS-010.md",
+      "depends_on": [
+        "SPEC-WS-006",
+        "SPEC-WS-008"
+      ],
+      "target_files": [
+        "R/cluster_tab.R",
+        "R/clustering_review.R",
+        "R/run_comparison.R",
+        "tests/testthat/test-run-comparison.R",
+        "tests/e2e/clustering-comparison.spec.ts"
+      ],
+      "existing_target_files": [
+        "R/cluster_tab.R"
+      ],
+      "new_target_files": [
+        "R/clustering_review.R",
+        "R/run_comparison.R",
+        "tests/testthat/test-run-comparison.R",
+        "tests/e2e/clustering-comparison.spec.ts"
+      ],
+      "prerequisite_target_files": [],
+      "priority": "Medium",
+      "lane": "implementation",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-011",
+      "spec_path": "docs/specs/SPEC-WS-011.md",
+      "depends_on": [
+        "SPEC-WS-001",
+        "SPEC-WS-002",
+        "SPEC-WS-003",
+        "SPEC-WS-004",
+        "SPEC-WS-005",
+        "SPEC-WS-006",
+        "SPEC-WS-007",
+        "SPEC-WS-008",
+        "SPEC-WS-009",
+        "SPEC-WS-010",
+        "SPEC-WS-012"
+      ],
+      "target_files": [
+        "README.md",
+        "INSTRUCTION.md",
+        "tests/e2e/workspace-journeys.spec.ts",
+        "tests/e2e/workspace-accessibility.spec.ts",
+        "tests/e2e/workspace-security.spec.ts",
+        "docs/WORKSPACE_GUIDE.md",
+        "docs/WORKSPACE_RELEASE_CHECKLIST.md",
+        ".github/workflows/workspace-quality.yml",
+        "playwright.config.ts"
+      ],
+      "existing_target_files": [
+        "README.md",
+        "INSTRUCTION.md"
+      ],
+      "new_target_files": [
+        "tests/e2e/workspace-journeys.spec.ts",
+        "tests/e2e/workspace-accessibility.spec.ts",
+        "tests/e2e/workspace-security.spec.ts",
+        "docs/WORKSPACE_GUIDE.md",
+        "docs/WORKSPACE_RELEASE_CHECKLIST.md"
+      ],
+      "prerequisite_target_files": [
+        ".github/workflows/workspace-quality.yml",
+        "playwright.config.ts"
+      ],
+      "priority": "High",
+      "lane": "verification",
+      "external_dependencies": []
+    },
+    {
+      "id": "SPEC-WS-012",
+      "spec_path": "docs/specs/SPEC-WS-012.md",
+      "depends_on": [
+        "SPEC-WS-001",
+        "SPEC-WS-006",
+        "SPEC-WS-007"
+      ],
+      "target_files": [
+        "R/save_tab.R",
+        "inst/application/app.R",
+        "R/legacy_session_bridge.R",
+        "scripts/probe-legacy-isolation.sh",
+        "scripts/convert-trusted-session.R",
+        "tests/security/legacy-isolation-probe.R",
+        "tests/testthat/test-legacy-session-bridge.R",
+        "tests/e2e/legacy-session-restore.spec.ts",
+        "docs/quality/legacy-bridge-decision.md",
+        "docs/PROJECT_FORMAT.md"
+      ],
+      "existing_target_files": [
+        "R/save_tab.R",
+        "inst/application/app.R"
+      ],
+      "new_target_files": [
+        "R/legacy_session_bridge.R",
+        "scripts/probe-legacy-isolation.sh",
+        "scripts/convert-trusted-session.R",
+        "tests/security/legacy-isolation-probe.R",
+        "tests/testthat/test-legacy-session-bridge.R",
+        "tests/e2e/legacy-session-restore.spec.ts",
+        "docs/quality/legacy-bridge-decision.md"
+      ],
+      "prerequisite_target_files": [
+        "docs/PROJECT_FORMAT.md"
+      ],
+      "priority": "High",
+      "lane": "implementation",
+      "external_dependencies": []
+    }
+  ]
+}

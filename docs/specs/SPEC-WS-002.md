@@ -1,0 +1,102 @@
+---
+id: "SPEC-WS-002"
+title: "Design system, accessible components and audited screen handoff"
+version: "0.1.0"
+status: draft
+created: "2026-10-20"
+updated: "2026-10-20"
+author: "workspace planning team"
+priority: P1
+phase: "v0.1.7 target"
+module: "R/"
+lifecycle: spec-anchored
+tags: "workspace, usability, reproducibility"
+---
+
+# SPEC-WS-002 — Design system, accessible components and audited screen handoff
+
+Planning-only draft. This existing-style leaf document is the self-contained implementation contract; no implementation/test completion is claimed. Companion umbrella: [SPEC-WORKSPACE-001](SPEC-WORKSPACE-001/plan.md).
+
+## Problem and observable outcome
+
+The app already has blue/teal CSS tokens. A coherent workspace needs a documented extension of that identity and reusable accessible primitives before individual screens diverge.
+
+## Dependencies and ownership
+
+- Logical prerequisites: SPEC-WS-001.
+- One disposable implementer owns this entire leaf in its own fresh worktree; independently reviewed before integration.
+- Shared targets are exclusive locks, even for nonoverlapping line edits; derive conflicts from the umbrella dispatch.json. No metadata/namespace edits outside this list without registry revision.
+- Upstream richR work is separately owned and integrated through an official release, never edited by this consumer leaf.
+
+### Existing targets
+
+- `inst/application/www/custom.css`
+
+### New targets
+
+- `R/workspace_components.R`
+- `docs/design/workspace-design-system.md`
+- `docs/design/workspace-screens.md`
+- `docs/design/workspace-handoff.md`
+- `tests/testthat/test-workspace-components.R`
+- `tests/e2e/design-system.spec.ts`
+
+## Technical implementation plan
+
+1. Assign a manager-design specialist to prepare design-system and screen artifacts before production UI coding. Provide empty, populated, busy, failed, imported-only and legacy-session states for Home, intake, result explorer, job panel, figures and save/load.
+
+2. Extend existing --rs-* tokens and Shiny conventions; document typography, spacing, contrast, focus, table density, status semantics, dataset color assignment and reduced-motion behavior. Keep familiar biological terminology.
+
+3. Review high-change choices with the independent reviewer and scientific/QA/security inputs. Record the handoff receipt and component-state inventory. Design-sync capability is optional; if unavailable, versioned local screens/token tables and an explicit missing-sync note are the deliverable.
+
+## GEARS requirements
+
+- **REQ-001** The design handoff shall cover each primary route and its empty, running, failed and completed states before those screens enter implementation.
+- **REQ-002** The UI components shall expose visible labels, keyboard focus, semantic status text and non-color state cues.
+- **REQ-003** While the viewport is narrow or the browser is zoomed, primary actions shall remain reachable and data tables shall have labeled contained overflow.
+- **REQ-004** Where motion is present, the interface shall respect reduced-motion preferences.
+
+## Binary acceptance scenarios
+
+**AC-001** Given the approved handoff inventory, when the reviewer checks each planned screen, then every route has states, component references and an explicit handoff receipt.
+
+**AC-002** Given a keyboard-only user, when all component actions are traversed and activated, then focus is visible and returned after dialogs with no trap.
+
+**AC-003** Given Given 375x667 and200% zoom scenarios, when primary cards/forms render, then actions remain reachable and only intentionally scrollable tables overflow.
+
+All requirements must be exercised by the listed scenarios plus scoped tests; verification receipts identify the specific REQ/AC IDs. Disabled controls are valid intermediate/rollback containment only; they do not close the desired capability or justify full-program completion. Required feature criteria remain unresolved until demonstrated or explicitly re-scoped by the user.
+
+## Scoped verification and gate evidence
+
+- Component unit tests for labels/IDs, unique namespaces and status text.
+- CLI accessibility checks plus manual keyboard/focus/zoom/contrast/reduced-motion review; automated scanning alone does not establish accessibility.
+- Compare desktop and narrow-screen screenshots to reviewed artifacts without asserting pixel identity across operating systems.
+- Follow the canonical primary-repository quality/harness/LSP policies; record exact snapshot digests in CI. Do not duplicate their numerical thresholds here.
+- Report commands, verbatim bounded outputs, commit/runtime baseline, gaps and residual risks. Full-suite phase gates run in clean CI; local checks are scoped to affected behavior.
+
+## Requirement-to-acceptance traceability
+
+| Requirement | Required scenarios |
+|---|---|
+| REQ-001 | AC-001 |
+| REQ-002 | AC-002 |
+| REQ-003 | AC-003 |
+| REQ-004 | AC-002, AC-003 |
+
+## Security and trust boundary
+
+Escape dataset names and provider text; icons cannot substitute for labels. Documentation/screens contain synthetic data. External links use appropriate target/rel handling.
+
+## Rollout and rollback
+
+Retain original CSS token values as a reviewed reference. Roll back the scoped token/component commit and keep legacy modules available until screen-specific gates pass.
+
+## Exclusions
+
+### Out of Scope — Scope discipline
+
+- A frontend framework rewrite, mandatory design-sync availability, logo redesign or unreviewed global CSS replacement.
+
+## HISTORY
+
+- 2026-10-20: Planning-only draft, authored after repository inspection and Hur Harness team consultation.

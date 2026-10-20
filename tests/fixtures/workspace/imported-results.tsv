@@ -1,0 +1,5 @@
+Term	Annot	GeneID	Pvalue	Padj	ProviderExtra
+A	Alpha	g1,g2,g3	0.00000001	0.9	retained-a
+B	Beta	g1,g2,g4	0.0000001	0.9	retained-b
+C	Gamma	g5,g6,g7	0.000001	0.9	retained-c
+D	Delta	g5,g6,g8	0.05	0.00001	strict-boundary

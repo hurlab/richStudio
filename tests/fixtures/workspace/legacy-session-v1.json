@@ -1,0 +1,34 @@
+{
+  "version": "1.0",
+  "created": "2026-10-20T00:00:00Z",
+  "degnames": [
+    "query"
+  ],
+  "degdfs": {
+    "query": [
+      {
+        "gene": "g1",
+        "Pvalue": 0.001,
+        "Padj": 0.01
+      }
+    ]
+  },
+  "rrnames": [
+    "imported"
+  ],
+  "rrdfs": {
+    "imported": [
+      {
+        "Term": "A",
+        "Annot": "Alpha",
+        "GeneID": "g1,g2,g3",
+        "Pvalue": 1e-08,
+        "Padj": 0.9,
+        "ProviderExtra": "retained-a"
+      }
+    ]
+  },
+  "clusnames": [],
+  "clusdfs": {},
+  "cluslists": {}
+}

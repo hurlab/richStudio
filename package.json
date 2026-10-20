@@ -1,0 +1,15 @@
+{
+  "name": "richstudio-workspace-verification",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit --project tsconfig.json",
+    "test:e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "@types/node": "24.10.0",
+    "typescript": "5.9.3",
+    "@ast-grep/cli": "0.42.0"
+  }
+}

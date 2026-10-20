@@ -1,0 +1,125 @@
+name: Workspace quality
+on:
+  pull_request:
+  push:
+    branches: [main, 'WT-workspace-*']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  workspace:
+    name: workspace-${{ matrix.mode }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [prepare, full, browser, negative, diagnostics, scan]
+    env:
+      CI: 'true'
+      RENV_CONFIG_AUTOLOADER_ENABLED: 'FALSE'
+      WORKSPACE_BASELINE_SHA: d853a9920377f666163a8bcc09585f56ad951b3a
+      WORKSPACE_ARTIFACTS: ${{ github.workspace }}/workspace-quality-artifacts
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.21.0'
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.12'
+      - uses: actions/setup-go@v5
+        if: matrix.mode == 'scan'
+        with:
+          go-version: '1.26.8'
+          cache: false
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: '4.6.1'
+          use-public-rspm: true
+      - name: Provision package dependencies without historical renv restore
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          dependencies: '"all"'
+          extra-packages: |
+            any::remotes
+            any::tidyverse
+          cache-version: workspace-001
+      - name: Provision pinned verification tools and exact scientific archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$WORKSPACE_ARTIFACTS"
+          python -m pip install --disable-pip-version-check PyYAML==6.0.3
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm rebuild @ast-grep/cli --offline
+          Rscript --vanilla - <<'R'
+          pins <- c(covr="3.6.5",testthat="3.3.2")
+          for (name in names(pins)) remotes::install_version(name, version=pins[[name]], repos="https://cloud.r-project.org", upgrade="never", dependencies=NA)
+          R
+          python - <<'PY'
+          import hashlib,pathlib,urllib.request,tarfile,tempfile,json,os,subprocess
+          tooling_sources=[
+            ('collections','https://cran.r-project.org/src/contrib/collections_0.3.12.tar.gz','60e63ee65bc1889e54a008410f53cb5b643f2fffdb926c3ed12316094709c60d'),
+            ('styler','https://cran.r-project.org/src/contrib/styler_1.11.0.tar.gz','f08760782b2ead047dd8f166a7cd5e01ace8d713087712bf61d193f610fbfe18'),
+            ('xmlparsedata','https://cran.r-project.org/src/contrib/xmlparsedata_1.0.5.tar.gz','766034ab5e9728609bd240c9954d23ca0cdb881a98a31b9d3e1c8767c7b7cbb0'),
+            ('sessioninfo','https://cran.r-project.org/src/contrib/sessioninfo_1.2.4.tar.gz','fe855e84941126c272d5a0ae39b14f1c92d7076550d7be627389d452b7d61bd4'),
+            ('xopen','https://cran.r-project.org/src/contrib/xopen_1.0.1.tar.gz','e3b278b8c324a1aa2650141dd89d01253eea5c2555007422c797915689b29aec'),
+            ('lintr','https://cran.r-project.org/src/contrib/lintr_3.4.0.tar.gz','54144e68b70289edff7eed4fc8d00efacd1ddd51c032dc1e88bfb657c10a89dc'),
+            ('languageserver','https://cran.r-project.org/src/contrib/Archive/languageserver/languageserver_0.3.16.tar.gz','6079525a1c846eeeb4ab484e9229bdfad8783a1fcec18cc5cca8300706b772e5'),
+            ('rcmdcheck','https://cran.r-project.org/src/contrib/rcmdcheck_1.4.0.tar.gz','bbd4ef7d514b8c2076196a7c4a6041d34623d55fbe73f2771758ce61fd32c9d0'),
+          ]
+          sources=tooling_sources+[
+            ('richR','https://github.com/hurlab/richR/releases/download/v0.1.5/richR_0.1.5.tar.gz','0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf'),
+            ('richCluster','https://api.github.com/repos/hurlab/richCluster/tarball/a0d1f630fbe64089ab38516116b78962672e6349','6abe64c1c156368afcd9fbec942fadf80848ba64c00dadeac6b2faff27b73c00'),
+            ('bioAnno','https://api.github.com/repos/guokai8/bioAnno/tarball/3c8936033b806b9f40c7028faa80e4971f6d0859','ddab5c458aee07253aedf26d137caeeb6e548538c1ef14f1d0cb27d4d1dc9da9')]
+          receipts=[]
+          with tempfile.TemporaryDirectory() as tmp:
+            for name,url,expected in sources:
+              data=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'richStudio-workspace-CI'}),timeout=120).read()
+              actual=hashlib.sha256(data).hexdigest()
+              if actual!=expected:raise SystemExit(f'{name}: archive digest mismatch {actual}')
+              archive=pathlib.Path(tmp)/(name+'.tar.gz');archive.write_bytes(data)
+              if name not in ('richCluster','bioAnno'):target=archive
+              else:
+                target=pathlib.Path(tmp)/name;target.mkdir()
+                with tarfile.open(archive) as tar:tar.extractall(target,filter='data')
+                target=next(target.glob('*/DESCRIPTION')).parent
+              subprocess.run(['R','CMD','INSTALL',str(target)],check=True)
+              receipts.append({'package':name,'url':url,'sha256':actual,'bytes':len(data)})
+          pathlib.Path(os.environ['WORKSPACE_ARTIFACTS'],'verified-source-archives.json').write_text(json.dumps(receipts,indent=2))
+          PY
+          npx --no-install playwright install --with-deps chromium
+          if [ '${{ matrix.mode }}' = scan ]; then
+            go install github.com/modu-ai/moai-adk/cmd/moai@v0.0.0-20260929230834-3dd5adf2f4e7
+          fi
+      - name: Record exact tool identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            node --version
+            npm --version
+            python --version
+            npx --no-install tsc --version
+            npx --no-install playwright --version
+            npx --no-install ast-grep --version
+            Rscript --vanilla -e 'print(R.version.string); print(.libPaths()); for(p in c("richR","richCluster","bioAnno","languageserver","lintr","rcmdcheck","covr","testthat")) cat(p,as.character(packageVersion(p)),find.package(p),"\n")'
+          } > "$WORKSPACE_ARTIFACTS/tool-versions.txt" 2>&1
+          Rscript --vanilla -e 'jsonlite::write_json(as.data.frame(installed.packages()[,c("Package","Version","LibPath","Built")]),file.path(Sys.getenv("WORKSPACE_ARTIFACTS"),"installed-package-inventory.json"),pretty=TRUE)' 
+      - name: Run required gate (skips and unavailable tools are failures)
+        shell: bash
+        run: bash scripts/test-workspace.sh '${{ matrix.mode }}'
+      - name: Retain all diagnostics including failed and negative gates
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: workspace-${{ matrix.mode }}-${{ github.sha }}
+          path: |
+            workspace-quality-artifacts/
+            test-results/
+          if-no-files-found: error
+          retention-days: 14

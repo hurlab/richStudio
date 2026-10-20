@@ -57,7 +57,11 @@ Suggests:
     knitr,
     rmarkdown,
     BiocStyle,
-    devtools
+    devtools,
+    covr (>= 3.6.5),
+    rcmdcheck (>= 1.4.0),
+    lintr (>= 3.4.0),
+    languageserver (>= 0.3.16)
 LinkingTo: Rcpp
 SystemRequirements: C++11
 Encoding: UTF-8
@@ -68,7 +72,7 @@ Config/testthat/edition: 3
 Remotes:
     hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25,
     hurlab/richCluster@a0d1f630fbe64089ab38516116b78962672e6349,
-    guokai8/bioAnno
+    guokai8/bioAnno@3c8936033b806b9f40c7028faa80e4971f6d0859
 biocViews:
     Software,
     GeneSetEnrichment,

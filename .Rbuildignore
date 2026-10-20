@@ -16,3 +16,13 @@
 ^pkgdown$
 ^\.lintr$
 ^install_dependencies\.R$
+
+^package(-lock)?\.json$
+^playwright\.config\.ts$
+^tsconfig\.json$
+^node_modules$
+^test-results$
+^playwright-report$
+^scripts$
+^\.moai$
+^tests/e2e$

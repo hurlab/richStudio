@@ -30,12 +30,37 @@
         "R/workspace_resources.R",
         "scripts/measure-workspace-resources.R",
         "tests/testthat/test-workspace-resources.R",
-        "docs/quality/workspace-resource-baseline.md"
+        "docs/quality/workspace-resource-baseline.md",
+        "src/ClusterExport.cpp",
+        "R/RcppExports.R",
+        "man/richCluster.Rd",
+        "tests/testthat/test-dependency-integration.R",
+        "tests/testthat/helper-workspace-baseline-coverage.R",
+        "tests/testthat/test-baseline-ui-workflows.R",
+        "tests/testthat/test-baseline-result-figures.R",
+        "tests/testthat/test-baseline-session-coverage.R",
+        "tests/testthat/test-baseline-native-coverage.R",
+        "R/package.R",
+        "NAMESPACE",
+        "R/rr_cluster.R",
+        "man/is_richCluster_available.Rd",
+        "man/perform_clustering.Rd",
+        "src/Makevars"
       ],
       "existing_target_files": [
         "DESCRIPTION",
         ".Rbuildignore",
-        "tests/testthat.R"
+        "tests/testthat.R",
+        "src/ClusterExport.cpp",
+        "R/RcppExports.R",
+        "man/richCluster.Rd",
+        "tests/testthat/test-dependency-integration.R",
+        "R/package.R",
+        "NAMESPACE",
+        "R/rr_cluster.R",
+        "man/is_richCluster_available.Rd",
+        "man/perform_clustering.Rd",
+        "src/Makevars"
       ],
       "new_target_files": [
         ".github/workflows/workspace-quality.yml",
@@ -59,12 +84,237 @@
         "R/workspace_resources.R",
         "scripts/measure-workspace-resources.R",
         "tests/testthat/test-workspace-resources.R",
-        "docs/quality/workspace-resource-baseline.md"
+        "docs/quality/workspace-resource-baseline.md",
+        "tests/testthat/helper-workspace-baseline-coverage.R",
+        "tests/testthat/test-baseline-ui-workflows.R",
+        "tests/testthat/test-baseline-result-figures.R",
+        "tests/testthat/test-baseline-session-coverage.R",
+        "tests/testthat/test-baseline-native-coverage.R"
       ],
       "prerequisite_target_files": [],
       "priority": "High",
       "lane": "verification",
-      "external_dependencies": []
+      "external_dependencies": [],
+      "bounded_baseline_remediation": {
+        "authorization": "pending independent plan-audit PASS; child acceptance never closes001 or changes whole-SPEC dependency semantics",
+        "children": [
+          {
+            "id": "B0",
+            "write_files": [
+              "tests/testthat/helper-workspace-baseline-coverage.R"
+            ],
+            "locked_read_files": [
+              "R/workspace_resources.R",
+              "DESCRIPTION",
+              "NAMESPACE",
+              "tests/fixtures/workspace/annotation.tsv",
+              "tests/fixtures/workspace/query.tsv",
+              "tests/fixtures/workspace/background.tsv",
+              "tests/fixtures/workspace/imported-results.tsv"
+            ],
+            "depends_on_children": [],
+            "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
+          },
+          {
+            "id": "B1",
+            "write_files": [
+              "src/ClusterExport.cpp",
+              "R/RcppExports.R",
+              "man/richCluster.Rd"
+            ],
+            "locked_read_files": [
+              "src/RcppExports.cpp",
+              "NAMESPACE"
+            ],
+            "depends_on_children": [],
+            "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
+          },
+          {
+            "id": "B2",
+            "write_files": [
+              "tests/testthat/test-dependency-integration.R"
+            ],
+            "locked_read_files": [
+              "R/deg_enrich.R",
+              "R/workspace_resources.R",
+              "scripts/test-workspace.sh"
+            ],
+            "depends_on_children": [],
+            "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
+          },
+          {
+            "id": "B3",
+            "write_files": [
+              "tests/testthat/test-baseline-ui-workflows.R"
+            ],
+            "locked_read_files": [
+              "R/home_tab.R",
+              "R/runApp.R",
+              "R/cluster_upload_tab.R",
+              "R/enrich_tab.R",
+              "R/rr_column_handling.R",
+              "R/file_handling.R",
+              "R/cluster_tab.R",
+              "R/update_tab.R"
+            ],
+            "depends_on_children": [
+              "B0",
+              "B7"
+            ],
+            "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
+          },
+          {
+            "id": "B4",
+            "write_files": [
+              "tests/testthat/test-baseline-result-figures.R"
+            ],
+            "locked_read_files": [
+              "R/clus_visualize_tab.R",
+              "R/rr_visualize_tab.R",
+              "R/rr_bar.R",
+              "R/rr_dot.R",
+              "R/rr_hmap.R",
+              "R/rr_network.R",
+              "R/cluster_hmap.R",
+              "R/round_table.R"
+            ],
+            "depends_on_children": [
+              "B0"
+            ],
+            "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
+          },
+          {
+            "id": "B5",
+            "write_files": [
+              "tests/testthat/test-baseline-session-coverage.R"
+            ],
+            "locked_read_files": [
+              "R/save_tab.R",
+              "R/file_handling.R"
+            ],
+            "depends_on_children": [
+              "B0"
+            ],
+            "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
+          },
+          {
+            "id": "B6",
+            "write_files": [
+              "tests/testthat/test-baseline-native-coverage.R"
+            ],
+            "locked_read_files": [
+              "R/rr_cluster.R",
+              "R/RcppExports.R",
+              "src/ClusterExport.cpp",
+              "src/ClusterList.cpp",
+              "src/ClusterList.h",
+              "src/ClusterManager.cpp",
+              "src/ClusterManager.h",
+              "src/DistanceMatrix.cpp",
+              "src/DistanceMatrix.h",
+              "src/DistanceMetric.cpp",
+              "src/DistanceMetric.h",
+              "src/MergeStrategy.cpp",
+              "src/MergeStrategy.h",
+              "src/RcppExports.cpp",
+              "src/SeedMap.cpp",
+              "src/SeedMap.h",
+              "src/StringUtils.cpp",
+              "src/StringUtils.h"
+            ],
+            "depends_on_children": [
+              "B0",
+              "B1",
+              "B8",
+              "B9"
+            ],
+            "verification_scope": "affected local checks; one integrated clean-CI complete gate before001 acceptance"
+          },
+          {
+            "id": "B7",
+            "write_files": [
+              "R/package.R",
+              "NAMESPACE"
+            ],
+            "locked_read_files": [
+              "DESCRIPTION",
+              "R/clus_visualize_tab.R",
+              "R/rr_visualize_tab.R"
+            ],
+            "depends_on_children": [],
+            "verification_scope": "installed namespace winning DT bindings/formals and table UI/render equality; generator replay"
+          },
+          {
+            "id": "B8",
+            "write_files": [
+              "R/rr_cluster.R",
+              "man/is_richCluster_available.Rd",
+              "man/perform_clustering.Rd"
+            ],
+            "locked_read_files": [
+              "NAMESPACE",
+              "DESCRIPTION"
+            ],
+            "depends_on_children": [],
+            "verification_scope": "parsed code/body/formal identity; generated codoc/usage closure"
+          },
+          {
+            "id": "B9",
+            "write_files": [
+              "src/Makevars",
+              "DESCRIPTION"
+            ],
+            "locked_read_files": [
+              "R/rr_cluster.R",
+              "R/RcppExports.R",
+              "src/ClusterExport.cpp",
+              "src/ClusterList.cpp",
+              "src/ClusterList.h",
+              "src/ClusterManager.cpp",
+              "src/ClusterManager.h",
+              "src/DistanceMatrix.cpp",
+              "src/DistanceMatrix.h",
+              "src/DistanceMetric.cpp",
+              "src/DistanceMetric.h",
+              "src/MergeStrategy.cpp",
+              "src/MergeStrategy.h",
+              "src/RcppExports.cpp",
+              "src/SeedMap.cpp",
+              "src/SeedMap.h",
+              "src/StringUtils.cpp",
+              "src/StringUtils.h",
+              "NAMESPACE"
+            ],
+            "depends_on_children": [],
+            "verification_scope": "supported before/after compile object/symbol/public native result invariants; no algorithm change"
+          }
+        ],
+        "generator_serialization": "B1,B7,B8 generator execution is exclusive against each other and all readers of their snapshots; generated files outside approved writer targets must remain byte-identical.",
+        "application_check_profile": {
+          "args": [
+            "--no-manual",
+            "--as-cran"
+          ],
+          "error_on": "warning",
+          "only_scope_override": {
+            "_R_CHECK_CRAN_INCOMING_": "FALSE"
+          },
+          "scope": "website application; no CRAN publication claim; all code/doc/build/example/test and canonical coverage/diagnostic criteria retained",
+          "authorization": "pending independent plan audit",
+          "retain_original_incoming_log": true,
+          "preparation_proof": {
+            "required": "complete installed-R strict code/doc/build/test control and check-section semantic closure against original --as-cran; paired bounded valid/invalid tool-canary package checks",
+            "known_strict_controls_to_preserve_explicitly_if_needed": [
+              "_R_CHECK_OVERWRITE_REGISTERED_S3_METHODS_",
+              "_R_CHECK_AUTOCONF_"
+            ],
+            "completeness": "examples only; unknown or lost required control fails PREP",
+            "only_permissive_scope": "CRAN submission-suitability and remote eligibility; no code/doc/build/example/test loss",
+            "failure_disposition": "G0 held; no weaker standard-check fallback",
+            "owner": "001 runner implementer with independent reviewer and QA"
+          }
+        }
+      }
     },
     {
       "id": "SPEC-WS-002",

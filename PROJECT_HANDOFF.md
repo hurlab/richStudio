@@ -4,12 +4,29 @@
 
 richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
 
-- **Last updated:** 2026-10-20 (workspace plan independently reviewed; implementation not started)
-- **Last coding CLI used:** Codex (workspace planning); earlier phase history retained below
-- **Active worktree:** `.moai/worktrees/workspace-evolution-plan`, branch `WT-workspace-evolution-plan`, application baseline `06206d050dcae02a2e773a709c5c6119d29f436e`; documentation-only plan independently reviewed
+- **Last updated:** 2026-10-20 (workspace implementation authorized; baseline foundation in progress)
+- **Last coding CLI used:** Codex (workspace implementation); earlier phase history retained below
+- **Active worktree:** `.moai/worktrees/workspace-evolution-integration`, branch `WT-workspace-evolution-integration`, application baseline `06206d050dcae02a2e773a709c5c6119d29f436e`; reviewed plan seeded; execution in fresh integration worktree
 - **Version:** 0.1.6
 
 ## 2. Current State
+
+### Workspace implementation — Authorized and active (2026-10-20)
+
+User approved proceeding with the reviewed twelve-SPEC plan. The earlier planning-only paragraphs below are dated checkpoints, not a current restriction on implementing the accepted scope. Seed commit: `d853a9920377f666163a8bcc09585f56ad951b3a`; runtime source baseline remains `06206d050dcae02a2e773a709c5c6119d29f436e` until reviewed implementation integrates.
+
+SPEC-WS-001 is dispatched to its fresh `workspace-foundation-run` worktree. The execution lead coordinates the registry, independent reviewer, single QA owner and Security Auditor under the four-actor limit. G0 CI/baseline evidence is required before002; no completion is claimed yet. Root execution receipt: `.moai/reports/SPEC-WORKSPACE-001/implementation/root-execution-state.json`.
+
+Foundation candidates are published on `WT-workspace-foundation-run`: candidate 01 `519dbfff67e013fe361c13a99c64687feb4d1917`, candidate 02 `c94cd9165b6db3b3525c49074d864139e864a023`. Both received independent publication reviews. Both normal CI runs are now red: candidate02 passed five jobs, but its browser and full gates failed. Installed tests passed 62 cases and 408 assertions; package check reported 2 errors, 7 warnings and 5 notes and coverage measured 832/3900 lines (21.33%) against the configured 85% target. Root retained all seven candidate02 artifacts and the real failed-assertion dispatch artifacts under `.moai/reports/SPEC-WORKSPACE-001/implementation/ci/`.
+
+QA traced the narrow-screen failure to a test-helper scroll assumption. The one-line `fixtures.ts` fix is frozen in the foundation worktree and passed the affected narrow import test; it remains uncommitted for a combined repair candidate. QA also reproduced the hosted diagnostic output exactly by removing only the installed app namespace. Repair must install and verify separate matching baseline/candidate namespaces and reject unavailable or wrong-stage preparation. The local 63-warning result is not the hosted 1,048-warning result; preserve their distinct source/context receipts.
+
+A formal SPEC-WS-001 amendment now declares 40 exact writer targets and 10 bounded child tasks for meaningful existing-behavior tests, example/docs/import/build repairs and gate preparation. The original six requirements/five acceptance scenarios, twelve-leaf graph and G0-before-002 order remain. First amendment plan audit found one contradictory valid/invalid canary sentence. The author corrected it; confirming round2 returned PASS (score 1.000), audited subject bb452380f3dfc3d1ac7177dd2f753d849a2b946d7c78ac507c1551b05708af77. Root read the full verdict and authorized the bounded child tasks after Git prepares the verified source/plan seed. Preserve the exact declared read/write and generator barriers; this plan approval does not close G0. The application check profile must prove that all strict code/doc/build/test controls remain effective while CRAN-submission suitability is separately scoped; coverage and ordinary warning gates remain mandatory. No claim of CRAN submission readiness is authorized.
+
+G0 remains open; SPEC-WS-002 remains blocked, and no leaf is complete or integrated into this integration tree. Continue the full authorized program after verified repairs; do not stop after SPEC-WS-001. Later G5 all-severity diagnostics/public-interface compatibility and SPEC-WS-012 legacy isolation/usability remain separate unresolved work.
+
+Continue all unblocked authorized implementation work. Preserve primary checkout and foreign changes, use fresh MoAI worktrees per leaf, and integrate only independently approved work inside the integration tree. Production deployment remains user-manual sudo after reviewed preparation; agents never execute it.
+
 
 ### Workspace evolution — Planning complete; implementation not started (2026-10-20)
 

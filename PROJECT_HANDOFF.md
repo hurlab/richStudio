@@ -23,6 +23,7 @@ The production dependency update was user-executed and verified before this plan
 
 No new application implementation, commit, push or deployment occurred. Preserve the planning and dependency worktrees. Before implementation, version the reviewed plan and resolve the normal capability/configuration prerequisites; do not treat a planning PASS as runtime verification or release authorization. Future deployment remains user-manual sudo after reviewed preparation, followed by retrieved status/log and actual worker/library checks.
 
+
 ### Dependency adoption — Consumer acceptance passed with verification debt (2026-10-20)
 
 The user authorized SPEC-DEPENDENCY-001 after coordination with richR and inspection of standalone richCluster. This bounded migration takes priority over the older recommended B6 sequence; it does not close unrelated B3–B8 or publication work. See [runtime guidance](docs/DEPENDENCY_RUNTIME.md), [SPEC](docs/specs/SPEC-DEPENDENCY-001/spec.md), and [deployment procedure](docs/DEPENDENCY_DEPLOYMENT.md).

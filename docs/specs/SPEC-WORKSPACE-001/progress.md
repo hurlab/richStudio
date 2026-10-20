@@ -22,6 +22,20 @@ The root-authorized001 v0.1.1 amendment expands only documentation/generated-doc
 
 This post-audit E1 update records the existing verdict only. The frozen plan/contracts are unchanged; the audit covered the pre-bookkeeping five-document snapshot. The [post-audit delta receipt](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/001-amendment-post-audit-e1-delta.json) verifies the sole changed artifact and preservation of all content outside E1.
 
+### Narrow remote-only/B7 revision — confirming plan audit pending
+
+Actual PREP rejected the earlier master incoming-FALSE default; frozen runner remains blocked. The proposed revision keeps master incoming TRUE, narrows remote FALSE, explicitly excludes remote publication/identifier liveness, and uses the recorded source/version inventory and14 intended experimental outcomes. B7 public-import scope extends only within existing R/package.R/generated NAMESPACE ownership, with actual installed UI/module/render proof still required before B3/B4. The prior plan PASS is historical and does not approve these new bytes; no default/source switch is authorized before confirming independent plan audit and root review. G0 remains OPEN. All forty targets, ten children, six001 REQs/five ACs and twelve-node ordering remain unchanged.
+
+### D1-only local URL preservation — confirming review pending
+
+The confirming narrow-profile audit found one local URL-preservation blocker. This bounded plan correction adds the exact installed-source companion, actual-source finding/NOTE disposition and proof guard requirements within the existing runner; it records focused10-control evidence without promoting it to fourteen package-check reruns or G0 acceptance. Verified direct withr test declaration joins later in B9's already-owned DESCRIPTION. Forty writers, ten children, original six REQs/five ACs, B7 scope and12-node DAG remain unchanged. No source/default switch is approved before confirming plan audit and root review; G0 remains OPEN.
+
+### Post-audit outcome — narrow-REMOTE/B7 D1 confirming PASS
+
+The [confirming round2 report](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/001-profile-b7-d1-url-withr-plan-audit.md) records **PASS, score 1.0000**, for the exact frozen plan delta; D1 is resolved at the plan-contract level. Audited five-document subject: `0519f748f15d6430127fd62aa97bc3ac056005e8812d64b2f0939542f5a04e2c`; frozen manifest SHA256: `ffa1c3178f39bd1aef29968ed17001194952f2fc50ba53a9835a3331df83546d`.
+
+This records an observed plan-only verdict. Historical pending statements above remain attributed to their audited snapshot; no contract/registry/authorization wording is changed. Runner/default-profile/B7 implementation, actual-candidate execution and composed CI remain separate proof obligations. G0 remains OPEN; no runtime, full-check, coverage, release or deployment PASS is claimed. The audit covered the pre-bookkeeping snapshot; the post-audit delta receipt verifies this E1-only addition and byte preservation elsewhere.
+
 ## §E.2 Run-phase Evidence
 
 _<pending run-phase>_

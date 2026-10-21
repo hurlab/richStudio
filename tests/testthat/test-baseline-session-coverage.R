@@ -214,3 +214,196 @@ test_that("top-term heatmap settings update only the selected dataset", {
   expect_identical(updated[2L, , drop = FALSE], other)
   expect_identical(settings$value_type, c("Padj", "Pvalue"))
 })
+
+test_that("save UI exposes namespaced session and export controls with format guidance", {
+  html <- as.character(richStudio::saveTabUI("persist", "saved-analysis"))
+  expect_match(html, 'id="shiny-tab-saved-analysis"', fixed = TRUE)
+  expect_match(html, "Save &amp; Load Analysis Session", fixed = TRUE)
+  for (control in c("session_name", "save_format", "download_session",
+                    "load_session_file", "load_session", "deg_summary",
+                    "rr_summary", "clus_summary", "export_rr_select",
+                    "export_rr_format", "export_rr", "export_clus_select",
+                    "export_clus_format", "export_clus", "export_all")) {
+    expect_match(html, paste0('id="persist-', control, '"'), fixed = TRUE)
+  }
+  for (control in c("session_name", "load_session_file", "export_rr_select",
+                    "export_rr_format", "export_clus_select", "export_clus_format")) {
+    expect_match(html, paste0('for="persist-', control, '"'), fixed = TRUE)
+  }
+  expect_match(html, 'name="persist-save_format" value="rds" checked="checked"', fixed = TRUE)
+  expect_match(html, 'name="persist-save_format" value="json"', fixed = TRUE)
+  expect_match(html, 'accept=".rds,.json,.RDS,.JSON"', fixed = TRUE)
+  expect_match(html, "RDS format preserves all R objects exactly.", fixed = TRUE)
+  expect_match(html, "JSON format is more portable but may lose some data types.", fixed = TRUE)
+  expect_match(html, "Loading a session will replace your current analysis state.", fixed = TRUE)
+  expect_match(html, "Download all results as a ZIP archive", fixed = TRUE)
+  for (kind in c("rr", "clus")) {
+    select <- regmatches(html, regexpr(
+      paste0('<select id="persist-export_', kind, '_format"[^>]*>[\\s\\S]*?</select>'),
+      html, perl = TRUE))
+    expect_length(select, 1L)
+    expect_match(select, '<option value="csv" selected>CSV</option>', fixed = TRUE)
+    expect_match(select, '<option value="tsv">TSV</option>', fixed = TRUE)
+    expect_match(select, '<option value="xlsx">Excel</option>', fixed = TRUE)
+  }
+})
+
+test_that("registered dataset downloads preserve enrichment and cluster content in each format", {
+  state <- ws_baseline_state(populated = TRUE)
+  expected <- list(rr = ws_baseline_results()$treated,
+                   clus = ws_baseline_cluster_tables()$summary)
+  expected$clus$provider_metric <- c(NA_real_, pi)
+  state$u_rrdfs[["../treated:one"]] <- expected$rr
+  state$u_clusdfs[["../cluster:one"]] <- expected$clus
+  downloads <- new.env(parent = emptyenv())
+  downloads$paths <- character()
+  args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                  "u_clusnames", "u_clusdfs", "u_cluslists")]
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    for (format in c("csv", "tsv", "xlsx")) {
+      session$setInputs(export_rr_select = "../treated:one", export_rr_format = format,
+                        export_clus_select = "../cluster:one", export_clus_format = format)
+      for (kind in c("rr", "clus")) {
+        path <- output[[paste0("export_", kind)]]
+        downloads$paths <- c(downloads$paths, path)
+        expect_true(file.exists(path))
+        stem <- if (kind == "rr") "_treated_one" else "_cluster_one"
+        expect_identical(basename(path), paste0(stem, ".", format))
+        actual <- switch(format,
+          csv = read.csv(path, check.names = FALSE),
+          tsv = read.delim(path, check.names = FALSE),
+          xlsx = as.data.frame(readxl::read_xlsx(path)))
+        expect_identical(names(actual), names(expected[[kind]]))
+        expect_equal(actual, expected[[kind]], tolerance = 1e-12)
+        if (kind == "rr") {
+          expect_identical(actual$Term, c("A", "C", "D"))
+          expect_equal(actual$Pvalue, c(0.02, 0.03, 0.2), tolerance = 1e-12)
+          expect_equal(actual$Padj, c(0.04, NA_real_, 0.3), tolerance = 1e-12)
+          expect_identical(actual$ProviderExtra, c("retained-a", "retained-c", "strict-boundary"))
+        } else {
+          expect_equal(actual$Cluster, c(1, 2))
+          expect_identical(actual$Representative_Term, c("A", "D"))
+          expect_equal(actual$min_pvalue, c(0.9, 1e-5), tolerance = 1e-12)
+          expect_equal(actual$provider_metric, c(NA_real_, pi), tolerance = 1e-12)
+        }
+      }
+    }
+    expect_identical(u_rrdfs[["../treated:one"]], expected$rr)
+    expect_identical(u_clusdfs[["../cluster:one"]], expected$clus)
+  })
+  # MockShinySession registers each generated directory for session-end cleanup.
+  expect_length(downloads$paths, 6L)
+  expect_false(any(file.exists(downloads$paths)))
+  expect_false(any(dir.exists(dirname(downloads$paths))))
+})
+
+test_that("registered dataset callbacks distinguish missing data from empty tables", {
+  state <- ws_baseline_state()
+  state$u_rrdfs$empty <- ws_baseline_results()$treated[FALSE, , drop = FALSE]
+  state$u_clusdfs$empty <- ws_baseline_cluster_tables()$summary[FALSE, , drop = FALSE]
+  missing <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".csv")
+  downloads <- new.env(parent = emptyenv())
+  downloads$paths <- character()
+  args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                  "u_clusnames", "u_clusdfs", "u_cluslists")]
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    session$setInputs(export_rr_select = "missing", export_rr_format = "csv",
+                      export_clus_select = "missing", export_clus_format = "csv")
+    for (kind in c("rr", "clus")) {
+      # Inspect the registration made by the real Shiny downloadHandler. Calling
+      # getOutput here would add MockShinySession's separate no-file error.
+      registered <- session$rootScope()$.__enclos_env__$private$file_generators$get(
+        session$rootScope()$ns(session$ns(paste0("export_", kind))))
+      expect_true(is.function(registered$content))
+      registered$content(missing)
+      expect_false(file.exists(missing))
+    }
+    session$setInputs(export_rr_select = "empty", export_clus_select = "empty")
+    for (kind in c("rr", "clus")) {
+      path <- output[[paste0("export_", kind)]]
+      downloads$paths <- c(downloads$paths, path)
+      actual <- read.csv(path, check.names = FALSE)
+      expect_identical(basename(path), "empty.csv")
+      expect_identical(nrow(actual), 0L)
+      table <- if (kind == "rr") u_rrdfs$empty else u_clusdfs$empty
+      expect_identical(names(actual), names(table))
+    }
+    expect_identical(nrow(u_rrdfs$empty), 0L)
+    expect_identical(nrow(u_clusdfs$empty), 0L)
+  })
+  expect_false(any(dir.exists(dirname(downloads$paths))))
+})
+
+test_that("registered ZIP download includes each source group and omits missing datasets", {
+  state <- ws_baseline_state(populated = TRUE)
+  payload <- ws_baseline_session()
+  for (kind in c("deg", "rr", "clus")) {
+    state[[paste0("u_", kind, "names")]]$labels <- c(
+      payload[[paste0(kind, "names")]], "empty", "missing")
+    table <- payload[[paste0(kind, "dfs")]][[1L]]
+    state[[paste0("u_", kind, "dfs")]]$empty <- table[FALSE, , drop = FALSE]
+  }
+  downloads <- new.env(parent = emptyenv())
+  args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                  "u_clusnames", "u_clusdfs", "u_cluslists")]
+  cwd <- getwd()
+  temporary_exports <- list.files(tempdir(), pattern = "^richstudio_export_", full.names = TRUE)
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    path <- output$export_all
+    downloads$path <- path
+    expect_match(basename(path), "^richstudio_export_[0-9]{8}_[0-9]{6}_[a-z0-9]{8}\\.zip$")
+    expect_identical(getwd(), cwd)
+    expect_identical(list.files(tempdir(), pattern = "^richstudio_export_", full.names = TRUE),
+                     temporary_exports)
+    members <- zip::zip_list(path)$filename
+    files <- members[!endsWith(members, "/")]
+    expect_setequal(files, paste0("richstudio_export/", c(
+      "deg_sets/query.csv", "deg_sets/empty.csv", "enrichment_results/untreated.csv",
+      "enrichment_results/treated.csv", "enrichment_results/empty.csv",
+      "clustering_results/fixture.csv", "clustering_results/empty.csv")))
+    read_member <- function(member) {
+      connection <- unz(path, paste0("richstudio_export/", member), open = "r")
+      on.exit(close(connection), add = TRUE)
+      read.csv(connection, check.names = FALSE)
+    }
+    expect_equal(read_member("deg_sets/query.csv"), payload$degdfs$query)
+    untreated <- read_member("enrichment_results/untreated.csv")
+    treated <- read_member("enrichment_results/treated.csv")
+    expect_equal(untreated, payload$rrdfs$untreated, tolerance = 1e-12)
+    expect_equal(treated, payload$rrdfs$treated, tolerance = 1e-12)
+    expect_equal(untreated$Pvalue, c(1e-8, 1e-7, 1e-6, 0.05), tolerance = 1e-12)
+    expect_equal(treated$Padj, c(0.04, NA_real_, 0.3), tolerance = 1e-12)
+    expect_equal(read_member("clustering_results/fixture.csv"), payload$clusdfs$fixture,
+                 tolerance = 1e-12)
+    for (group in c("deg_sets", "enrichment_results", "clustering_results")) {
+      empty <- read_member(paste0(group, "/empty.csv"))
+      expect_identical(nrow(empty), 0L)
+    }
+    expect_identical(u_rrdfs$treated, payload$rrdfs$treated)
+    expect_identical(u_clusdfs$fixture, payload$clusdfs$fixture)
+  })
+  expect_false(dir.exists(dirname(downloads$path)))
+  expect_identical(getwd(), cwd)
+})
+
+test_that("registered ZIP download supports a session with no source groups", {
+  state <- ws_baseline_state()
+  downloads <- new.env(parent = emptyenv())
+  args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                  "u_clusnames", "u_clusdfs", "u_cluslists")]
+  cwd <- getwd()
+  temporary_exports <- list.files(tempdir(), pattern = "^richstudio_export_", full.names = TRUE)
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    path <- output$export_all
+    downloads$path <- path
+    expect_true(file.exists(path))
+    expect_identical(zip::zip_list(path)$filename, "richstudio_export/")
+    expect_identical(getwd(), cwd)
+    expect_identical(list.files(tempdir(), pattern = "^richstudio_export_", full.names = TRUE),
+                     temporary_exports)
+    expect_identical(output$deg_summary, "No DEG sets loaded")
+    expect_identical(output$rr_summary, "No enrichment results")
+    expect_identical(output$clus_summary, "No clustering results")
+  })
+  expect_false(dir.exists(dirname(downloads$path)))
+})

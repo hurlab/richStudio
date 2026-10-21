@@ -2,9 +2,9 @@
 id: "SPEC-WS-001"
 title: "Measured baseline, scientific fixtures and verification harness"
 version: "0.1.2"
-status: draft
+status: in-progress
 created: "2026-10-20"
-updated: "2026-10-20"
+updated: "2026-10-21"
 author: "workspace planning team"
 priority: P1
 phase: "v0.1.7 target"

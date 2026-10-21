@@ -10,6 +10,7 @@ export async function openNavigation(page: Page): Promise<void> {
   if (!bounds || bounds.x + bounds.width <= 0) {
     await page.getByRole('button', { name: /Toggle navigation/ }).click();
   }
+  await home.scrollIntoViewIfNeeded();
   await expect(home).toBeInViewport();
 }
 

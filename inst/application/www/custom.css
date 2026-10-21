@@ -1363,3 +1363,132 @@ pre, .shiny-text-output {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.7; transform: scale(0.95); }
 }
+/* Workspace presentation primitives (SPEC-WS-002). */
+.rs-workspace {
+  --rs-workspace-text-subtle: var(--rs-text);
+  --rs-workspace-control-border: var(--rs-text-secondary);
+  --rs-workspace-focus: var(--rs-primary-dark);
+  --rs-workspace-focus-gap: #ffffff;
+  --rs-workspace-success-text: #1e7a33;
+  --rs-workspace-warning-text: #92400e;
+  --rs-workspace-error-text: #b91c1c;
+  --rs-workspace-info-text: #0e7c8c;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  color: var(--rs-text);
+  font-family: var(--rs-font);
+  font-size: 1.4rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+.rs-workspace *, .rs-workspace *::before, .rs-workspace *::after {
+  box-sizing: border-box;
+}
+.rs-workspace h3 {
+  margin: 0 0 1.2rem;
+  font-size: 1.6rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+.rs-workspace-card {
+  padding: 1.6rem;
+  margin-bottom: 2rem;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow-sm);
+}
+.rs-workspace dl, .rs-workspace dd { margin: 0; }
+.rs-workspace dt { margin-top: 1.2rem; font-weight: 600; }
+.rs-workspace-kind { font-weight: 600; }
+.rs-workspace-action-group, .rs-workspace-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.8rem;
+}
+.rs-workspace-action, .rs-workspace button {
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 100%;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid var(--rs-workspace-control-border);
+  border-radius: var(--rs-radius-sm);
+  background: var(--rs-bg-card);
+  color: var(--rs-text);
+  font: inherit;
+  font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, box-shadow .2s ease;
+}
+.rs-workspace-action:not(:disabled):hover, .rs-workspace button:not(:disabled):hover {
+  background: var(--rs-primary-light);
+  border-color: var(--rs-primary-dark);
+}
+.rs-workspace-action:disabled { cursor: not-allowed; }
+.rs-workspace-action:focus-visible, .rs-workspace :focus-visible {
+  outline: 3px solid var(--rs-workspace-focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--rs-workspace-focus-gap);
+}
+.rs-workspace-field { margin-bottom: 1.2rem; }
+.rs-workspace-field label { display: block; margin-bottom: 0.4rem; }
+.rs-workspace-field .form-control {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 44px;
+  height: auto;
+  font: inherit;
+  color: var(--rs-text);
+  border-color: var(--rs-workspace-control-border) !important;
+}
+.rs-workspace-field p { font-size: 1.3rem; margin: 0.4rem 0 0; }
+.rs-workspace-results > p, .rs-workspace-action-group > span { font-size: 1.3rem; }
+.rs-workspace-error { color: var(--rs-workspace-error-text); font-weight: 600; }
+.rs-workspace-status { padding: 1.2rem; margin-bottom: 1.2rem; background: var(--rs-bg-card); }
+.rs-workspace-status-failed { color: var(--rs-workspace-error-text); background: var(--rs-danger-light); }
+.rs-workspace-status-succeeded { color: var(--rs-workspace-success-text); background: var(--rs-success-light); }
+.rs-workspace-status-stop-requested, .rs-workspace-status-interrupted {
+  color: var(--rs-workspace-warning-text); background: #fef9ec;
+}
+.rs-workspace-results { width: 100%; }
+.rs-workspace-table-scroll { overflow-x: auto; max-width: 100%; margin: 0.8rem 0; padding: 0.4rem; }
+.rs-workspace table { border-collapse: collapse; font-size: 1.3rem; width: 100%; }
+.rs-workspace caption { color: var(--rs-text); text-align: left; }
+.rs-workspace th { padding: 1rem 1.2rem; text-align: left; background: var(--rs-bg); }
+.rs-workspace td { padding: 0.8rem 1.2rem; border-bottom: 1px solid var(--rs-border); }
+.rs-workspace-dataset { display: inline-block; padding: 0.4rem 0.8rem; background: var(--rs-primary-light); }
+.rs-workspace-dataset-square { background: var(--rs-accent-light); }
+.rs-workspace-dataset-triangle { border-bottom: 3px solid #6366f1; }
+.rs-workspace-confirmation {
+  width: min(57.6rem, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: 1.6rem;
+  border: 1px solid var(--rs-workspace-control-border);
+  border-radius: var(--rs-radius);
+  background: var(--rs-bg-card);
+}
+@media (max-width: 767px) {
+  .rs-workspace-actions { align-items: stretch; }
+  .rs-workspace-actions button { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rs-workspace, .rs-workspace *, .rs-workspace *::before, .rs-workspace *::after {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    scroll-behavior: auto !important;
+  }
+  #loading-overlay, #loading-overlay .loading-logo, #loading-overlay .loading-spinner {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

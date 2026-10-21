@@ -89,87 +89,201 @@ test_that("the future worker retains typed valid-empty results and rejects empty
   ))
 })
 
+# Capture the loaded namespace as well as each declared library's resolution.
+dependency_richr_identity <- function() {
+  loadNamespace("richR")
+  libraries <- .libPaths()
+  list(
+    pid = Sys.getpid(), lib_paths = libraries,
+    environment = as.list(Sys.getenv(c("R_LIBS", "R_LIBS_USER", "R_LIBS_SITE",
+                              "RENV_CONFIG_AUTOLOADER_ENABLED", "R_PROFILE_USER",
+                              "R_ENVIRON_USER"))),
+    namespace_path = normalizePath(getNamespaceInfo(asNamespace("richR"), "path"),
+                                   winslash = "/", mustWork = TRUE),
+    namespace_version = as.character(getNamespaceVersion("richR")),
+    package_path = normalizePath(find.package("richR"), winslash = "/", mustWork = TRUE),
+    package_version = as.character(utils::packageVersion("richR")),
+    library_packages = lapply(libraries, function(library) {
+      package <- find.package("richR", lib.loc = library, quiet = TRUE)
+      list(library = library,
+           path = if (length(package)) normalizePath(package, winslash = "/", mustWork = TRUE) else "",
+           version = if (length(package)) as.character(utils::packageVersion("richR", lib.loc = library)) else "")
+    })
+  )
+}
+
+dependency_richr_origin <- function(identity, expected_path, expected_version) {
+  expected_path <- normalizePath(expected_path, winslash = "/", mustWork = TRUE)
+  identical(identity$namespace_path, expected_path) &&
+    identical(identity$package_path, expected_path) &&
+    identical(identity$namespace_version, expected_version) &&
+    identical(identity$package_version, expected_version) &&
+    any(vapply(identity$library_packages, function(package) {
+      identical(package$path, expected_path) && identical(package$version, expected_version)
+    }, logical(1)))
+}
+
 test_that("the worker future uses the installed richR dispatch and preserves saved tables", {
   suppressPackageStartupMessages(library(richR))
   genes <- paste0("g", seq_len(20))
-  old_plan <- future::plan()
-  on.exit(future::plan(old_plan), add = TRUE)
-  future::plan(future::multisession, workers = I(1))
+  parent <- dependency_richr_identity()
+  cat("parent richR identity ", jsonlite::toJSON(parent, auto_unbox = TRUE), "\n", sep = "")
+  expect_identical(parent$namespace_version, "0.1.5")
+  expect_true(dependency_richr_origin(parent, parent$namespace_path, "0.1.5"))
 
-  parent_richr_path <- normalizePath(system.file(package = "richR"), winslash = "/")
-  parent_richr_version <- as.character(utils::packageVersion("richR"))
-  for (anntype in c("GO", "KEGG", "Reactome")) {
-    annotation <- dependency_annot_object(anntype, dependency_annotation_fixture(anntype, genes))
-    job <- list(list(
-      name = "one", df = data.frame(gene = genes[1:10]), gene_header = "gene"
-    ))
-    task <- future::future({
-      list(
-        pid = Sys.getpid(),
-        lib_paths = .libPaths(),
-        richr_path = normalizePath(system.file(package = "richR"), winslash = "/"),
-        richr_version = as.character(utils::packageVersion("richR")),
-        results = run_enrichment_jobs(
-          job, cutoff = 0.05, species = "custom", anntype = anntype,
-          keytype = "SYMBOL", ontology = "BP",
-          annotation_builder = function(...) annotation
-        )
-      )
-    }, packages = "richR", seed = TRUE)
-    worker <- future::value(task)
-    result <- worker$results[[1]]$result
-    cat(sprintf("worker route %s parent_pid=%d worker_pid=%d richR=%s version=%s\n",
-                anntype, Sys.getpid(), worker$pid, worker$richr_path, worker$richr_version))
+  # Register before creating anything. Nested worker cleanup runs before this.
+  temporary <- tempfile("richr-origin-")
+  on.exit(unlink(temporary, recursive = TRUE), add = TRUE)
+  dir.create(temporary)
+  alias <- file.path(temporary, "alias")
+  copied <- file.path(temporary, "copied")
+  dir.create(alias)
+  dir.create(copied)
+  expect_true(file.symlink(parent$namespace_path, file.path(alias, "richR")))
+  expect_true(file.copy(parent$namespace_path, copied, recursive = TRUE))
+  copied_package <- normalizePath(file.path(copied, "richR"), winslash = "/", mustWork = TRUE)
+  # A physical copy is required before any fixture metadata can be changed.
+  stopifnot(startsWith(copied_package, paste0(normalizePath(temporary), "/")),
+            !identical(copied_package, parent$namespace_path),
+            !nzchar(Sys.readlink(file.path(copied, "richR"))))
 
-    expect_true(worker$pid != Sys.getpid())
-    expect_identical(worker$richr_path, parent_richr_path)
-    expect_identical(worker$richr_version, parent_richr_version)
-    expect_true(any(grepl(dirname(worker$richr_path), worker$lib_paths, fixed = TRUE)))
-    expect_true(nrow(result) > 0)
-    expect_identical(result$Annot, switch(
-      anntype, GO = "GO:TEST1", KEGG = "01100", Reactome = "R-HSA-TEST1"
-    ))
-    expect_equal(result$GeneID[1], paste(genes[1:10], collapse = ","))
-    if (anntype == "KEGG") {
-      expect_true(all(c("Level1", "Level2", "Level3") %in% names(result)))
-    }
-
-    legacy_session <- list(
-      version = "1.0", created = Sys.time(), degnames = character(),
-      degdfs = list(), rrnames = "one",
-      rrdfs = list(one = result), clusnames = character(),
-      clusdfs = list(), cluslists = list()
-    )
-    saved <- tempfile(fileext = ".rds")
-    saveRDS(legacy_session, saved)
-    u_degnames <- shiny::reactiveValues(labels = character())
-    u_degdfs <- shiny::reactiveValues()
-    u_rrnames <- shiny::reactiveValues(labels = character())
-    u_rrdfs <- shiny::reactiveValues()
-    u_clusnames <- shiny::reactiveValues(labels = character())
-    u_clusdfs <- shiny::reactiveValues()
-    u_cluslists <- shiny::reactiveValues()
-    shiny::testServer(
-      saveTabServer,
-      args = list(
-        id = "save", u_degnames = u_degnames, u_degdfs = u_degdfs,
-        u_rrnames = u_rrnames, u_rrdfs = u_rrdfs,
-        u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
-        u_cluslists = u_cluslists
-      ),
-      {
-        session$setInputs(
-          load_session_file = list(
-            datapath = saved, name = "legacy.rds", size = file.info(saved)$size,
-            type = "application/octet-stream"
-          ),
-          load_session = 1
-        )
-        expect_identical(shiny::isolate(u_rrnames$labels), "one")
-        expect_identical(shiny::isolate(u_rrdfs$one), result)
+  check_worker <- function(libraries, label, expected_origin, expected_version, routes) {
+    old_plan <- future::plan()
+    worker_pid <- integer()
+    on.exit({
+      future::plan(old_plan)
+      deadline <- Sys.time() + 5
+      while (length(worker_pid) && isTRUE(tools::pskill(worker_pid, 0L)) && Sys.time() < deadline) {
+        Sys.sleep(0.01)
       }
-    )
+      gone <- !length(worker_pid) || !isTRUE(tools::pskill(worker_pid, 0L))
+      cat(sprintf("worker cleanup %s pid=%s gone=%s\n", label, paste(worker_pid, collapse = ","), gone))
+      # Keep the alias/copy for diagnosis if shutdown was not acknowledged.
+      if (!gone) {
+        temporary <<- character()
+        stop("Owned richR worker did not exit before fixture cleanup")
+      }
+    }, add = TRUE)
+    future::plan(future::multisession, workers = I(1), rscript_libs = libraries)
+    worker <- future::value(future::future(dependency_richr_identity(), packages = "richR", seed = TRUE))
+    worker_pid <- worker$pid
+    cat("worker richR identity ", label, " ", jsonlite::toJSON(worker, auto_unbox = TRUE), "\n", sep = "")
+    expect_true(worker$pid != parent$pid)
+    expect_identical(worker$namespace_version, expected_version)
+    expect_identical(worker$package_version, expected_version)
+    expect_identical(worker$namespace_path, if (label == "wrong-origin" || label == "wrong-version") copied_package else parent$namespace_path)
+    expect_identical(dependency_richr_origin(worker, parent$namespace_path, "0.1.5"), expected_origin)
+    if (label == "wrong-origin") {
+      expect_true(dependency_richr_origin(worker, copied_package, "0.1.5"))
+    }
+    # Version rejection is independent of origin: use the copy's own true path.
+    if (label == "wrong-version") {
+      expect_false(dependency_richr_origin(worker, copied_package, "0.1.5"))
+      expect_true(dependency_richr_origin(worker, copied_package, expected_version))
+    }
+    if (label == "valid-alias") {
+      expect_false(any(grepl(dirname(worker$namespace_path), worker$lib_paths, fixed = TRUE)))
+    }
+    if (label == "ordinary") {
+      unresolved <- future::value(future::future((function() {
+        previous <- .libPaths()
+        on.exit(.libPaths(previous), add = TRUE)
+        .libPaths(previous[!vapply(previous, function(library) {
+          package <- find.package("richR", lib.loc = library, quiet = TRUE)
+          length(package) > 0L && identical(normalizePath(package, winslash = "/"), parent$namespace_path)
+        }, logical(1))])
+        dependency_richr_identity()
+      })(), packages = "richR", seed = TRUE))
+      cat("worker richR identity undeclared-library ", jsonlite::toJSON(unresolved, auto_unbox = TRUE), "\n", sep = "")
+      expect_identical(unresolved$namespace_path, parent$namespace_path)
+      expect_identical(unresolved$namespace_version, "0.1.5")
+      expect_false(dependency_richr_origin(unresolved, parent$namespace_path, "0.1.5"))
+    }
+    for (anntype in routes) {
+      annotation <- dependency_annot_object(anntype, dependency_annotation_fixture(anntype, genes))
+      job <- list(list(name = "one", df = data.frame(gene = genes[1:10]), gene_header = "gene"))
+      task <- future::future({
+        list(identity = dependency_richr_identity(), results = run_enrichment_jobs(
+          job, cutoff = 0.05, species = "custom", anntype = anntype,
+          keytype = "SYMBOL", ontology = "BP", annotation_builder = function(...) annotation
+        ))
+      }, packages = "richR", seed = TRUE)
+      observed <- future::value(task)
+      cat(sprintf("worker route %s %s parent_pid=%d worker_pid=%d\n", label, anntype, parent$pid, observed$identity$pid))
+      expect_identical(observed$identity, worker)
+      result <- observed$results[[1]]$result
+      expect_true(nrow(result) > 0)
+      expect_identical(result$Annot, switch(
+        anntype, GO = "GO:TEST1", KEGG = "01100", Reactome = "R-HSA-TEST1"
+      ))
+      expect_equal(result$GeneID[1], paste(genes[1:10], collapse = ","))
+      expect_equal(result$Pvalue, stats::phyper(9, 10, 10, 10, lower.tail = FALSE))
+      expect_equal(result$Padj, result$Pvalue)
+      if (anntype == "KEGG") {
+        expect_true(all(c("Level1", "Level2", "Level3") %in% names(result)))
+      }
+
+      legacy_session <- list(
+        version = "1.0", created = Sys.time(), degnames = character(),
+        degdfs = list(), rrnames = "one",
+        rrdfs = list(one = result), clusnames = character(),
+        clusdfs = list(), cluslists = list()
+      )
+      saved <- tempfile(fileext = ".rds", tmpdir = temporary)
+      saveRDS(legacy_session, saved)
+      u_degnames <- shiny::reactiveValues(labels = character())
+      u_degdfs <- shiny::reactiveValues()
+      u_rrnames <- shiny::reactiveValues(labels = character())
+      u_rrdfs <- shiny::reactiveValues()
+      u_clusnames <- shiny::reactiveValues(labels = character())
+      u_clusdfs <- shiny::reactiveValues()
+      u_cluslists <- shiny::reactiveValues()
+      shiny::testServer(
+        saveTabServer,
+        args = list(
+          id = "save", u_degnames = u_degnames, u_degdfs = u_degdfs,
+          u_rrnames = u_rrnames, u_rrdfs = u_rrdfs,
+          u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
+          u_cluslists = u_cluslists
+        ),
+        {
+          session$setInputs(
+            load_session_file = list(
+              datapath = saved, name = "legacy.rds", size = file.info(saved)$size,
+              type = "application/octet-stream"
+            ),
+            load_session = 1
+          )
+          expect_identical(shiny::isolate(u_rrnames$labels), "one")
+          expect_identical(shiny::isolate(u_rrdfs$one), result)
+        }
+      )
+    }
   }
+  routes <- c("GO", "KEGG", "Reactome")
+  check_worker(parent$lib_paths, "ordinary", TRUE, "0.1.5", routes)
+  # Remove physical richR libraries, so the alias is the only intended origin.
+  other_libraries <- parent$lib_paths[!vapply(parent$library_packages, function(package) {
+    identical(package$path, parent$namespace_path)
+  }, logical(1))]
+  check_worker(c(alias, other_libraries), "valid-alias", TRUE, "0.1.5", routes)
+  check_worker(c(copied, other_libraries), "wrong-origin", FALSE, "0.1.5", "Reactome")
+
+  # Synthetic metadata-only mismatch, not an upstream richR release. Keep the
+  # supported >=0.1.5 API so the actual route reaches the identity comparison.
+  # Only the owned physical copy is changed; the valid alias is never written.
+  description <- file.path(copied_package, "DESCRIPTION")
+  metadata <- file.path(copied_package, "Meta", "package.rds")
+  stopifnot(!nzchar(Sys.readlink(description)), !nzchar(Sys.readlink(metadata)),
+            startsWith(normalizePath(description), paste0(copied_package, "/")),
+            startsWith(normalizePath(metadata), paste0(copied_package, "/")))
+  dcf <- read.dcf(description)
+  dcf[1L, "Version"] <- "0.1.6"
+  write.dcf(dcf, description)
+  meta <- readRDS(metadata)
+  meta$DESCRIPTION["Version"] <- "0.1.6"
+  saveRDS(meta, metadata)
+  check_worker(c(copied, other_libraries), "wrong-version", FALSE, "0.1.6", "Reactome")
 })
 
 test_that("standalone hierarchical clustering uses public paths and strict raw-Pvalue filtering", {

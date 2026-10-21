@@ -165,7 +165,10 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
       }
     }, add = TRUE)
     future::plan(future::multisession, workers = I(1), rscript_libs = libraries)
-    worker <- future::value(future::future(dependency_richr_identity(), packages = "richR", seed = TRUE))
+    worker <- future::value(future::future({
+      .libPaths(libraries, include.site = FALSE)
+      dependency_richr_identity()
+    }, packages = "richR", seed = TRUE))
     worker_pid <- worker$pid
     cat("worker richR identity ", label, " ", jsonlite::toJSON(worker, auto_unbox = TRUE), "\n", sep = "")
     expect_true(worker$pid != parent$pid)
@@ -191,7 +194,7 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
         .libPaths(previous[!vapply(previous, function(library) {
           package <- find.package("richR", lib.loc = library, quiet = TRUE)
           length(package) > 0L && identical(normalizePath(package, winslash = "/"), parent$namespace_path)
-        }, logical(1))])
+        }, logical(1))], include.site = FALSE)
         dependency_richr_identity()
       })(), packages = "richR", seed = TRUE))
       cat("worker richR identity undeclared-library ", jsonlite::toJSON(unresolved, auto_unbox = TRUE), "\n", sep = "")
@@ -203,6 +206,7 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
       annotation <- dependency_annot_object(anntype, dependency_annotation_fixture(anntype, genes))
       job <- list(list(name = "one", df = data.frame(gene = genes[1:10]), gene_header = "gene"))
       task <- future::future({
+        .libPaths(libraries, include.site = FALSE)
         list(identity = dependency_richr_identity(), results = run_enrichment_jobs(
           job, cutoff = 0.05, species = "custom", anntype = anntype,
           keytype = "SYMBOL", ontology = "BP", annotation_builder = function(...) annotation
@@ -262,10 +266,27 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
   }
   routes <- c("GO", "KEGG", "Reactome")
   check_worker(parent$lib_paths, "ordinary", TRUE, "0.1.5", routes)
-  # Remove physical richR libraries, so the alias is the only intended origin.
-  other_libraries <- parent$lib_paths[!vapply(parent$library_packages, function(package) {
-    identical(package$path, parent$namespace_path)
-  }, logical(1))]
+  # Preserve every other package and its precedence when replacing richR.
+  other_libraries <- vapply(seq_along(parent$lib_paths), function(i) {
+    library <- parent$lib_paths[[i]]
+    if (!identical(parent$library_packages[[i]]$path, parent$namespace_path)) return(library)
+    projection <- file.path(temporary, paste0("library-", i))
+    stopifnot(dir.create(projection))
+    projection <- normalizePath(projection, winslash = "/", mustWork = TRUE)
+    stopifnot(startsWith(projection, paste0(normalizePath(temporary, winslash = "/"), "/")),
+              !nzchar(Sys.readlink(projection)))
+    packages <- list.files(library, full.names = TRUE)
+    packages <- packages[basename(packages) != "richR" & dir.exists(packages) &
+                           file.exists(file.path(packages, "DESCRIPTION"))]
+    for (package in packages) {
+      target <- normalizePath(package, winslash = "/", mustWork = TRUE)
+      link <- file.path(projection, basename(package))
+      stopifnot(identical(normalizePath(dirname(link), winslash = "/"), projection),
+                file.symlink(target, link),
+                identical(normalizePath(link, winslash = "/", mustWork = TRUE), target))
+    }
+    projection
+  }, character(1))
   check_worker(c(alias, other_libraries), "valid-alias", TRUE, "0.1.5", routes)
   check_worker(c(copied, other_libraries), "wrong-origin", FALSE, "0.1.5", "Reactome")
 

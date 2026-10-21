@@ -68,6 +68,24 @@ The earlier rows remain attributed to their original local snapshot; they do not
 
 The B2 code audit PASS and Security projection-boundary PASS support the exact local integration, not whole001/G0 or a full coverage verdict. The reviewed one-file repair is integrated at current HEAD `3c57ad7878d0e9eef39d3a457dc4aa29a83aca93`. This parent composition performs only readback/hash/diff checks and E2/E3 bookkeeping; it does not rerun the unchanged runtime boundaries, project suite, check or coverage. Relative to published21b57556, only the reviewed B2 test and this progress document differ. Runner, helper, nav, policy and every other declared source target are byte-identical; leaf status/body is unchanged. Candidate04 evidence/manifest binds all 42 targets and the separate source snapshots. G0 remains OPEN,002 blocked; new branch-only normal and same-head intentional-negative CI are required before root adjudication.
 
+### Candidate05 composition after measured CI04 coverage failure
+
+This section supersedes earlier pending candidate04 statements with actual CI04 outcomes while preserving their historical attribution. Hosted candidate04 HEAD `284def4568d31696a8b626f8e7fa102fccd08ae9`, normal run `39530082888`, FAILED only the full coverage threshold. The installed suite passed: 101 tests, 947 passing assertions, 0 failed assertions/errors/skips/test warnings. Strict application check completed with 0 ERRORs, 0 WARNINGs and 5 NOTEs; examples completed with a slow-example NOTE. The six other normal jobs succeeded. Same-head intentional-negative run `39530082698` failed exactly two injected assertions and retained both traces. QA's actual retained CI04 report/data and source/artifact binding remain attributed to that published source, not to candidate05.
+
+| Scenario / gate | Actual Output and attribution | Candidate05 status |
+|---|---|---|
+| AC-001 / full coverage | CI04 complete 2955/3904 = 75.691598%, R 2677/3586, native 278/318. Canonical complete threshold 85% is unchanged: FAIL. These are actual measurements, distinct from CI03's aborted/unmeasured attempt. | PENDING — new hosted full acceptance required |
+| AC-001 / installed suite/check | CI04 suite and strict application check passed as reported above; no new local full suite/check was run. | Prior successful measurements retained; own hosted verdict pending |
+| AC-002 / deliberate hosted failure | CI04 actual same-SHA negative job failed only its two intended assertions with retained traces; normal wrapper passed separately. | Prior hosted proof retained; candidate05 normal and same-head negative CI required |
+| AC-003 / AC-004 / AC-005 | CI04 browser/prepare/diagnostics/scan/resources jobs succeeded; those are historical bounded measurements on284def45. | Candidate05 acceptance not inferred from unchanged boundaries |
+| B3 test-only continuation | Exact test SHA256 `33b89a853ff86bb76339d3574675a1bab2eafc4ae83eda14cc672bd692b6b2e2`, +336 lines. Actual ordinary and instrumented scoped runs each: 16 tests, 264 assertions, 0 failures/errors/skips/test warnings. 219 unique positive hosted-zero keys. Actual namespace/source/counter delta 0→1776, owned covr PID cleanup/plan/upload receipts retained; sequential backend, no future child claim. Failed attempts remain retained; retry cap is root-owned. | Independent Code PASS-WITH-DEBT and Security PASS — exact test delta only |
+| B5 test-only continuation | Exact test SHA256 `2f5f00cc6200c3cb79bedcb2af0af2e3e665f96d332b9c2762220aff234ba7bc`, +193 lines. Actual scoped run: 12 tests, 224 assertions, 0 failures/errors/skips/test warnings; 169 new hosted-zero keys. Strict pre-test namespace/covr guards, successful exit/totals and RDS retained. Successful covr-child stdout PID/dependency/cleanup transcript is missing and remains a root-accepted evidence gap, not reconstructed or rerun. | Independent Code PASS-WITH-DEBT and Security PASS — exact test delta only |
+| Independent scoped-hit union | QA decoded both retained RDS files and CSVs against the actual hosted-zero keys/source binding: union388, overlap0. Scoped RDS denominator3906 includes two extra native keys; this never substitutes for hosted3904. Both outer covr runs retain two unchanged native EOF warnings separately from zero test warnings. | Basis for considering fresh CI only; no aggregate85% PASS |
+
+Current integrated source HEAD is `1b0c3b8de9426e4b39096aec0fa9528b1596d548`, with reviewed B5 commit782ce01 and B3 commita7cfae0. Candidate05 changes only the two reviewed tests plus this E2/E3 metadata against published284def45. All39 remaining declared targets, including product, runner, helper, nav, policy and leaf, are unchanged. This parent performed only source/hash/diff readback and bookkeeping, with no runtime repetition. Exact42-target binding and external report hashes are retained in candidate05's evidence manifest. Hosted full acceptance remains PENDING; G0 OPEN and002 blocked.
+
+Root's retained observation disposition is separate from baseline success: B3-OBS-001 is an unclassified accepted-import association/UI-summary-semantics observation routed to004 provenance validation and010 contract definition; no statistical defect or severity is claimed. B3-OBS-002 is confirmed Medium, owner009 (rr_visualize/rr_hmap): on the disjoint fixture A/B survive explicit whole-result deletion because callerTRUE differs from the documented term-vector contract. The original regression must pass after later correction while preserving remaining datasets' valid and unknown memberships. Unprinted combined stale GeneID and overlap deletion policy remain unverified; no blind NA filtering or shared-term deletion is justified. No001 product fix is authorized. QA's counterexample replay used primary CWD with actual installed body/source checks and redirected evidence; no external-CWD claim is made. SCI-RETENTION-001, SCI-NETWORK-002, private WIP, SYNC1830 and targetR4.5.2/011 holds remain distinct and unchanged.
+
 ## §E.3 Run-phase Audit-Ready Signal
 
 ```yaml
@@ -75,11 +93,12 @@ run_complete_at: null
 run_commit_sha: pending_git_composition_and_metadata_commit
 measured_source_head: 00db2fd7a9d08f5cc5b932c104347df2bab40cb5
 candidate04_composition_head: 3c57ad7878d0e9eef39d3a457dc4aa29a83aca93
-prior_hosted_head: 21b57556ad7b6f616cf6d951b99e6557fab9454e
+candidate05_composition_head: 1b0c3b8de9426e4b39096aec0fa9528b1596d548
+prior_hosted_head: 284def4568d31696a8b626f8e7fa102fccd08ae9
 prior_hosted_full: FAIL
-prior_hosted_coverage: UNMEASURED_aborted_during_tests
+prior_hosted_coverage: FAIL_2955_of_3904_75.691598_percent
 run_status: in-progress
-scope: SPEC-WS-001 candidate04 composition; own hosted verdict pending
+scope: SPEC-WS-001 candidate05 composition; own hosted verdict pending
 ac_pass_count: 1
 ac_fail_count: 0
 ac_pending_count: 4
@@ -103,6 +122,8 @@ SPEC_WS_002: blocked
 `run_complete_at` and preserve-count remain unobserved; no completion or preserve-list total is fabricated. Forty is the declared source-target inventory, with two separately attributed run-phase metadata files. The sole local AC PASS is scoped browser behavior; other partial/pending rows are not counted as acceptance passes. Exact severity counts are baseline warnings 63/information 1769 and candidate warnings 48/information 1782; errors and lint errors are 0 in both. Individual diagnostics have not been classified for novelty, so `new_warnings_or_lints_introduced` remains null. RUN PASS does not establish the absence of new information-level or lint observations. SYNC still fails its actual total-diagnostic predicate. No release or whole-program status is advanced.
 
 Candidate04 has no hosted result at this bookkeeping point. The observed CI03 full failure is not cleared by the scoped B2 successes; all full R/native coverage ratios remain unmeasured. `measured_source_head` identifies the preserved original local runtime proofs, while `candidate04_composition_head` identifies this new source binding. No new runtime or diagnostic execution is claimed. The existing null novelty classification, null `run_complete_at`, in-progress status, SYNC hold and scientific008/009/target011 holds remain unchanged. Acceptance counts above retain the one scoped local browser PASS and four incomplete criteria; the historical CI03 failure is recorded separately and is not a current-candidate PASS.
+
+Candidate05 has no hosted result at this bookkeeping point. CI04 coverage is measured FAIL, while CI03 remains a separate aborted/unmeasured historical run. The scoped388-key union does not establish fresh aggregate coverage, retained prior hits or an unchanged future denominator. Candidate05 must satisfy the unchanged canonical85% gate in actual hosted CI. `run_complete_at` and novelty classification remain null, status in-progress; no clean-SYNC, no-new-information/lint or completion claim is made. Original measured_source_head still identifies the preserved local proofs; candidate05_composition_head binds the new test snapshot. B5's missing successful child transcript and root's OBS001/002 dispositions remain explicit gaps/holds.
 
 ## §E.4 Sync-phase Audit-Ready Signal
 

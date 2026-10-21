@@ -38,7 +38,7 @@ This records an observed plan-only verdict. Historical pending statements above 
 
 ## §E.2 Run-phase Evidence
 
-Bounded SPEC-WS-001 composition only, measured at source HEAD `00db2fd7a9d08f5cc5b932c104347df2bab40cb5` plus the frozen navigation overlay (`tests/e2e/fixtures.ts` SHA256 `10f79ac2f093c97a03b3fe486152ac2da0b24d601d07bbeab31c56a99608e99b`). Baseline diagnostics were freshly measured against `d853a9920377f666163a8bcc09585f56ad951b3a`. The forty-target pre-proof manifest SHA256 is `7d9cb9673fd9c74e1d3fa2df09560ff5c357b9fab2a0c5163de1c09a98cc4392`; every target remained unchanged during the commands. [Command/environment ledger](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/001/final-composition/execution.json) and [composition report](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/001/final-composition/report.md) retain commands, outputs, attribution and gaps. These local results do not establish the whole twelve-leaf program or G0 acceptance.
+Historical candidate03 local composition evidence, measured at source HEAD `00db2fd7a9d08f5cc5b932c104347df2bab40cb5` plus the frozen navigation overlay (`tests/e2e/fixtures.ts` SHA256 `10f79ac2f093c97a03b3fe486152ac2da0b24d601d07bbeab31c56a99608e99b`). Baseline diagnostics were freshly measured against `d853a9920377f666163a8bcc09585f56ad951b3a`. The forty-target pre-proof manifest SHA256 is `7d9cb9673fd9c74e1d3fa2df09560ff5c357b9fab2a0c5163de1c09a98cc4392`; every target remained unchanged during the commands. [Command/environment ledger](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/001/final-composition/execution.json) and [composition report](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/001/final-composition/report.md) retain commands, outputs, attribution and gaps. These local results do not establish the whole twelve-leaf program or G0 acceptance.
 
 | Scenario | Actual Output | Status |
 |---|---|---|
@@ -54,14 +54,32 @@ Bounded SPEC-WS-001 composition only, measured at source HEAD `00db2fd7a9d08f5cc
 
 Requirement disposition: REQ-001 PARTIAL, REQ-002 PARTIAL, REQ-003 scoped local PASS, REQ-004 PARTIAL, REQ-005 local preparation PASS with clean-CI acceptance pending, REQ-006 PARTIAL. Independent composed code/Security review and actual clean CI are still required. G0 remains OPEN; 002 remains blocked.
 
+### Candidate04 composition after actual CI03 failure and scoped B2 repair
+
+The earlier rows remain attributed to their original local snapshot; they do not describe a candidate04 execution. QA independently audited actual hosted candidate03 HEAD `21b57556ad7b6f616cf6d951b99e6557fab9454e`: normal run `39523360861` FAILED in the full job; six other normal jobs passed. The separate same-head intentional-negative run `39523360499` FAILED exactly its two injected browser assertions and retained both traces. These are completed historical observations, not pending candidate03 outcomes and not candidate04 success. Exact reports are retained in the integration worktree at `.moai/reports/SPEC-WORKSPACE-001/implementation/qa/ci03/{report.md,full-classification.json,receipt-audit.json}`; candidate04's evidence binding records their paths and hashes.
+
+| Scenario / gate | Actual Output and source attribution | Candidate04 status |
+|---|---|---|
+| AC-001 / installed suite and strict package check | CI03: 101 tests, 887 passing assertions, 0 failed assertions, 1 error, 0 skips, 0 test warnings. Actual `R CMD check` reached DONE with 1 ERROR, 0 WARNINGs, 5 NOTEs; examples completed, with slow-example NOTE. The full job failed. These failures remain retained. | PENDING — repaired candidate needs its own clean hosted full job |
+| AC-001 / complete R and native coverage | CI03 covr ABORTED during tests after 2 failed assertions / 945 passing assertions, 0 warnings/skips. Complete, R-only and native-only covered-line numerators, denominators and percentages are UNMEASURED. No comparison against canonical 85% is possible; scoped calibration or older percentages are not substitutes. | PENDING — full coverage unmeasured |
+| AC-002 / actual failed assertion and artifacts | CI03 same-head dispatched browser job failed exactly two `INTENTIONALLY BROKEN FIXTURE EXPECTATION` assertions, one per viewport; six other cases passed, no skips/flakes, both traces retained. Normal negative wrapper also passed its expected-rejection checks. | Historical hosted proof observed; candidate04 normal plus same-head intentional-negative CI still required |
+| AC-003 / AC-004 / AC-005 | CI03 browser, prepare, diagnostics, scanner and resource jobs passed, separately from the failed full job. Original source-specific local receipts retain their original HEAD. None is relabeled as a new candidate04 runtime execution. | Prior bounded proofs retained; candidate04 hosted acceptance pending |
+| B2 portability repair — scoped worker boundary only | Exact test SHA256 `6555f51afcbe6024fb55f4f2630b941ba3549758dd60638e912725f9fb611133`, 27 additions / 6 deletions. Author's ordinary, co-located dependency-library and genuine private covr type-none contexts each exited 0 with 1 test / 97 passing assertions / 0 failures, errors, skips or test warnings. All 130 original expectation expressions were preserved. Actual parent/child namespace identities were recorded; all 19 recorded owned PIDs were gone. The two outer covr newline warnings remain separate and retained. | Scoped PASS for this test delta only, independently code/Security reviewed; no whole-leaf acceptance |
+
+The B2 code audit PASS and Security projection-boundary PASS support the exact local integration, not whole001/G0 or a full coverage verdict. The reviewed one-file repair is integrated at current HEAD `3c57ad7878d0e9eef39d3a457dc4aa29a83aca93`. This parent composition performs only readback/hash/diff checks and E2/E3 bookkeeping; it does not rerun the unchanged runtime boundaries, project suite, check or coverage. Relative to published21b57556, only the reviewed B2 test and this progress document differ. Runner, helper, nav, policy and every other declared source target are byte-identical; leaf status/body is unchanged. Candidate04 evidence/manifest binds all 42 targets and the separate source snapshots. G0 remains OPEN,002 blocked; new branch-only normal and same-head intentional-negative CI are required before root adjudication.
+
 ## §E.3 Run-phase Audit-Ready Signal
 
 ```yaml
 run_complete_at: null
 run_commit_sha: pending_git_composition_and_metadata_commit
 measured_source_head: 00db2fd7a9d08f5cc5b932c104347df2bab40cb5
+candidate04_composition_head: 3c57ad7878d0e9eef39d3a457dc4aa29a83aca93
+prior_hosted_head: 21b57556ad7b6f616cf6d951b99e6557fab9454e
+prior_hosted_full: FAIL
+prior_hosted_coverage: UNMEASURED_aborted_during_tests
 run_status: in-progress
-scope: SPEC-WS-001 bounded local composition; clean-CI verdict pending
+scope: SPEC-WS-001 candidate04 composition; own hosted verdict pending
 ac_pass_count: 1
 ac_fail_count: 0
 ac_pending_count: 4
@@ -83,6 +101,8 @@ SPEC_WS_002: blocked
 ```
 
 `run_complete_at` and preserve-count remain unobserved; no completion or preserve-list total is fabricated. Forty is the declared source-target inventory, with two separately attributed run-phase metadata files. The sole local AC PASS is scoped browser behavior; other partial/pending rows are not counted as acceptance passes. Exact severity counts are baseline warnings 63/information 1769 and candidate warnings 48/information 1782; errors and lint errors are 0 in both. Individual diagnostics have not been classified for novelty, so `new_warnings_or_lints_introduced` remains null. RUN PASS does not establish the absence of new information-level or lint observations. SYNC still fails its actual total-diagnostic predicate. No release or whole-program status is advanced.
+
+Candidate04 has no hosted result at this bookkeeping point. The observed CI03 full failure is not cleared by the scoped B2 successes; all full R/native coverage ratios remain unmeasured. `measured_source_head` identifies the preserved original local runtime proofs, while `candidate04_composition_head` identifies this new source binding. No new runtime or diagnostic execution is claimed. The existing null novelty classification, null `run_complete_at`, in-progress status, SYNC hold and scientific008/009/target011 holds remain unchanged. Acceptance counts above retain the one scoped local browser PASS and four incomplete criteria; the historical CI03 failure is recorded separately and is not a current-candidate PASS.
 
 ## §E.4 Sync-phase Audit-Ready Signal
 

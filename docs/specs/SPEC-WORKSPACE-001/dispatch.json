@@ -405,10 +405,14 @@
         "docs/design/workspace-screens.md",
         "docs/design/workspace-handoff.md",
         "tests/testthat/test-workspace-components.R",
-        "tests/e2e/design-system.spec.ts"
+        "tests/e2e/design-system.spec.ts",
+        "package.json",
+        "package-lock.json"
       ],
       "existing_target_files": [
-        "inst/application/www/custom.css"
+        "inst/application/www/custom.css",
+        "package.json",
+        "package-lock.json"
       ],
       "new_target_files": [
         "R/workspace_components.R",

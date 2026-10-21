@@ -31,6 +31,8 @@ The app already has blue/teal CSS tokens. A coherent workspace needs a documente
 ### Existing targets
 
 - `inst/application/www/custom.css`
+- `package.json`
+- `package-lock.json`
 
 ### New targets
 
@@ -48,6 +50,10 @@ The app already has blue/teal CSS tokens. A coherent workspace needs a documente
 2. Extend existing --rs-* tokens and Shiny conventions; document typography, spacing, contrast, focus, table density, status semantics, dataset color assignment and reduced-motion behavior. Keep familiar biological terminology.
 
 3. Review high-change choices with the independent reviewer and scientific/QA/security inputs. Record the handoff receipt and component-state inventory. Design-sync capability is optional; if unavailable, versioned local screens/token tables and an explicit missing-sync note are the deliverable.
+
+## Proposed root re-scope and accessibility tooling amendment — pending approval
+
+[002 accessibility tooling amendment](SPEC-WORKSPACE-001/amendments/002-accessibility-tooling.md) proposes bounded COMPONENTS/BROWSER children after the original execution cycle stopped at its five-failure cap, plus one exact development-only dependency, `axe-core` version `4.14.0`, through the existing npm manifest/lockfile. The two existing-target additions above are reserved for this proposal; they authorize no package edits until independent read-only plan-audit PASS and explicit coordinator acceptance/re-dispatch. The amendment supersedes the frozen design handoff's no-new-development-dependency restriction only for this accessibility QA tool after that approval. The four product implementation targets, frozen three design artifacts, four REQs, three ACs, dependency graph and quality thresholds remain unchanged. Historical unexpected-failure count remains5 and that execution cycle is stopped; a corrective scope cycle requires independent plan-audit PASS and explicit coordinator approval. Expected test-first RED is not an unexpected failure.
 
 ## GEARS requirements
 

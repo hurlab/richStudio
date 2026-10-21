@@ -120,7 +120,55 @@ jobs:
         shell: bash
         env:
           WORKSPACE_NEGATIVE_ASSERTION: ${{ (inputs.negative_assertion || endsWith(github.ref_name, '-negative-canary')) && '1' || '0' }}
-        run: bash scripts/test-workspace.sh '${{ matrix.mode }}'
+        run: |
+          set -euo pipefail
+          if [ '${{ matrix.mode }}' = browser ]; then
+            # Capture the provisioned search order before scrubbing inherited R inputs.
+            Rscript --vanilla - <<'R'
+          libraries <- unique(normalizePath(.libPaths(), mustWork=TRUE))
+          stopifnot(length(libraries) > 0L, all(dir.exists(libraries)),
+            all(startsWith(libraries, "/")), !any(grepl("[:\r\n]", libraries)))
+          packages <- c("richR", "richCluster", "bioAnno", "shiny", "jsonlite",
+            "testthat", "covr", "languageserver", "lintr", "rcmdcheck")
+          origins <- lapply(packages, function(package) list(package=package,
+            version=as.character(packageVersion(package)),
+            path=normalizePath(find.package(package), mustWork=TRUE)))
+          jsonlite::write_json(list(libraries=libraries, packages=origins),
+            file.path(Sys.getenv("WORKSPACE_ARTIFACTS"), "browser-provisioned-origins.json"),
+            auto_unbox=TRUE, pretty=TRUE)
+          writeLines(libraries, file.path(Sys.getenv("WORKSPACE_ARTIFACTS"), "browser-dependency-libraries.txt"))
+          R
+            checkout=$(realpath -e -- "$GITHUB_WORKSPACE")
+            [[ "$checkout" = "$GITHUB_WORKSPACE" && -d "$checkout" ]]
+            [[ ! -L "$checkout/tmp" && ! -L "$checkout/tmp/runs" ]]
+            mkdir -p -- "$checkout/tmp/runs"
+            runs=$(realpath -e -- "$checkout/tmp/runs")
+            [[ "$runs" = "$checkout/tmp/runs" ]]
+            temporary=$(mktemp -d "$runs/hosted-browser.XXXXXXXX")
+            [[ -d "$temporary" && ! -L "$temporary" && -O "$temporary" ]]
+            [[ "$(realpath -e -- "$temporary")" = "$temporary" && "$temporary" = "$runs/"* ]]
+            dependency_chain=
+            while IFS= read -r library; do
+              [[ -n "$library" && "$library" = /* && -d "$library" ]]
+              [[ "$library" != *:* && "$library" != *$'\r'* ]]
+              [[ "$(realpath -e -- "$library")" = "$library" ]]
+              dependency_chain+="${dependency_chain:+:}$library"
+            done < "$WORKSPACE_ARTIFACTS/browser-dependency-libraries.txt"
+            [[ -n "$dependency_chain" ]]
+            {
+              printf 'checkout=%s\nruns=%s\nTMPDIR=%s\ndependency_chain=%s\n' "$checkout" "$runs" "$temporary" "$dependency_chain"
+              stat --printf='allocation device=%d inode=%i uid=%u mode=%a path=%n\n' -- "$runs" "$temporary"
+            } > "$WORKSPACE_ARTIFACTS/browser-environment-binding.txt"
+            unset R_PROFILE R_PROFILE_USER R_ENVIRON R_ENVIRON_USER R_LIBS R_LIBS_USER R_LIBS_SITE R_HOME R_COVR R_TESTS
+            export WORKSPACE_RUNS_ROOT="$runs" TMPDIR="$temporary"
+            export WORKSPACE_DEPENDENCY_LIBRARIES="$dependency_chain" R_LIBS_USER="$dependency_chain"
+            export RENV_CONFIG_AUTOLOADER_ENABLED=FALSE
+            unset DEBUG_FILE
+            export DEBUG=pw:browser
+            bash scripts/test-workspace.sh browser
+          else
+            bash scripts/test-workspace.sh '${{ matrix.mode }}'
+          fi
       - name: Retain all diagnostics including failed and negative gates
         if: always()
         uses: actions/upload-artifact@v4

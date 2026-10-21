@@ -407,12 +407,14 @@
         "tests/testthat/test-workspace-components.R",
         "tests/e2e/design-system.spec.ts",
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        ".github/workflows/workspace-quality.yml"
       ],
       "existing_target_files": [
         "inst/application/www/custom.css",
         "package.json",
-        "package-lock.json"
+        "package-lock.json",
+        ".github/workflows/workspace-quality.yml"
       ],
       "new_target_files": [
         "R/workspace_components.R",

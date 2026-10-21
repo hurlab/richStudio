@@ -33,6 +33,7 @@ The app already has blue/teal CSS tokens. A coherent workspace needs a documente
 - `inst/application/www/custom.css`
 - `package.json`
 - `package-lock.json`
+- `.github/workflows/workspace-quality.yml`
 
 ### New targets
 
@@ -54,6 +55,10 @@ The app already has blue/teal CSS tokens. A coherent workspace needs a documente
 ## Proposed root re-scope and accessibility tooling amendment — pending approval
 
 [002 accessibility tooling amendment](SPEC-WORKSPACE-001/amendments/002-accessibility-tooling.md) proposes bounded COMPONENTS/BROWSER children after the original execution cycle stopped at its five-failure cap, plus one exact development-only dependency, `axe-core` version `4.14.0`, through the existing npm manifest/lockfile. The two existing-target additions above are reserved for this proposal; they authorize no package edits until independent read-only plan-audit PASS and explicit coordinator acceptance/re-dispatch. The amendment supersedes the frozen design handoff's no-new-development-dependency restriction only for this accessibility QA tool after that approval. The four product implementation targets, frozen three design artifacts, four REQs, three ACs, dependency graph and quality thresholds remain unchanged. Historical unexpected-failure count remains5 and that execution cycle is stopped; a corrective scope cycle requires independent plan-audit PASS and explicit coordinator approval. Expected test-first RED is not an unexpected failure.
+
+## Proposed hosted browser binding amendment — pending approval
+
+[Hosted browser environment binding amendment](SPEC-WORKSPACE-001/amendments/002-hosted-browser-binding.md) proposes one existing workflow target for the browser-only environment adapter. The target addition is reserved, not active: local final16 acceptance and packet/readlock termination, independent amendment/metadata PASS, explicit root acceptance, and exclusive ownership reconciliation with001/011 precede application or implementation. Existing accessibility-tooling workflow exclusions are superseded only for that reviewed adapter after acceptance; runner/config/product/npm/dependency/threshold restrictions remain.001 creator history,011 future workflow ownership, all dependency edges, REQs/ACs, stopped histories and current cumulative accounting remain unchanged. Combined source/workflow and process Security review plus separate root release precede commit/push/hosted execution; actual hosted evidence and independent acceptance still gate whole002/003.
 
 ## GEARS requirements
 
@@ -106,3 +111,5 @@ Retain original CSS token values as a reviewed reference. Roll back the scoped t
 ## HISTORY
 
 - 2026-10-20: Planning-only draft, authored after repository inspection and Hur Harness team consultation.
+
+- 2026-10-21: Proposed hosted browser environment binding amendment reserves one existing workflow target; no ownership or execution activates before its explicit local-evidence, lock, independent-review and root-acceptance prerequisites.

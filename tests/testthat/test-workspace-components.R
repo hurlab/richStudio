@@ -17,10 +17,10 @@ test_that("native actions escape labels and namespace local IDs exactly once", {
 
 test_that("actions keep sanitized text inside the native updateable label child", {
   action <- getFromNamespace("workspace_action", "richStudio")
-  payload <- htmltools::HTML("<img src=x onerror=alert(1)>")
+  payload <- shiny::HTML("<img src=x onerror=alert(1)>")
   for (available in c(TRUE, FALSE)) {
     node <- action("alpha", "open", payload, available,
-      htmltools::HTML("<script>Unavailable</script>"))
+      shiny::HTML("<script>Unavailable</script>"))
     button <- if (available) node else node$children[[1]]
     labels <- Filter(function(child) inherits(child, "shiny.tag") &&
       identical(child$attribs$class, "action-label"), button$children)

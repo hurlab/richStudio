@@ -12,9 +12,9 @@ const sourceRoot = path.resolve(__dirname, '../..');
 const requireLocal = createRequire(__filename);
 const url = 'http://127.0.0.1:3872';
 const frozen = {
-  'R/workspace_components.R': '1fbdbd87d301cff4defb3e28fc0f74e2c221f39aea1a9884f649a5d7c977ffb6',
+  'R/workspace_components.R': 'f13e697ffcae12303cb0ff9aa159df9bf4f3284fb9272f366205de7744a8d9a1',
   'inst/application/www/custom.css': '92fdf6e04d0660037165b958c3dccf181f1b2f3258f25156f46b328dedb29d5e',
-  'tests/testthat/test-workspace-components.R': '5cd14a5e41c8dd104729af4ebc4a8d43e423d0b68ded6b59eb0a361c72c408c1',
+  'tests/testthat/test-workspace-components.R': 'a3c6ba91477caa5b2666c24c8e3b7dd93e02b0cc71fc3203e086f37bf5d66c42',
   'docs/design/workspace-design-system.md': '808b54610ab346c3037aaff2a9309baf24ab3a7d53862d9febea4a8f396d0ef0',
   'docs/design/workspace-screens.md': '448758fb68c9d005f6e69f18fc179a76d7ce35e705d8fcec3944705d4f9a527d',
   'docs/design/workspace-handoff.md': '086f3f8fa2b148f6807e9bf3e06d8e953f455e46e502337121eb08b418ebdd3c',

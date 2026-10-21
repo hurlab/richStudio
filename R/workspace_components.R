@@ -65,16 +65,16 @@ workspace_field <- function(namespace, id, label, value = "", help = NULL, error
 }
 
 workspace_status <- function(namespace, id, state) {
-  labels <- c(queued = "Queued", running = "Running — progress not reported",
-    failed = "Failed", succeeded = "Succeeded", `stop-requested` = "Stop requested — awaiting acknowledgement",
-    cancelled = "Cancelled", detached = "Detached — computation may continue",
-    interrupted = "Interrupted — historical job is not running")
+  labels <- c(queued = "Queued", running = "Running \u2014 progress not reported",
+    failed = "Failed", succeeded = "Succeeded", `stop-requested` = "Stop requested \u2014 awaiting acknowledgement",
+    cancelled = "Cancelled", detached = "Detached \u2014 computation may continue",
+    interrupted = "Interrupted \u2014 historical job is not running")
   state <- match.arg(state, names(labels))
   shiny::tags$div(id = shiny::NS(namespace, id),
     class = paste("rs-workspace rs-workspace-status", paste0("rs-workspace-status-", state)),
     role = if (state == "failed") "alert" else "status",
     `aria-atomic` = "true",
-    shiny::tags$span(`aria-hidden` = "true", if (state == "failed") "! " else "• "),
+    shiny::tags$span(`aria-hidden` = "true", if (state == "failed") "! " else "\u2022 "),
     unname(labels[state]))
 }
 
@@ -97,10 +97,10 @@ workspace_table <- function(namespace, id, title, data) {
 
 workspace_dataset_cue <- function(code, label, dataset_id, symbol = c("circle", "square", "triangle")) {
   symbol <- match.arg(symbol)
-  symbols <- c(circle = "●", square = "■", triangle = "▲")
+  symbols <- c(circle = "\u25cf", square = "\u25a0", triangle = "\u25b2")
   shiny::tags$span(class = paste("rs-workspace rs-workspace-dataset", paste0("rs-workspace-dataset-", symbol)),
     shiny::tags$span(`aria-hidden` = "true", unname(symbols[symbol])), " ",
-    workspace_text(code), " · ", workspace_text(label), " · ", workspace_text(dataset_id))
+    workspace_text(code), " \u00b7 ", workspace_text(label), " \u00b7 ", workspace_text(dataset_id))
 }
 
 # Native showModal() provides modal focus containment, Escape and invoker return.

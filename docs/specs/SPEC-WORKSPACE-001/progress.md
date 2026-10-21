@@ -86,6 +86,23 @@ Current integrated source HEAD is `1b0c3b8de9426e4b39096aec0fa9528b1596d548`, wi
 
 Root's retained observation disposition is separate from baseline success: B3-OBS-001 is an unclassified accepted-import association/UI-summary-semantics observation routed to004 provenance validation and010 contract definition; no statistical defect or severity is claimed. B3-OBS-002 is confirmed Medium, owner009 (rr_visualize/rr_hmap): on the disjoint fixture A/B survive explicit whole-result deletion because callerTRUE differs from the documented term-vector contract. The original regression must pass after later correction while preserving remaining datasets' valid and unknown memberships. Unprinted combined stale GeneID and overlap deletion policy remain unverified; no blind NA filtering or shared-term deletion is justified. No001 product fix is authorized. QA's counterexample replay used primary CWD with actual installed body/source checks and redirected evidence; no external-CWD claim is made. SCI-RETENTION-001, SCI-NETWORK-002, private WIP, SYNC1830 and targetR4.5.2/011 holds remain distinct and unchanged.
 
+### Terminal candidate05 hosted evidence — resumed owner append
+
+This append supersedes the earlier candidate05 PENDING/OPEN observations only for the measured001 run gate; all historical measurements and gaps above remain attributed to their original snapshots. Authoring timestamp: `2026-10-21T11:55:03Z` (record composition, not execution completion). Integration HEAD was read as exact reviewed/published candidate05 `2e52278601d150fd6982886681448d36eac2bdfe`; the source prerequisite for002 is integrated. Root accepted G0 in the [process/status review](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/process-status-review-20261021.md), after reading the complete [terminal QA report](../../../.moai/reports/SPEC-WORKSPACE-001/implementation/qa/ci05/resumed/report.md), SHA256 `1841dcdf1c6592b443296677959b54bb6ad19d39cd601221c96a418a7c57494b`. This owner append reconciles retained receipts; it is not a new runtime execution or independent audit.
+
+| Scenario | Actual Output and exact terminal receipt | Status |
+|---|---|---|
+| 001 AC-001 — installed identity, complete suite/check/coverage | Normal hosted run39537367912, source2e52278601d150fd6982886681448d36eac2bdfe, all seven jobs SUCCESS including full119017009911. Installed112 tests/1213 passing assertions,0 failures/errors/skips/test warnings; application check DONE,0 ERROR/0 WARNING/5 NOTEs, examples complete. Complete3343/3904=85.63012295081968%, canonical target85; R3065/3586 and native278/318 agree across RDS/CSV/XML. Actual instrumented parent/child each2 calibration hits, full merged helper44, matching installed identity and reaped worker. Receipts: `qa/ci05/resumed/{terminal-summary.txt,full-audit.json,calibration-audit.json,coverage-summary.json,job-119017009911.log}`. | PASS — measured hosted001 scope |
+| 001 AC-002 — actual deliberate failed assertion | Separate same-head actual negative run39537367660/job119017015206 completed FAILURE: exactly two intended broken heading assertions, six passing cases,0 skips/flakes and two valid retained trace ZIPs. Both failures name `INTENTIONALLY BROKEN FIXTURE EXPECTATION`; imports succeed. Normal wrapper success is separate from this actual failure. Receipts: `qa/ci05/resumed/{20261021T082343Z-negative-run.json,20261021T082343Z-negative-jobs.json,receipt-audit.json,terminal-summary.txt}`. | PASS — intentional failure propagates |
+| 001 AC-003 — desktop/narrow browser | Eight normal browser cases pass once each at1280x720 and375x667,0 unexpected/skipped/flaky; navigation/import, actual DT2000x24 and decoded GGally PNG cases pass. Receipts: `qa/ci05/resumed/{receipt-audit.json,terminal-summary.txt}` and digest-verified browser artifact recorded by the terminal report. Keyboard/zoom/manual accessibility outside these cases remains unmeasured. | PASS — specified hosted cases |
+| 001 AC-004 — closed policy bundle and intended TypeScript | All eight artifact digests/source bindings/extracted bytes reconcile;54 tracked source-digest rows per artifact match published blobs. Frozen42-file manifest matches;18 canonical policy assets match. Prepare verifies three intended TypeScript inputs, missing[]; negative wrapper retains empty-fileset rejection and five policy self-tests OK. Four missing/opposite-stage controls reject and reap children; all14 strict/application profile controls complete as intended. Receipts: `qa/ci05/resumed/{full-audit.json,extraction-verification.json,receipt-audit.json}` and terminal report. | PASS — measured preparation/rejection controls |
+| 001 AC-005 — bounded resources and installed loader | Six retained resource cases include owned success/error worker admission1/rejection2/factory_calls1, active-before-rejection true, PID gone and temporary cleanup true; parser50000x24/16 archive members/depth5; actual renderer400nodes/800edges with800segment/400point/400label layers and DT2000x24. Receipts: `qa/ci05/resumed/receipt-audit.json` and digest-verified resource artifact identified by the terminal report. Four-term three-engine proof is not upper-size engine capacity,006 global admission or production concurrency proof. | PASS — bounded001 foundation limits |
+| Invariant — canonical diagnostics and deferred boundaries | Candidate22files:0 errors/48 warnings/1782 information=1830; baseline21files:0/63/1769. Stage identities and parse canaries reconcile; RUN PASS, SYNC FAIL/release_hold TRUE. SCI-RETENTION-001, SCI-NETWORK-002, B3-OBS-002, import-summary semantics, legacy012 and targetR4.5.2/011 remain held. | PASS — unchanged001 policy boundary; release remains held |
+
+Terminal disposition: all five001 ACs are supported by the exact hosted candidate05 receipts above; the six unchanged001 requirements map to these ACs as specified in the leaf. G0 is root-accepted and001 run gate met. This does not advance leaf/umbrella status, establish clean SYNC, complete002–012 or authorize production deployment. The original code/Security verdicts remain scoped to their frozen source subjects; this append claims no fresh independent code verdict.
+
+B5's missing successful local covr-child stdout/dependency/cleanup transcript remains an accepted evidence gap, not repaired by substituting hosted evidence or inventing a transcript. The B3 retry record contains four ordinary failed attempts plus two evidence-driver failures without a located timely reset: the six-failure sequence exceeded the literal five-failure cap and remains a process breach; later successful hosted evidence does not retroactively satisfy that cap. Future retries need one combined counter and escalation at five. The primary-CWD replay gap remains historical. Scientific retention/network holds008/009, deletion/remaining-dataset contract009, unclassified import-summary association004/010, sync1830, legacy012 and targetR4.5.2 qualification011 remain open. No runtime rerun, local full suite, package check or coverage execution was performed for this append.
+
 ## §E.3 Run-phase Audit-Ready Signal
 
 ```yaml
@@ -124,6 +141,41 @@ SPEC_WS_002: blocked
 Candidate04 has no hosted result at this bookkeeping point. The observed CI03 full failure is not cleared by the scoped B2 successes; all full R/native coverage ratios remain unmeasured. `measured_source_head` identifies the preserved original local runtime proofs, while `candidate04_composition_head` identifies this new source binding. No new runtime or diagnostic execution is claimed. The existing null novelty classification, null `run_complete_at`, in-progress status, SYNC hold and scientific008/009/target011 holds remain unchanged. Acceptance counts above retain the one scoped local browser PASS and four incomplete criteria; the historical CI03 failure is recorded separately and is not a current-candidate PASS.
 
 Candidate05 has no hosted result at this bookkeeping point. CI04 coverage is measured FAIL, while CI03 remains a separate aborted/unmeasured historical run. The scoped388-key union does not establish fresh aggregate coverage, retained prior hits or an unchanged future denominator. Candidate05 must satisfy the unchanged canonical85% gate in actual hosted CI. `run_complete_at` and novelty classification remain null, status in-progress; no clean-SYNC, no-new-information/lint or completion claim is made. Original measured_source_head still identifies the preserved local proofs; candidate05_composition_head binds the new test snapshot. B5's missing successful child transcript and root's OBS001/002 dispositions remain explicit gaps/holds.
+
+### Terminal candidate05 run-gate signal — owner append
+
+The preceding YAML and candidate04/05 pending paragraphs are immutable historical composition observations. This later signal records terminal001 evidence without rewriting those baselines or performing a sync-phase transition.
+
+```yaml
+record_authored_at: 2026-10-21T11:55:03Z
+run_complete_at: null
+run_commit_sha: 2e52278601d150fd6982886681448d36eac2bdfe
+measured_hosted_source_head: 2e52278601d150fd6982886681448d36eac2bdfe
+integrated_source_head_observed: 2e52278601d150fd6982886681448d36eac2bdfe
+normal_hosted_run: 39537367912
+normal_hosted_verdict: SUCCESS_all_7_jobs
+actual_negative_hosted_run: 39537367660
+actual_negative_verdict: FAILURE_exactly_2_intended_assertions_6_pass_2_valid_traces
+run_status: 001_run_gate_met
+scope: SPEC_WS_001_hosted_foundation_only
+ac_pass_count: 5
+ac_fail_count: 0
+ac_pending_count: 0
+preserve_list_post_run_count: null
+new_warnings_or_lints_introduced: null
+cross_platform_build:
+  hosted_R_4_6_1: observed_installed_suite_check_coverage
+  target_R_4_5_2: pending_SPEC_WS_011
+  clean_CI_strict_application_check: PASS_0_ERROR_0_WARNING_5_NOTEs
+  clean_CI_coverage_85: PASS_3343_of_3904_85.63012295081968_percent
+G0: ACCEPTED_by_root_process_status_review
+SPEC_WS_002: integrated_source_prerequisite_met
+sync_verdict: FAIL_1830_diagnostics
+whole_program_completion: false
+release_hold: true
+```
+
+`record_authored_at` is actual owner bookkeeping time, not a runtime end timestamp; `run_complete_at` stays null because no execution-end timestamp is asserted here. Preserve-list total and individual diagnostic novelty remain unmeasured/null. No undocumented pre/post-push fetch, clean-SYNC, target-runtime qualification or new formal auditor verdict is inferred. The eight artifacts,54 tracked source rows per artifact,42 manifest entries,18 policy assets and14 controls are distinct reconciliation counts, not a new source-file inventory. G0 acceptance closes only the001 dependency gate; all retained scientific, legacy, diagnostics, B5-transcript and B3-process qualifications above continue to apply. E1, E4 and all leaf/plan/frontmatter artifacts remain unchanged.
 
 ## §E.4 Sync-phase Audit-Ready Signal
 

@@ -19,8 +19,8 @@ test_that("characterize home and module UIs expose namespaced controls in applic
   home <- as.character(richStudio:::homeTabUI("home", "welcome", "fixture-version"))
   expect_match(home, 'id="shiny-tab-welcome"', fixed = TRUE)
   expect_match(home, "vfixture-version", fixed = TRUE)
-  expect_match(home, "Upload &amp; Enrich", fixed = TRUE)
-  expect_match(home, "Visualize &amp; Export", fixed = TRUE)
+  expect_match(home, "Upload gene lists", fixed = TRUE)
+  expect_match(home, "Load demo results", fixed = TRUE)
   expect_match(home, 'alt="richStudio logo"', fixed = TRUE)
   cases <- list(
     list(richStudio:::enrichTabUI, "deg_files", "upload_degtext", "enrich_deg"),

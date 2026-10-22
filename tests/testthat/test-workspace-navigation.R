@@ -594,24 +594,35 @@ test_that("REQ-001 navigation rejects unknown route names without sending an upd
 })
 
 test_that("REQ-003 two sessions keep independent active results", {
+  # Reactives are read only inside their live session; after a session ends only
+  # plain values and object identities are compared (shiny >= 1.14 raises on reads
+  # of a destroyed session's reactives).
   captured <- new.env(parent = emptyenv())
   shiny::testServer(ws3_app_server(), {
     session$flushReact()
     session$setInputs(`home-load_demo` = 1L)
-    expect_identical(nav$active_result(), "go1")
-    captured$first <- nav
+    captured$first <- nav$active_result()
+    expect_identical(captured$first, "go1")
+    captured$first_handle <- nav$active_result
   })
   shiny::testServer(ws3_app_server(), {
     session$flushReact()
-    expect_null(nav$active_result())
+    captured$second_start <- nav$active_result()
+    expect_null(captured$second_start)
     expect_null(state$u_rrnames$labels)
     session$setInputs(`home-load_demo` = 1L)
     session$setInputs(`workspace-active_result` = "kegg1")
-    expect_identical(nav$active_result(), "kegg1")
-    captured$second <- nav
+    captured$second <- nav$active_result()
+    expect_identical(captured$second, "kegg1")
+    captured$second_handle <- nav$active_result
+    # The first session's state is a different object, not a shared one.
+    expect_false(identical(captured$first_handle, captured$second_handle))
   })
-  expect_identical(shiny::isolate(captured$first$active_result()), "go1")
-  expect_identical(shiny::isolate(captured$second$active_result()), "kegg1")
+  expect_true(exists("second_start", envir = captured, inherits = FALSE))
+  expect_identical(captured$first, "go1")
+  expect_null(captured$second_start)
+  expect_identical(captured$second, "kegg1")
+  expect_false(identical(captured$first_handle, captured$second_handle))
 })
 
 test_that("REQ-001 REQ-003 F3 server-rendered action ids follow the session namespace", {

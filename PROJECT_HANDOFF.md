@@ -1,382 +1,68 @@
 # richStudio Project Handoff
 
-### Current checkpoint — 2026-10-21 autonomous execution resumed
-
-User explicitly authorized completing001, immediately continuing002, then003–012 in dependency/file-lock order with Hur Harness and independent reviews. No further phase confirmation is required. Root restored execution coordination, the sole QA observer and the Security boundary owner. Their restored context and ignored receipts do not substitute for new product acceptance.
-
-Git integrated exact approved candidate05 `2e52278601d150fd6982886681448d36eac2bdfe` into the isolated integration branch by fast-forward; root independently observed that HEAD with `git rev-parse HEAD`. The two existing root documents remained the only dirty paths immediately after integration. G0 remains accepted on the retained full terminal QA evidence, not a new local runtime run. Implementation owner is appending terminal E2/E3;002 design preparation follows that bookkeeping and the exact source receipt. Final clean SYNC, scientific holds, legacy restoration, target R4.5.2 and release acceptance remain open. Primary main and production were not changed by this integration.
-
-Root owns these two documents; implementation coordination owns ignored dispatch/state records; implementers own only declared leaf targets. Preserve historical checkpoint paragraphs below as dated evidence. Future retry accounting includes evidence-driver failures and requires re-scoping at five failures. Future R probes use an external temporary CWD and a compound environment scrub. Actual deployment remains user-executed.
-
-
-
-### Current checkpoint — 2026-10-21 process review
-
-Root read the complete candidate05 terminal QA report and accepts measured G0 at `2e52278601d150fd6982886681448d36eac2bdfe`: seven normal jobs pass,112 tests/1213 assertions, check0ERROR/0WARNING/5NOTE, coverage3343/3904=85.630123%; deliberate-negative fails exactly two intended assertions. Earlier RUNNING/PENDING paragraphs are historical checkpoints. Website redesign002–012 remains outstanding;002 temporarily held for user-requested process review and exact-source integration/owner bookkeeping. Primary main unchanged, production unchanged this review. Process corrections: unified retry accounting/escalation, external-CWD probes, current authoritative status, restore Security before boundary. All scientific/SYNC/legacy/target-R holds remain. Full review: `.moai/reports/SPEC-WORKSPACE-001/implementation/process-status-review-20261021.md`; terminal QA: `implementation/qa/ci05/resumed/report.md`.
-
 ## 1. Project Overview
 
-richStudio is an R Shiny application for functional enrichment analysis and gene set clustering. It provides DEG file upload, enrichment analysis (GO, KEGG, Reactome via richR/bioAnno), multiple visualization modes (table, bar, dot, network, heatmap), three clustering algorithms (richR Kappa, Hierarchical via richCluster, DAVID-style), session save/load (RDS/JSON), and export (CSV/TSV/XLSX/ZIP).
+richStudio is an R Shiny application for enrichment analysis, gene-set clustering, visualization, saved sessions and exports. The authorized workspace evolution covers SPEC-WS-001 through SPEC-WS-012 in dependency and file-lock order.
 
-- **Last updated:** 2026-10-20 (workspace implementation authorized; baseline foundation in progress)
-- **Last coding CLI used:** Codex (workspace implementation); earlier phase history retained below
-- **Active worktree:** `.moai/worktrees/workspace-evolution-integration`, branch `WT-workspace-evolution-integration`, application baseline `06206d050dcae02a2e773a709c5c6119d29f436e`; reviewed plan seeded; execution in fresh integration worktree
-- **Version:** 0.1.6
+- Last updated: 2026-10-22 (Claude Code)
+- Last coding CLI used: Claude Code (root changed from Codex on 2026-10-21; user-instructed).
+- Conversation: Korean (`/lang gloss`); artifacts: English.
+- Integration worktree: `/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-evolution-integration`, branch `WT-workspace-evolution-integration`, HEAD `2835467372b7a5dc913e71fb1c116e945d5034b4` (pushed; includes SPEC-WS-002 and SPEC-WS-003).
+- Corrective source worktree: `/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-check-warning-portability`, branch `WT-workspace-check-warning-portability`, HEAD and remote `2442363`. Now integrated; keep until I is pushed/merged.
+- Previous handoffs preserved verbatim: [2026-10-21 15:56](logs/PROJECT_HANDOFF_2026-10-21_1556.md), [2026-10-21 21:02 pre-update](logs/PROJECT_HANDOFF_2026-10-21_2102.md).
+- Reusable lesson: [CI evidence needs protocol and type identity](/home/juhur/PROJECTS/wiki/concept/ci-evidence-needs-protocol-and-type-identity.md).
 
 ## 2. Current State
 
-### Workspace implementation — Authorized and active (2026-10-20)
+Status as of 2026-10-21 21:02 CDT:
 
-User approved proceeding with the reviewed twelve-SPEC plan. The earlier planning-only paragraphs below are dated checkpoints, not a current restriction on implementing the accepted scope. Seed commit: `d853a9920377f666163a8bcc09585f56ad951b3a`; runtime source baseline remains `06206d050dcae02a2e773a709c5c6119d29f436e` until reviewed implementation integrates.
-
-SPEC-WS-001 is dispatched to its fresh `workspace-foundation-run` worktree. The execution lead coordinates the registry, independent reviewer, single QA owner and Security Auditor under the four-actor limit. G0 CI/baseline evidence is required before002; no completion is claimed yet. Root execution receipt: `.moai/reports/SPEC-WORKSPACE-001/implementation/root-execution-state.json`.
-
-Foundation candidates are published on `WT-workspace-foundation-run`: candidate 01 `519dbfff67e013fe361c13a99c64687feb4d1917`, candidate 02 `c94cd9165b6db3b3525c49074d864139e864a023`. Both received independent publication reviews. Both normal CI runs are now red: candidate02 passed five jobs, but its browser and full gates failed. Installed tests passed 62 cases and 408 assertions; package check reported 2 errors, 7 warnings and 5 notes and coverage measured 832/3900 lines (21.33%) against the configured 85% target. Root retained all seven candidate02 artifacts and the real failed-assertion dispatch artifacts under `.moai/reports/SPEC-WORKSPACE-001/implementation/ci/`.
-
-QA traced the narrow-screen failure to a test-helper scroll assumption. The one-line `fixtures.ts` fix is frozen in the foundation worktree and passed the affected narrow import test; it remains uncommitted for a combined repair candidate. QA also reproduced the hosted diagnostic output exactly by removing only the installed app namespace. Repair must install and verify separate matching baseline/candidate namespaces and reject unavailable or wrong-stage preparation. The local 63-warning result is not the hosted 1,048-warning result; preserve their distinct source/context receipts.
-
-A formal SPEC-WS-001 amendment now declares 40 exact writer targets and 10 bounded child tasks for meaningful existing-behavior tests, example/docs/import/build repairs and gate preparation. The original six requirements/five acceptance scenarios, twelve-leaf graph and G0-before-002 order remain. First amendment plan audit found one contradictory valid/invalid canary sentence. The author corrected it; confirming round2 returned PASS (score 1.000), audited subject bb452380f3dfc3d1ac7177dd2f753d849a2b946d7c78ac507c1551b05708af77. Root read the full verdict and authorized the bounded child tasks after Git prepares the verified source/plan seed. Preserve the exact declared read/write and generator barriers; this plan approval does not close G0. The application check profile must prove that all strict code/doc/build/test controls remain effective while CRAN-submission suitability is separately scoped; coverage and ordinary warning gates remain mandatory. No claim of CRAN submission readiness is authorized.
-
-The full reviewed foundation composition is published on `WT-workspace-foundation-run` at `21b57556ad7b6f616cf6d951b99e6557fab9454e`. Its source parent is remediation master00db2fd7; final commit contains exactly nav plus two assigned run-phase metadata paths. All B0-B9/PREP and combined code review passed for publication. Root verified final42 r2 manifest652e5e32 after a metadata-only truthful lint-novelty correction; Security reconciled exact source/metadata preservation. All scoped source/browser/identity/calibration proofs and their explicit gaps remain in foundation `.moai/reports/SPEC-WORKSPACE-001/implementation/001/final-composition/`.
-
-Actual normal CI39523360861 finished FAILED in the full job only; six other jobs SUCCESS. Same-SHA deliberate-negative CI39523360499 failed exactly its two injected assertions and retained both traces. QA completed the terminal artifact audit at implementation/qa/ci03/report.md:101 installed tests/887 passing assertions/one startup error/zero skips or warnings; R CMD check1ERROR/0WARNING/5NOTE, all14 profile canaries completed/proved and examples completed. The valid-alias fixture removes the shared dependency library and cannot load future. Covr separately aborted on two library-origin assertions; final coverage data/percent are absent and UNMEASURED. Fresh clean21b57556 diagnosis tree workspace-g0-worker-portability is assigned to the B2 owner; separate actual topology reproductions and a minimal proposal precede edits. G0 remains OPEN and002 blocked. SYNC still fails1830 diagnostics. SCI-RETENTION-001 and SCI-NETWORK-002 remain unresolved High release blockers for008/009; private unused helper and targetR4.5.2 qualification remain separately scoped. No main merge or production change. Continue the entire twelve-leaf program after G0; do not stop at foundation.
-
-The master incoming-FALSE check proposal was rejected by an actual lost-code-check canary. A narrow REMOTE-FALSE/master-TRUE revision passed fourteen paired controls but its confirming plan audit found a local URL preservation gap (FAIL0.9375). The bounded exact-source local URL companion subsequently passed ten controls and preserved original NOTE severity; its five-document D1/withr correction received confirming plan PASS1.000 (subject0519f748). Root read the full verdict, verified5/5 frozen file hashes/lengths, and authorized the exact profile/local URL preservation and fixed B7 import implementation under independent review. Actual default/full acceptance still requires independent implementation review and fresh integrated CI. Original failed evidence is retained.
-
-Candidate04 is published at `284def4568d31696a8b626f8e7fa102fccd08ae9`: only the reviewed B2 test and progress record differ from candidate03. Actual normal CI39530082888 finished FAIL solely measured coverage; six other jobs SUCCESS. Installed101 tests/947 assertions passed with zero failures/errors/skips/warnings; application check0ERROR/0WARNING/5NOTE, examples/tests complete. Full coverage2955/3904=75.691598%, R2677/3586, native278/318; canonical85 requires364 additional real hits at unchanged denominator. Actual same-SHA negative39530082698 failed purely its two intentional assertions with both traces retained. Root read QA complete terminal report at implementation/qa/ci04/report.md, including full RDS/CSV/XML agreement, real parent/child instrumentation delta2each/merged44 and worker reaped. Root authorized only existing-owned B3/B5 test continuations in fresh workspace-g0-ui-coverage and workspace-g0-session-exports trees, both at284def45; genuine clustering/heatmap and save UI/download oracles, all source/helper/native/runner/policy paths read-locked. Owners measure exact previously-zero line hit sets under scoped instrumentation before new CI; no local full suite, exclusions, threshold waiver, arbitrary execution or known-bug expected output. G0 remains OPEN and002 held.
-
-Current candidate05 is published at `2e52278601d150fd6982886681448d36eac2bdfe`, final42 manifest5a6d765c. Reviewed B3/B5 test continuations are integrated, product/runner/helper/native/policy unchanged; independent scoped union388 is not full coverage acceptance. Actual normal CI39537367912 and same-SHA deliberate-negative39537367660 are running, sole QA audit implementation/qa/ci05. Root read full child/code/Security/QA reports and verified current42+84Git hashes before publication. B3 retry history frozen; B5 missing stdout retained. OBS002 is confirmed Medium009 only disjoint deletion contract, while OBS001 remains unclassified import-summary semantics004/010. Preserve original counterexamples, unknown metadata and remaining-dataset memberships; no001 scientific fix. New current-head full85% acceptance remains pending.
-
-G0 remains open; SPEC-WS-002 remains blocked, and no whole leaf is complete. Continue the full authorized program after verified repairs; do not stop after SPEC-WS-001. Later G5 all-severity diagnostics/public-interface compatibility and SPEC-WS-012 legacy isolation/usability remain separate unresolved work.
-
-Continue all unblocked authorized implementation work. Preserve primary checkout and foreign changes, use fresh MoAI worktrees per leaf, and integrate only independently approved work inside the integration tree. Production deployment remains user-manual sudo after reviewed preparation; agents never execute it.
-
-
-### Workspace evolution — Planning complete; implementation not started (2026-10-20)
-
-The user requested all six recommended improvement areas using the Hur Harness hybrid team and independent review structure. [Master plan](docs/specs/SPEC-WORKSPACE-001/plan.md), [requirements](docs/specs/SPEC-WORKSPACE-001/spec.md), [design/state contracts](docs/specs/SPEC-WORKSPACE-001/design.md), [acceptance](docs/specs/SPEC-WORKSPACE-001/acceptance.md) and machine-readable dispatch registry now define twelve atomic leaf SPECs. All remain draft; dispatch is inactive. The next step is a separately authorized implementation, beginning with001 baseline/CI/resource policy and002 design handoff.
-
-Independent plan audit round2 returned PASS (score1.00), closing six formal/execution findings plus the failed-import generation ambiguity. Planning checks:13 requirement documents linted with exit0 and no findings; twelve graph nodes reachable, twenty-one shared-file lock pairs;59 leaf requirements map to50 acceptance scenarios. Full evidence and frozen hashes are under this worktree's ignored `.moai/reports/SPEC-WORKSPACE-001/`; no application runtime, browser or security scan success is inferred from planning checks.
-
-001 establishes the actual clean-CI baseline, policy/rule bundle and measured resource configuration.003–010 implement the workspace, scientific setup/background, jobs, projects, exploration, figures and clustering experience.012 separately owns bounded legacy bridge discovery and usable restoration; it does not block additive exploration but must pass before final011 release. Legacy data/results must survive; missing metadata remains unknown. Keep existing RDS parsing's trust limitation explicit until its replacement is proven. No ordinary subprocess is advertised as a sandbox, no ignored result as cancelled, and no hidden capability as delivered.
-
-The production dependency update was user-executed and verified before this planning task. Exact deployed app release is `06206d050dcae02a2e773a709c5c6119d29f436e`; prior evidence is in sibling `dependency-adoption/.moai/reports/SPEC-DEPENDENCY-001/deployed-verification/report.md`. Historical sections below retain their dated pre-deployment checkpoints. Original server app backup remains preserved.
-
-No new application implementation, commit, push or deployment occurred. Preserve the planning and dependency worktrees. Before implementation, version the reviewed plan and resolve the normal capability/configuration prerequisites; do not treat a planning PASS as runtime verification or release authorization. Future deployment remains user-manual sudo after reviewed preparation, followed by retrieved status/log and actual worker/library checks.
-
-
-### Dependency adoption — Consumer acceptance passed with verification debt (2026-10-20)
-
-The user authorized SPEC-DEPENDENCY-001 after coordination with richR and inspection of standalone richCluster. This bounded migration takes priority over the older recommended B6 sequence; it does not close unrelated B3–B8 or publication work. See [runtime guidance](docs/DEPENDENCY_RUNTIME.md), [SPEC](docs/specs/SPEC-DEPENDENCY-001/spec.md), and [deployment procedure](docs/DEPENDENCY_DEPLOYMENT.md).
-
-- Targets: official hurlab/richR 0.1.5 at `9be43abdae556d9f1df128149a70721f08ab7d25`; hurlab/richCluster 2.0.1 at `a0d1f630fbe64089ab38516116b78962672e6349`. bioAnno remains 0.99.45 at its existing lock revision.
-- All three pinned sources were installed into the new `/tmp/richstudio-dependency-adoption-v015-lib-20261020` under R 4.6.1; logs are `/tmp/richstudio-v015-logs-20261020/{archive-sha256,install,identity}.log`. The original 0.1.4 library remains protected as a baseline and fallback lookup path used without installing into it for other dependencies, including the task-local Rcpp 1.1.2 overlay.
-- The historical lock still records R 4.5.2/Bioc 3.22; a full restore is unverified. Do not resume the old blanket `renv::restore()` recommendation without re-evaluating compatibility. The isolated library permits scoped verification without changing shared libraries.
-- **Implementation:** `8d3dcfee405b8f79abb771337fa5425fe3c3e7d2` records the source baseline. Explicit richR/Reactome dispatch, valid-empty/error behavior, public standalone clustering, method-specific significance policy, term-union background, output mapping and save/reopen compatibility are implemented. This SHA is not a documentation-sync SHA or proof of push/deployment.
-- **Consumer acceptance:** Final independent review returned PASS-WITH-DEBT, all AC-001–AC-010 satisfied and F1–F7 closed. Scoped installed 0.1.5 tests and existing clustering regressions passed; logs are `/tmp/richstudio-v015-final-scoped-root.log` and `/tmp/richstudio-v015-existing-clustering-root.log`. GO/KEGG/Reactome worker traces resolve the new library. UI construction/server start/close passed in `/tmp/richstudio-v015-ui-smoke.log`.
-- **Quality debt:** Changed executable R lines covered 91/100 (91%); selected-test overall package/native coverage is 20.04%, not a full-suite coverage result. Default lintr found 26 changed-line style diagnostics and no warning/error diagnostics there. Full suite/check, overall coverage target, LSP, browser end-to-end, cross-platform consumer and server execution remain unverified. Earlier import/SystemRequirements warnings remain attributed to measured original-HEAD behavior.
-- **Measured numerical baselines:** `numerical-baseline.md` covers all three identities: standalone 1.0.2/2.0.1 equal grouping with changed numeric values/deduplicated genes on one fixture, original-HEAD/current vendored equality on another, and unequal-size richR 0.1.4 consumer/explicit-union equality. Historical 0.1.4 balanced-Kappa/namespace-only KEGG failures stay recorded. Final 0.1.5 consumer regressions and discriminating union oracle passed; no universal historical equality is claimed.
-- **Official upstream release:** 0.1.5 commit `9be43abdae556d9f1df128149a70721f08ab7d25`, release asset SHA256 `0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf`, 2,769,042 bytes; exact SPEC delta audit passed.
-- **Deployment preparation:** Final script safety review PASS; reviewed script SHA256 `106a1d9b05f5302e94e188a3b50a0c82aed052303a3db89c17bb92a4d605cda5`. No upload or sudo execution has occurred at this checkpoint. Final sync/push precede upload, and host execution/worker evidence must be retrieved before a deployed claim.
-- No new GSEA, explicit-background UI, diagnostics dashboard or batch-status UX is included.
-- Read-only server inspection measured `100.94.67.89` (`Hurlab.und.nodak.edu`), `/home/juhur/shinyapps/richStudio`, HEAD `fc124971b004fcbc24a212a40636d34cc57fd587`, R 4.5.2, richR 0.0.40/richCluster 1.0.2. This replaces the old assumption that the live app must first become a git checkout. Deployment has not occurred.
-- Deployment protocol: finish required gates, prepare and thoroughly re-review a shell script, upload over Tailscale, and let the user run sudo. The script must save private temporary log/exit-status files; retrieve and inspect them before reporting deployment. Do not deploy on the home computer or execute sudo as an agent.
-
-Historical completion statements below remain dated records of their original baselines, not fresh verification of this migration.
-
-### Phases 1-11: Application Development — All Completed
-
-All application development phases (Critical Bug Fixes, Visualization Fixes, Production Readiness, Remaining High Fixes, Async & Memory, Reactive Refactor, Medium Fixes & Tests, Second Review Round, UI/UX Modernization, UI Audit & Polish v0.1.6, Code Review Bug Fixes) are complete. See previous PROJECT_HANDOFF.md versions and PROJECT_LOG.md for details.
-
-### Phase 12: Deployment Infrastructure — Completed in Session 2026-03-29 21:24 CDT
-- Fixed renv library directory hash mismatch after directory rename (richStudio_3 to richStudio)
-- Renamed `renv/library/richStudio_3-cb61d1cc` to `renv/library/richStudio-29a8d641`
-- Fixed Shiny Server running as wrong user (`shiny` instead of `juhur`) via `/srv/shiny-server/` symlinks
-- Removed stale symlinks in `/srv/shiny-server/` so `location /richStudio` block handles requests
-- Updated all stale `richStudio_3` references in nginx configs and app.R
-- Verified renv activation with system R and all packages loadable
-
-### Phase 13: Manuscript & Documentation Suite — Completed in Session 2026-03-29 21:24 CDT
-
-#### BMC Bioinformatics Full Research Article
-- **Status:** Completed, 3 review rounds passed (Conditional PASS)
-- **File:** `inst/manuscript/richStudio_BMC_Bioinformatics.md` and `.docx`
-- ~3,900 words main text, 291-word abstract, 27 references (all verified)
-- 7 figures (multi-panel), 3 tables
-- Competitive analysis: 10 tools compared including simplifyEnrichment, EnrichmentMap, clusterProfiler treeplot()
-- Funding: R01DK130913 (NIDDK), P20GM113123 (NIGMS/CDA Core UND)
-
-#### Application Note
-- **Status:** Completed, revised to match writing standards
-- **File:** `inst/manuscript/richStudio_ApplicationNote.md` and `.docx`
-- 5 verified references, proper competitive positioning vs Metascape
-
-#### User Manual
-- **Status:** Completed (HTML + DOCX; PDF pending LaTeX installation)
-- **File:** `inst/manuscript/richStudio_UserManual.md`, `.html`, `.docx`
-- 905 lines, 11 sections + 3 appendices
-- All parameters documented with defaults and ranges
-
-#### Figures
-- **Status:** 18 screenshots captured from live app
-- **Location:** `inst/manuscript/figures/`
-- **Pending:** Figure 1A (architecture diagram) needs manual creation
-
-#### Review Reports
-- `inst/manuscript/review_round1.md` — 3 critical, 8 major (all resolved)
-- `inst/manuscript/review_round2.md` — 3 critical, 8 major (all resolved)
-- `inst/manuscript/review_round3.md` — Conditional PASS (2 minor, both resolved)
-- `inst/manuscript/competitive_analysis.md` — 13 tools benchmarked with verified refs
-
-### UI Fix — Completed in Session 2026-03-29 21:24 CDT
-- Updated About box Team section to single line (no "(Lead)" label)
-
-### Code Fix — Completed in Session 2026-03-29 21:24 CDT
-- Added `.xlsx` to accepted file types in `enrich_tab.R` and `cluster_upload_tab.R`
-- Added Kai Guo as author in DESCRIPTION
-
-### Phase 14: Code Review & Fix (4-Agent Harness) — Completed in Session 2026-03-30 22:10 CDT
-- **Issues found:** 3 confirmed real bugs, 4 security gaps (2 fixed, 2 accepted)
-- **CRITICAL fix:** Added Excel (.xls/.xlsx) file reading via `readxl::read_excel()` with tryCatch error handling in 3 files (enrich_tab.R, cluster_upload_tab.R, rr_visualize_tab.R)
-- **HIGH fix:** Removed debug `std::cout` statements from C++ production loop (ClusterManager.cpp)
-- **LOW fix:** Added missing file size validation in rr_visualize_tab.R upload handler
-- **LOW fix:** Added `!is.na()` guard to file size checks in all 3 upload handlers
-- **MEDIUM fix:** Added `sanitize_filename()` to download handler in clus_visualize_tab.R
-- **HIGH fix:** Added type validation after `readRDS()` in save_tab.R to guard against deserialization attacks
-- **Security baseline:** No hardcoded secrets. All dependencies current. RDS now validated post-deserialize.
-- **Verification:** All R files parse clean, C++ braces balanced, app loads successfully via browser
-
-### Phase 15: Senior-Architect Review + Multi-Round Harness — In Progress (Sessions 2026-05-17 → 2026-05-19)
-- **Review scope:** 21 R files (5757 LOC), 9 C++ files (987 LOC), inst/application/app.R, NAMESPACE/DESCRIPTION, 5 test files, 3 manuscript files
-- **Method:** 4 parallel domain agents (security, performance, quality, functional gap) + per-bundle 3-round review-revise harness
-- **Findings:** 8 security + 16 performance + 20 quality (TRUST 5) + 18 functional-gap = ~58 raw, deduplicated to ~50 distinct items, grouped into 8 SPEC bundles
-- **Bundle B1 (SPEC-QUICK-001) complete (2026-05-17):** commit 774d019 — dead-code/debug stub removal, -110 / +1 lines across 6 R files
-- **Bundle B2 (SPEC-CRAN-001) complete (2026-05-17):** commit 5305d49 — CRAN NAMESPACE hygiene, dropped tidyverse umbrella, added 13 missing importFroms (including the critical `shinyjqui::jqui_resizable` bare call that would have caused R CMD check ERROR), inline-comment magic-0.5 defaults in rr_cluster.R
-- **Deployment tooling complete (2026-05-18):** commit 7535bc2 — `scripts/deploy.sh`, `scripts/rollback.sh`, `scripts/preview-deploy.sh` (git-based deploy with hardlinked PREV snapshots, auto-rollback on mid-deploy failure, curl smoke test, configurable retention). DEPLOYMENT.md restructured with 5-tier safety checklist and risk-by-change-type table.
-- **All commits pushed to origin/main (2026-05-18):** 5 commits this phase — 774d019 (B1), 5305d49 (B2), 0748e67 (Phase 15 docs), 4eb9f96 (MoAI 0.33.0 template sync), 7535bc2 (deploy tooling). Local tree clean. Server deploy intentionally deferred per user direction — bundle B1-B5 into one coordinated update later.
+- **Completed:** SPEC-WS-001 foundation (prior session).
+- **Completed in Session 2026-10-21 21:02 CDT: whole SPEC-WS-002 acceptance.** Scope `ws002-acceptance-recovery` closed COMPLETE at 1/cap5. Hosted run 39664812571 at `2442363`: 7/7 jobs success; tests 122/1351/0 fail/0 skip; R CMD check 0E/0W/5N (NOTE headings unchanged); coverage 3424/3988 = 85.86% (denominator unchanged); browser 16 pass, axe 0 violations; in-run negative rejection. Independently judged R1–R11 PASS (R11 via R11-bis). Integrated by fast-forward; amendment `docs/specs/SPEC-WORKSPACE-001/amendments/002-acceptance-recovery.md` and SPEC-WS-002 link published in `b8eb759`.
+- **User decisions this session:** U1 keep the established audit method; U2 direct human keyboard/focus/200% zoom/contrast/reduced-motion review deferred to the SPEC-WS-011 release gate; U3 same-SHA negative alias skipped; U4 200% zoom state judged from measured layout receipts (screenshot capture was partial).
+- **Completed 2026-10-22: SPEC-WS-003 accepted and integrated.** I = `2835467` (pushed). Gating hosted run 39726772374: 7/7 success; tests 145/1703; check 0E/0W/5N; coverage 86.65%; browser 30/30, axe 0. Result audit `ws003-result-audit-r1.md` PASS; receipt `.moai/reports/SPEC-WORKSPACE-001/implementation/003/ws003-root-acceptance.json`. Scopes: `ws003-navigation` STOP5 (preserved), `ws003-recovery` COMPLETE 2/5. Confirmatory I-branch run 39730055735 (not a gate). New holds: enrich_tab.R zero-height pane (pre-existing), design-system fixture flake, CI shiny 1.14 vs local 1.12.1 drift.
+- **Not started:** SPEC-WS-004–012.
+- **Server (updated 2026-10-22):** hurlab now runs R 4.6.1 + Bioconductor 3.23. Live app `https://100.94.67.89/richStudio/` (Tailscale) runs release `06206d0` rebuilt for R 4.6.1 (`/opt/richStudio/releases/richStudio-06206d0…-20261022T114305Z`, release-private library `renv/library/release-r46`, no R 4.5 fallback) via user-run `scripts/deploy-r46-release.sh`; HTTP 200, 0 error pages. R 4.5-era releases and `richStudio.PREV.20261020T164533Z` were removed; `scripts/rollback.sh` and `scripts/deploy-dependency-update.sh` are obsolete (R 4.5). No workspace work deployed.
+- **Known CI flake:** `tests/e2e/design-system.spec.ts:758` 'Unknown process joined owned fixture group' failed once on run 39709359169 (I branch), passed on job rerun.
+- No push, deployment, sudo, worktree disposal or primary-checkout branch change happened.
 
 ## 3. Execution Plan Status
 
-| Phase | Status | Last Updated |
-|-------|--------|-------------|
-| Phase 1: Critical Bug Fixes | Completed | 2026-03-08 |
-| Phase 2: Visualization Fixes | Completed | 2026-03-08 |
-| Phase 3: Production Readiness | Completed | 2026-03-08 |
-| Phase 4: Remaining High Fixes | Completed | 2026-03-08 |
-| Phase 5: Async & Memory | Completed | 2026-03-08 |
-| Phase 6: Reactive Refactor | Completed | 2026-01-08 |
-| Phase 7: Medium Fixes & Tests | Completed | 2026-03-09 |
-| Phase 8: Second Review Round | Completed | 2026-03-10 |
-| Phase 9: UI/UX Modernization | Completed | 2026-03-28 |
-| Phase 10: UI Audit & Polish (v0.1.6) | Completed | 2026-03-28 |
-| Phase 11: Code Review Bug Fixes | Completed | 2026-03-28 |
-| Phase 12: Deployment Infrastructure | Completed | 2026-03-29 |
-| Phase 13: Manuscript & Documentation Suite | Completed | 2026-03-29 |
-| Phase 14: Code Review & Fix (4-Agent Harness) | Completed | 2026-03-30 |
-| Phase 15: Senior-Architect Review + Harness B1+B2 + Deploy Tooling | In Progress (B1, B2, tooling done; B3-B8 + deploy pending) | 2026-05-19 |
+| Phase | Status | Last updated | Current condition |
+|---|---|---|---|
+| 001 foundation | Completed | 2026-10-21 | Prior accepted integration |
+| 002 design/components/browser | Completed | 2026-10-21 21:02 CDT | Accepted and integrated in I (`b8eb759`); holds below |
+| 003 Home / header / navigation | Completed | 2026-10-22 | Accepted and integrated in I (`2835467`); holds in section 4 |
+| 004–010 workspace | Not started | 2026-10-22 | Each needs its own dispatch; respect app.R lock conflicts with 006/007/008/012 |
+| 012 legacy restoration | Not started | 2026-10-21 | Required before 011 release |
+| 011 compatibility/release | Blocked | 2026-10-21 21:02 CDT | Target R, SYNC, science, legacy, human review (incl. U2) gates |
 
 ## 4. Outstanding Work
 
-### Active Items
+- **Open; updated 2026-10-21 21:02 CDT:** decide SPEC-WS-003 activation. Draft `.moai/reports/SPEC-WORKSPACE-001/implementation/003/next-dispatch-draft.md` (unactivated).
+- **Open; updated 2026-10-21 21:02 CDT:** push `WT-workspace-evolution-integration` and plan merge to `main` (owner decision; not done).
+- **Hold (011); recorded 2026-10-21 21:02 CDT:** direct human keyboard/focus/200% zoom/contrast/reduced-motion review; 011 planning must read `docs/specs/SPEC-WORKSPACE-001/amendments/002-acceptance-recovery.md`.
+- **Hold; recorded 2026-10-21 21:02 CDT:** fix the partial 200% screenshot capture — `page.screenshot({ fullPage: true })` under native zoom in `tests/e2e/design-system.spec.ts` (L363 at `2442363`) records only the top-left quarter — at the next browser-test change.
+- **Hold; recorded 2026-10-21 21:02 CDT:** hosted browser-only negative path (`-negative-canary` ref / `negative_assertion` dispatch) never observed (U3).
+- **Open:** SPEC-WS-002 lifecycle `status: draft` → completed belongs to a sync phase.
+- **Open; target changed 2026-10-22:** target R qualification (011) is now **R 4.6.1 + Bioc 3.23** (server upgraded; R 4.5.2 superseded).
+- **Open (unchanged):** SYNC1884 release hold, SCI-RETENTION-001 (008/009), SCI-NETWORK-002 (009), B3-OBS-002 (009), unclassified B3-OBS-001 (004/010), legacy 012, deployment.
 
-- **User Manual PDF**: Requires LaTeX installation to generate PDF from markdown. HTML and DOCX versions are ready.
-  - Status: Not started
-  - Last updated: 2026-03-29 21:24 CDT
-  - Ref: Session 2026-03-29
+## 5. Risks, Open Questions, Assumptions
 
-- **Figure 1A Architecture Diagram**: Manual workflow/architecture schematic needed (richR/bioAnno/richCluster integration diagram).
-  - Status: Not started
-  - Last updated: 2026-03-29 21:24 CDT
-  - Ref: Session 2026-03-29
-
-- **Web-accessible documentation**: User manual HTML not yet linked from the Shiny app or served via nginx.
-  - Status: Not started
-  - Last updated: 2026-03-29 21:24 CDT
-  - Ref: Session 2026-03-29
-
-- **Bioconductor submission**: Planned after publication. Currently distributed via GitHub only.
-  - Status: Not started
-  - Last updated: 2026-03-29 21:24 CDT
-  - Ref: Session 2026-03-29
-
-- **CI/CD**: No GitHub Actions or CI pipeline configured.
-  - Status: Not started
-  - Last updated: 2026-03-28
-
-- **renv R 4.6 rebuild**: System R was upgraded 4.5 → 4.6 between 2026-03-29 and 2026-05-17. Existing renv library at `renv/library/richStudio-29a8d641/R-4.5/` is stale; system R cannot resolve any packages. Required before running `testthat::test_dir()`, `R CMD check --as-cran`, or rebuilding the deployed Shiny app.
-  - Status: Not started
-  - Last updated: 2026-05-17
-  - Suggested command: `Rscript -e 'renv::restore()'` (will recompile against R 4.6; takes ~20-40 min)
-
-- **Phase 15 outstanding bundles**: 6 remaining SPEC bundles from the senior-architect review.
-  - **SPEC-STYLE-001 (B6) — recommended next**: Style + extract `sniff_delimiter` utility, document `u_` prefix, internal `format_cells` alternative comments. Low risk. ~1 hour.
-  - **SPEC-SEC-001 (B3)**: Security hardening — path traversal in `export_all` ZIP loop (HIGH; deployment-critical), content-based file validation, nested RDS validation, `setBookmarkExclude`. ~2 hours.
-  - **SPEC-PERF-R-001 (B4)**: R reactive performance — heatmap caching, observer decomposition, debounce, rbind-in-loop, network term-count guard. Severity: MED. ~2 hours.
-  - **SPEC-PERF-CPP-001 (B5)**: C++ performance refactor — upper-triangle distance matrix (200 MB → 100 MB at n=5000), pre-cache per-term gene sets (eliminates 25M re-allocations), int-overflow guard. **Requires `R CMD INSTALL` to verify**; depends on renv R-4.6 rebuild. Severity: CRITICAL for the manuscript's "scales to 5000+ terms" claim. ~3 hours.
-  - **SPEC-FUNC-001 (B7)**: Functional-gap code-side fixes — port network plot to plotly, expand Reactome species, set `shiny.maxRequestSize = 100MB`. Per user decision 2026-05-17. ~4 hours.
-  - **SPEC-TEST-001 (B8)**: Test foundation rebuild — depends on B5 stability and renv R-4.6 rebuild. Decompose 4 monolithic server functions (327–467 LOC), add shinytest2 integration tests, add C++ direct tests. Severity: CRITICAL for journal submission credibility. ~6 hours.
-  - Status: Not started
-  - Last updated: 2026-05-19
-  - Ref: Sessions 2026-05-17, 2026-05-19
-
-- **SPEC-CRAN-002 (architectural decision)**: 6 packages in DESCRIPTION Imports are used only via `library()` in `inst/application/app.R` — `shinyWidgets`, `ggplot2`, `data.table`, `config`, `digest`, `bioAnno`. Per CRAN policy these must either have NAMESPACE coverage (`@import pkg`) or move to `Suggests` with `requireNamespace()` guards. Triggers CRAN NOTEs in current state.
-  - Status: Not started
-  - Last updated: 2026-05-17
-
-- **Coordinated B1–B5 server deploy**: Deferred per user direction (2026-05-18). B1+B2 changes are pushed to GitHub origin/main (commit 7535bc2) but NOT deployed to hurlab.med.und.edu/richStudio/ yet. The live deployment is still on pre-Phase-15 code (last server sync 2026-05-10 via smart-rsync). Deploy after completing B3, B4, B5 in one event using `scripts/deploy.sh` with Tier 2 (staging slot) safety since the deploy will include `src/*.cpp` changes from B5 and `renv.lock` changes from CRAN compliance fixes.
-  - Status: Not started (blocked on B3/B4/B5 completion)
-  - Last updated: 2026-05-19
-  - Ref: Session 2026-05-18
-
-- **Server migration to git-based deploy**: One-time setup required to convert the server's `/srv/shiny-server/richStudio` from rsync-copy to a git checkout. Procedure documented in DEPLOYMENT.md under "One-Time Setup". Without this, `scripts/deploy.sh` will fail its precondition check.
-  - Status: Not started
-  - Last updated: 2026-05-19
-  - Ref: Session 2026-05-18
-
-### Accepted Risks (no action needed)
-- **MED-014**: Sample data contention — accepted (read-only access, minimal risk)
-
-## 5. Risks, Open Questions, and Assumptions
-
-### Directory rename residue — Resolved
-- **Status:** Resolved
-- **Date opened:** 2026-03-29
-- **Resolution:** Renamed renv library directory, fixed nginx configs, removed stale symlinks. App confirmed running correctly.
-
-### Shiny Server user context — Resolved
-- **Status:** Resolved
-- **Date opened:** 2026-03-29
-- **Resolution:** Removed `/srv/shiny-server/richStudio` and `/srv/shiny-server/RichStudio` symlinks so requests route to the explicit `location /richStudio` block which runs as `juhur`, not `shiny`.
-
-### richR/richCluster dependency adoption — In progress
-- **Status:** SPEC-DEPENDENCY-001 scoped consumer acceptance passed with verification debt (2026-10-20).
-- **Current policy:** Test the pinned releases and supported public standalone entry points. Historical single-input bypasses and universal numerical-equivalence assumptions are not a migration baseline.
-
-### Bioconductor annotation package availability — Open
-- **Status:** Open
-- **Default assumption:** org.Hs.eg.db, org.Mm.eg.db must be pre-installed. App shows informational messages if missing.
-
-### Manuscript reference accuracy — Mitigated
-- **Status:** Mitigated
-- **Date opened:** 2026-03-29
-- **Resolution:** 3 rounds of review caught fabricated author names in 4 references; all corrected via PubMed/DOI verification. All 27 references now verified.
+- **Open; 2026-10-21 21:02 CDT:** I is unpushed; worktree I is the only copy of `b8eb759`. Do not dispose of I or W until pushed and merged.
+- **Open:** 002 accessibility rests on automated evidence until the 011 human review.
+- **Mitigated:** STOP5 of the prior publication scope was caused by reader tools (PNG decoded as UTF-8; JSON shape assumption), not by product defects; type-aware reading rules now apply.
+- **Process note:** the audit method is heavy (four proposal revisions plus a correction were needed). Keep tool failures distinct from product failures.
 
 ## 6. Verification Status
 
-### Verified
-| Feature | Method | Result | Date |
-|---------|--------|--------|------|
-| All R files parse (21/21) | Rscript -e "parse()" | All OK | 2026-03-09 |
-| Unit test suite | testthat::test_dir() | 152 pass, 0 fail | 2026-03-09 |
-| App startup after rename | renv::restore() + system R | All packages load | 2026-03-29 |
-| Shiny Server serving as juhur | Browser + log check | Confirmed running | 2026-03-29 |
-| renv activation (system R) | /usr/lib/R/bin/R source("renv/activate.R") | Library path correct | 2026-03-29 |
-| BMC manuscript review | 3 review rounds | Conditional PASS (resolved) | 2026-03-29 |
-| Application Note review | 1 review round | All issues fixed | 2026-03-29 |
-| No stale richStudio_3 refs | grep -r richStudio_3 (excl logs) | Only in PROJECT_LOG.md (historical) | 2026-03-29 |
-| Code review: R parse (21/21) | Rscript -e "parse()" per file | All PASS | 2026-03-30 |
-| Code review: C++ syntax | Brace balance check | 10 open / 10 close | 2026-03-30 |
-| Code review: App smoke test | Playwright browser navigate | Home page renders, title "richStudio" | 2026-03-30 |
-| Code review: Package loading | system R requireNamespace() | shiny, readxl, plotly, richR, DT, future all TRUE | 2026-03-30 |
-| Code review: No debug output | grep cout ClusterManager.cpp | Zero matches | 2026-03-30 |
-| Code review: xlsx handling | Grep readxl::read_excel in R/ | Present in all 3 upload handlers | 2026-03-30 |
-| Security: Secret scan | grep password/secret/api_key/token | No hardcoded secrets found | 2026-03-30 |
-| Security: Dependency versions | renv.lock audit | shiny 1.12.1, jsonlite 2.0.0, openssl 2.3.4 (all current) | 2026-03-30 |
-| Phase 15 B1+B2 R parse | Rscript -e "parse()" per file | 21/21 OK after both commits | 2026-05-17 |
-| Phase 15 B1+B2 test file parse | Rscript -e "parse()" per test file | 5/5 OK | 2026-05-17 |
-| Phase 15 B1 review | 3-round harness (regression, completeness, final gate) | All PASS, High confidence | 2026-05-17 |
-| Phase 15 B2 review | 3-round harness (CRAN compliance, runtime regression, final gate) | All PASS after 1 revise cycle (caught missed shinyjqui+tibble+tidyr+richR+shinyjs hidden drift) | 2026-05-17 |
-| Phase 15 NAMESPACE/package.R alignment | Cross-check all @importFrom directives | Aligned; 55 importFrom lines in NAMESPACE | 2026-05-17 |
-| Deploy scripts syntax | bash -n on all 3 scripts | All PASS | 2026-05-18 |
-| GitHub sync state | git rev-list --count HEAD...origin/main | 0/0 (fully synced at 7535bc2) | 2026-05-19 |
+Evidence directory: I `.moai/reports/SPEC-WORKSPACE-001/implementation/002/` (gitignored). Key files: `ws002-acceptance-recovery-plan-r4.md` (5f8d3098…), plan audit r4 PASS (4116f94e…), `ws002-acceptance-recovery-r11-correction-plan-r2.md` (bc319d57…) with audit r2 PASS (23584bd9…), result audit r1 (1769727d…; R1–R10 PASS), result audit r2 (fdefa89a…; R11-bis PASS), state `ws002-acceptance-recovery-state.json` (COMPLETE 1/5), receipt `ws002-acceptance-recovery-root-acceptance.json` (8b5ca741…). Raw retention: `/home/juhur/PROJECTS/20_libs/richStudio/tmp/runs/ws002-acceptance-recovery.cciaGXiu` (terminal metadata, full artifact, six screenshots, inventory 7bc659c9…).
 
-### Not Yet Verified
-- User manual accuracy (not independently reviewed against live app)
-- PDF generation (requires LaTeX)
-- Figure quality for print publication (screenshots may need higher DPI)
-- Playwright CLI E2E test suite (not yet created; user prefers CLI over MCP)
-- **Full test suite under R 4.6** — unverified. Scoped installed 0.1.5 consumer tests and existing clustering regressions now pass using the isolated library; the full historical lock restore and full-suite baseline remain unverified. Do not substitute the historical 152-test count for a fresh full run.
-- **R CMD check --as-cran** — never run end-to-end; blocked by same renv drift. Will surface any remaining NAMESPACE NOTEs (especially the 6 packages flagged in SPEC-CRAN-002).
-- **`scripts/deploy.sh` end-to-end** — scripts pass `bash -n` syntax check but have not been executed against a live server. First-run will be the coordinated B1-B5 deploy event.
-- **B1 + B2 in live deployment** — code pushed to GitHub but not yet deployed to hurlab.med.und.edu/richStudio/. Live app is still on pre-Phase-15 code.
+- Root verified: `git show HEAD:<path> | sha256sum` equals accepted amendment r6 (a8af6fa4…) and expected SPEC r5 (b8bef7e8…); `git diff --quiet 2442363 HEAD -- . ':!docs'` identical; I tree at `2442363` = `3f89bfc5…`.
+- Not observed: hosted browser-only negative path; complete 200% screenshot; human/AT/participant review; target R; local full suite (none run, by policy).
 
 ## 7. Restart Instructions
 
-**Current starting point (2026-10-20):** Continue SPEC-DEPENDENCY-001 in the isolated `dependency-adoption` worktree. Consumer acceptance and scoped review passed with the verification debt listed above. Documentation sync/push and server upload/execution are not established at this checkpoint. Inspect current status and the runtime guide before trusting the older baseline or restore advice below. The implementation commit is recorded above; no documentation-sync commit, push or deployment is established by these notes. Preserve unrelated pending bundles and completed historical work.
+Last updated: 2026-10-21 21:02 CDT. Say **resume**; read the primary-root `NEXT_SESSION.md`, give a one-line summary and confirm before executing. Start in integration worktree I. Verify `git -C I rev-parse HEAD` = `b8eb759…` and the state file reads COMPLETE before treating 002 as accepted.
 
-The following 2026-05-19 instructions describe the earlier plan; their deployment-path, library-readiness and priority assumptions are superseded by the current dependency-adoption section where they conflict.
-
-**Starting point (2026-05-19 08:17 CDT):**
-- Local working tree at `/home/juhur/PROJECTS/20_libs/richStudio` is clean and fully synced with `origin/main` at commit `7535bc2`.
-- Phase 15 Senior-Architect Review is IN PROGRESS. B1 (dead-code) and B2 (NAMESPACE hygiene) bundles complete locally and on GitHub but NOT yet on the live server.
-- Live app at `hurlab.med.und.edu/richStudio/` is still on the pre-Phase-15 codebase (last rsync 2026-05-10). Users are not yet affected by Phase 15 changes.
-- The user has chosen: continue harness bundles B6 → B3 → B4 → B5 → B7 → B8 (style → security → R perf → C++ perf → functional gap → tests), then ONE coordinated server deploy via `scripts/deploy.sh` with Tier 2 staging-slot safety.
-
-**Recommended next actions, in order:**
-
-1. **(Highest priority) Resume Phase 15 harness with Bundle B6 — SPEC-STYLE-001.**
-   Scope: Extract shared `sniff_delimiter()` utility into `R/file_handling.R` (eliminates the triplicated CSV/TSV probe in `enrich_tab.R`, `cluster_upload_tab.R`, `rr_visualize_tab.R`). Document the `u_` reactive-prefix convention in `R/package.R` roxygen. Clean up the remaining `format_cells` internal alternative comments in `R/round_table.R` that were deferred from B1.
-   Risk: Low. Expected ~1 hour with the 3-round review-revise harness.
-
-2. **Then B3 — SPEC-SEC-001 (security hardening).**
-   The deployment-critical bundle. Specifically:
-   - Path traversal in `R/save_tab.R::export_all` ZIP loop (lines 435, 447, 459): wrap each `paste0(name, ".csv")` in `sanitize_filename()`.
-   - Add `detect_file_format()` content-sniffing helper to `R/file_handling.R` (combines with B6's `sniff_delimiter`).
-   - Extend RDS validation in `R/save_tab.R::load_session` observer to assert `is.list()` and `inherits(x, "data.frame")` on every nested entry.
-   - Add `setBookmarkExclude()` calls in each module server for large reactiveValues stores.
-   - Add explicit `nchar(lab) <= 255` length cap.
-
-3. **Then B4 — SPEC-PERF-R-001 (R reactive performance).** Heatmap `bindCache`, top-terms debounce, observer split, rbind-in-loop fix, network term-count guard.
-
-4. **Then run `renv::restore()` against R 4.6** (~20-40 min). This is a hard prerequisite for B5 (needs `R CMD INSTALL`) and B8 (needs `testthat` + `shinytest2`). Should also enable `R CMD check --as-cran` for the first end-to-end CRAN compliance verification.
-
-5. **Then B5 — SPEC-PERF-CPP-001 (C++ refactor).** Upper-triangle distance matrix, pre-cache per-term gene sets, integer-overflow guard. Verify with `R CMD INSTALL` + benchmark.
-
-6. **Then B7 — SPEC-FUNC-001 (functional gap closure).** Port `R/rr_network.R` from static ggplot to `plotly::ggplotly()`; expand Reactome species support; add `options(shiny.maxRequestSize = 100*1024^2)` in `inst/application/app.R`.
-
-7. **Then B8 — SPEC-TEST-001 (test foundation rebuild).** Decompose the 4 monolithic server functions, add `shinytest2` integration tests for each module, add C++ direct tests via `.Call('_richStudio_richCluster', ...)`.
-
-8. **Then coordinated server deploy event:**
-   - One-time server setup per `DEPLOYMENT.md` "One-Time Setup" section (convert `/srv/shiny-server/richStudio` from rsync-copy to git checkout). Requires SSH + sudo on the server.
-   - `scripts/preview-deploy.sh` to confirm exactly what will deploy.
-   - `scripts/deploy.sh` — auto PREV snapshot + git fetch + reset --hard + renv::restore + Rcpp::compileAttributes + restart + curl smoke test.
-   - If anything misbehaves: `scripts/rollback.sh` for instant rollback to most recent PREV snapshot.
-
-9. **Pre-publication tasks (parallel track):** Figure 1A architecture diagram, user manual PDF (needs LaTeX), in-app help link, final author review.
-
-**Critical context for the next agent:**
-- The cross-validation step (running an independent skeptical reviewer against the original audit findings) caught real defects: B1 dropped one false-positive finding (T-18 launch_richStudio docs), B2 caught a CRAN-blocker bare-call (`shinyjqui::jqui_resizable`) the original audit missed. KEEP the 3-round review-revise harness for every bundle.
-- The original code-review found ~58 raw items deduplicated to ~50. After B1+B2 work, the validated set is in the SPEC docs at `.moai/specs/SPEC-QUICK-001/spec.md` and `.moai/specs/SPEC-CRAN-001/spec.md` (gitignored — not in the repo). Findings for B3-B8 are listed in the assistant message at the start of this session's harness work (search PROJECT_LOG.md for "P-01" / "SEC-01" / "T-01" / "G-01" tables).
-- The renv lockfile is the single biggest blocker to verification. Re-baselining it under R 4.6 unlocks `testthat`, `R CMD check --as-cran`, and full `scripts/deploy.sh` runs.
-
-**Key NEW files added 2026-05-18:**
-- `scripts/deploy.sh` — git-based deploy with PREV snapshot + smoke test + auto-rollback
-- `scripts/rollback.sh` — instant rollback from PREV snapshot
-- `scripts/preview-deploy.sh` — dry-run preview of pending deploy
-- `DEPLOYMENT.md` — restructured with 5-tier safety checklist and risk-by-change-type table
-
-**Key manuscript files:**
-- `inst/manuscript/richStudio_BMC_Bioinformatics.md` — Full research article (BMC Bioinformatics Software Article)
-- `inst/manuscript/richStudio_ApplicationNote.md` — Application note
-- `inst/manuscript/richStudio_UserManual.md` — User manual
-- `inst/manuscript/figures/` — 18 figure screenshots + manifest
-- `inst/manuscript/competitive_analysis.md` — Detailed tool comparison
-- `inst/manuscript/review_round*.md` — Review reports (3 rounds)
-
-**Key code files:**
-- `inst/application/app.R` — Main entry point
-- `R/rr_cluster.R` — Core clustering logic
-- `R/enrich_tab.R` — Enrichment module (accepts .xlsx now)
-- `R/cluster_upload_tab.R` — Cluster upload module (accepts .xlsx now)
-- `R/save_tab.R` — Session save/load with file locking
-- `DESCRIPTION` — Package metadata (Kai Guo added as author)
-
-**Author affiliations (for all manuscripts):**
-1. Junguk Hur — Dept. Biomedical Sciences, UND, Grand Forks, ND 58202
-2. Sarah Hong — Dept. Biomedical Informatics, Columbia University, NY 10032
-3. Jane Kim — Dept. Biomedical Sciences, UND, Grand Forks, ND 58202
-4. Kai Guo — Dept. Neurology, University of Michigan, Ann Arbor, MI 48109; NeuroNetwork for Emerging Therapies, University of Michigan
-
-**Funding:** R01DK130913 (NIDDK), P20GM113123 (NIGMS/CDA Core UND)
-
-**Last updated:** 2026-10-20 (dependency implementation accepted; verification debt and deployment pending)
+Next action candidates (owner decides): (a) dispatch SPEC-WS-003 from the existing draft; (b) push I and plan the merge to `main`; (c) fix the 200% capture hold as a small test-only card. Preserve the primary checkout's foreign `.gitignore` change; root owns I's handoff/log. No local full R suite/check/coverage; deployment remains user-manual sudo after review.

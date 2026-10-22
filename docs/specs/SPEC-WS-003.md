@@ -32,6 +32,7 @@ Home Quick Start cards are static, and separate Visualize labels do not communic
 
 - `R/home_tab.R`
 - `inst/application/app.R`
+- `tests/testthat/test-baseline-ui-workflows.R` (two Home label assertions only; see [003 baseline Home assertions](SPEC-WORKSPACE-001/amendments/003-baseline-home-assertions.md))
 
 ### New targets
 
@@ -100,3 +101,5 @@ Gate the new shell/context header behind one release switch with the old menu ro
 ## HISTORY
 
 - 2026-10-20: Planning-only draft, authored after repository inspection and Hur Harness team consultation.
+
+- 2026-10-21: Baseline Home assertion ownership amendment adds tests/testthat/test-baseline-ui-workflows.R as an existing target limited to two Home label assertions.

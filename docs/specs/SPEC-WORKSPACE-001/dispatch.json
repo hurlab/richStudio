@@ -440,11 +440,13 @@
         "inst/application/app.R",
         "R/workspace_navigation.R",
         "tests/testthat/test-workspace-navigation.R",
-        "tests/e2e/workspace-entry.spec.ts"
+        "tests/e2e/workspace-entry.spec.ts",
+        "tests/testthat/test-baseline-ui-workflows.R"
       ],
       "existing_target_files": [
         "R/home_tab.R",
-        "inst/application/app.R"
+        "inst/application/app.R",
+        "tests/testthat/test-baseline-ui-workflows.R"
       ],
       "new_target_files": [
         "R/workspace_navigation.R",

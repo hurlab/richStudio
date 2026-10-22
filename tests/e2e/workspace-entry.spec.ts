@@ -1,4 +1,4 @@
-import { test, expect, openNavigation } from './fixtures';
+import { test, expect } from './fixtures';
 import type { Page, TestInfo } from '@playwright/test';
 import type { AxeResults, RunOptions } from 'axe-core';
 import { createRequire } from 'node:module';
@@ -18,21 +18,50 @@ async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
 
+// The routed pane's own box can be zero-height (floated columns directly under the
+// tab item), so the route is proven by its state and by visible content inside it.
 async function expectTab(page: Page, tab: string) {
-  await expect(page.locator(`#shiny-tab-${tab}`)).toBeVisible();
-  await expect(page.locator(`#shiny-tab-${tab}`)).toHaveClass(/\bactive\b/);
+  const pane = page.locator(`#shiny-tab-${tab}`);
+  await expect(pane).toHaveClass(/\bactive\b/);
+  await expect(pane).toHaveAttribute('aria-hidden', 'false');
+  await expect(page.locator('.tab-pane.active[id^="shiny-tab-"]')).toHaveCount(1);
+  if (tab !== 'home_tab') await expect(page.locator('#shiny-tab-home_tab')).toBeHidden();
+  await expect(pane.locator('*:visible').first()).toBeVisible();
+}
+
+// Narrow viewports use the off-canvas sidebar (AdminLTE below 768px), driven by the
+// body.sidebar-open class; its slide transition must finish before the next decision.
+const homeLink = (page: Page) => page.locator('.sidebar-menu a[href="#shiny-tab-home_tab"]');
+const isNarrow = (page: Page) => (page.viewportSize()?.width ?? 1280) < 768;
+
+async function waitSidebarClosed(page: Page) {
+  await expect(page.locator('body.sidebar-open')).toHaveCount(0);
+  await expect.poll(async () => {
+    const bounds = await homeLink(page).boundingBox();
+    return bounds ? bounds.x + bounds.width : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(0);
+}
+
+async function openSidebar(page: Page) {
+  if (isNarrow(page) && !(await page.locator('body.sidebar-open').count())) {
+    await waitSidebarClosed(page);
+    await page.getByRole('button', { name: /Toggle navigation/ }).click();
+    await expect(page.locator('body.sidebar-open')).toHaveCount(1);
+  }
+  await homeLink(page).scrollIntoViewIfNeeded();
+  await expect(homeLink(page)).toBeInViewport();
 }
 
 async function closeNavigation(page: Page) {
   if (await page.locator('body.sidebar-open').count()) {
     await page.getByRole('button', { name: /Toggle navigation/ }).click();
-    await expect(page.locator('body.sidebar-open')).toHaveCount(0);
   }
+  if (isNarrow(page)) await waitSidebarClosed(page);
 }
 
 // Sidebar route by its unchanged href; a collapsed group is expanded first.
 async function openRoute(page: Page, tab: string, caption: RegExp) {
-  await openNavigation(page);
+  await openSidebar(page);
   const href = `a[href="#shiny-tab-${tab}"]`;
   const link = page.locator(`.sidebar-menu ${href}`);
   if (!(await link.isVisible())) {
@@ -116,7 +145,7 @@ test('REQ-001 collapsed navigation reaches Home and Save/Load through relabelled
   await openRoute(page, 'home_tab', /Home/);
   await expect(page.getByRole('heading', { name: 'Welcome to richStudio' })).toBeVisible();
   await expect(page.locator('#home-open_saved')).toBeVisible();
-  await openNavigation(page);
+  await openSidebar(page);
   await expect(page.locator('.sidebar-menu a[href="#shiny-tab-rr_visualize_tab"]')).toHaveText(/Enrichment figures/);
   await expect(page.locator('.sidebar-menu a[href="#shiny-tab-clus_visualize_tab"]')).toHaveText(/Cluster figures/);
   await closeNavigation(page);

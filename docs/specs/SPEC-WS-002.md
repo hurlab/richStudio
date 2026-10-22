@@ -60,6 +60,10 @@ The app already has blue/teal CSS tokens. A coherent workspace needs a documente
 
 [Hosted browser environment binding amendment](SPEC-WORKSPACE-001/amendments/002-hosted-browser-binding.md) proposes one existing workflow target for the browser-only environment adapter. The target addition is reserved, not active: local final16 acceptance and packet/readlock termination, independent amendment/metadata PASS, explicit root acceptance, and exclusive ownership reconciliation with001/011 precede application or implementation. Existing accessibility-tooling workflow exclusions are superseded only for that reviewed adapter after acceptance; runner/config/product/npm/dependency/threshold restrictions remain.001 creator history,011 future workflow ownership, all dependency edges, REQs/ACs, stopped histories and current cumulative accounting remain unchanged. Combined source/workflow and process Security review plus separate root release precede commit/push/hosted execution; actual hosted evidence and independent acceptance still gate whole002/003.
 
+## Acceptance recovery and manual-review deferral
+
+[002 acceptance recovery amendment](SPEC-WORKSPACE-001/amendments/002-acceptance-recovery.md) sets out whole 002 acceptance on independently accepted hosted run 39664812571 at `2442363`, including independent inspection of its layout and 100% zoom screenshots and of its measured 200% zoom layout receipts, together with the previously accepted AC-001 design inventory review and local browser milestone. It is effective on root's publication receipt. By program-owner decision, the direct human keyboard/focus/200% zoom/contrast/reduced-motion review required by the verification text below is a mandatory SPEC-WS-011 release-gate hold; 011 planning must read that amendment. The same-SHA negative alias requirement of the [check-warning portability amendment](SPEC-WORKSPACE-001/amendments/002-check-warning-portability.md) is superseded for 002 acceptance by the in-run negative job. REQs, ACs, targets, dependency graph and quality thresholds remain unchanged; the lifecycle `status` field is updated separately in a sync phase.
+
 ## GEARS requirements
 
 - **REQ-001** The design handoff shall cover each primary route and its empty, running, failed and completed states before those screens enter implementation.
@@ -113,3 +117,5 @@ Retain original CSS token values as a reviewed reference. Roll back the scoped t
 - 2026-10-20: Planning-only draft, authored after repository inspection and Hur Harness team consultation.
 
 - 2026-10-21: Proposed hosted browser environment binding amendment reserves one existing workflow target; no ownership or execution activates before its explicit local-evidence, lock, independent-review and root-acceptance prerequisites.
+
+- 2026-10-21: Acceptance recovery amendment records whole 002 acceptance, the manual-review deferral to the 011 release gate, the negative-alias supersession and measured-layout evidence for the 200% zoom state; REQs, ACs and targets are unchanged.

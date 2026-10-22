@@ -471,6 +471,7 @@
         "R/rr_visualize_tab.R",
         "R/rr_column_handling.R",
         "R/file_handling.R",
+        "R/deg_enrich.R",
         "R/input_review.R",
         "tests/testthat/test-input-review.R",
         "tests/e2e/input-review.spec.ts"
@@ -480,7 +481,8 @@
         "R/cluster_upload_tab.R",
         "R/rr_visualize_tab.R",
         "R/rr_column_handling.R",
-        "R/file_handling.R"
+        "R/file_handling.R",
+        "R/deg_enrich.R"
       ],
       "new_target_files": [
         "R/input_review.R",

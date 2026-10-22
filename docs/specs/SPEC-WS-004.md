@@ -4,7 +4,7 @@ title: "Intake validation and truthful scientific query preview"
 version: "0.1.0"
 status: draft
 created: "2026-10-20"
-updated: "2026-10-20"
+updated: "2026-10-22"
 author: "workspace planning team"
 priority: P1
 phase: "v0.1.7 target"
@@ -35,6 +35,7 @@ Upload, preprocessing and scientific settings currently occupy one large surface
 - `R/rr_visualize_tab.R`
 - `R/rr_column_handling.R`
 - `R/file_handling.R`
+- `R/deg_enrich.R`
 
 ### New targets
 
@@ -44,7 +45,7 @@ Upload, preprocessing and scientific settings currently occupy one large surface
 
 ## Technical implementation plan
 
-1. Introduce a review card showing immutable source identity, chosen columns, organism/identifier/database/ontology, exact query rule, submitted count and recognized/unmatched/excluded counts when actually available. Preview and committed preprocessing states receive separate labels and versions.
+1. Introduce a review card showing immutable source identity, chosen columns, organism/identifier/database/ontology, exact query rule, submitted count and recognized/unmatched/excluded counts when actually available. Preview and committed preprocessing states receive separate labels and versions. The committed revision carries an explicit query rule (exact column, role adjusted/raw/none, cutoff, strict `<`); `run_enrichment_jobs()` applies that rule when present and keeps the current behavior (exact case-insensitive `padj`, else `pvalue`, else no filter) when absent. The default resolution reproduces that current rule exactly; other recognized column names are offered only as explicit choices.
 
 2. Offer deterministic suggested column mappings, but require explicit resolution for ambiguous raw-versus-adjusted p-values, identifiers and duplicate semantic mappings. Preserve extra provider columns/raw data for export.
 
@@ -92,7 +93,7 @@ All requirements must be exercised by the listed scenarios plus scoped tests; ve
 
 ## Security and trust boundary
 
-File extensions are hints only; load the accepted001 application resource configuration/loader and bound bytes/rows/columns/strings before expensive parsing. Missing/invalid policy blocks submission. Escape imported labels/text and reject non-data objects. Scientific validation is distinct from upload trust validation.
+File extensions are hints only; load the accepted001 application resource configuration/loader and bound bytes/rows/columns/strings before expensive parsing. For gene-membership columns of imported enrichment results, the string limit applies to each delimited identifier rather than to the whole membership cell (owner decision 2026-10-22, amendment 004). Missing/invalid policy blocks submission. Escape imported labels/text and reject non-data objects. Scientific validation is distinct from upload trust validation.
 
 ## Rollout and rollback
 
@@ -107,3 +108,4 @@ Retain raw uploads and old completed results. Revert review adapters without rew
 ## HISTORY
 
 - 2026-10-20: Planning-only draft, authored after repository inspection and Hur Harness team consultation.
+- 2026-10-22: Amendment 004 (owner decisions): adds `R/deg_enrich.R` so the explicit p-value rule reaches the worker; default rule pinned to current behavior; string limit applied per membership identifier. No requirement or acceptance scenario changed.

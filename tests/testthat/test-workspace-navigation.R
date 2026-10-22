@@ -155,6 +155,20 @@ test_that("REQ-001 AC-001 Home renders four native entry actions above About and
                 "View results", "Continue setup")) {
     expect_false(grepl(old, html, fixed = TRUE))
   }
+  # Heading outline never skips a level (h1 Welcome, h2 Quick Start, h3 box titles).
+  levels <- as.integer(regmatches(html, gregexpr("(?<=<h)[1-6]", html, perl = TRUE))[[1]])
+  expect_identical(levels[1:2], c(1L, 2L))
+  expect_true(all(diff(levels) <= 1L))
+  expect_match(html, '<h1 id="home-title" class="home-title">Welcome to richStudio</h1>', fixed = TRUE)
+  expect_match(html, '<h2 id="home-quick_start_heading"', fixed = TRUE)
+  expect_false(grepl("<h3>Quick Start", html, fixed = TRUE))
+  # All Home content sits inside one named landmark; the entry actions in a nested one.
+  expect_match(html, '^<div role="tabpanel"[^>]*>\\s*<section aria-labelledby="home-title">')
+  expect_match(html, "</section>\\s*</div>$")
+  expect_match(html, '<section class="workflow-stepper" aria-labelledby="home-quick_start_heading">',
+               fixed = TRUE)
+  expect_lt(regexpr("home-quick_start_heading", html, fixed = TRUE),
+            regexpr("Upload gene lists", html, fixed = TRUE))
 })
 
 test_that("REQ-001 release switch off restores the previous Home content without entry actions", {
@@ -167,6 +181,11 @@ test_that("REQ-001 release switch off restores the previous Home content without
   # tool", so absence of entry actions is asserted on the action markup instead.
   for (absent in c("Upload gene lists", "Open saved analysis", "Load demo results",
                    'id="home-', "action-label", "<button")) {
+    expect_false(grepl(absent, html, fixed = TRUE))
+  }
+  # The previous markup is kept: h3 Quick Start, no added landmark or heading ids.
+  expect_match(html, "<h3>Quick Start</h3>", fixed = TRUE)
+  for (absent in c("<section", "<h2", 'id="home-title"', "aria-labelledby")) {
     expect_false(grepl(absent, html, fixed = TRUE))
   }
 })
@@ -200,6 +219,7 @@ test_that("REQ-003 S11 header is an accessible region with a native dataset choo
     expect_match(on, value, fixed = TRUE)
   }
   expect_false(grepl('data-for="workspace-active_result"', on, fixed = TRUE))
+  expect_false(grepl("<h[1-6]", on))
   for (kind in c("rs-workspace-kind", "Setup draft", "Captured run settings", "Display filter",
                  "Committed input revision", "Unsaved project changes")) {
     expect_false(grepl(kind, on, fixed = TRUE))
@@ -317,6 +337,7 @@ test_that("REQ-003 S9r header shows recorded organism and identifier type for a 
     }
     # Only the run is unrecorded; the other result's facts are never borrowed.
     expect_identical(ws3_count(html, "Not recorded"), 1L)
+    expect_false(grepl("<h[1-6]", html))
     for (absent in c("human", "SYMBOL", "Recorded details unavailable for this result name",
                      "No dataset selected")) {
       expect_false(grepl(absent, html, fixed = TRUE))
@@ -333,6 +354,8 @@ test_that("REQ-003 unknown recorded values are shown as not recorded", {
       html <- ws3_output_html(output$summary)
       expect_match(html, "kegg1", fixed = TRUE)
       expect_identical(ws3_count(html, "Not recorded"), 3L)
+      # One matching row: its (unknown) recorded details are shown with the source note.
+      expect_match(html, "From the recorded result details", fixed = TRUE)
       expect_false(grepl("Recorded details unavailable for this result name", html, fixed = TRUE))
       for (absent in c("human", "SYMBOL", ">?<", ">NULL<", ">NA<")) {
         expect_false(grepl(absent, html, fixed = TRUE))
@@ -353,7 +376,9 @@ test_that("REQ-003 zero or repeated recorded rows never guess and say details ar
       expect_match(html, "kegg1", fixed = TRUE)
       expect_identical(ws3_count(html, "Not recorded"), 3L)
       expect_match(html, "Recorded details unavailable for this result name", fixed = TRUE)
-      for (absent in c("human", "mouse", "rat", "SYMBOL", "ENTREZID")) {
+      # The source note accompanies shown details only, never the unavailable line.
+      for (absent in c("human", "mouse", "rat", "SYMBOL", "ENTREZID",
+                       "From the recorded result details")) {
         expect_false(grepl(absent, html, fixed = TRUE))
       }
     })
@@ -549,6 +574,62 @@ test_that("REQ-003 two sessions keep independent active results", {
   })
   expect_identical(shiny::isolate(captured$first$active_result()), "go1")
   expect_identical(shiny::isolate(captured$second$active_result()), "kegg1")
+})
+
+test_that("REQ-001 REQ-003 F3 server-rendered action ids follow the session namespace", {
+  home <- ws3_home_fixture(results = TRUE, gene_lists = TRUE)
+  header <- ws3_header_fixture(c("go1", "kegg1"), NULL, "kegg1")
+  # Mounted below another module, the raw module id ("home") would be wrong.
+  outer <- function(id) shiny::moduleServer(id, function(input, output, session) {
+    do.call(richStudio:::homeTabServer, home$args)
+    do.call(richStudio:::workspaceHeaderServer, header$args)
+  })
+  shiny::testServer(outer, args = list(id = "outer"), {
+    session$flushReact()
+    context <- ws3_output_html(output[["home-context_actions"]])
+    expect_match(context, '<button id="outer-home-view_results"', fixed = TRUE)
+    expect_match(context, '<button id="outer-home-continue_setup"', fixed = TRUE)
+    actions <- ws3_output_html(output[["workspace-actions"]])
+    expect_match(actions, '<button id="outer-workspace-create_figure"', fixed = TRUE)
+    expect_match(actions, '<button id="outer-workspace-cluster_results"', fixed = TRUE)
+    expect_false(grepl('id="home-', context, fixed = TRUE))
+    expect_false(grepl('id="workspace-', actions, fixed = TRUE))
+    session$setInputs(`home-view_results` = 1L, `workspace-cluster_results` = 1L)
+    expect_identical(home$log$events, "navigate:rr_visualize_tab")
+    expect_identical(header$log$tabs, "cluster_tab")
+  })
+})
+
+test_that("REQ-001 F4 demo status names added and skipped bundled results precisely", {
+  status <- richStudio:::workspace_demo_status
+  all <- status(c("go1", "go2", "kegg1"))
+  expect_identical(all, "Added bundled demo results: go1, go2, kegg1.")
+  some <- status(c("go1", "kegg1"))
+  expect_identical(some, paste("Added bundled demo results: go1, kegg1.",
+    "Not added because a result with that name already exists: go2."))
+  none <- status(character())
+  expect_identical(none, paste("No bundled demo results added.",
+    "Not added because a result with that name already exists: go1, go2, kegg1."))
+})
+
+test_that("REQ-001 REQ-003 F4 a user result named go1 is kept, reported and never activated", {
+  shiny::testServer(ws3_app_server(), {
+    user_go1 <- data.frame(Term = "user", Pvalue = 0.5)
+    state$u_rrnames$labels <- "go1"
+    state$u_rrdfs$go1 <- user_go1
+    session$flushReact()
+    session$setInputs(`home-load_demo` = 1L)
+    expect_identical(state$u_rrnames$labels, c("go1", "go2", "kegg1"))
+    expect_identical(state$u_rrdfs$go1, user_go1)
+    expect_null(nav$active_result())
+    expect_identical(output[["home-demo_status"]], paste(
+      "Added bundled demo results: go2, kegg1.",
+      "Not added because a result with that name already exists: go1."))
+    # Activating again adds nothing and still activates nothing.
+    session$setInputs(`home-load_demo` = 2L)
+    expect_null(nav$active_result())
+    expect_match(output[["home-demo_status"]], "No bundled demo results added.", fixed = TRUE)
+  })
 })
 
 test_that("REQ-004 AC-002 AC-003 M10 entry and header actions start no enrichment or clustering", {

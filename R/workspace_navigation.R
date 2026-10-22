@@ -55,6 +55,20 @@ workspace_load_demo_results <- function(u_rrnames, u_rrdfs, u_big_rrdf) {
   added
 }
 
+# Status text naming exactly which bundled names were added and which were not
+# added because a result with that name already exists (never replaced).
+workspace_demo_status <- function(added) {
+  added <- intersect(workspace_demo_labels, added)
+  skipped <- setdiff(workspace_demo_labels, added)
+  if (!length(skipped)) {
+    return(paste0("Added bundled demo results: ", paste(added, collapse = ", "), "."))
+  }
+  reason <- paste0("Not added because a result with that name already exists: ",
+                   paste(skipped, collapse = ", "), ".")
+  if (!length(added)) return(paste("No bundled demo results added.", reason))
+  paste0("Added bundled demo results: ", paste(added, collapse = ", "), ". ", reason)
+}
+
 # Unknown recorded values ("?", "NULL", "NA", "", missing) become one NA.
 workspace_recorded_value <- function(value) {
   value <- as.character(value)
@@ -133,16 +147,19 @@ workspaceHeaderServer <- function(id, active_result, u_rrnames, u_big_rrdf, navi
           shiny::tags$dd(workspace_text(facts$organism, missing = TRUE)),
           shiny::tags$dt("Recorded identifier type"),
           shiny::tags$dd(workspace_text(facts$keytype, missing = TRUE))),
-        shiny::tags$p("From the recorded result details"),
-        if (!facts$unique) shiny::tags$p("Recorded details unavailable for this result name"))
+        if (facts$unique) {
+          shiny::tags$p("From the recorded result details")
+        } else {
+          shiny::tags$p("Recorded details unavailable for this result name")
+        })
     })
 
     output$actions <- shiny::renderUI({
       available <- !is.null(active_result())
       reason <- if (length(labels())) "Choose a result first" else "Import or load enrichment results first"
       shiny::tags$div(class = "rs-workspace rs-workspace-actions",
-        workspace_action(id, "create_figure", "Create figure", available, reason),
-        workspace_action(id, "cluster_results", "Cluster results", available, reason))
+        workspace_action(session$ns(NULL), "create_figure", "Create figure", available, reason),
+        workspace_action(session$ns(NULL), "cluster_results", "Cluster results", available, reason))
     })
 
     # Selects the active result in the Enrichment figures selectors only.
@@ -170,8 +187,8 @@ workspace_navigation_server <- function(session, u_degnames, u_rrnames, u_rrdfs,
   navigate <- function(tab) workspace_navigate(session, tab)
   load_demo <- function() {
     added <- workspace_load_demo_results(u_rrnames, u_rrdfs, u_big_rrdf)
-    if (is.null(shiny::isolate(active_result())) &&
-        "go1" %in% shiny::isolate(u_rrnames$labels)) {
+    # Only a go1 added by this action becomes active, and only if none is active.
+    if ("go1" %in% added && is.null(shiny::isolate(active_result()))) {
       active_result("go1")
     }
     invisible(added)

@@ -3,8 +3,10 @@
 # is the only one that loads data, and nothing here runs an analysis.
 homeQuickStartUI <- function(id) {
   ns <- NS(id)
-  div(class = "workflow-stepper",
-    h3("Quick Start"),
+  # h2 keeps the outline valid under the h1; inline values mirror .workflow-stepper h3.
+  tags$section(class = "workflow-stepper", `aria-labelledby` = ns("quick_start_heading"),
+    h2(id = ns("quick_start_heading"), "Quick Start",
+      style = "font-size: 18px; font-weight: 700; color: var(--rs-text); margin: 0 0 10px;"),
     p(class = "step-desc", "Start from any of these. Nothing runs until you choose an action."),
     div(class = "rs-workspace rs-workspace-actions",
       workspace_action(id, "upload_gene_lists", "Upload gene lists"),
@@ -46,8 +48,7 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
       )
     )
   )
-  tabItem(
-    tabName = tabName,
+  rows <- list(
 
     # --- Row 1: Compact Hero Banner ---
     fluidRow(
@@ -55,7 +56,7 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
         div(class = "home-hero-compact",
           tags$img(src = "richstudio-logo.svg", alt = "richStudio logo", class = "home-logo"),
           div(
-            h1("Welcome to richStudio", class = "home-title"),
+            h1(id = if (isTRUE(enabled)) ns("title"), "Welcome to richStudio", class = "home-title"),
             p("An interactive platform for functional enrichment analysis, gene set clustering, and visualization.",
               class = "home-subtitle"),
             p("Run GO, KEGG, or Reactome enrichment directly, or import results from tools like clusterProfiler or DAVID. Cluster functionally related terms using multiple algorithms and explore results through interactive plots.",
@@ -120,6 +121,11 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
       )
     )
   )
+  # Enabled Home sits in one named landmark; the disabled Home renders as before.
+  if (isTRUE(enabled)) {
+    return(tabItem(tabName = tabName, tags$section(`aria-labelledby` = ns("title"), rows)))
+  }
+  do.call(tabItem, c(list(tabName = tabName), rows))
 }
 
 
@@ -136,11 +142,7 @@ homeTabServer <- function(id, navigate, load_demo, has_results, has_gene_lists) 
     observeEvent(input$open_saved, navigate("save_tab"))
     observeEvent(input$load_demo, {
       added <- load_demo()
-      demo_status(if (length(added)) {
-        paste0("Loaded bundled demo results: ", paste(added, collapse = ", "))
-      } else {
-        "Bundled demo results are already loaded"
-      })
+      demo_status(workspace_demo_status(added))
       navigate("rr_visualize_tab")
     })
 
@@ -150,9 +152,9 @@ homeTabServer <- function(id, navigate, load_demo, has_results, has_gene_lists) 
       gene_lists <- isTRUE(has_gene_lists())
       if (!results && !gene_lists) return(NULL)
       div(class = "rs-workspace rs-workspace-actions",
-        workspace_action(id, "view_results", "View results", results,
+        workspace_action(session$ns(NULL), "view_results", "View results", results,
           "Import or load enrichment results first"),
-        workspace_action(id, "continue_setup", "Continue setup", gene_lists,
+        workspace_action(session$ns(NULL), "continue_setup", "Continue setup", gene_lists,
           "Upload gene lists first"))
     })
     observeEvent(input$view_results, {

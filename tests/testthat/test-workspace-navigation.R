@@ -60,7 +60,9 @@ ws3_sidebar_tabs <- function(calls) {
 ws3_home_fixture <- function(results = FALSE, gene_lists = FALSE) {
   log <- new.env(parent = emptyenv())
   log$events <- character()
+  # Production module id, so rendered button ids match the app ("home-...").
   list(log = log, args = list(
+    id = "home",
     navigate = function(tab) {
       log$events <- c(log$events, paste0("navigate:", tab))
       invisible(TRUE)
@@ -87,7 +89,9 @@ ws3_header_fixture <- function(labels = NULL, meta = NULL, active = NULL) {
   })
   log <- new.env(parent = emptyenv())
   log$tabs <- character()
+  # Production module id, so rendered button ids match the app ("workspace-...").
   list(log = log, args = list(
+    id = "workspace",
     active_result = shiny::reactiveVal(active),
     u_rrnames = state$u_rrnames,
     u_big_rrdf = state$u_big_rrdf,
@@ -159,8 +163,10 @@ test_that("REQ-001 release switch off restores the previous Home content without
                   "Upload &amp; Enrich", "Visualize &amp; Export", "vfixture-version")) {
     expect_match(html, value, fixed = TRUE)
   }
-  for (absent in c("Upload gene lists", "Import enrichment results", "Open saved analysis",
-                   "Load demo results", 'id="home-')) {
+  # The previous stepper prose already contains "Import enrichment results from any
+  # tool", so absence of entry actions is asserted on the action markup instead.
+  for (absent in c("Upload gene lists", "Open saved analysis", "Load demo results",
+                   'id="home-', "action-label", "<button")) {
     expect_false(grepl(absent, html, fixed = TRUE))
   }
 })
@@ -168,11 +174,13 @@ test_that("REQ-001 release switch off restores the previous Home content without
 test_that("REQ-002 sidebar relabels figure destinations and keeps every route in both switch states", {
   on <- ws3_html(richStudio:::workspace_sidebar_menu(enabled = TRUE))
   off <- ws3_html(richStudio:::workspace_sidebar_menu(enabled = FALSE))
-  shared <- c(home_tab = "Home", enrich_tab = "Enrich", cluster_upload_tab = "Upload files",
+  # The two menu groups keep their existing group tabNames as well.
+  shared <- c(home_tab = "Home", enrich_tab_group = "Enrichment", enrich_tab = "Enrich",
+              cluster_tab_group = "Clustering", cluster_upload_tab = "Upload files",
               cluster_tab = "Cluster", update_tab = "Manage Files", save_tab = "Save/Load")
   for (html in list(on, off)) {
     captions <- ws3_captions(html)
-    expect_setequal(names(captions), ws3_tabs)
+    expect_setequal(names(captions), c(ws3_tabs, "enrich_tab_group", "cluster_tab_group"))
     expect_identical(captions[names(shared)], shared)
   }
   expect_identical(ws3_captions(on)[c("rr_visualize_tab", "clus_visualize_tab")],
@@ -509,11 +517,14 @@ test_that("REQ-001 navigation rejects unknown route names without sending an upd
   shiny::testServer(ws3_app_server(), {
     inputs <- ws3_record_inputs(session)
     session$flushReact()
+    # The header's own chooser initialisation may precede navigation; count from here.
+    before <- length(inputs$calls)
+    expect_true(all(ws3_is_own_select(ws3_ids(inputs$calls))))
     for (tab in list("not_a_tab", "", NA_character_, c("home_tab", "save_tab"),
                      "<script>alert(1)</script>", NULL, 1L)) {
       expect_false(isTRUE(nav$navigate(tab)))
     }
-    expect_length(inputs$calls, 0L)
+    expect_length(ws3_since(inputs, before), 0L)
     for (tab in ws3_tabs) expect_true(isTRUE(nav$navigate(tab)))
     expect_identical(ws3_sidebar_tabs(inputs$calls), ws3_tabs)
   })

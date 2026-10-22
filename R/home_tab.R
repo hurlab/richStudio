@@ -1,6 +1,51 @@
 
-homeTabUI <- function(id, tabName, app_version = "0.1.6") {
+# Quick Start entry actions (SPEC-WS-003). Native buttons only; the demo action
+# is the only one that loads data, and nothing here runs an analysis.
+homeQuickStartUI <- function(id) {
   ns <- NS(id)
+  div(class = "workflow-stepper",
+    h3("Quick Start"),
+    p(class = "step-desc", "Start from any of these. Nothing runs until you choose an action."),
+    div(class = "rs-workspace rs-workspace-actions",
+      workspace_action(id, "upload_gene_lists", "Upload gene lists"),
+      workspace_action(id, "import_results", "Import enrichment results"),
+      workspace_action(id, "open_saved", "Open saved analysis"),
+      workspace_action(id, "load_demo", "Load demo results")
+    ),
+    p(class = "step-desc",
+      "Load demo results adds the bundled demo results go1, go2 and kegg1 (example data, not your analysis)."),
+    div(role = "status", textOutput(ns("demo_status"))),
+    uiOutput(ns("context_actions"))
+  )
+}
+
+homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
+  ns <- NS(id)
+  quick_start <- if (isTRUE(enabled)) homeQuickStartUI(id) else div(class = "workflow-stepper",
+    h3("Quick Start"),
+    div(class = "stepper-container",
+      div(class = "step-card",
+        span(class = "step-number", "1"),
+        div(class = "step-title", "Upload & Enrich"),
+        p(class = "step-desc",
+          "Upload DEG lists and run GO, KEGG, or Reactome enrichment."),
+        span(class = "step-arrow", icon("arrow-right"))
+      ),
+      div(class = "step-card",
+        span(class = "step-number", "2"),
+        div(class = "step-title", "Cluster"),
+        p(class = "step-desc",
+          "Import enrichment results from any tool (clusterProfiler, DAVID, etc.) or enrich here first at Step 1."),
+        span(class = "step-arrow", icon("arrow-right"))
+      ),
+      div(class = "step-card",
+        span(class = "step-number", "3"),
+        div(class = "step-title", "Visualize & Export"),
+        p(class = "step-desc",
+          "Explore interactive plots, save sessions, and export results.")
+      )
+    )
+  )
   tabItem(
     tabName = tabName,
 
@@ -21,35 +66,9 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
       )
     ),
 
-    # --- Row 2: Quick Start Workflow Stepper ---
+    # --- Row 2: Quick Start (entry actions, or the previous stepper when disabled) ---
     fluidRow(
-      column(12,
-        div(class = "workflow-stepper",
-          h3("Quick Start"),
-          div(class = "stepper-container",
-            div(class = "step-card",
-              span(class = "step-number", "1"),
-              div(class = "step-title", "Upload & Enrich"),
-              p(class = "step-desc",
-                "Upload DEG lists and run GO, KEGG, or Reactome enrichment."),
-              span(class = "step-arrow", icon("arrow-right"))
-            ),
-            div(class = "step-card",
-              span(class = "step-number", "2"),
-              div(class = "step-title", "Cluster"),
-              p(class = "step-desc",
-                "Import enrichment results from any tool (clusterProfiler, DAVID, etc.) or enrich here first at Step 1."),
-              span(class = "step-arrow", icon("arrow-right"))
-            ),
-            div(class = "step-card",
-              span(class = "step-number", "3"),
-              div(class = "step-title", "Visualize & Export"),
-              p(class = "step-desc",
-                "Explore interactive plots, save sessions, and export results.")
-            )
-          )
-        )
-      )
+      column(12, quick_start)
     ),
 
     # --- Row 3: Features + Links + About (3 equal columns) ---
@@ -104,9 +123,44 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6") {
 }
 
 
-homeTabServer <- function(id) {
+# Calls only the supplied callbacks; navigation and demo loading are owned by
+# workspace_navigation_server(). has_results/has_gene_lists are reactives.
+homeTabServer <- function(id, navigate, load_demo, has_results, has_gene_lists) {
 
   moduleServer(id, function(input, output, session) {
+    demo_status <- reactiveVal("")
+    output$demo_status <- renderText(demo_status())
+
+    observeEvent(input$upload_gene_lists, navigate("enrich_tab"))
+    observeEvent(input$import_results, navigate("cluster_upload_tab"))
+    observeEvent(input$open_saved, navigate("save_tab"))
+    observeEvent(input$load_demo, {
+      added <- load_demo()
+      demo_status(if (length(added)) {
+        paste0("Loaded bundled demo results: ", paste(added, collapse = ", "))
+      } else {
+        "Bundled demo results are already loaded"
+      })
+      navigate("rr_visualize_tab")
+    })
+
+    # Context actions appear only once the session holds data.
+    output$context_actions <- renderUI({
+      results <- isTRUE(has_results())
+      gene_lists <- isTRUE(has_gene_lists())
+      if (!results && !gene_lists) return(NULL)
+      div(class = "rs-workspace rs-workspace-actions",
+        workspace_action(id, "view_results", "View results", results,
+          "Import or load enrichment results first"),
+        workspace_action(id, "continue_setup", "Continue setup", gene_lists,
+          "Upload gene lists first"))
+    })
+    observeEvent(input$view_results, {
+      if (isTRUE(has_results())) navigate("rr_visualize_tab")
+    })
+    observeEvent(input$continue_setup, {
+      if (isTRUE(has_gene_lists())) navigate("enrich_tab")
+    })
   })
 
 }

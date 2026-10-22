@@ -96,27 +96,20 @@ app_version <- "0.1.6"
 
 # UI Definition
 ui <- function(request) {
+  # Release switch for the workspace navigation (SPEC-WS-003); FALSE keeps the
+  # previous Home, menu captions and no header. Stores and results are unaffected.
+  workspace_navigation <- isTRUE(getOption("richStudio.workspace_navigation", TRUE))
+  figure_breadcrumbs <- if (workspace_navigation) {
+    "'rr_visualize_tab': 'Enrichment / Enrichment figures',
+              'clus_visualize_tab': 'Clustering / Cluster figures',"
+  } else {
+    "'rr_visualize_tab': 'Enrichment / Visualize',
+              'clus_visualize_tab': 'Clustering / Visualize',"
+  }
   dashboardPage(
     dashboardHeader(title = "richStudio"),
     dashboardSidebar(
-      sidebarMenu(
-        menuItem("Home", icon = icon("house"), tabName = "home_tab"),
-        tags$li(class = "header", "ANALYSIS"),
-        menuItem("Enrichment", icon = icon("flask"), tabName = "enrich_tab_group",
-          menuSubItem("Enrich", icon = icon("play-circle"), tabName = "enrich_tab"),
-          menuSubItem("Visualize", icon = icon("chart-bar"), tabName = "rr_visualize_tab")
-        ),
-        menuItem("Clustering", icon = icon("layer-group"), tabName = "cluster_tab_group",
-          menuSubItem("Upload files", icon = icon("file-arrow-up"), tabName = "cluster_upload_tab"),
-          menuSubItem("Cluster", icon = icon("vials"), tabName = "cluster_tab"),
-          menuSubItem("Visualize", icon = icon("chart-line"), tabName = "clus_visualize_tab")
-        ),
-        tags$li(class = "header", "TOOLS"),
-        menuItem("Manage Files", icon = icon("folder-open"), tabName = "update_tab"),
-        menuItem("Save/Load", icon = icon("floppy-disk"), tabName = "save_tab"),
-        hr(),
-        bookmarkButton()
-      ),
+      workspace_sidebar_menu(enabled = workspace_navigation),
       # Sidebar footer with lab homepage link
       div(class = "sidebar-footer",
         tags$a(href = "http://hurlab.med.und.edu/", target = "_blank",
@@ -144,8 +137,11 @@ ui <- function(request) {
       # Enable shinyjs
       shinyjs::useShinyjs(),
 
+      workspace_header_ui("workspace", enabled = workspace_navigation),
+
       tabItems(
-        homeTabUI("home", tabName = "home_tab", app_version = app_version),
+        homeTabUI("home", tabName = "home_tab", app_version = app_version,
+                  enabled = workspace_navigation),
         enrichTabUI("enrich", tabName = "enrich_tab"),
         rrVisTabUI("rr_visualize", tabName = "rr_visualize_tab"),
         clusterUploadTabUI("cluster_upload", tabName = "cluster_upload_tab"),
@@ -157,7 +153,7 @@ ui <- function(request) {
       tags$head(
         tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
         tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
-        tags$script(HTML("
+        tags$script(HTML(paste0("
           $(document).on('shiny:connected', function() {
             // Hide loading overlay with fade
             var $overlay = $('#loading-overlay');
@@ -169,10 +165,9 @@ ui <- function(request) {
             var breadcrumbs = {
               'home_tab': 'Home',
               'enrich_tab': 'Enrichment / Enrich',
-              'rr_visualize_tab': 'Enrichment / Visualize',
+              ", figure_breadcrumbs, "
               'cluster_upload_tab': 'Clustering / Upload Files',
               'cluster_tab': 'Clustering / Cluster',
-              'clus_visualize_tab': 'Clustering / Visualize',
               'update_tab': 'Manage Files',
               'save_tab': 'Save / Load'
             };
@@ -196,7 +191,7 @@ ui <- function(request) {
               }
             });
           });
-        "))
+        ")))
       )
     )
   )
@@ -242,8 +237,14 @@ server <- function(input, output, session) {
     gc()
   })
 
-  # Initialize module servers
-  homeTabServer("home")
+  # Initialize module servers. Home entry actions and the active-workspace header
+  # exist only behind the release switch; their state is created per session.
+  if (isTRUE(getOption("richStudio.workspace_navigation", TRUE))) {
+    workspace_navigation_server(session,
+      u_degnames = u_degnames, u_rrnames = u_rrnames,
+      u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf
+    )
+  }
 
   enrichTabServer("enrich",
     u_degnames = u_degnames, u_degdfs = u_degdfs, u_big_degdf = u_big_degdf,

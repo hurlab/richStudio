@@ -4,6 +4,7 @@ enrichTabUI <- function(id, tabName) {
   tabItem(tabName = tabName,
     # UPLOAD TAB CONTENTS
     useShinyjs(),
+    fluidRow(
     column(width = 4,
       fluidRow(
         tabBox(title=span(icon("upload"), "Upload DEG sets"), id='upload_box', width=NULL,
@@ -18,7 +19,7 @@ enrichTabUI <- function(id, tabName) {
             actionButton(ns('deg_load'), 'Load data')
           ),
           tabPanel("Text input",
-            helpText("Genes can be separated by any non-alphanumeric character"),
+            helpText("Separate genes with spaces, new lines, commas or semicolons"),
             textAreaInput(ns('deg_text'), "Text Input", placeholder="Paste list of significant genes or dataframe-like object"),
             textInput(ns('degtext_name'), "Name", placeholder="Set name for pasted DEG set"),
             fluidRow(
@@ -46,6 +47,11 @@ enrichTabUI <- function(id, tabName) {
                         'arabidopsis', 'anopheles', 'ecoli', 'malaria', 'chipm',
                         'toxoplasma', 'sco'), selected='human'),
           br(),
+          h4("Review before Run"),
+          uiOutput(ns('review_card')),
+          uiOutput(ns('review_messages')),
+          numericInput(ns('deg_filter_cutoff'),
+                       "Default cutoff (used for gene lists without a committed revision)", value=NULL),
           actionButton(ns('enrich_deg'), "Run Enrichment",
                        icon = icon("play"),
                        class = "btn-action-hero btn-block")
@@ -87,22 +93,27 @@ enrichTabUI <- function(id, tabName) {
         tabPanel(title="DEG sets",
           h4("Preprocess data"),
           selectInput(ns('deg_table_select'), "Select DEG set", choices=NULL),
-          fluidRow(column(5,
-            selectInput(ns('deg_header_select'), "GeneID header", choices=NULL)
-          )),
-          fluidRow(
-            column(5,
-              selectInput(ns('deg_filter_by'), "Filter by", choices=NULL)
+          tags$div(class = "review-preview",
+            h4("Preview \u2014 not committed"),
+            fluidRow(
+              column(6, selectInput(ns('review_gene_col'), "Gene column",
+                                    choices = c("Default (GeneID header)" = "__default__"))),
+              column(6, selectInput(ns('review_p_col'), "P-value column",
+                                    choices = c("Default (current rule)" = "__default__",
+                                                "None \u2014 all rows" = "__none__")))
             ),
-            column(5,
-              numericInput(ns('deg_filter_cutoff'), "Cutoff", value=NULL)
+            fluidRow(
+              column(6, selectInput(ns('review_p_role'), "P-value role",
+                                    choices = c("Adjusted" = "adjusted", "Raw" = "raw"))),
+              column(6, numericInput(ns('review_cutoff'), "Preview cutoff", value = 0.05,
+                                     min = 0, max = 1, step = 0.01))
             ),
+            uiOutput(ns('review_preview_ui')),
+            actionButton(ns('review_commit'), "Commit input revision")
           ),
-          checkboxInput(ns('deg_remove_na'), "Remove NA?", value=TRUE),
           br(),
+          h4("Stored rows"),
           DT::dataTableOutput(ns('deg_table')),
-          br(),
-          actionButton(ns('deg_filter_btn'), "Filter"),
           br(),
           hr(),
           h4("Export data"),
@@ -126,6 +137,7 @@ enrichTabUI <- function(id, tabName) {
         )
       )
     )
+    )
   )
 }
 
@@ -145,14 +157,42 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
 
     # Tab-local reactive objects
     deg_colnames_reactive <- shiny::reactiveVal(NULL)
+    # Committed input revisions keyed by gene-list name; preview changes never touch them.
+    review_revisions <- shiny::reactiveValues()
+    review_messages <- shiny::reactiveVal(character())
+
+    review_report <- function(messages) {
+      review_messages(messages)
+      showNotification(paste(messages, collapse = "\n"), type = "error")
+    }
+    review_settings <- reactive(list(species = input$species_select, anntype = input$anntype_select,
+                                     keytype = input$keytype_select, ontology = input$ont_select))
+    review_gene_header <- function(name) {
+      big <- u_big_degdf[['df']]
+      if (!is.data.frame(big) || !all(c("name", "GeneID_header") %in% names(big))) return(NULL)
+      header <- big[big$name %in% name, "GeneID_header"]
+      if (length(header)) as.character(header[[1]]) else NULL
+    }
 
     # Update select inputs based on # file inputs
     observe ({
       updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'deg_table_select', choices= u_degnames_reactive())
       updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'degs_to_enrich', choices= u_degnames_reactive())
-      updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'deg_header_select', choices= deg_colnames_reactive())
-      updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'deg_filter_by', choices= deg_colnames_reactive())
       updateSelectInput(session=shiny::getDefaultReactiveDomain(), 'rr_table_select', choices= u_rrnames_reactive())
+    })
+
+    # Preview selectors take their choices from the selected list's columns;
+    # recognized p-value names come first, others need the user's confirmation.
+    observe({
+      columns <- as.character(deg_colnames_reactive())
+      recognized <- tolower(c("padj", "pvalue", expanded_col_dictionary$Pvalue, expanded_col_dictionary$Padj))
+      known <- columns[tolower(columns) %in% recognized]
+      other <- setdiff(columns, known)
+      updateSelectInput(session, 'review_gene_col',
+        choices = c("Default (GeneID header)" = "__default__", stats::setNames(columns, columns)))
+      updateSelectInput(session, 'review_p_col',
+        choices = c("Default (current rule)" = "__default__", review_column_choices(known, other),
+                    "None \u2014 all rows" = "__none__"))
     })
 
     observe ({
@@ -197,59 +237,27 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
 
     # When deg upload button clicked
     observeEvent(input$deg_files, {
+      problems <- character()
       for (i in seq_along(input$deg_files$name)) {
-        # Validate file size before processing
-        file_size_mb <- file.info(input$deg_files$datapath[i])$size / (1024 * 1024)
-        if (!is.na(file_size_mb) && file_size_mb > 100) {
-          showNotification(
-            paste0("File '", input$deg_files$name[i], "' too large (max 100MB)"),
-            type = "error"
-          )
+        lab <- input$deg_files$name[i]
+        if (lab %in% u_degnames$labels) {
+          problems <- c(problems, paste("A gene list named", lab, "already exists"))
           next
         }
-
-        lab <- input$deg_files$name[i]
-
-        ext <- tools::file_ext(input$deg_files$name[i])
-        path <- input$deg_files$datapath[i]
-
-        # Handle Excel files directly
-        if (tolower(ext) %in% c("xls", "xlsx")) {
-          df <- tryCatch({
-            as.data.frame(readxl::read_excel(path))
-          }, error = function(e) {
-            showNotification(paste0("Error reading '", lab, "': ", e$message), type = "error")
-            NULL
-          })
-          if (is.null(df)) next
-        } else {
-          # try to read file as csv
-          csv_ncol <- tryCatch({
-            csvdf <- read.csv(path)
-            ncol(csvdf)
-          }, error = function(err) {
-            0
-          })
-          # try to read file as tsv
-          tsv_ncol <- tryCatch({
-            tsvdf <- read.delim(path)
-            ncol(tsvdf)
-          }, error = function(err) {
-            0
-          })
-          # decide which df to store
-          if (tsv_ncol == 0 || csv_ncol > tsv_ncol) {
-            df <- read.csv(path)
-          } else {
-            df <- read.delim(path)
-          }
+        # Admission bounds the file before it is parsed; nothing is stored on rejection.
+        admitted <- review_admit_file(input$deg_files$datapath[i], lab, "deg")
+        if (!isTRUE(admitted$ok)) {
+          problems <- c(problems, paste0(lab, ": ", admitted$message))
+          next
         }
+        df <- admitted$df
 
         u_degdfs[[lab]] <- df # set u_degdfs
         u_degnames$labels <- c(u_degnames$labels, lab) # set u_degnames
         u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
+        review_revisions[[lab]] <- NULL
       }
-
+      if (length(problems)) review_report(problems) else review_messages(character())
     })
 
     # Load demo DEG data
@@ -268,15 +276,24 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     # Parse pasted text inputs
     observeEvent(input$upload_degtext, {
       req(input$deg_text, input$degtext_name)
-      x <- strsplit(input$deg_text, "[^[:alnum:]]+")
-      df <- data.frame(GeneID = x)
-      colnames(df) <- c("GeneID")
       lab <- input$degtext_name
+      if (lab %in% u_degnames$labels) {
+        review_report(paste("A gene list named", lab, "already exists"))
+        return(NULL)
+      }
+      # Tokens split on whitespace, commas and semicolons only.
+      admitted <- review_admit_text(input$deg_text, lab)
+      if (!isTRUE(admitted$ok)) {
+        review_report(paste0(lab, ": ", admitted$message))
+        return(NULL)
+      }
+      df <- data.frame(GeneID = admitted$tokens)
 
       u_degdfs[[lab]] <- df # set u_degdfs
       u_degnames$labels <- c(u_degnames$labels, lab)
       u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
-
+      review_revisions[[lab]] <- NULL
+      review_messages(character())
     })
 
     # Reactively update uploaded file dataframe
@@ -307,6 +324,8 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
           # Update labels
           u_degnames$labels <- setdiff(u_degnames$labels, old_name)
           u_degnames$labels <- c(u_degnames$labels, new_name)
+          # The committed revision follows the gene list
+          review_move_record(review_revisions, old_name, new_name)
         }
       }
 
@@ -328,6 +347,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         # Properly remove from reactive values using NULL assignment
         u_degdfs[[deg_to_rm]] <- NULL
         u_degnames$labels <- setdiff(u_degnames$labels, deg_to_rm)
+        review_revisions[[deg_to_rm]] <- NULL
       }
 
       # Remove selection from u_big_degdf
@@ -357,6 +377,8 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       if (!is.null(df)) {
         deg_colnames_reactive(colnames(df))
       }
+      # The preview cutoff starts from the default cutoff for each selected list.
+      updateNumericInput(session, 'review_cutoff', value = review_cutoff_value(input$deg_filter_cutoff))
     })
 
     # download deg
@@ -377,6 +399,67 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       }
     )
 
+    # Preview: always uses review_cutoff, so the previewed snapshot is what Commit freezes.
+    review_preview <- reactive({
+      name <- input$deg_table_select
+      req(name)
+      df <- u_degdfs[[name]]
+      req(df)
+      gene_col <- input$review_gene_col
+      if (is.null(gene_col) || identical(gene_col, "__default__")) gene_col <- NULL
+      review_resolve(df, gene_header = review_gene_header(name), gene_col = gene_col,
+                     rule = review_rule_from_inputs(input$review_p_col, input$review_p_role),
+                     cutoff = review_cutoff_value(input$review_cutoff), name = name,
+                     settings = review_settings())
+    })
+    output$review_preview_ui <- renderUI(review_preview_card(review_preview()))
+
+    observeEvent(input$review_commit, {
+      name <- input$deg_table_select
+      req(name, u_degdfs[[name]])
+      snapshot <- review_preview()
+      if (!isTRUE(snapshot$ok)) {
+        review_report(snapshot$message)
+        return(NULL)
+      }
+      previous <- review_revisions[[name]]
+      revision <- if (is.null(previous)) 1L else previous$revision + 1L
+      review_revisions[[name]] <- list(revision = revision, snapshot = snapshot,
+                                       source_digest = snapshot$source_digest)
+      review_messages(sprintf("Committed revision %d for %s", revision, name))
+    })
+
+    # Cutoff authority: a committed list runs its revision's rule; an uncommitted one
+    # runs the default rule with the live default cutoff.
+    review_card_data <- reactive({
+      selected <- input$degs_to_enrich
+      if (!length(selected)) return(list())
+      cutoff <- review_cutoff_value(input$deg_filter_cutoff)
+      settings <- review_settings()
+      entries <- lapply(selected, function(name) {
+        df <- u_degdfs[[name]]
+        revision <- review_revisions[[name]]
+        if (is.null(df)) {
+          return(list(name = name, committed = FALSE, changed = FALSE, snapshot = list(
+            ok = FALSE, message = paste("Gene list", name, "is not available"))))
+        }
+        if (!is.null(revision)) {
+          return(list(name = name, committed = TRUE, revision = revision$revision,
+                      snapshot = revision$snapshot,
+                      changed = !identical(revision$source_digest, digest::digest(df))))
+        }
+        list(name = name, committed = FALSE, changed = FALSE,
+             snapshot = review_resolve(df, gene_header = review_gene_header(name), cutoff = cutoff,
+                                       name = name, settings = settings))
+      })
+      stats::setNames(entries, selected)
+    })
+    output$review_card <- renderUI(review_deg_card(review_card_data(), review_settings()))
+    output$review_messages <- renderUI({
+      messages <- review_messages()
+      if (length(messages)) tags$ul(class = "review-messages", lapply(messages, tags$li))
+    })
+
     # Enrich selected degs
     # test text inputs:
     # Xkr4 Rp1 Sox17
@@ -386,12 +469,31 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
 
       # 1. Collect ALL reactive inputs BEFORE entering future
       req(u_big_degdf[['df']])
-      deg_inputs <- lapply(input$degs_to_enrich, function(name) {
-        x <- u_degdfs[[name]]
-        big_df <- u_big_degdf[['df']]
-        gene_hdr <- big_df[big_df$name %in% name, "GeneID_header"]
-        list(name = name, df = x, gene_header = gene_hdr)
-      })
+      # A missing policy, a changed committed input or an empty rule stops Run before
+      # any runner call; stores and selections stay unchanged.
+      if (is.null(review_resolve_policy())) {
+        review_report(review_policy_message)
+        return(NULL)
+      }
+      entries <- review_card_data()
+      problems <- unlist(lapply(entries, function(entry) {
+        if (isTRUE(entry$changed)) {
+          sprintf("Input changed since commit for %s; review again", entry$name)
+        } else if (!isTRUE(entry$snapshot$ok)) {
+          entry$snapshot$message
+        }
+      }))
+      if (length(problems)) {
+        review_report(problems)
+        return(NULL)
+      }
+      review_messages(character())
+      deg_inputs <- unname(lapply(entries, function(entry) {
+        snapshot <- entry$snapshot
+        list(name = entry$name, df = u_degdfs[[entry$name]],
+             gene_header = snapshot$query_rule$gene_col, ids = snapshot$submitted,
+             query_rule = snapshot$query_rule, revision_digest = snapshot$digest)
+      }))
       species_val <- input$species_select
       anntype_val <- input$anntype_select
       keytype_val <- input$keytype_select

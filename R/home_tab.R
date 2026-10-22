@@ -7,14 +7,16 @@ homeQuickStartUI <- function(id) {
   tags$section(class = "workflow-stepper", `aria-labelledby` = ns("quick_start_heading"),
     h2(id = ns("quick_start_heading"), "Quick Start",
       style = "font-size: 18px; font-weight: 700; color: var(--rs-text); margin: 0 0 10px;"),
-    p(class = "step-desc", "Start from any of these. Nothing runs until you choose an action."),
+    # #475569 on the page background #f1f5f9 is 6.92:1 (the class colour gives 4.34:1).
+    p(class = "step-desc", style = "color: #475569;",
+      "Start from any of these. Nothing runs until you choose an action."),
     div(class = "rs-workspace rs-workspace-actions",
       workspace_action(id, "upload_gene_lists", "Upload gene lists"),
       workspace_action(id, "import_results", "Import enrichment results"),
       workspace_action(id, "open_saved", "Open saved analysis"),
       workspace_action(id, "load_demo", "Load demo results")
     ),
-    p(class = "step-desc",
+    p(class = "step-desc", style = "color: #475569;",
       "Load demo results adds the bundled demo results go1, go2 and kegg1 (example data, not your analysis)."),
     div(role = "status", textOutput(ns("demo_status"))),
     uiOutput(ns("context_actions"))
@@ -23,6 +25,21 @@ homeQuickStartUI <- function(id) {
 
 homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
   ns <- NS(id)
+  enabled <- isTRUE(enabled)
+  # Enabled-Home accessibility adjustments; with the switch off every helper returns
+  # the original markup unchanged.
+  link_icon <- function(name) {
+    tag <- icon(name)
+    if (!enabled) return(tag)
+    # Decorative: hidden from assistive technology; the link text names the link.
+    tag$attribs$role <- NULL
+    tag$attribs[["aria-label"]] <- NULL
+    tag$attribs[["aria-hidden"]] <- "true"
+    tag
+  }
+  # .box-title colour is #fff !important on the info header, so the readable colour
+  # sits on a child span: #1e293b on #17a2b8 is 4.80:1 (white gives 3.04:1).
+  info_title <- function(text) if (enabled) span(style = "color: #1e293b;", text) else text
   quick_start <- if (isTRUE(enabled)) homeQuickStartUI(id) else div(class = "workflow-stepper",
     h3("Quick Start"),
     div(class = "stepper-container",
@@ -85,35 +102,40 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
         )
       ),
       column(4, class = "home-section",
-        box(title = "Quick Links", width = 12, status = "info", solidHeader = TRUE,
+        box(title = info_title("Quick Links"), width = 12, status = "info", solidHeader = TRUE,
           tags$ul(class = "link-list-compact",
             tags$li(tags$a(href = "http://hurlab.med.und.edu/", target = "_blank",
-              icon("globe"), "Hur Lab Homepage")),
+              link_icon("globe"), "Hur Lab Homepage")),
             tags$li(tags$a(href = "https://github.com/hurlab/richStudio", target = "_blank",
-              icon("github"), "richStudio on GitHub")),
+              link_icon("github"), "richStudio on GitHub")),
             tags$li(tags$a(href = "https://github.com/hurlab/richCluster", target = "_blank",
-              icon("github"), "richCluster")),
+              link_icon("github"), "richCluster")),
             tags$li(tags$a(href = "https://github.com/hurlab/richR", target = "_blank",
-              icon("github"), "richR (0.1.5+)")),
+              link_icon("github"), "richR (0.1.5+)")),
             tags$li(tags$a(href = "https://github.com/guokai8/bioAnno", target = "_blank",
-              icon("github"), "bioAnno"))
+              link_icon("github"), "bioAnno"))
           )
         )
       ),
       column(4, class = "home-section",
-        box(title = "About", width = 12, status = "info", solidHeader = TRUE,
+        box(title = info_title("About"), width = 12, status = "info", solidHeader = TRUE,
           div(class = "about-section",
+            # Inline link: underlined so it is distinguishable without colour
+            # (#0f6fc5 on the white card is 5.12:1 and stays unchanged).
             p("Developed by the",
-              tags$a(href = "http://hurlab.med.und.edu/", target = "_blank", "Hur Lab"),
+              tags$a(href = "http://hurlab.med.und.edu/", target = "_blank",
+                style = if (enabled) "text-decoration: underline;", "Hur Lab"),
               "at UND School of Medicine & Health Sciences."),
             p(tags$strong("Team:"), "Junguk Hur, Sarah Hong, Jane Kim, Kai Guo"),
-            div(class = "citation-block",
+            # #475569 is 6.92:1 on the citation background #f1f5f9 (was 4.34:1).
+            div(class = "citation-block", style = if (enabled) "color: #475569;",
               tags$strong("Citation:"),
               br(),
               "Hur J, Hong S, Kim J, Guo K. richStudio: an interactive platform for functional enrichment clustering and visualization. Manuscript in preparation."
             ),
+            # #475569 is 7.58:1 on the white card (the muted colour gives 2.56:1).
             p(tags$small(
-              style = "color: var(--rs-text-muted);",
+              style = if (enabled) "color: #475569;" else "color: var(--rs-text-muted);",
               paste0("richStudio v", app_version, " | R Shiny | GPL-3 License")
             ))
           )

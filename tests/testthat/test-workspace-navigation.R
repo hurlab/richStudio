@@ -171,6 +171,38 @@ test_that("REQ-001 AC-001 Home renders four native entry actions above About and
             regexpr("Upload gene lists", html, fixed = TRUE))
 })
 
+test_that("REQ-001 M15 enabled Home markup meets the accessibility contract", {
+  html <- ws3_html(richStudio:::homeTabUI("home", "home_tab", "fixture-version", enabled = TRUE))
+  # No element combines role="presentation" with an aria-label; icons are hidden instead.
+  expect_false(grepl('<[^>]*role="presentation"[^>]*aria-label', html))
+  expect_false(grepl('<[^>]*aria-label[^>]*role="presentation"', html))
+  icons <- regmatches(html, gregexpr("<i [^>]*>", html))[[1]]
+  expect_identical(icons, c('<i class="fas fa-globe" aria-hidden="true">',
+                            rep('<i class="fab fa-github" aria-hidden="true">', 4L)))
+  # Every link is named by its visible text; no aria-label is needed on the anchors.
+  links <- regmatches(html, gregexpr('(?s)<a href="[^"]*" target="_blank"[^>]*>.*?</a>',
+                                     html, perl = TRUE))[[1]]
+  expect_identical(trimws(gsub("\\s+", " ", gsub("<[^>]+>", "", links))),
+                   c("Hur Lab Homepage", "richStudio on GitHub", "richCluster",
+                     "richR (0.1.5+)", "bioAnno", "Hur Lab"))
+  expect_false(any(grepl("aria-label", links, fixed = TRUE)))
+  # Info box titles: the colour sits on a child span, because .box-title is
+  # #fff !important on the info header; the primary title keeps its 5.12:1 white.
+  for (title in c("Quick Links", "About")) {
+    expect_match(html, paste0('<h3 class="box-title">\\s*<span style="color: #1e293b;">',
+                              title, '</span>\\s*</h3>'))
+    expect_false(grepl(paste0('<h3 class="box-title"[^>]*style=[^>]*>\\s*', title), html))
+  }
+  expect_match(html, '<h3 class="box-title">Key Features</h3>', fixed = TRUE)
+  # Inline text colours and the underlined inline link.
+  expect_identical(ws3_count(html, '<p class="step-desc" style="color: #475569;">'), 2L)
+  expect_match(html, '<div class="citation-block" style="color: #475569;">', fixed = TRUE)
+  expect_match(html, '<small style="color: #475569;">richStudio vfixture-version', fixed = TRUE)
+  expect_false(grepl("var(--rs-text-muted)", html, fixed = TRUE))
+  expect_match(html, paste0('<a href="http://hurlab.med.und.edu/" target="_blank" ',
+                            'style="text-decoration: underline;">Hur Lab</a>'), fixed = TRUE)
+})
+
 test_that("REQ-001 release switch off restores the previous Home content without entry actions", {
   html <- ws3_html(richStudio:::homeTabUI("home", "home_tab", "fixture-version", enabled = FALSE))
   for (value in c('id="shiny-tab-home_tab"', "Welcome to richStudio", "Quick Start",
@@ -186,6 +218,12 @@ test_that("REQ-001 release switch off restores the previous Home content without
   # The previous markup is kept: h3 Quick Start, no added landmark or heading ids.
   expect_match(html, "<h3>Quick Start</h3>", fixed = TRUE)
   for (absent in c("<section", "<h2", 'id="home-title"', "aria-labelledby")) {
+    expect_false(grepl(absent, html, fixed = TRUE))
+  }
+  # Enabled-only accessibility adjustments do not leak into the previous Home.
+  expect_match(html, 'role="presentation" aria-label="github icon"', fixed = TRUE)
+  expect_match(html, '<small style="color: var(--rs-text-muted);">', fixed = TRUE)
+  for (absent in c("aria-hidden", "text-decoration: underline", "#475569", "#1e293b")) {
     expect_false(grepl(absent, html, fixed = TRUE))
   }
 })

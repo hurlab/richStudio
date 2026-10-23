@@ -45,6 +45,12 @@ async function attach(info: TestInfo, name: string, value: unknown) {
 }
 
 async function chooseSelectize(page: Page, id: string, value: string) {
+  // An upload repopulates the choices and shiny rebuilds the selectize control,
+  // closing any dropdown opened before the option arrived; wait for the option first.
+  await expect.poll(() => page.evaluate(([selectId, option]) => {
+    const select = document.getElementById(selectId) as (HTMLElement & { selectize?: { options: Record<string, unknown> } }) | null;
+    return Boolean(select?.selectize && Object.prototype.hasOwnProperty.call(select.selectize.options, option));
+  }, [id, value] as const)).toBe(true);
   const control = page.locator(`#${id} + .selectize-control`);
   await control.locator('.selectize-input').click();
   await control.locator(`.selectize-dropdown .option[data-value="${value}"]`).click();

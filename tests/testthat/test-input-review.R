@@ -1047,3 +1047,212 @@ test_that("case 14 AC-002 an adjusted-only import invents no raw p-values and ex
       expect_match(card, hierarchical, fixed = TRUE)
     })
 })
+
+# ---- cases 15-19: invalid UTF-8 intake, observer containment, missing policy ----
+
+# A text file with a lone Latin-1 byte 0xF6 between `before` and `after`.
+ir_latin1_file <- function(before, after) {
+  ir_write(c(charToRaw(before), as.raw(0xf6), charToRaw(after)), ".tsv")
+}
+
+ir_deg_snapshot <- function(state) {
+  shiny::isolate(list(labels = state$u_degnames$labels,
+                      dfs = shiny::reactiveValuesToList(state$u_degdfs),
+                      meta = state$u_big_degdf$df))
+}
+
+test_that("case 15 F1 a Latin-1 Term or GeneID result imports exactly as legacy did", {
+  files <- list(
+    "latin1-term.tsv" = ir_latin1_file("Term\tPvalue\tGeneID\nSj", "gren syndrome\t0.01\tA,B\nT2\t0.02\tC\n"),
+    "latin1-gene.tsv" = ir_latin1_file("Term\tPvalue\tGeneID\nT1\t0.01\tA,Sj", "\nT2\t0.02\tC\n")
+  )
+  for (label in names(files)) {
+    admitted <- ir_admit(files[[label]], label, "result")
+    expect_true(admitted$ok)
+    result <- tryCatch(richStudio:::review_import(admitted$df, label, character()),
+                       error = function(e) list(status = paste("error:", conditionMessage(e))))
+    expect_identical(result$status, "imported")
+    expect_identical(result$df, ir_legacy_read(files[[label]]))
+  }
+  for (server in ir_result_servers) {
+    state <- ws_baseline_state()
+    done <- new.env(parent = emptyenv())
+    shiny::testServer(server, args = state[intersect(names(formals(server)), names(state))], {
+      session$flushReact()
+      for (label in names(files)) {
+        before <- length(u_rrnames$labels)
+        session$setInputs(rr_files = data.frame(name = label, datapath = files[[label]]))
+        expect_false(session$isClosed())
+        expect_identical(length(u_rrnames$labels), before + 1L)
+        expect_identical(u_rrdfs[[label]], ir_legacy_read(files[[label]]))
+        expect_match(ir_html(output$imported_results_card), label, fixed = TRUE)
+      }
+      done$ok <- TRUE
+    })
+    expect_true(isTRUE(done$ok))
+  }
+})
+
+test_that("case 16 F2 a Latin-1 gene ID previews, commits and reaches the worker kept", {
+  suppressPackageStartupMessages(library(richR))
+  ir_sequential()
+  path <- ir_latin1_file("gene\tpadj\nG1\t0.01\ncaf", "\t0.02\nG3\t0.5\n")
+  legacy <- ir_legacy_read(path)
+  expected <- as.character(legacy$gene[1:2])
+  rec <- ir_recorder(ir_rich_builder(expected))
+  state <- ws_baseline_state()
+  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args$enrichment_runner <- rec$runner
+  done <- new.env(parent = emptyenv())
+  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+    session$flushReact()
+    session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
+                      ont_select = "BP", deg_filter_cutoff = 0.05,
+                      deg_files = data.frame(name = "latin1.tsv", datapath = path))
+    expect_identical(u_degdfs[["latin1.tsv"]], legacy)
+    session$setInputs(deg_table_select = "latin1.tsv", review_gene_col = "__default__",
+                      review_p_col = "__default__", review_cutoff = 0.05, review_commit = 1L)
+    expect_false(session$isClosed())
+    expect_identical(review_revisions[["latin1.tsv"]]$snapshot$submitted, expected)
+    preview <- tryCatch(review_preview(), error = function(e) list(submitted = conditionMessage(e)))
+    expect_identical(preview$submitted, expected)
+    expect_identical(preview$counts$submitted, 2L)
+    session$setInputs(degs_to_enrich = "latin1.tsv", enrich_deg = 1L)
+    ir_settle(session)
+    expect_false(session$isClosed())
+    expect_length(rec$calls, 1L)
+    expect_identical(rec$calls[[1]]$deg_inputs[[1]]$ids, expected)
+    expect_length(rec$errors, 0L)
+    done$ok <- TRUE
+  })
+  expect_true(isTRUE(done$ok))
+  expect_identical(richStudio:::query_gene_ids(legacy, "gene"), as.character(legacy$gene))
+})
+
+test_that("case 17 review_is_blank equals the trimws rule on valid text and never errors", {
+  valid <- c("", " ", "\t", NA, "a", " a ", "\r\n", "x y")
+  expect_identical(richStudio:::review_is_blank(valid), is.na(valid) | !nzchar(trimws(valid)))
+  invalid <- c(rawToChar(as.raw(c(0x63, 0x61, 0x66, 0xf6))), rawToChar(as.raw(c(0x20, 0xf6, 0x20))), " ")
+  expect_no_error(blank <- richStudio:::review_is_blank(invalid))
+  expect_identical(blank, c(FALSE, FALSE, TRUE))
+})
+
+test_that("case 18 F1 F2 an unexpected error in an intake observer becomes a message", {
+  ir_sequential()
+  boom <- function(...) stop("injected failure")
+  valid <- ir_write_table(ir_import_base())
+  no_term <- ir_write_table(ir_import_base()[c("Annot", "Pvalue", "Padj", "GeneID")])
+  # Characterization: a failing reader is already contained by admission.
+  local({
+    testthat::local_mocked_bindings(review_read_text = boom, .package = "richStudio")
+    expect_identical(ir_admit(valid, "valid.tsv", "result")$message, "File structure could not be read")
+  })
+  for (server in ir_result_servers) {
+    state <- ws_baseline_state(populated = TRUE)
+    before <- ir_rr_snapshot(state)
+    owned <- ir_owned_session()
+    done <- new.env(parent = emptyenv())
+    shiny::testServer(server, args = state[intersect(names(formals(server)), names(state))],
+                      session = owned$session, {
+      session$flushReact()
+      session$setInputs(rr_table_select = "treated", select_table = "treated")
+      owned$sent$ids <- character()
+      session$setInputs(rr_files = data.frame(name = "no-term.tsv", datapath = no_term))
+      local({
+        testthat::local_mocked_bindings(review_import = boom, .package = "richStudio")
+        session$setInputs(rr_files = data.frame(name = "valid.tsv", datapath = valid))
+        expect_false(session$isClosed())
+        expect_match(ir_html(output$intake_status),
+                     "valid.tsv was not imported: the file could not be processed", fixed = TRUE)
+        session$setInputs(intake_map_Term = "Annot", intake_import = 1L)
+        expect_false(session$isClosed())
+        expect_match(ir_html(output$intake_pending),
+                     "no-term.tsv: the file could not be processed", fixed = TRUE)
+      })
+      expect_false(ir_selection_messages(owned$sent))
+      expect_identical(ir_rr_snapshot(state), before)
+      done$ok <- TRUE
+    })
+    expect_true(isTRUE(done$ok))
+  }
+  calls <- new.env(parent = emptyenv())
+  calls$n <- 0L
+  state <- ir_deg_state(list(c18 = data.frame(gene = c("g1", "g2"), Padj = c(0.01, 0.02))))
+  shiny::isolate({
+    state$u_rrnames$labels <- "old_enriched"
+    state$u_rrdfs$old_enriched <- data.frame(Term = "old", GeneID = "g1,g2")
+  })
+  deg_before <- ir_deg_snapshot(state)
+  rr_before <- ir_rr_snapshot(state)
+  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args$enrichment_runner <- function(...) {
+    calls$n <- calls$n + 1L
+    list()
+  }
+  deg_file <- ir_write_table(data.frame(gene = "g9", Padj = 0.01))
+  done <- new.env(parent = emptyenv())
+  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+    session$flushReact()
+    session$setInputs(deg_table_select = "c18", review_gene_col = "__default__",
+                      review_p_col = "__default__", review_cutoff = 0.05, rr_table_select = "old_enriched")
+    local({
+      testthat::local_mocked_bindings(review_admit_file = boom, review_admit_text = boom,
+                                      review_resolve = boom, .package = "richStudio")
+      session$setInputs(deg_files = data.frame(name = "new.tsv", datapath = deg_file))
+      expect_false(session$isClosed())
+      expect_true("new.tsv: the file could not be processed" %in% review_messages())
+      session$setInputs(deg_text = "g1 g2", degtext_name = "pasted", upload_degtext = 1L)
+      expect_false(session$isClosed())
+      expect_true("pasted: the pasted text could not be processed" %in% review_messages())
+      session$setInputs(review_cutoff = 0.04, review_commit = 1L)
+      expect_false(session$isClosed())
+      expect_true("c18: the input revision could not be committed" %in% review_messages())
+      session$setInputs(degs_to_enrich = "c18", enrich_deg = 1L)
+      ir_settle(session, 3L)
+      expect_false(session$isClosed())
+      expect_true("Run stopped: c18 could not be reviewed" %in% review_messages())
+    })
+    expect_identical(calls$n, 0L)
+    expect_null(review_revisions[["c18"]])
+    expect_identical(input$rr_table_select, "old_enriched")
+    expect_identical(ir_deg_snapshot(state), deg_before)
+    expect_identical(ir_rr_snapshot(state), rr_before)
+    done$ok <- TRUE
+  })
+  expect_true(isTRUE(done$ok))
+})
+
+test_that("case 19 F6 a missing resource policy blocks Run and paste", {
+  ir_sequential()
+  calls <- new.env(parent = emptyenv())
+  calls$n <- 0L
+  state <- ir_deg_state(list(c19 = data.frame(gene = c("g1", "g2"), Padj = c(0.01, 0.02))))
+  shiny::isolate({
+    state$u_rrnames$labels <- "old_enriched"
+    state$u_rrdfs$old_enriched <- data.frame(Term = "old", GeneID = "g1,g2")
+  })
+  deg_before <- ir_deg_snapshot(state)
+  rr_before <- ir_rr_snapshot(state)
+  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args$enrichment_runner <- function(...) {
+    calls$n <- calls$n + 1L
+    list()
+  }
+  testthat::local_mocked_bindings(workspace_resource_policy = function(...) stop("policy missing"),
+                                  .package = "richStudio")
+  done <- new.env(parent = emptyenv())
+  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+    session$flushReact()
+    session$setInputs(degs_to_enrich = "c19", enrich_deg = 1L)
+    ir_settle(session, 3L)
+    expect_identical(calls$n, 0L)
+    expect_true(ir_policy_message %in% review_messages())
+    session$setInputs(deg_text = "g1 g2", degtext_name = "pasted", upload_degtext = 1L)
+    expect_true(paste0("pasted: ", ir_policy_message) %in% review_messages())
+    expect_false("pasted" %in% u_degnames$labels)
+    expect_identical(ir_deg_snapshot(state), deg_before)
+    expect_identical(ir_rr_snapshot(state), rr_before)
+    done$ok <- TRUE
+  })
+  expect_true(isTRUE(done$ok))
+})

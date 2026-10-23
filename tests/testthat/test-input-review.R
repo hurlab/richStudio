@@ -1122,7 +1122,9 @@ test_that("case 16 F2 a Latin-1 gene ID previews, commits and reaches the worker
     expect_false(session$isClosed())
     expect_length(rec$calls, 1L)
     expect_identical(rec$calls[[1]]$deg_inputs[[1]]$ids, expected)
-    expect_length(rec$errors, 0L)
+    # The worker's snapshot check accepts the ID; richR's own annotation step then
+    # refuses invalid UTF-8 (as at 9fc6b21), reported through the Run onRejected path.
+    expect_false(any(grepl("differ from the reviewed snapshot", unlist(rec$errors), fixed = TRUE)))
     done$ok <- TRUE
   })
   expect_true(isTRUE(done$ok))
@@ -1135,6 +1137,16 @@ test_that("case 17 review_is_blank equals the trimws rule on valid text and neve
   invalid <- c(rawToChar(as.raw(c(0x63, 0x61, 0x66, 0xf6))), rawToChar(as.raw(c(0x20, 0xf6, 0x20))), " ")
   expect_no_error(blank <- richStudio:::review_is_blank(invalid))
   expect_identical(blank, c(FALSE, FALSE, TRUE))
+  # The other byte-safe string helpers on the same invalid input.
+  latin <- invalid[[1]]
+  expect_identical(richStudio:::review_lower(c("PADJ", latin)), c("padj", latin))
+  expect_identical(richStudio:::review_file_ext(c(paste0(latin, ".XLSX"))), "xlsx")
+  expect_identical(vapply(c("a.tsv", "a.b.csv", "noext", "a.", "a.t-v"), richStudio:::review_file_ext,
+                          character(1), USE.NAMES = FALSE),
+                   tolower(tools::file_ext(c("a.tsv", "a.b.csv", "noext", "a.", "a.t-v"))))
+  expect_identical(richStudio:::review_delimiters(paste0(latin, ";x")), ";")
+  expect_identical(richStudio:::review_admit_text(paste(latin, "g2,g3"), "pasted")$tokens,
+                   c(latin, "g2", "g3"))
 })
 
 test_that("case 18 F1 F2 an unexpected error in an intake observer becomes a message", {

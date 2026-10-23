@@ -27,7 +27,8 @@ query_gene_ids <- function(x, header) {
     stop("Gene identifier column was not found.", call. = FALSE)
   }
   ids <- as.character(x[[column]])
-  ids[!is.na(ids) & nzchar(trimws(ids))]
+  # The review snapshot's blank rule, on bytes, so snapshot and worker IDs agree.
+  ids[!review_is_blank(ids)]
 }
 
 # x: deg to analyze

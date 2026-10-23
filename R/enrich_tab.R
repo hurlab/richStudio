@@ -240,22 +240,26 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       problems <- character()
       for (i in seq_along(input$deg_files$name)) {
         lab <- input$deg_files$name[i]
-        if (lab %in% u_degnames$labels) {
-          problems <- c(problems, paste("A gene list named", lab, "already exists"))
-          next
-        }
-        # Admission bounds the file before it is parsed; nothing is stored on rejection.
-        admitted <- review_admit_file(input$deg_files$datapath[i], lab, "deg")
-        if (!isTRUE(admitted$ok)) {
-          problems <- c(problems, paste0(lab, ": ", admitted$message))
-          next
-        }
-        df <- admitted$df
-
-        u_degdfs[[lab]] <- df # set u_degdfs
-        u_degnames$labels <- c(u_degnames$labels, lab) # set u_degnames
-        u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
-        review_revisions[[lab]] <- NULL
+        # An unexpected error becomes a message for this file; stores stay unchanged.
+        problems <- c(problems, review_contain({
+          if (lab %in% u_degnames$labels) {
+            paste("A gene list named", lab, "already exists")
+          } else {
+            # Admission bounds the file before it is parsed; nothing is stored on rejection.
+            admitted <- review_admit_file(input$deg_files$datapath[i], lab, "deg")
+            if (!isTRUE(admitted$ok)) {
+              paste0(lab, ": ", admitted$message)
+            } else {
+              df <- admitted$df
+              meta <- add_file_degdf(u_big_degdf[['df']], lab, df)
+              u_degdfs[[lab]] <- df # set u_degdfs
+              u_degnames$labels <- c(u_degnames$labels, lab) # set u_degnames
+              u_big_degdf[['df']] <- meta
+              review_revisions[[lab]] <- NULL
+              NULL
+            }
+          }
+        }, function() paste0(lab, ": the file could not be processed")))
       }
       if (length(problems)) review_report(problems) else review_messages(character())
     })
@@ -277,23 +281,26 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     observeEvent(input$upload_degtext, {
       req(input$deg_text, input$degtext_name)
       lab <- input$degtext_name
-      if (lab %in% u_degnames$labels) {
-        review_report(paste("A gene list named", lab, "already exists"))
-        return(NULL)
-      }
-      # Tokens split on whitespace, commas and semicolons only.
-      admitted <- review_admit_text(input$deg_text, lab)
-      if (!isTRUE(admitted$ok)) {
-        review_report(paste0(lab, ": ", admitted$message))
-        return(NULL)
-      }
-      df <- data.frame(GeneID = admitted$tokens)
+      review_contain({
+        if (lab %in% u_degnames$labels) {
+          review_report(paste("A gene list named", lab, "already exists"))
+          return(NULL)
+        }
+        # Tokens split on whitespace, commas and semicolons only.
+        admitted <- review_admit_text(input$deg_text, lab)
+        if (!isTRUE(admitted$ok)) {
+          review_report(paste0(lab, ": ", admitted$message))
+          return(NULL)
+        }
+        df <- data.frame(GeneID = admitted$tokens)
+        meta <- add_file_degdf(u_big_degdf[['df']], lab, df)
 
-      u_degdfs[[lab]] <- df # set u_degdfs
-      u_degnames$labels <- c(u_degnames$labels, lab)
-      u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
-      review_revisions[[lab]] <- NULL
-      review_messages(character())
+        u_degdfs[[lab]] <- df # set u_degdfs
+        u_degnames$labels <- c(u_degnames$labels, lab)
+        u_big_degdf[['df']] <- meta
+        review_revisions[[lab]] <- NULL
+        review_messages(character())
+      }, function() review_report(paste0(lab, ": the pasted text could not be processed")))
     })
 
     # Reactively update uploaded file dataframe
@@ -417,16 +424,18 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
     observeEvent(input$review_commit, {
       name <- input$deg_table_select
       req(name, u_degdfs[[name]])
-      snapshot <- review_preview()
-      if (!isTRUE(snapshot$ok)) {
-        review_report(snapshot$message)
-        return(NULL)
-      }
-      previous <- review_revisions[[name]]
-      revision <- if (is.null(previous)) 1L else previous$revision + 1L
-      review_revisions[[name]] <- list(revision = revision, snapshot = snapshot,
-                                       source_digest = snapshot$source_digest)
-      review_messages(sprintf("Committed revision %d for %s", revision, name))
+      review_contain({
+        snapshot <- review_preview()
+        if (!isTRUE(snapshot$ok)) {
+          review_report(snapshot$message)
+          return(NULL)
+        }
+        previous <- review_revisions[[name]]
+        revision <- if (is.null(previous)) 1L else previous$revision + 1L
+        review_revisions[[name]] <- list(revision = revision, snapshot = snapshot,
+                                         source_digest = snapshot$source_digest)
+        review_messages(sprintf("Committed revision %d for %s", revision, name))
+      }, function() review_report(paste0(name, ": the input revision could not be committed")))
     })
 
     # Cutoff authority: a committed list runs its revision's rule; an uncommitted one
@@ -470,30 +479,37 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       # 1. Collect ALL reactive inputs BEFORE entering future
       req(u_big_degdf[['df']])
       # A missing policy, a changed committed input or an empty rule stops Run before
-      # any runner call; stores and selections stay unchanged.
-      if (is.null(review_resolve_policy())) {
-        review_report(review_policy_message)
-        return(NULL)
-      }
-      entries <- review_card_data()
-      problems <- unlist(lapply(entries, function(entry) {
-        if (isTRUE(entry$changed)) {
-          sprintf("Input changed since commit for %s; review again", entry$name)
-        } else if (!isTRUE(entry$snapshot$ok)) {
-          entry$snapshot$message
+      # any runner call; stores and selections stay unchanged. So does an unexpected error.
+      deg_inputs <- review_contain({
+        if (is.null(review_resolve_policy())) {
+          review_report(review_policy_message)
+          return(NULL)
         }
-      }))
-      if (length(problems)) {
-        review_report(problems)
-        return(NULL)
-      }
-      review_messages(character())
-      deg_inputs <- unname(lapply(entries, function(entry) {
-        snapshot <- entry$snapshot
-        list(name = entry$name, df = u_degdfs[[entry$name]],
-             gene_header = snapshot$query_rule$gene_col, ids = snapshot$submitted,
-             query_rule = snapshot$query_rule, revision_digest = snapshot$digest)
-      }))
+        entries <- review_card_data()
+        problems <- unlist(lapply(entries, function(entry) {
+          if (isTRUE(entry$changed)) {
+            sprintf("Input changed since commit for %s; review again", entry$name)
+          } else if (!isTRUE(entry$snapshot$ok)) {
+            entry$snapshot$message
+          }
+        }))
+        if (length(problems)) {
+          review_report(problems)
+          return(NULL)
+        }
+        review_messages(character())
+        unname(lapply(entries, function(entry) {
+          snapshot <- entry$snapshot
+          list(name = entry$name, df = u_degdfs[[entry$name]],
+               gene_header = snapshot$query_rule$gene_col, ids = snapshot$submitted,
+               query_rule = snapshot$query_rule, revision_digest = snapshot$digest)
+        }))
+      }, function() {
+        review_report(paste("Run stopped:", paste(input$degs_to_enrich, collapse = ", "),
+                            "could not be reviewed"))
+        NULL
+      })
+      if (is.null(deg_inputs)) return(NULL)
       species_val <- input$species_select
       anntype_val <- input$anntype_select
       keytype_val <- input$keytype_select

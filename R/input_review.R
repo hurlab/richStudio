@@ -24,6 +24,38 @@ review_resolve_policy <- function(policy = NULL) {
   }, error = function(e) NULL)
 }
 
+# Uploaded bytes are admitted unvalidated (a Latin-1 export is legal input), so every
+# string test on uploaded content works on bytes: trimws, tolower and locale-validating
+# regexes error on, or misread, invalid UTF-8.
+# Blank exactly as is.na(x) | !nzchar(trimws(x)) on valid text (trimws's [ \t\r\n]).
+review_is_blank <- function(x) {
+  is.na(x) | !grepl("[^ \t\r\n]", x, useBytes = TRUE)
+}
+
+# tolower on valid UTF-8; invalid strings are left as they are (they can never equal
+# the ASCII names they are compared with).
+review_lower <- function(x) {
+  x <- as.character(x)
+  valid <- !is.na(x) & validUTF8(x)
+  x[valid] <- tolower(x[valid])
+  x
+}
+
+# The lower-cased extension after the last dot when it is alphanumeric, on bytes.
+review_file_ext <- function(name) {
+  ext <- sub("^.*\\.", "", name, useBytes = TRUE)
+  if (identical(ext, name) || !grepl("^[[:alnum:]]+$", ext, useBytes = TRUE)) "" else review_lower(ext)
+}
+
+# Runs an observer body; an unexpected error returns report() instead of closing the
+# session. Shiny's silent req() conditions pass through unchanged.
+review_contain <- function(expr, report) {
+  tryCatch(expr, error = function(e) {
+    if (inherits(e, "shiny.silent.error")) stop(e)
+    report()
+  })
+}
+
 review_reject <- function(message, field = NA_character_) {
   list(ok = FALSE, field = field, message = message, df = NULL)
 }
@@ -78,7 +110,7 @@ review_admit_file <- function(path, name, kind = c("deg", "result"), policy = NU
   if (!is.null(failure)) return(failure)
   magic <- review_magic(path)
   if (identical(magic, "compressed")) return(review_reject("Compressed files are not accepted", "content"))
-  ext <- tolower(tools::file_ext(name))
+  ext <- review_file_ext(name)
   excel <- c("xls", "xlsx")
   if ((ext %in% excel && !identical(magic, ext)) || (!ext %in% excel && magic %in% excel)) {
     return(review_reject("File content does not match its extension", "content"))
@@ -213,7 +245,8 @@ review_check_table <- function(df, columns, name, kind, policy) {
 }
 
 review_split_genes <- function(text) {
-  tokens <- unlist(strsplit(text, "[[:space:],;]+"))
+  # Pasted text is valid UTF-8 from the browser; invalid bytes split on ASCII separators.
+  tokens <- unlist(strsplit(text, "[[:space:],;]+", useBytes = !all(validUTF8(text))))
   tokens[nzchar(tokens)]
 }
 
@@ -270,7 +303,7 @@ review_resolve <- function(df, gene_header = NULL, gene_col = NULL, rule = NULL,
   }
   note <- NULL
   if (is.null(rule)) {
-    lower <- tolower(columns)
+    lower <- review_lower(columns)
     if (any(lower == "padj")) {
       column <- columns[which(lower == "padj")[1]]
       role <- "adjusted"
@@ -308,7 +341,7 @@ review_resolve <- function(df, gene_header = NULL, gene_col = NULL, rule = NULL,
   p <- if (is.na(column)) NULL else df[[column]]
   keep <- if (is.null(p)) rep(TRUE, nrow(df)) else (!is.na(p) & p < cutoff)
   ids <- as.character(df[[gene_col]])[keep]
-  blank <- is.na(ids) | !nzchar(trimws(ids))
+  blank <- review_is_blank(ids)
   submitted <- ids[!blank]
   if (!length(submitted)) return(fail("submitted", paste("No genes remain after the rule for", name)))
   distinct <- length(unique(submitted))
@@ -393,7 +426,7 @@ review_suggestions <- function(columns) {
                      Pvalue = expanded_col_dictionary$Pvalue, Padj = expanded_col_dictionary$Padj,
                      GeneID = expanded_col_dictionary$GeneID)
   lapply(dictionary, function(terms) {
-    columns[tolower(columns) %in% tolower(terms) & !columns %in% review_result_roles]
+    columns[review_lower(columns) %in% tolower(terms) & !columns %in% review_result_roles]
   })
 }
 
@@ -401,7 +434,7 @@ review_delimiters <- function(x) {
   x <- as.character(x)
   x <- x[!is.na(x)]
   kinds <- c(",", ";", "/")
-  kinds[vapply(kinds, function(kind) any(grepl(kind, x, fixed = TRUE)), logical(1))]
+  kinds[vapply(kinds, function(kind) any(grepl(kind, x, fixed = TRUE, useBytes = TRUE)), logical(1))]
 }
 
 review_validate_result <- function(df, label, existing_labels, roles, limit) {
@@ -411,7 +444,7 @@ review_validate_result <- function(df, label, existing_labels, roles, limit) {
     messages <- c(messages, "Term column is required")
   } else {
     term <- as.character(df$Term)
-    blank <- is.na(term) | !nzchar(trimws(term))
+    blank <- review_is_blank(term)
     if (any(blank)) messages <- c(messages, sprintf("Term is blank in %d row(s)", sum(blank)))
   }
   if (!any(c("Pvalue", "Padj") %in% roles)) messages <- c(messages, "At least one of Pvalue or Padj is required")
@@ -435,7 +468,7 @@ review_validate_result <- function(df, label, existing_labels, roles, limit) {
   }
   if ("GeneID" %in% roles) {
     genes <- as.character(df$GeneID)
-    blank <- is.na(genes) | !nzchar(trimws(genes))
+    blank <- review_is_blank(genes)
     if (any(blank)) messages <- c(messages, sprintf("GeneID is blank in %d row(s)", sum(blank)))
     if (length(review_delimiters(genes)) > 1L) messages <- c(messages, "GeneID uses mixed delimiters")
     cells <- review_text_cells(df$GeneID)
@@ -558,13 +591,36 @@ review_result_intake <- function(input, output, session, u_rrnames, u_rrdfs, u_b
     unique(c(u_rrnames$labels, names(shiny::reactiveValuesToList(u_rrdfs))))
   }
   publish <- function(label, df, map) {
+    meta <- add_file_rrdf(df = u_big_rrdf[['df']], name = label, file = TRUE)
     u_rrdfs[[label]] <- df
     u_rrnames$labels <- c(u_rrnames$labels, label)
-    u_big_rrdf[['df']] <- add_file_rrdf(df = u_big_rrdf[['df']], name = label, file = TRUE)
+    u_big_rrdf[['df']] <- meta
     maps[[label]] <- map
   }
   notify <- function(label, messages) {
     showNotification(paste0(label, ": ", paste(messages, collapse = "; ")), type = "error")
+  }
+  failed <- "the file could not be processed"
+
+  # One uploaded file; returns its status line. Stores change only through publish().
+  intake_file <- function(path, label) {
+    admitted <- review_admit_file(path, label, "result")
+    if (!isTRUE(admitted$ok)) {
+      notify(label, admitted$message)
+      return(paste0(label, " was not imported: ", admitted$message))
+    }
+    result <- review_import(admitted$df, label, existing_labels())
+    if (identical(result$status, "imported")) {
+      publish(label, result$df, character())
+      paste(label, "imported")
+    } else if (identical(result$status, "pending")) {
+      intake$queue <- c(intake$queue, list(list(label = label, df = admitted$df,
+        messages = result$messages, suggestions = result$suggestions)))
+      paste(label, "waits for column confirmation")
+    } else {
+      notify(label, result$messages)
+      paste0(label, " was not imported: ", paste(result$messages, collapse = "; "))
+    }
   }
 
   observeEvent(input$rr_files, {
@@ -572,24 +628,10 @@ review_result_intake <- function(input, output, session, u_rrnames, u_rrdfs, u_b
     status <- character()
     for (i in seq_along(files$name)) {
       label <- files$name[i]
-      admitted <- review_admit_file(files$datapath[i], label, "result")
-      if (!isTRUE(admitted$ok)) {
-        status <- c(status, paste0(label, " was not imported: ", admitted$message))
-        notify(label, admitted$message)
-        next
-      }
-      result <- review_import(admitted$df, label, existing_labels())
-      if (identical(result$status, "imported")) {
-        publish(label, result$df, character())
-        status <- c(status, paste(label, "imported"))
-      } else if (identical(result$status, "pending")) {
-        intake$queue <- c(intake$queue, list(list(label = label, df = admitted$df,
-          messages = result$messages, suggestions = result$suggestions)))
-        status <- c(status, paste(label, "waits for column confirmation"))
-      } else {
-        status <- c(status, paste0(label, " was not imported: ", paste(result$messages, collapse = "; ")))
-        notify(label, result$messages)
-      }
+      status <- c(status, review_contain(intake_file(files$datapath[i], label), function() {
+        notify(label, failed)
+        paste0(label, " was not imported: ", failed)
+      }))
     }
     intake$status <- status
   })
@@ -603,16 +645,21 @@ review_result_intake <- function(input, output, session, u_rrnames, u_rrdfs, u_b
       if (is.null(value)) "" else as.character(value)
     }, character(1))
     names(mapping) <- review_result_roles
-    result <- review_import(current$df, current$label, existing_labels(), mapping = mapping)
-    if (identical(result$status, "imported")) {
-      publish(current$label, result$df, result$source_name_map)
-      intake$queue <- queue[-1]
-      intake$card_messages <- character()
-      intake$status <- paste(current$label, "imported")
-    } else {
-      intake$card_messages <- result$messages
-      notify(current$label, result$messages)
-    }
+    review_contain({
+      result <- review_import(current$df, current$label, existing_labels(), mapping = mapping)
+      if (identical(result$status, "imported")) {
+        publish(current$label, result$df, result$source_name_map)
+        intake$queue <- queue[-1]
+        intake$card_messages <- character()
+        intake$status <- paste(current$label, "imported")
+      } else {
+        intake$card_messages <- result$messages
+        notify(current$label, result$messages)
+      }
+    }, function() {
+      intake$card_messages <- paste0(current$label, ": ", failed)
+      notify(current$label, failed)
+    })
   })
 
   observeEvent(input$intake_discard, {

@@ -1,4 +1,447 @@
+# PROJECT_LOG.md (active) — richStudio
+
+Historical entries and checkpoints are preserved verbatim. Newest first.
+
+## Archives
+- logs/PROJECT_LOG_2026-H1.md — 6 sessions (2026-01 … 2026-03)
+
+## Session Index (active, newest first)
+- 2026-10-23 — SPEC-WS-004 accepted and integrated (4142c94); WS-001–004 deployed live and verified
+- 2026-10-22 — SPEC-WS-003 accepted via ws003-recovery; integrated and pushed
+- 2026-10-21 late — SPEC-WS-003 implemented locally; scope ws003-navigation STOP5
+- 2026-10-21 21:02 CDT — SPEC-WS-002 accepted via acceptance-recovery scope; integrated and published (Claude Code)
+- 2026-10-21 15:56 CDT — Corrected hosted packets retained; STOP5 preserved and session closed
+- 2026-10-21 — Foundation integrated; design-first002 active
+- 2026-10-20 — Workspace implementation authorized
+- 2026-10-20 — Workspace evolution planning (SPEC-WORKSPACE-001)
+- 2026-10-20 — Dependency adoption (consumer acceptance passed with debt)
+- 2026-05-17 — 4-Agent Senior-Architect Review + B1/B2 Harness
+- 2026-03-29 21:24 CDT — Deployment Fix, Manuscript Suite & Documentation
+- 2026-03-30 22:10 CDT — Code Review & Fix (4-Agent Harness)
+- 2026-05-18 → 2026-05-19 — Deployment Tooling + Sync Strategy Decision
+
+---
+
+## Session 2026-10-23 — SPEC-WS-004 accepted; WS-001–004 deployed live (Claude Code)
+
+- SPEC-WS-004 accepted and integrated: I = 4142c94 (pushed). Gating run 39911249412 7/7; tests 176/2102; check 0E/0W/5N; coverage 88.48%; browser 38/38. Scope ws004-intake COMPLETE 4/5. Details in PROJECT_HANDOFF.md section 2.
+- Deploy (owner decision, user-run sudo, run id ws004-20261023): live /opt/richStudio/releases/richStudio-4142c94…-20261023T085133Z; previous 06206d0 kept. Independently verified: symlink, HTTPS 200, R 4.6.1 only, clean app log, DEG upload shows the WS-004 preview and review card, commit -> revision 1, 0 console errors (browser via SSH tunnel to :3838; public cert CN mismatch).
+- Preflight build ~/richStudio-r46-preflight.20261023T065708Z deleted (user-authorized).
+- User decisions: commit the handoff records with the log archive (logs/PROJECT_LOG_2026-H1.md force-added past the logs/* ignore rule); start SPEC-WS-005.
+
+## Session 2026-10-22 — SPEC-WS-003 accepted via ws003-recovery (Claude Code)
+
+- User chose a new recovery scope with the same method. Recovery plan PASS 0.80; scope ws003-recovery opened 0/cap5.
+- Home accessibility fix a288db6 (icons aria-hidden, contrast >= 4.5:1, underlined link); root ran local browser in N with runs root ROOT/tmp/runs: run 1 28/30 (two spec defects, counted 1), spec fix dca2ff2, run 2 30/30 axe 0.
+- Re-review PASS; push dca2ff2 -> hosted run 39722079553 full failed (test read reactive after session end; hosted shiny 1.14.0 vs local 1.12.1; counted 2); test fix 2835467, delta review PASS; hosted run 39726772374 7/7 success; result audit Q1-Q10 PASS.
+- Integrated: I fast-forwarded b8eb759 -> 2835467 (tree equal), pushed; confirmatory run 39730055735.
+
+## Session 2026-10-21 late — SPEC-WS-003 implemented locally; scope ws003-navigation STOP5 (Claude Code)
+
+- I pushed (b8eb759); run 39709359169 browser flake then pass on rerun.
+- 003 dispatch: r1 FAIL, r2 FAIL, r3 PASS (accepted with dispositions); worktree ws003-navigation; amendment commit 6e722d6; RED dd0471e (19 tests red for stated reasons); GREEN b9cdfb3 (attempts 1-2 counted); review r1 FAIL (heading order) -> fix 560d2a6; re-review r2 FAIL (predicted Home axe violations); correction plan audit FAIL -> STOP5.
+- User decisions: push I and start 003; U5 fix Home a11y in home_tab.R; U6 allow local browser verification; U7 keep method.
+- Server check: live = release 06206d0 via Tailscale 100.94.67.89.
+
+## Session 2026-10-21 21:02 CDT — SPEC-WS-002 accepted via acceptance-recovery scope (Claude Code)
+
+- Coding CLI used: Claude Code (root changed from Codex; user instructed "현재 상태 확인하고 계속진행해" and later to proceed autonomously on routine steps).
+- User decisions: U1 keep established audit method; U2 manual human review deferred to SPEC-WS-011 release gate; U3 skip same-SHA negative alias; U4 judge 200% zoom from measured layout receipts.
+- Observation: user-directed read-only query showed run 39664812571 completed/success (7/7); first JSON output not retained (later retained properly in step 2).
+- Proposal pair: r1 FAIL (0.72), r2 FAIL (0.74), r3 FAIL (0.82), r4 PASS (0.87) by fresh plan-auditors; scope ws002-acceptance-recovery opened 0/cap5.
+- Step 2 (one attempt): terminal run/jobs/artifacts metadata + full artifact retained; digest matched API and log; 731 regular entries; six retained zips rebound; six screenshots extracted. Root dir tmp/runs/ws002-acceptance-recovery.cciaGXiu.
+- Result audit r1: R1–R10 PASS; R11 INCONCLUSIVE (200% screenshots partial: fullPage capture under native zoom) → counter 1/5.
+- R11 correction: r1 PASS not accepted (published-text precision), r2 PASS accepted; R11-bis PASS on measured receipts (dpr 2, innerWidth 640, rootWidth 640, actions within width, 7 keyboard ids, contained table overflow).
+- Integration: manager-git fast-forwarded I 7e0f6ff → 2442363 (tree 3f89bfc5 = tested tree); docs-only commit b8eb759 publishes amendment 002-acceptance-recovery.md (a8af6fa4…) and SPEC-WS-002.md (b8bef7e8…). No push.
+- Completed in Session 2026-10-21 21:02 CDT: whole SPEC-WS-002 acceptance; scope COMPLETE 1/5. Receipt ws002-acceptance-recovery-root-acceptance.json (8b5ca741…).
+- Remaining: 003 activation decision; push/merge of I; 011 human review hold; 200% capture fix; browser-only negative path unobserved; lifecycle status sync; existing science/SYNC/target-R/legacy/deploy holds.
+
+## Session 2026-10-21 15:56 CDT — Corrected hosted packets retained; STOP5 preserved and session closed
+
+- Coding CLI used: Codex.
+- Phases: SPEC-WS-002 hosted verification/evidence review, then endsession documentation only.
+- Changes: continued already-authorized observation of corrected commit24423633; retained six successful hosted packets; published separate factual erratum for incorrect negative-reporter positive-baseline attribution. No new source edits, commit/push, rerun, alias, integration or deployment in this resumed segment. Endsession gather measured I HEAD7e0f6ff, branchWT-workspace-evolution-integration, only PROJECT_HANDOFF.md/PROJECT_LOG.md modified and no staged changes.
+- Files: I handoff/log; ignored mutable implementation/002/hosted-rcheck-publication-state.json; W ignored ci-normal-24423633 reports; machine-local resume files/memory; verbatim historical handoff snapshot. Gather RECENT_FILES reflects prior SPEC/design/runtime documents, not newly authored implementation in this resumed segment.
+- Decisions: provider success is scoped, not whole acceptance; intentional negative reporters retain their actual failures; original QA/Security reports and proper FAILs are immutable. F1 erratum corrects attribution without rerun. Preserve nine exhausted scopes and STOP5; no automatic continuation/reset.
+- Problems: proper four-job audit76d80be4 found F1; corrected separately9c51a9d1. Proper positive-browser re-auditd0cc677a failed after PNG-as-UTF8 UnicodeDecodeError, fifth current failure. Post-STOP read-only provider reader parsed undefined, SyntaxError; monitoring stopped without retry. These reader errors do not establish hosted product failure.
+- Completed in Session 2026-10-21 15:56 CDT: durable partial packet retention, factual erratum, saved STOP5 state and session documentation. Whole002 is not completed.
+- Verification: browser16pass/retry0/skip0/flaky0; retained oracle0 and scoped Security40dbf043 verifies raw receipts. Scan26/findings0/errors0/canary true. Root standard hash/inventory checks0 and complete readback of reports/launcher records. Proper audits remain FAIL; terminal full remains unobserved. Diagnostics RUN PASS/SYNC FAIL1884. No local full R suite/check/coverage.
+- Remaining: terminal full outcome, complete proper browser corroboration, manual criterion answer and recovery authority. No negative alias/whole002/003 release. Human/AT/participant, target-R, science, SYNC, legacy and deploy holds remain.
+- Endsession: current handoff replaces stale active claims; prior handoff saved byte-for-byte at logs/PROJECT_HANDOFF_2026-10-21_1556.md. Existing checkpoint preamble and consumed primary resume prompt are preserved below. No new project idea identified.
+
+- Finalization at session timestamp 2026-10-21 15:56 CDT: canonical rotation exited0, kept9 of15 sessions, moved6 verbatim into logs/PROJECT_LOG_2026-H1.md (active960 lines before this note). Wiki sync exited0/OK; index regenerated579 pages. One concept page authored, no new project idea. Root and integration NEXT_SESSION.md plus first-line memory pointers saved; shared primary.gitignore untouched, machine-local /NEXT_SESSION.md ignored through Git info/exclude. No project commit/push performed during close.
+
+### Consumed root resume prompt (historical; superseded)
+
+# Next Session — Resume
+
+> **Checkpoint** saved for user-requested reboot on 2026-10-21 08:36 CDT; project-local tmp preservation completed afterward.
+> The integration handoff/log were updated during this session. This checkpoint supplies the final PAUSED browser draft and new tmp decision; it overrides older ACTIVE statements.
+
+When the user says "resume", read this file, summarize in one line, mechanically verify preconditions, and continue the already-authorized scope. The user's resume instruction ends this explicit pause; do not ask for another phase confirmation. Do not execute work merely because this file was read before the user resumes. Apply maximum reasoning effort; the literal `ultrathink.` text is not a tool trigger.
+
+## THE SAVED PROMPT
+
+```text
+ultrathink. richStudio — resume SPEC-WS-002 BROWSER source preparation, then finish003–012 in the approved dependency/file-lock order.
+source_session_id: n/a. Language: Korean conversation with established first-mention glosses; English artifacts.
+Paths: ROOT=/home/juhur/PROJECTS/20_libs/richStudio; I=ROOT/.moai/worktrees/workspace-evolution-integration; B=ROOT/.moai/worktrees/workspace-browser-run.
+User authorized autonomous001→002→003–012 with Hur Harness/independent reviews, then explicitly paused for reboot and requested project-local ./tmp on2026-10-21.
+
+Preconditions (run from ROOT; resolve aliases to absolute paths):
+1) git -C B rev-parse HEAD → 7e0f6ffe9d13b54c91e22aa186833c5b3efffc4d; branchWT-workspace-browser-run.
+2) git -C I rev-parse HEAD → same7e0f6ffe; dirtyPROJECT_HANDOFF.md/PROJECT_LOG.md belong to root and must be preserved.
+3) git -C B status --short → M package-lock.json; M package.json; ?? tests/e2e/design-system.spec.ts; compare hashes below before editing.
+4) test -f tmp/preservation-manifest.json → success; read preservation-report.json and verify all four new library destinations exist. Do not assume /tmp survives reboot.
+
+Done — do not repeat:
+-001 G0 accepted/integrated exact2e522786; actual hosted112tests1213assertions/check0E0W5N/cov3343/3904; terminalmetadata d2b473b; finalSYNC/release holds persist.
+-002 reviewed design67570a06, approved axe/npm amendment2b420b04, exact COMPONENTS/API PASS35aaa2843cf4beaee1b90896b2628449a3b46f4be4d29d65935706c4bb2fe12f; accepted3files integrated7e0f6ffe.
+-Actual component RED10cases113pass21expectedfail in3cases, GREEN10cases138assertions0fail/error/skip/warn;194source hashes/namespace/body/formals/CSS/ownedcleanup verified; exact receipts under workspace-components-corrective/.moai/reports/SPEC-WS-002/corrective-02/components/.
+-FreshBROWSERtree seeded7e0f6ffe; exact npm provenance and standard lock generation/npmciignore-scripts succeeded; local node_modules preserved. No push/CI/deploy this session.
+
+In progress — PAUSED, unreviewed partial source (not source-ready; no static TS or browser execution):
+-tests/e2e/design-system.spec.ts SHA829912e71e7b95c4bbf074d288776ce3c9cfc8fe7b58d3b7dfe693bf4bc7b29c (~500lines; actual installed-helper fixture/four tests/recreated MV3 zoom).
+-package.json SHA2c8890c9bb03ac55c4b2d3cc17381786df9dfc342f35eeb7f9ae79b7d3142512; package-lock.json SHAb6c99a7e6d5ff67b900946c59b18d04adfe375394a0fb49472535eadce39d93d.
+-B/.moai/reports/SPEC-WS-002/corrective-02/browser/{npm-registry.json,npm-lock.log,npm-ci.log}; installedaxe4.14.0/MPL-2.0; LICENSEshaaf175b9d96ee93c21a036152e1b905b0b95304d4ae8c2c921c7609100ba8df7e; axe.min.jssha20c09fe157a8a34a30e241aaa1fcdade657734f08ab379ecfbeb7d45cc46e878.
+-Corrective02 unexpected counter1/5; original002STOP5 andcorrective01STOP5 remain separate. Preserve all history; expected RED/intentional controls separate. Stop/re-scope at5 actual unexpected validation/driver failures.
+
+Decisions and restart constraints:
+-Use ROOT/tmp/runs for fresh owned runtime scratch (TMPDIR); read-only dependency/tool inputs now ROOT/tmp/libraries/<original basename>. No new system/tmp use. Adapt unreviewed future fixture/commands before Security freeze; do not rewrite historical approved driver/receipts or claim old runtime used new paths.
+-Four basenames: richstudio-dependency-adoption-v015-lib-20261020; richstudio-dependency-adoption-lib-20261020; richstudio-workspace-qa-tools-lib-20261020; richstudio-quality-tooling-lib-20261020. Other user/site R libraries remain their existing persistent paths.
+-ROOT/tmp/preservation-manifest.json SHA8a43585ec01e5d88b16084a915289cb1fb5e20a09302c9790fd779f6601f1350;21004files618823000bytes verified source-before/source-after/destination equal. OldRED evidence copied to tmp/evidence/richstudio-ws002-unit-_5mhvdj_; originalshared/tmp copies retained. Gitignored via local.git/info/exclude; primary preexisting.gitignore must remain untouched.
+-No active owned command/runtime remained at pause; scoped process scan found none. Reboot/library relocation has NOT been R-runtime-qualified; prove actual new installed origins when future scoped verification runs.
+
+Read first (at most5): ROOT/tmp/preservation-report.json; I/PROJECT_HANDOFF.md; I/.moai/reports/SPEC-WORKSPACE-001/implementation/002/browser-dispatch-corrective02.md; I/.moai/reports/SPEC-WORKSPACE-001/implementation/qa/002/browser-preparation.md; B/tests/e2e/design-system.spec.ts. Read ownAGENTS/local and re-establish complete frozen design reads before authoring (prior screens read was fragmented).
+Run: Resume a fresh disposable BROWSER writer, owning ONLY spec/package.json/lock inB; simplify/read back partial source, mechanically reject unrelated lock churn, finish provenance, static TypeScript check and freeze exact source/readlocks/commands/cleanup controls. Standard npm tooling permitted; NO R/fixture/server/browser/Playwright import before exact-source Security approval and root/soleQA runtime release.
+Follow-up: Independent source/process Security → actual scoped browser/axe/nativeBootstrapfonts/Shinyupdate/keyboard/dialog/narrow/native200%zoom/contrast/motion/baseline8 and hosted evidence → independent review/integration → whole002 acceptance →003 and remaining DAG. No local full R suite/check/coverage, no production/sudo/deploy, no worktree disposal.
+Retain gaps/holds: manual/assistive technology/participant evidence; SYNC1830; SCI-RETENTION-001008009, SCI-NETWORK-002009, B3-OBS-002009, unclassifiedB3-OBS-001004010; legacy012 and R4.5.2qualification011. Read-only future003–009 research reports are under I/.moai/reports/SPEC-WORKSPACE-001/implementation/research/, not implementation acceptance.
+```
+
+
+### Prior checkpoint preamble (verbatim; historical, newest first)
+
 # richStudio Project Log
+
+### Current checkpoint - STOP5 retained; monitoring reader stopped with terminal result unknown
+
+After STOP5, sole QA's read-only provider timestamp reader assumed structuredContent.content and raised SyntaxError while parsing undefined. It established no timestamps, timeout or terminal outcome. No retry or alternate provider query is authorized. Root instructed monitoring to stop after a factual retention note; no further workload, audit, alias or integration is active. Publication scope stays STOP5, counter5 unchanged, with this additional post-stop triage error separately recorded.
+
+Last actually verified provider observation: normal run39664812571/head2442363361239f0c10d924e38992670f1292f7ac has six successful jobs; full119446924792 was in_progress at 'Run required gate (skips and unavailable tools are failures)', conclusion null and no failed step. Its terminal result remains unknown. The actual hosted workflow may continue independently; this session does not claim active monitoring or completion. Browser reporter16passed remains a scoped observation. All evidence/FAILs and pending manual criterion are preserved. No new continuation authority is opened.
+
+
+### Current checkpoint - publication authority STOP5; existing CI evidence retention only
+
+The proper read-only browser/erratum re-audit `d0cc677a`, launcher exit 0, returned FAIL after its attachment reader attempted to decode a PNG as UTF-8 and raised UnicodeDecodeError. It verified F1's factual correction, provider binding and sixteen actual positive passed cases before stopping; deeper raw receipt corroboration remained incomplete. This is an auditor reader failure, not evidence of hosted product failure. The original FAIL is preserved without retry. Independent Security browser/erratum review `40dbf043` passed within its separate scope; this does not replace the proper failed re-audit.
+
+Publication-authority accounting reached 5/cap5 and is now STOP5. No reader re-audit, source/runtime retry, commit/push, negative-ref alias, integration, whole002 acceptance or003 activation is allowed under that exhausted authority. All eight older STOP histories remain unchanged; this is a ninth stopped scope. Sole QA acknowledged the stop and may only retain terminal metadata, logs and artifacts from the already-running normal run `39664812571` on exact `2442363361239f0c10d924e38992670f1292f7ac`. Latest provider snapshot still shows six successful jobs and full119446924792 in progress, conclusion null, no failed step. No terminal full result is inferred.
+
+The F1 erratum `9c51a9d1` remains valid separate factual correction: normal-matrix negative browser JSON filenames both contain the same intended two failures, not a positive baseline. Original report and failed audit remain immutable. The positive browser report `cc750ea3` is a distinct provider artifact; it cannot grant whole-run acceptance. Scan report `2dc2d92a` and literal inventory `de58aea7` were fully read/checked by root; separate Security scan report was published but root has not yet read it at this checkpoint.
+
+Manual criterion remains unanswered, no human/AT/participant waiver. SYNC FAIL1884, target-R, science, legacy, deployment and whole002/003 holds remain. No new task/counter/reset or continuation authority is opened. Root handoff/log updates preserve prior bytes; no source changes or integration occurred.
+
+
+### Current checkpoint - six hosted jobs succeeded; attribution correction under review
+
+New normal run `39664812571`, attempt 1, exact head `2442363361239f0c10d924e38992670f1292f7ac`, has six observed successful jobs; only full remains pending in the latest QA snapshot. Root fully read positive browser packet `cc750ea3` and checked its literal inventory `8d278bbb` with exit 0. Its actual reporter records 16 passed, no retry/skip/flaky; unchanged artifact oracle exit 0, new source receipts, axe/focus/motion/glyph and two clean native Chromium launches are retained. Independent positive-browser acceptance is pending. Diagnostics RUN passes while SYNC remains FAIL with 1884 diagnostics and release hold; older 1882 is historical.
+
+Proper read-only four-job audit `76d80be4`, launcher exit 0, returned FAIL F1: the original four-job report `e03b80e6` incorrectly calls an ordinary browser-results filename in the negative-job archive a positive baseline. Both retained JSON names actually contain the same intentionally failed canary results (expected 0, unexpected 2). Original report, raw files, Security PASS `0641f076` and audit FAIL are preserved. A separate erratum must withdraw that attribution; it cannot change provider terminal success conclusions or substitute for the separate positive browser packet. Dependent acceptance and negative alias actions are stopped pending independent correction review. No runtime rerun or source change is authorized by this correction.
+
+Publication-authority accounting is now 4/cap5, with all prior events and eight older STOP histories preserved. No normal-run acceptance, negative-ref release, integration, whole002 or003 activation follows. The manual-review criterion remains unanswered; human/AT/participant, target-R, science, legacy, SYNC and deployment holds persist. Sole QA continues read-only monitoring and durable evidence collection for the already-running full job.
+
+
+### Current checkpoint - corrected commit pushed; new normal hosted verification is running
+
+Commit `2442363361239f0c10d924e38992670f1292f7ac` contains exactly the three reviewed source corrections and the accepted administrative amendment. Its parent is `5e3681c864c42ece8c343772cc0ebac472fb2a35`. Working-file and Git-blob hashes match every reviewed subject. The corrective worktree is `/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-check-warning-portability`, on `WT-workspace-check-warning-portability`; it was clean after commit. Root fully read commit report `e25eb0b7` and push report `c58f5324`.
+
+One authorized push published that exact commit. New normal run `39664812571`, attempt 1, event `push`, registered all seven expected jobs: prepare, resources, negative, diagnostics, browser, full and scan. URL: https://github.com/hurlab/richStudio/actions/runs/39664812571 . Sole QA owns monitoring and complete raw log/artifact retrieval. No terminal result or corrected hosted warning removal is claimed yet. The previous normal run `39651379582` remains failed and its evidence is unchanged.
+
+Local readiness was independently accepted: combined Security report `9ed27e9f` and proper read-only code/API/result audit `669a970b`, launcher exit 0, were fully read by root. Actual A2 established constructor equivalence; actual B2 established decoded R AST equality, eight installed function identities, eight status and three cue markup equalities, and 10 existing component tests with 138 passing expectations and zero failures/errors/skips/warnings. The B runtime report `ac33e7e6` must be read with erratum `a8fa3aa2`: approved private installation compiled nine existing C++ units. No local full suite, R CMD check or coverage was run.
+
+The current publication-authority scope remains at 3/cap5. Its three recorded failures remain preserved; all eight older stopped histories, including native-log STOP5, stay stopped. New normal-push authority is `implementation/002/hosted-rcheck-normal-push-release.json`, SHA `623084de`. A separate same-SHA negative alias remains unreleased until this normal run is independently accepted. No duplicate trigger, rerun, PR, integration or deployment occurred.
+
+The manual-review criterion question remains unanswered. Whole002/003, human/AT/participant, target-R, SYNC1882, science/network/retention, legacy and deployment holds persist. I remains at `7e0f6ffe` with only root-owned handoff/log changes; the corrective branch has not been integrated into I or the primary checkout.
+
+
+### Current checkpoint - three-source warning correction applied; actual scoped B passed, combined review active
+
+W=/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-check-warning-portability remainsHEAD5e3681c/WT-workspace-check-warning-portability with exactly3modifiedsourcepaths and new accepted administrative amendment; no commit/push/CI. Root accepted complete A2 runtime0fe25d90 (actual HTML export/function/formals/body/environment/two hostile objects/all25namespace origins and exit/postchecks0) after A1failed base-origin collection. Exact source release784ba317 then allowed only frozen candidate application. Source application56494bbc/diff3f0a4cff/full16freeze249d928c fully read; helperf13e697f/unita3c6ba91/browsere037a564 applied, all13otherinputs unchanged, indexempty.
+
+One B2 packet9772f722/bashbada1d7d/RSEMff9bc908 passed static process/source Security3ccd3b21 and root release44f28148, then actual soleQA execution exited0 at ROOT/tmp/runs/ws002-components-b.ig7Ysopi. Runtime reportac33e7e6 fully read: private richStudio0.1.6 onR4.6.1, old/new decoded AST and8installedfunction formals/body/namespace match, actual8status+3cue markup identical, existing component tests10/138passing expectations/0fail,error,skip,warning. Actual installedtestthat3.3.2 forwarding/provenance and complete namespace origins recorded. Source3/authority6/candidate7/application16postchecks0, visible nonce observer0/controller0; private stage/library retained.269rawinventory56ed981b preserved. Full suite/check/coverage and browser not rerun locally.
+
+Read runtime together with immutable erratuma8fa3aa2: private R CMD INSTALL actually compiled9existingC++units withg++13.3 andlinked the library, as authorized in owned stage. The original no-compiler clause is withdrawn; B actualexit0/unit results unchanged. Root read full actualinstall.log7df02159. Current publication-authority accounting3/cap5 preserves A1driverexit1, rootunusedofficial-source404 and this report-quality error; no reset. All8oldSTOP/native5 histories remain stopped.
+
+Fresh combined Security actual-artifact review and proper read-only sync-auditor are active; CLI audit session49289 writes W/.moai/reports/SPEC-WS-002/check-warning/independent-combined-review-r1.md. W ignored canonical readonlyrole is installedverbatim d0e062a5, parsedreadonly/cmp0/16freeze0. No verdict is presumed. Root acceptance plus exact four-path commit/newSHA normal7jobs and later sameSHAnegativealias remain held. Oldnormal39651379582 staysfailed; actual corrected hostedwarningremoval unobserved. Usermanualcriterion remains unanswered; whole002/003/human/AT/participant/targetR/SYNC1882/science/legacy/deploy holds persist.
+
+
+### Current checkpoint - publication authority accepted; scoped preflight preparation only
+
+New pair plan1d8c7daa/amendment2a8098ba passed proper independent audit4c41a2a2/launcher0, fully read by root. Immutable initial acceptance2087cd6b opens distinct ws002-rcheck-publication-authority0/cap5; exhausted native-log5 and all eight STOP histories remain stopped. Metadata actor created fresh W=/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-check-warning-portability from freshly fetched origin/main27aac, fast-forwarded exact5e3681c, branchWT-workspace-check-warning-portability. Sole administrative file docs/specs/SPEC-WORKSPACE-001/amendments/002-check-warning-portability.md has byte-identical acceptedSHA2a8098ba. Git report8ef410f1 fully read; copy exit0 portability warning retained, separatecmp0/hash/fullread succeed. No commit/push or source correction.
+
+Root personally guarded and fully read the published amendment, standardSHA matched and cmp exited0; immutable publication acceptance6ecd84fe now satisfies D1 before exclusive source assignment. Separate actor /root/rcheck_warning_source owns only helper/componentunit/browserdigest fields and is preparing ignored candidates/diffs only; actual source edits remain held until the constructor API preflight proof. SoleQA prepares one scoped packet with once-only phaseA API equivalence before substitution, then phaseB semantic/private installed component-unit validation after source application. Each exact process still needs Security/root release; no local R/runtime/install/test has run under this scope yet. No local fullsuite/check/coverage/browser/TSC is released.
+
+Actual failed normal39651379582/head5e368 and all raw evidence remain unchanged; six scoped successful packets remain historical. Future corrected bytes require fresh reviews, exact newSHA normal seven jobs, then only after normal acceptance sameSHA negative alias. No automatic retry or oldpushrelease reuse. User manual criterion remains unanswered; whole002/003/human/AT/participant/targetR/SYNC1882/science/legacy/deployment holds remain. IHEAD7e0f6ffe remains rootdocs dirty only; W amendment untracked, index empty at publisher snapshot.
+
+
+### Current checkpoint - native-log STOP5; publication-authority proposal only
+
+Root fully read proper plan audit a5b91978975f924f0d44a810407b306791a6793d383e765e34d862dab3ff3af9 and launcher exit0. Its sole blocking D1 is amendment publication ownership and prerequisite: accepted text must be published by a designated metadata owner, then root must read/hash/record acceptance before reopening the three source locks. The remaining three-source warning-correction and verification gates passed as proposals. Original plan7da82422 and amendment5e18178a remain unchanged and unreleased.
+
+This actual plan FAIL is cumulative native-log event5/cap5: STOP all edits, correction retries, new worktree/runtime, commit/push/canary under that exhausted task. Eight STOP histories now remain preserved. Root commissioned a DISTINCT publication-authority continuation proposal only, addressing D1's separately owned administrative publication and dependency order. No fresh counter or execution authority is open; exact independent paired-plan/amendment PASS and root acceptance are required. Proposed administrative fourth tracked file is separate from the three existing implementation targets; no registry/SPEC/DAG expansion.
+
+Normal run39651379582/head5e368 remains failed; full Security52c21f56 independently confirms tests122/1351pass, coverage85.85757>=85, product check0errors/2warnings/5notes->exit1. All raw failed evidence and prior six scoped PASS remain preserved. No source fix, scoped R execution, new CI run or negative-canary release has occurred. Manual criterion remains unanswered; all whole002/003, human/AT/participant, targetR/science/SYNC1882/legacy/deployment holds persist.
+
+
+### Current checkpoint - normal hosted failure retained; R-check warning correction plan only
+
+Root fully read terminal QA report4d012a826be0767e00a71eb66a534636ac26e631708a4ecc6d96778498554deb in H/.moai/reports/SPEC-WS-002/hosted-native-log/ci-normal/final-run-review.md. Normal run39651379582/attempt1/push/head5e3681c8 ended completed/failure: six jobs succeeded; workspace-full119400289351 failed. Test suite122 tests/1351 passing expectations/zero fail,error,skip,warning and coverage85.85757 against canonical85 passed separately. Actual warning-sensitive R CMD check has0errors/2warnings/5notes: non-ASCII R/workspace_components.R and undeclared htmltools import in tests, causing exit1. Earlier intentionally broken profile canaries are distinct.
+
+All seven full logs/provider ZIPs and924 rawfiles are retained under ROOT/tmp/runs/ws002-hosted-native-normal.zkX87Pkf with final absolute inventoryec5f9b90. Current native-log task4/cap5 is STOP for dependent/canary/integration/003 work. Events retain missing-config read, Security negative-fixture reader assertion, auditor nested-trace selection assertion, and actual hosted full-gate failure. No counter reset, automatic rerun, fix, second trigger or canary push occurred.
+
+Six scoped packets retain independent PASS: browser Securityca8178c5 and readonlydd371438/launcher0; five nonbrowser Security26145f52 and readonly68ba470e/launcher0. Terminal provider receipts close earlier metadata provenance gaps without changing old reports. Diagnostics RUN pass leaves SYNCFAIL1882/releaseholdtrue. Final full failure artifact review is active; planner is preparing a distinct failure-specific R-check warning correction proposal only, requiring independent plan review/root acceptance before any implementation or new run. It must preserve existing warning policy, coverage target, tests and browser/native criteria.
+
+Manual criterion remains unanswered; no human/AT/participant waiver, targetR/science/SYNC/legacy/deployment acceptance or whole002/003 activation is inferred. I remains7e0f6ffe, root-owned handoff/log dirty; H not integrated. Earlier authority/STOP histories and full failure evidence remain immutable.
+
+
+### Current checkpoint - normal hosted run active; browser evidence under independent review
+
+Exact commit5e3681c864c42ece8c343772cc0ebac472fb2a35 was pushed once on WT-workspace-hosted-binding, creating normal run39651379582/attempt1/eventpush with seven expected jobs. The source-readiness and Security verdicts passed before the exact four-path commit; Git publication and remote SHA were verified. No second trigger, PR or canary push is released.
+
+Root fully read browser-review.md SHA28e41f3d38c3130ff61309127f91ff24a077e837d3ca4def9c4590071c17fa87 under H/.moai/reports/SPEC-WS-002/hosted-native-log/ci-normal. QA retained the provider-bound ZIP and complete console under ROOT/tmp/runs/ws002-hosted-native-normal.zkX87Pkf. Its artifact-only oracle exited0: sixteen passed with no retry/skip/flaky, exact2/17axe ledgers, full15-cell glyph/contrast checks, focus/motion and two actual distinct full Chromium starts, both exit0/null with no SDK recovery. Hosted native identity observations are populated and scoped cleanup records all measured identities dead. These are QA's measured hosted results; independent Security and proper read-only sync-auditor reviews are active, not yet accepted by root. Full normal run completion and its full-suite/check/coverage evidence remain pending.
+
+Actual hosted baseline uses R4.6.1 and Shiny1.14.0, distinct from local Shiny1.12.1. This does not qualify targetR4.5.2. Current native-log correction accounting remains1/cap5, preserving the Gitworker's absent H-relative config-read failure and guarded primary-config disposition; all seven older STOP5 tasks remain stopped. I remains7e0f6ffe with root-owned handoff/log changes only; H has not been integrated into I.
+
+The user manual-review criterion question remains unanswered. No waiver, whole002 acceptance or003 activation is inferred. Negative-canary release requires normal run acceptance. Human/AT/participant, science, targetR, SYNC, legacy and deployment holds remain.
+
+
+### Current checkpoint — native logging correction under fresh review
+
+The local sixteen-case browser milestone remains accepted on source446f329a and commit22f8e388. The recovered historical AC-001 static inventory verdict also remains valid for the unchanged three design artifacts. Whole002/003 acceptance is still open.
+
+Root fully read and accepted native-log plan b0b8218f after independent plan PASS d54a0932 and launcher exit0. Immutable authority is implementation/002/hosted-native-log-root-acceptance.json; separate live state opens ws002-hosted-native-log-correction at0/cap5. All seven STOP5 histories remain closed, including hosted-binding5/5. The correction addresses the confirmed standard SDK log-selection/redirection gap without weakening the two-clean-start/no-recovery criterion.
+
+The exclusive workflow writer added exactly two lines in H's browser branch: unset DEBUG_FILE, then export DEBUG=pw:browser immediately before the unchanged runner. Current workflow/snapshot SHAe53e1d2f; new fourteen-entry freeze9a4b9e04, delta465d4266 and shell40dcb6f6. Full preparation29afc98c was read. Producer YAML/byte comparison, Bash syntax and protected-input checks passed; root independently guarded all fourteen literal targets and standard checksum verification exited0. Three accepted metadata files and product/runner/config/npm bytes remain unchanged. Fresh independent source and Security reviews are active; no commit/push/hosted run is released.
+
+The accepted future trigger sequence is one normal branch push for seven modes, then only after normal acceptance one remote negative-canary ref push of the identical commit. No duplicate workflow dispatch or PR trigger, force/overwrite or automatic rerun is permitted. Actual full job logs and native profile/executable/PID/clean-exit/recovery evidence remain mandatory.
+
+A user question is pending about whether002's manual-review obligation requires a person to operate the browser or can be explicitly scoped to independent artifact review while retaining human/AT/participant checks at the final gate. No answer or waiver is assumed. This does not block current technical CI preparation. Target-R, science, SYNC, legacy, production and other existing holds remain unchanged.
+
+
+### Current checkpoint — local final16 accepted; hosted adapter STOP5 before push
+
+Local final16 source446f329a/attemptkD2v4a7e accepted via fullQA294a4f53/Securitybacf7403/independentactualPASSdb0c8d2f+launcher0/designcomparison96f6cb79. All16passed, no retry/skip/flaky, raw2/17axe checks/all15cells150rect750hits/focus/motion/native2cleanstarts+restorations/scopedcleanup/post711locks+8roots pass. Frozen continuation retains1/5 for first independent audit controllerexit143/noverdict; no browserrerun. AC001historicalstaticinventoryPASS666a96c8 recovered, exactthreecurrentdesignhashesmatch; rootreadfullhistoricalverdict and reconciliationb1170b7c. This closes provenance uncertainty only, not manual/AT/participant/hosted/whole002/003.
+
+Accepted exactthreebrowserfiles committed in C as22f8e388; Cnowonlyuntrackednode_modules. FreshMoAI H=/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-hosted-binding beganactualorigin/main27aac, renamedWT-workspace-hosted-binding, fast-forwarded22f8e388. Gitreporta55d7771 fullyread; sourceblob/workinghashesmatch. No push/CI. IHEADstill7e0f6ffe/rootdocsdirty. Primaryforeigngitignorepreserved.
+
+Rootaccepted reviewedhostedamendment and exactthreefilepatch. Metadata316ef981 appliedonlyH3docs paths; amendment5fb76128/SPEC002ea0c0ec4/dispatchf33079e6,12nodes/DAGunchanged,23overlaps. Workflow47lineadapterbc5e6c3f/prep95baa221/freezeb345ad91 with11entries/bashextractd167b6e4 isfrozen. StaticYAML/text/bash/diffchecksPASS; codePASSf85e5f23/launcher0 andSecurityd1f147a7 fullyread. Canonicalreadonlysync-auditorrole copiedverbatimonlytoH ignored.codex forlauncher; allsourcebytesunchanged.
+
+Hostedtask reaches5/cap5 STOP after preservedoptionaljqwrapperfailure, Gitmissinginternalpathdiscovery, workflowmissing.agentsdiscovery, missingemittedauditrolestartup, andnewSecurityreadinessHELDf1b28942. Fullclarification mechanicallyprovespinnedSDK successfullaunch/PID/exit/glibcrecovery logsareDEBUG-gated; workflowdoesnotguaranteeDEBUGbinding orsuccessfulSDKprogressattachment. InheritedhostedDEBUGunknown; noactualhostedfailureclaimed. EarlierHB01-03PASSesremainqualifiedhistorical, notfullnative-logreadiness. No fifthcounterreset/retry/sourceedit/commit/push/CIunderexhaustedtask. Sevenstoppedhistoriespreserved.
+
+Plannercommissioned distinctminimumstandardnative-logbinding correctionplan: existingbrowserbranchDEBUG=pw:browser plusonlymechanicallyjustifiedconsolebinding, no newwrapper/sampler/runner/product/npm/metadatachange. IndependentplanPASS/rootacceptance requiredbeforeanycorrection; thenfreshcombinedreviewbeforeexactcommit/push/hostednormal+negativecontrols. Currentworkflow/source/metadata/readlocks retained. Manual/AT/participant, targetR/science/SYNC/legacy/whole002/003–012/deploymentholdsremain.
+
+
+### Current checkpoint — frozen final16 executing once, continuation0/cap5
+
+Root accepted independently reviewed frozen-final-continuation pland7fe0cbe/planPASSc679d3f2 through immutable acceptancebecf51b0. Six old STOP5 histories remain stopped. Publisher literal inventory410361dc, root guarded bindingd1353c4a and fresh independent sourcePASS26a63350/launcher0 plus SecurityPASS228a6f77 fully read. Source446f329a/freezee94fb090/711locks/8roots/exactshellf9cd58a0 match. Source writer idle and no other C source writer assigned; root frozen readlock remains. No source/compiler/diagnostic changes allowed.
+
+Root published/readback frozen-final-continuation-runtime-release.json and soleQA launched exactONEfinal16, session49382, retained outer ROOT/tmp/runs/ws002-scroll-final-r1.kD2v4a7e. QA freshprechecks standard711exit0/sourcefreeze/git/eightrootidentitiesmatch. Actual runtime result is PENDING, not a pass. Current continuation0/cap5; any failed/inconclusive packet stops even belowcap, no rerun. Future hosted amendment/metadata auditPASSbd0cf99b fullyread, application/implementation stillHELD pending localactualacceptance/readlocktermination. Audit preserves its separate optional jq projection exit3 followed by corrected wrapperexit0; this future-planning failure is not erased or attributed to browser runtime. No commit/push/CI/deploy/whole002/003acceptance.
+
+
+### Current checkpoint — ordinary-scroll task STOP5; frozen r2 retained, no final runtime
+
+Final-r2 source446f329a/841lines and freezee94fb090 remain preserved; producer/compilerPASS0 and new preparation24b8c3ef are retained. Root read complete preparation, then incorrectly requested source-final.diff instead of its published source-final-r2.diff filename. Actual cat missing-file stderr counts once despite trailing successful lock check masking command exit. Current task reaches5/cap5 STOP; no sixth validation/source edit/compiler/runtime/retry is authorized. The already-started r2 independent read-only code/Security jobs may finish triage only. Six stopped task histories now remain distinct and immutable.
+
+This is a root operational path-handling failure, not a measured product/browser defect. Final16 has not run on r2. Root commissioned a separate failure-specific frozen-subject continuation proposal addressing absolute publisher-provided paths, availability guards and visible per-command exit status; it requires independent plan PASS and exact root acceptance before any new verification. No source change/recompile/diagnostic repetition belongs that proposed scope. Future hosted amendment/ownership drafts are published but unapplied. All whole002/003, hosted/manual/AT/participant/science/SYNC/legacy/targetR holds remain; no commit/push/CI/deploy/disposal.
+
+
+### Current checkpoint — independent source FAIL retained; minimum evidence-order repair, task4/cap5
+
+Root read complete read-only code verdict adef71c6 and launcher exit0, then actual C lines419–455. F1 raw-key equality precedes collection, leaving an empty attempt ledger on mismatch. F2 decorative label contrast is asserted before full observation persistence. Both concern failure evidence retention; no final runtime/product failure was measured. Root authorized only moving the exact key check after collection and persisting full label observation immediately after measurement, before assertion. All thresholds/raw identities/other behavior remain. Final-r1 packets and FAIL stay immutable; new final-r2 freeze, one scoped compiler and fresh exact independent code/Security PASS are required before final16.
+
+Current continuous scroll task4/cap5 includes prior two compiler failures, one root-owned missing I-source read exit2, and this independent FAIL. Security r1 PASS45a4f964 applies only to old dd2c6f71 bytes. Final browser execution remains HELD and unattempted for corrected final source. Five old STOP5 ledgers and all protected inputs remain. Future hosted plan has independent planPASS77cb4d08; its ownership/amendment is draft-only. No commit/push/CI/deploy or whole002/003 acceptance.
+
+
+### Current checkpoint — final source frozen; independent reviews active, task2/cap5
+
+Final C browser spec dd2c6f71 (841 lines) is frozen under source-freeze-final-r1.json 1c1480bb. Root read preparation97c3ac59, compiler r3 output TYPECHECK_EXIT0/diagnostics0, exact source delta and QA final command c4c23e1c/shell f9cd58a0. Standard711 locked-input checks exited0 against C. Only focusContrast/resolveIncomplete and diagnostic removal changed; original four final bodies and15other functions remain preserved by producer AST receipt. Browser behavior for these final bytes is unobserved. Exact read-only code audit and Security review active; final16 remains HELD pending full verdict reads and soleQA release.
+
+Two failed compiler invocations remain counted and logs retained: r1 wrong CWD/missing type resolution; r2 six TS2339 diagnostics repaired by five explicit optional ratio properties. r3 success resets nothing. Current scroll task2/cap5; five old STOP5 histories untouched. Source/npm/product/helper/CSS/runner/library readlocks remain. Separate hosted environment binding plan4c257388 is proposed and under read-only plan audit only; no workflow amendment, source edit, commit/push/CI/deploy or whole002/003 release occurred. Manual/AT/participant, targetR/science/SYNC/legacy holds remain.
+
+
+### Current checkpoint — centered SC03 evidence accepted; final SOURCE corrections active0/cap5
+
+Rootread fullQA10ad36d5 and Security986f1072 plus originaloracle/all15data. OnecontrolnCZ8PUMO actual10capturePASS/shellruntimeoracle0/zero persistentnative. All150textrectangles areinsideviewport/effectiveclip, all750points exactTDhits, contrast14.6287; observedsettledfocuschecksPASS, scrollrestorationexact. Thirtywholecellobservationsremain:2902.5pxcellcannotfit667px. Rootpublished/readback scroll-control-evidence-acceptance.json permittingtext-awarefinaloracle onlybecauseactualfullglyphvisibilityproved, notanaxesuppression/identitydrop orproductrepair. Nearestoffviewporthistorypreserved.
+
+Writerreleasedacceptedplanstep4minimumfinalspec: provenobservedfocussettlement, centeredscroll/allglyphrectviewport+clip+allhit+contrastchecks/raw2/17resolvedledger equality, wholecelldataretained/beforeguardfailureevidence, diagnosticregistrationremoved; otherpassingkeyboard/modal/typography/nativebehavior/productCSS/helper/runner/librarylocks unchanged. SoleQAprepares exactfinal16command/schema. Currenttask0/cap5/fiveoldSTOP5unchanged. Onechangedsourcecompiler/newfreeze/independentcode+Security/rootsoleQArelease requiredbeforeONEfinal16. No newruntime/whole002/003acceptance/push/CI/deploy/disposal; broadholdsremain.
+
+
+### Current checkpoint — centered-scroll control released once, task0/cap5
+
+Rootread full centeredsourceprep919c3763/spec e87bc888/freeze c1b6b653 and exactQA029951c3/shell2626f989. Exactsource delta one diagnostic nearest→center literal; command delta onlyattemptprefix. Singlecompiler0 androotfreshstandard711locked-inputcheckexit0/sourcehash/Gitstate match; currentHEAD7e0f6ffe/expectedfourstatusentries. IndependentcodePASS29c0b21c/read-onlylauncher0 andSecurityPASSa7eecee4 fullyread; observedsettlementprovenancegap retained, no new cancellationcondition. Rootpublished/readback scroll-control-runtime-release.json andsoleQAreleasedONEcontrol.
+
+ActiveQA81509/freshouter ROOT/tmp/runs/ws002-scroll-center-control-r1.nCZ8PUMO; QAstandardprechecks0. Actualcenteroutcomespending. Expected10capturecases/zero persistentnative; actualeverytextrectviewport+effectiveclip/everytexthitexactcell/contrast≥4.5/no unknowns requiredforSC03/rootcorrectiondecision. Capturepassaloneisnotproductpass. Newtask0/cap5/fiveoldSTOP5 unchanged; no retry/matrix/productCSSrepair. Source/provenpartialresults/historicalnearestoffviewportdata preserved. Final16/whole002/003–012/hosted/manual/science/SYNC/legacy/targetRholdsopen; no push/CI/deploy/disposal.
+
+
+### Current checkpoint — ordinary-scroll control independently accepted; SOURCE prep0/cap5
+
+Rootread entire785word scroll-control-planbd135112 and independentplanPASSceadaaa5/launcherexit0. Immutable scroll-control-root-acceptance.json0ec3431e opensdistinct ws002-ordinary-scroll-control at0/cap5 withseparate scroll-control-state.json. AllFIVEpreviousSTOP5histories remainfrozen; no oldcounter/release reused. ActualKG1fnc38measurement10PASS/focusobservedsettledPASS/all15offviewporttext/750nullpoints andpostreportingNameErrorSTOP remainseparatefacts. RootreadfullQA15121b0a/Securitya92eccfa.
+
+Writer ownsminimum diagnosticblocknearest→center alignmentcontrolfromsource77347ae9; allcollectors/focus/DOM/CSS/fixture/viewport/finalfunctions/tests unchangedexceptcontrolmetadata. SoleQAcoordinatesone10casecapturecommand/zero persistentnative. Existingguardedreaders+sha256sum only, no newcustomsummary/hashutility, absolutepublishedpathguards, immutable/live separation. Onechangedsourcecompiler thenfreshindependentcode/Security/rootsoleQArelease beforeanyR/browser/runtime. Centerworks remainsunproved; actualall15fulltextrectviewport+effectiveclip/everytexthitexactcell/contrast≥4.5/no unknowns requiredbeforefinaloraclecorrection. ProductCSS/helper/runner/library/sampler frozen. Whole002/003–012andallholdsopen; no push/CI/deploy/disposal.
+
+
+### Current checkpoint — final-gate STOP5 after successful measurement capture
+
+ActualONEmeasurementattempt ROOT/tmp/runs/ws002-focus-cell-measure-r1.KG1fnc38 succeeded10cases/0fail/skip/flaky/retry; shell/runtime/artifactoracle0, captureComplete true/errors[], zero persistentnative/SDKrecovery. Rootread raworacle/fullprojected15cellgeometry: allfourfocuscontrols settle224–238ms towhite2pxgap andunchangedratiosPASS. Everytd11–25 height2902.5 vsviewport667; afterblocknearestscroll text10RangeRects y1353.0625–1546.5625/all50hitsoutsideviewport, measuredtextcontrast14.6287doesnotprovevisibility. 180blockingfindings retained; NOTpadding-onlymismatch, nofinalcellcorrectionorproductacceptance. Originalrawreporter/observationspersist.
+
+A separatepost-triageQAsummarycommand wroteJSONthen finalhashprint NameError(hashlibomitted), exit1. Rootcountsonce4→5; final-gateSTOP5. DiagnosticcaptureisNOTrelabeledfailed. No sixthvalidation/sourceedit/workload/summaryrerun; onlyalready-ownedcleanup/read-onlytriage/reportcompletion. ExistingfourpriorSTOP5plusnewfinalgateSTOP5 remainseparate. Anyfurtherordinary-scrollcontrol/finalcorrection requiresdistinctfailure-specificindependentplan/rootacceptance. Potentialblockcenterordinaryscroll is onlyunexecutedexperiment, noassumedvisibilitysuccess. FullQA/Securityterminalreportsawaitpublication; no pendingreads. Source77347ae9/freezee79c/authoritiesandallprovenpartialresults preserved. Whole002/003–012/manual/hosted/science/SYNC/legacy/targetRholds remain; no commit/push/CI/deploy/disposal.
+
+
+### Current checkpoint — measurement diagnostic released once, same final-gate4/cap5
+
+Source77347ae9/911lines froze withonecompiler0 andunchangedold702lines/4finalbodies/15functions,32locks/6diag/8authority/8libraries640DESCRIPTION. Rootread fullprep a7f78ea5 and exactQA0034a848/shell9c7bbb6a. Independentsource r1FAIL48d5d348 foundcancellationprovenanceabsent underroot's strongerauditprompt; formalreviewfailurecountedonce3→4. Rootpublishedinterpretationb09a1caa clarifiesacceptedFC02observedinactive+two stableframes only, withdrawsroot-addedblanketcancellationfailscondition; provenancegapremains, no sourcefix/productpass. Independentconfirmingr2PASS9b6f25b1/read-onlylauncher0 andSecurityPASSdd5cb16a agree diagnostic-onlyscope. Rootreadcompletebothverdicts; r1FAILverbatimremains.
+
+Rootfreshreleasebindings source16/locks32/diag6/authority8/library8/DESCRIPTION640/shellMATCH andpublished focus-cell-measure-runtime-release.json. SoleQAexactONEcommand active91442, freshouter ROOT/tmp/runs/ws002-focus-cell-measure-r1.KG1fnc38; ownprechecksallmatch. Expected10capturecases/zero persistentnative. Actualresultpending; unfavorablestablefindings/unknownsblockfuturecorrectionevenifcapturepasses. Anyunexpectedfailure reachesSTOP5; no second diagnostic/retry. FourpriorSTOP5/failedfinal14,2/allholds preserved. No final16newresult/whole002/003/push/CI/deploy/disposal.
+
+
+### Current checkpoint — focus/cell diagnostic SOURCE prep, continuous final-gate3/cap5
+
+Writer reportedtwo pre-edit failedread-onlylocation invocations: rgI-relativepathfromC missingdirectory withtrailinggitexitmask, andsedIspecpathmissing exit2 (owneduntrackedsourceexistsonlyC). Rootcountseachinvocationonce: samefinalgate1→3/cap5, no source/compiler/runtimefailureinferred. Exactpathsnowlocated; guardedabsoluteCsource/Ireports required, nooptionalabsent/pendingreads. Immutableamendmentauthorityb6354e1f unchanged; onlyseparatelivestateupdated. AllfourpriorSTOP5remain.
+
+Writer/soleQAcoordinate measure-r1 diagnostic: baseline8+twofocuscellcases10, zero persistentnativecanary, lifecycle/rawaxe andcompleteimmediate/settledfocus/frame/timing records, desktoppredeterminedzero-cells/narrowall15attemptswithgeometry/textRange/scroll/clipping/hits. Stablefailures retainedblockingdata; capturepasscannotbeproductpass. Exactcode/Security/sourcefreeze/rootsoleQArelease stillrequired; noadditionalR/browser/import/discovery/runtime executed. Failedfinal14/2andallnative/modal/typographypasspartialresults preserved; finalwhole002/003–012andallholdsopen.
+
+
+### Current checkpoint — focus/cell amendment independently accepted; diagnostic SOURCE preparation
+
+Rootread full94line focus-cell-correction-plandaa37fc1 and independentplanPASS3a22ef4d/launcherexit0. Newimmutable focus-cell-root-acceptance.json preserves SAMEfinalgatecumulative1/cap5/fourpriorSTOP5; noreset/exhaustedrelease reuse. ExistingC soleBROWSERwriter prepares one source-only focus/cellmeasurement diagnostic; soleQAcoordinatesexactcommand. Baseline8+twofocuscellcases=10actualrequired, zeropersistentnativecanary. Supportedratio-independenttransitioncompletion/stablecomputedstyle withimmediate/finalsamples; all15narrowcells fullcell/textRange/scroll/clipping/hit/color observations beforeguards/finally, nofirstfailurehidingothers. No speculativeproductfix/thresholdrelax/axesuppression/fixedsleep/motiondisable. Unknown/settledfailure/realobstruction blocksfinalcorrection. Onechangedsourcecompilerthenexactcode/Security/rootsoleQArelease before anyR/browser/import/discovery/runtime. Failedfinal1b9d8dcb/14pass2fail/rawdtjPxMVf andallreports preserved. No push/CI/deploy/disposal; whole002/003–012 andinheritedholds remainopen.
+
+
+### Current checkpoint — actual final-gate FAILED14/2; one-run limit exhausted
+
+Rootread freshSecurityreadiness20aa47ca then releasedexactONEfinalshell via final-gate-runtime-release.json. SoleQAactualattempt ROOT/tmp/runs/ws002-browser-c03-final.dtjPxMVf atsource1b9d8dcb/exactshellc27d terminatedshell3/runtime1/artifactoracle3/processobserver0:16actualcases14pass2fail,0skip/flaky/retry. Bothprojecttypography/modal/nativezoom plusbaseline8passed. Desktopaxecontrastmotion failsfocus#a-filled outlineToSeparator2.068289<3, actualgapshadowtransparent0; normalprecedingfocusshadowpartialwhite. Narrowfailsunobscuredfalse firsttd11bytrace/partialledger; failedstatepointsnotattachedbeforeassert. CSS.2sboxshadowtransition+QAtraceearlysample timing support timinghypothesisonly, notsettledcontrastpass/productdefectcause.
+
+Rootread fullSecurityruntime3d222e81 plusrawreporter68b370e4/actualerrors/attachments. BothnativefullChromiumPID770388/786447 cleanexit0/null/noSDKrecovery, realzoom1→2→1/full100/200actiondialoglayoutPASS. All8fixtureleadersreaped/16knownfixtureidentitiesabsent/8rootsremoved; noncepostprocess[]gaps[]/3871,3872empty, outerretained. Source16/readlocks32/diagnostic6/library8DESCRIPTIONS640 pre/post/currentmatch. NativePIDstarttick/sampler[]gap remains. No finala11y/motion/whole002acceptance or003release. FinalgatestatecountsONEfailedattempt1/cap5; allfourpriorSTOP5unchanged. Single-runlimitspent evenbelowcap: no automaticretry/sourcefix; read-onlytriage thenindependentlyreviewedfailure-specificscope needed. No commit/push/CI/deploy/disposal.
+
+
+### Current checkpoint — independently accepted frozen final-gate prerequisite review
+
+Root read complete final-gate-plan09fe1c75/119lines and independentplanPASS8b9bc083/read-onlylauncherexit0. Published immutable final-gate-root-acceptance.json c2e60355 and separatemutable final-gate-state.json at0/cap5; allfourpriorSTOP5ledgers remain unchanged. Failure-specific correction is publication-before-dependentread, separateimmutable/liveaccounting and no optionalmissingconfigurationread. ExistingisolatedC/source1b9d8dcb/exactcommand37943e4f/shellc27d remainexclusivefrozen; no sourceedit/recompile/repeateddiagnostic.
+
+Fresh root binding-r1 actual16sources/32readlocks/6diagnosticevidence/8canonicalroots640DESCRIPTION/shell/Gitstate allmatch. Independent sourcePASS7fef97d0 retained withhistoricalcounter/reportmetadata qualified separately. FreshSecurityprocessreadiness andsoleQAconfirmation active; final16stillHELD until completePASS/rootexactonerelease. Actual10case diagnostic remainshistoricalsuccess; no finalruntime/whole002/003 acceptance, push/CI/deploy/disposal.
+
+
+### Current checkpoint — corrective03 STOP5 before final16 execution
+
+Corrective03 reachesSTOP5: Security one read-onlyinspection invocation attempted still-pending source-preparation-final-r1.md; actual ls/cat No such file or directory stderr verified, countonce despite compositeexit0 from trailing successfulcat. No source/runtime defect follows. Prior4events remain. No sixthvalidation/sourceedit-and-retry/finalruntime is allowed. Already-started independentreadonlyfinalsource reviews mayfinishtriage; a distinct narrowrescope mustpassindependentplan/rootacceptance before execution.
+
+Finalsource frozen1b9d8dcb8981f2ad393c09710634d2b94c97f3dd8c93e1ca1b14a7373612df85/702lines; writerreports onecompilerexit0 withdiagnostics0, no finalruntime. Freezeff66699e records32readlocks (original31+compilerAPI), unchangedother15, library8/640DESCRIPTION and6accepteddiagnosticdigests. FinalQAcommand37943e4f/shellc27d4a4f remains source-only. Actualdiagnostic10PASS/nativezoom and gaps remainacceptedhistoricalevidence. Newcyclecannotbeclaimedbyrenaming/phasechange. Whole002/003–012/finalmanual/hosted/science/SYNC/legacy/targetRholds persist; no commit/push/CI/deploy/disposal.
+
+
+### Current checkpoint — corrective03 diagnostic accepted; final SOURCE corrections active
+
+Root read fullQA0975486e and Securityb1091d57 plus original reporter5524c11c/actualeventnativecleanup receipts. One releaseddiagnostic succeeded10actualpasses/no retry/skip/flaky, runtime/oracle/processobserver0. Baseline submitprevention flips atdocumentShiny; calleractioncontrol safeCancel/stalerevalidation/freshapply succeeds. ActualShiftTabfromCancel givesBODY/hasFocusfalse/modaltrue, TabreturnsCancel thenconfirm. Native141.0.7390.37 onePID3425655 clean0/noSDKrecovery; nativezoom1→2→1 inner1280x581→640x290 outer/screenstable/visualScale1. Shortpathsuccess doesnotprove oldSIGTRAPcause. Nativeidentitysampler[] isexplicitgap; terminalPIDproofcomesfromDEBUG, no native startticks/group guarantee. Fixtureleadersreaped/knownidentitiesabsent/shortrootsremoved, outerretained, source16/readlocks31/libraries8/DESCRIPTION640 remainmatch.
+
+Root accepts diagnostic-only evidence via implementation/002/corrective-03-diagnostic-evidence-acceptance.json and releases existingwriter minimumfinalSOURCEbundle underacceptedplanstep4–5; soleQA prepares separateexactfinal16command source-only. Currentcounter4/cap5 persists. Producthelper/CSS/runner/config/npm/readlocks frozen; no moreR/browser untilfinalbytes independentlycode/Securityreviewed androotsoleQAreleased. Final16/axeledger/contrastmotion/zoomlayout/manual/hosted/whole002/003 remainopen. No commit/push/CI/deploy/disposal.
+
+
+### Current checkpoint — corrective03 exact diagnostic released once
+
+Root read complete independent source PASSc672d087 (read-only launcherexit0) and Security exact source/process/command PASS1c3eb1e3. Fresh root Python recheck: source16/readlocks31/library8/DESCRIPTION640/exactshell MATCH. Source6889ab1a, freeze109f37b1, command06a18e44/shell0d1e1647 remain frozen. SoleQA is released for exactly ONE ten-instance modal/native diagnostic, not final16 or whole002. Runtime outcome pending.
+
+Current corrective03 counter4/cap5: independent auditor optional harness.yaml read returnedexit1, then absence confirmed. Conservatively counted once in addition to prior3; no source defect inferred. Any unexpected failed/inconclusive attempt triggers STOP5 before automaticretry. Immutableauthority025af332 remains unchanged; mutable corrective-03-state.json and separate diagnostic-runtime-release.json carry currentstate. AllthreepriorSTOP5 histories, primaryforeigngitignore, oldtrees, inheritedscience/SYNC/legacy/targetR/manual/hosted holds remain. No commit/push/CI/deploy/disposal.
+
+
+### Current checkpoint — corrective03 diagnostic source/command being frozen
+
+Source owner workspace_002_browser_c03 and soleQA coordinate one diagnostic packet in workspace-browser-corrective03: exactmodeWORKSPACE_CORRECTIVE03_DIAGNOSTIC=modal-native-r1, source-derived10cases (baseline8+2diagnostic), desktopONEpublicpersistentcanary/narrowpredeterminedno-launch. Native SDK exact79a831a5 permits a conditional second internalstart onlyfor ld.so inconsistency; root+Security interpret onecanary as onepubliccall/noAPIretry, with everyactualPID/exit retained and anyrecovery rejected as failed/inconclusive. No physical-one-start guarantee, privatehook or sharedtoolmutation.
+
+Corrective03 counter2/cap5: setupstatussymlink1, conservative failedliteralhistoricalpathread2. No source/compiler/runtimevalidationfailure in newcycle yet. OldthreeSTOP5 histories persist; exactdiagnostic source/Securityreview androot/QA runtime release still pending. No newR/browser/fixture/import/discovery/canary executed.
+
+
+### Current checkpoint — 2026-10-21 corrective03 plan accepted; fresh diagnostic SOURCE preparation active
+
+Root read complete independentplanPASSdea5cdb3 (read-onlylauncherexit0) for exactplan3f5843df and accepts only the distinct failure-specific corrective03 cycle via implementation/002/corrective-03-root-acceptance.json. Allthreepriorcycles remainSTOP5, including actualcorrective02runtime8baselinepass/8componentfail. Root read full actualQA/Security/trace triage; no sixthcorrective02retry occurred.
+
+Git created fresh workspace-browser-corrective03/WT-workspace-browser-corrective03 fromorigin27aac71, fast-forwarded accepted7e0f6ffe and copiedexact3stoppedbrowserfiles. Root read full seeddcb5c85f and independently rehashed16entries/no mismatches. OldB/primaryforeigngitignore/Irootdocs preserved byGit. Exactread-only oldB/node_modules toolsymlink is a fourthknownuntrackedsetupentry; don'tstageit or editsharedexcludes. Setupstatusdiscrepancy conservativelycounted1/cap5 innewcycle, not runtimefailure.
+
+Distinctwriter /root/workspace_002_browser_c03 owns onlynewtree spec/package/lock, preparing ONE minimal diagnostic sourcepacket under acceptedplan. Nativecanary≤1acrossprojects, actualsubmit/focuscapture, explicitincompleteaxeledger and nativezoom evidence requirements remain. No R/browser/fixture/Playwrightimport/discovery/canary authorized until exactnewsource/command Security approval plusroot/soleQA release. Staticcompileronlyallowed. Existingwhole002/003–012/manual/hosted/science/SYNC/legacy/targetRholds remain; no commit/push/CI/deploy/disposal.
+
+
+### Current checkpoint — 2026-10-21 actual BROWSER failure; corrective02 STOP5
+
+Actual one approved r2 runtime source0416f09e exited1: all8baseline cases passed, all8component cases failed,0skip/flaky/no retries. Root read raw reporter, terminal process/listener files and complete soleQA runtime-r2.md (SHA8b49312d). Cancel remained visible, ShiftTab focus oracle failed, axe4.14 reported0violations but unresolved colorcontrast incomplete2desktop/17narrow nodes, and nativefullChromium launchSIGTRAP prevented zoom. No causal claim from cpufreqstderr. Actual R4.6.1 installedcandidate/helper/CSSidentity and relocatedv015 richR0.1.5/richCluster2.0.1/bioAnno0.99.45 origins were observed; computed typography measurements were emitted, not enclosing testPASS.
+
+Corrective02 nowSTOP5 (singlefailedruntimeattempt, not eight retries). No sixthvalidation/retry/sourcewrite is allowed in that cycle. SoleQA performed only read-only artifact triage after registered cleanup; nonceprocesses[]/gaps[] and3871/3872listeners empty, leaders reaped, sixfixture roots removed and twozoom roots intentionally retained. Outerattempt ROOT/tmp/runs/ws002-browser-c02.wmJGlSrD remains. Full stoppedr2spec preserved under implementation/002/stopped-corrective02/design-system-r2.spec.ts with identical0416f09e hash; all16source hashes pre/postmatch.
+
+Root dispatches manager-spec /root/workspace_002_corrective03_plan to author a narrow failure-specific plan only; independent read-only planPASS/rootacceptance required before a distinct corrective03 cycle. Security read-only actual cleanup/identity reconciliation active. Dialog source inspection found Shiny form interception as sourceevidence, focus/zoomcauses still require bounded approved diagnosis; axe incomplete is not a proven contrastviolation. Whole002/003–012/manual/hosted/science/SYNC/legacy/targetR remain open. Primarymain/.gitignore preserved; no push/CI/deploy/disposal.
+
+
+### Current checkpoint — 2026-10-21 BROWSER static pass; source review r1 corrections pending
+
+BROWSER source frozen2a1108ac with unchanged exact axe manifest/lock. Actual npm run typecheck exit0 and four compiler input membership after one retained delimiter failure; root read raw logs/full spec and independently rehashed16inputs with no mismatches. No R/install/fixture/browser/test discovery/runtime occurred. Independent read-only sync-auditor source review launched through supported moai codex role-audit in B, session22356, own corrective-02/browser/independent-source-review-r1.md; verdict pending.
+
+Independent Security r1 FAIL mechanically established unpadded proc port3872 lookup and missing propagation of zoom-known-survivor retention state. No actual leak/deletion occurred. Corrective02 continuous unexpected count3/cap5: inherited1, static delimiter failure2, single Security r1 pass3. Source stays frozen until independent code report is read, then a minimal correction bundle. FullSecurity report latest323688bd includes exactQA command-only acceptable disposition; QA packet e5262fb2, shellc2f3dd19 (no trailing newline). Native Playwright bounded cleanup/outer600s/production300s are source-reviewed intended controls, not observed runtime. Separate dependency-origin probe was not built/run; no new generic driver. Whole002/003–012 and inherited gates remain open; no push/CI/deploy/disposal.
+
+
+### Current checkpoint — 2026-10-21 reboot resume; BROWSER source preparation restored
+
+User said resume, ending the saved explicit pause. Root read NEXT_SESSION.md and mechanically verified both worktree HEADs7e0f6ffe, browser branch/status and all three draft hashes, preservation manifest8a43585e and all four relocated library destinations. Integration handoff/log dirt and primary main27aac71/.gitignore are preserved. Fresh root remote reconciliation returned0 0. Root handoff/log on primary are historical; this isolated integration checkpoint governs active intent. No new runtime qualification is claimed.
+
+Restored disposable BROWSER writer /root/workspace_002_browser, soleQA /root/workspace_qa and Security /root/workspace_security. BROWSER owns only spec/package/lock; source preparation/static TypeScript remains authorized, R/fixture/browser imports and execution held for exact-source Security approval plus root/QA release. Fresh scratch must use ROOT/tmp/runs; protected libraries are now ROOT/tmp/libraries. Corrective02 count1/cap5 continues; previousSTOP5 histories remain. Whole002open/003blocked; scientific/SYNC/manual/legacy/targetR holds persist. Actual precondition receipt: implementation/002/resume-20261021.json.
+
+
+### Current checkpoint — 2026-10-21 COMPONENTS accepted/integrated; BROWSER source preparation active
+
+Root read the complete actual independent COMPONENTS/API PASS reportSHA35aaa2843cf4beaee1b90896b2628449a3b46f4be4d29d65935706c4bb2fe12f; approved read-only launcher exited0. Root accepted that exact source/API milestone, with Security scoped source/RED/GREEN approval and all browser/manual/hosted gaps retained. Root acceptance receipt: implementation/002/corrective-02-components-root-acceptance.json.
+
+Git explicitly committed only the three reviewed component files as7e0f6ffe9d13b54c91e22aa186833c5b3efffc4d, integrated locally and created fresh workspace-browser-run/WT-workspace-browser-run at that exact HEAD. Actual CLI initially created from verified origin/main27aac71, then renamed/aligned by verified fast-forward inside the new tree. All three source/hash/blob comparisons across candidate/integration/browser trees passed; root independently read commit3file scope and integrated hashes. Root dirty documents and primary main/.gitignore remained byte-preserved. FullGitreceiptSHAe81bc6efed049118f51a5a1eea9e26bfc62cfd6671c2f82f42081765d9d2755c in implementation/002/components-git-integration.md. No push/newCI/deploy/disposal.
+
+Fresh disposable owner /root/workspace_002_browser now owns only tests/e2e/design-system.spec.ts, package.json and package-lock.json in the new tree. Root activates the reviewed source-preparation brief, standard pinned npm metadata/local ignore-scripts installation and static TypeScript checks; R/fixture/server/browser execution remains blocked until exact-source Security approval and root/soleQA release. Original zoom executable source was unlocated; root permits minimal same-MV3-mechanism recreation within the owned spec with fresh review/runtime proof, never a historical-source-reuse claim. Corrective02 counter1/5 remains continuous; both earlier STOP5 cycles persist. Whole002 remains open;003 is not dispatched. Parallel003/009 source reconnaissance is preparation only, not runtime verification or implementation acceptance.
+
+
+### Current checkpoint — 2026-10-21 corrective002 installed GREEN, independent API review pending
+
+Root read the full independent corrective02 task-plan PASS (reportSHA856c40da25f7c55378e95321bc8ce1aa56679abba45d10b49b6f0f4d88597d73) and accepted exactplanc42c8163. Fresh bounded cycle02 retains both prior STOP5 histories. Counter1 records the source-only semantic CSS oracle defect: native Bootstrap has two html blocks; the first lacks font-size. The minimal unit correction reads the last specified property, and actual native root10px was confirmed before runtime. No old-cycle sixth retry occurred.
+
+Exactdriver8e7dce8b/run.Rfb4ffa were independently source-approved before execution. Four actual bounded lifecycle canaries exited0 with expected normal/capture-exception/TERM-registration/setup-exception markers. Root verified35receipt hashes, preserved control identities and fresh owned PID/group/scratch absence; independent Security reconciled actual receipts. Root acceptance: implementation/002/corrective-02-canary-root-acceptance.json. SIGKILL escalation and unsafe-initialization fail-closed retention remain unexercised, not implied passes.
+
+Actual installed RED on unchanged initial R/CSS:10cases113passingassertions21expectedfailures in exactly F2actions4/F3status8/F1sizing9, zero errors/skips/warnings. Following root acceptance, minimal scoped rem sizing/native action-label/status semantics corrections produced actual installed GREEN:10cases138assertions, zero failures/errors/skips/warnings. Root independently read raw install/test logs, checked194pre/postsource hashes and status, frozen-input/namespace/body/formal/CSS identity, original28938byteCSSprefix, process reaping and fresh owned cleanup. RED individual failure display is clipped after10 detail blocks; complete10case/21failure aggregate retained.
+
+Frozen corrected subject in workspace-components-corrective: R1fbdbd87d301cff4defb3e28fc0f74e2c221f39aea1a9884f649a5d7c977ffb6; CSS92fdf6e04d0660037165b958c3dccf181f1b2f3258f25156f46b328dedb29d5e; unit5cd14a5e41c8dd104729af4ebc4a8d43e423d0b68ded6b59eb0a361c72c408c1. FullGREENreportSHA8b2d1828d23a2ce39eba283f2ab3887bdcb552f8085053a7e03779fee62aed5b under own corrective-02/components. Security grants scoped component/evidence approval only. Approved read-only sync-auditor is reviewing exact API milestone; no commit/integration, browser release or whole002 acceptance yet. Browser QA source-only plan is retained in integration implementation/qa/002/browser-preparation.md. Actual browser/axe/keyboard/focus/computed sizes/zoom/contrast/motion/manual/hosted remain pending. Integration HEAD remains2b420b04; primary main/production unchanged.
+
+
+### Current checkpoint — 2026-10-21 corrective002 stopped pending narrow re-scope
+
+001 exact accepted candidate2e522786 is integrated; terminal metadata commitd2b473b and reviewed design67570a06 are retained. Current integration HEAD2b420b045a828d33d9b4a215e94822a9955405ee contains the approved npm-tooling amendment. No002 product/browser acceptance or003 dispatch is authorized.
+
+Corrective01 has reached five unexpected failures and is STOPPED: missing-path read, rejected cleanup command before execution, independent component/API review FAIL, revision prerequisite-path read, and source-confirmed Security prerequisite BLOCK SEC-002-DRV-001. The original002 cycle STOP5 remains separate. The latest driver registers its Popen child only after a fallible identity read; active signal handling can bypass registration. No such runtime interruption or leak was executed or observed. R/CSS remain the initial candidate; updated regression tests and rejected driver are frozen. No sixth execution is allowed.
+
+Root is obtaining a narrow corrective02 task plan under the existing approved amendment, with independent read-only plan review and explicit coordinator acceptance before a new bounded cycle. Scope remains the same three component targets. Repair or simplify owned process registration/cleanup before any R workload, then actual expected RED, minimal Bootstrap sizing/Shiny updateable-label/status announcement corrections and installed-candidate GREEN. Literal CSS-value tests must become semantic design-size checks; actual computed browser behavior remains a later required gate. Independent component review still precedes browser/npm ownership. Preserve all historic source, cleanup and manual-accessibility gaps; no full suite, new CI, push or deployment occurred at this checkpoint.
+
+
+### Current checkpoint — 2026-10-21 corrective002 components active
+
+Design handoff1.0.1 passed independent read-only confirming review after the missing Manage Files surface was corrected. Root read the complete report; reviewed artifact hashes are retained in `implementation/002/design-integration-resumed.md`. Three design documents were committed53ec11b and integrated67570a06. Design acceptance is pre-implementation only.
+
+Original002 execution reached its fifth unplanned failure and STOPPED before any sixth retry: two inventory-driver errors, design-r1 omission, failed customaxe LICENSE guard, and malformed JS verification probe rejected before shell execution. Original unit expectedRED is separate (private installDONE,8cases/1pass/2fail/7errors/0skip/0warn); only testfilee8b46a78 was authored. Preserve original source-identity and failed-provisioner cleanup gaps. Handwritten QA provisioning and its unexecuted diagnostic are abandoned, not silently retried.
+
+Root read full independent corrective-plan PASS and accepted the exact three-artifact subject, reportSHA995ffc27eae9ccac138071986bdf5608660d56c9c70f1cd30eab45765067b445. Acceptance receipt `implementation/002/corrective-01-root-acceptance.json` preserves oldcount5 and explicitly authorizes a separate corrective-scope cycle. Amendment committed2b420b045a828d33d9b4a215e94822a9955405ee. New isolated tree `.moai/worktrees/workspace-components-corrective`, branchWT-workspace-components-corrective, same seed. COMPONENTS owns only CSS/internalRhelpers/unit tests; independent exact API review precedes BROWSER's spec and two npm metadata files. Pinnedaxe-core4.14.0 is development verification tooling only; no package change or scan has occurred. No R/runtime/framework or threshold change is authorized.
+
+Active owner `/root/workspace_002_components_corrective`; original stopped tree remains preserved. Corrective counter1/5 conservatively records one failed location/read operation before edits; expected discovery negatives and planned RED are separately attributed. Every unexpected validation/driver failure is retained and triggers STOP atfive. SoleQA/Security and coordinator retain context idle as needed, within four active actors. No browser runtime is authorized until exact fixture/process review.003 remains blocked on whole002 acceptance; all finalSYNC/science/legacy/targetR/release holds remain.
+
+Parallel read-only005 API reconnaissance verified installed richR0.1.5 publicGO/KEGG/genericenrich universe forwarding and metadata reader; Reactome usesenrich rather than an exportedrichReactome. Default/explicit universes and positive-overlap testing-family/adjust-before-report-filter semantics were source-inspected, not numerically executed. Future005 must pre-reject excluded query IDs and retain enrichmentInfo metadata. Recon used existing protected dependency fallbacks, no workloads/network/library mutation. Further006 public cancellation API reconnaissance is read-only and does not dispatch006 implementation.
+
+
+
+## Session 2026-10-21 — Foundation integrated; design-first002 active
+
+- User explicitly authorized001, immediately002, then003–012 autonomously with Hur Harness, independent review and dependency/file-lock scheduling. Deployment remains user-executed.
+- Restored execution lead `/root/workspace_execution_resume`, sole QA `/root/workspace_qa_resume` and Security owner `/root/workspace_security_resume`. Git specialist `/root/workspace_001_integrate` integrated accepted candidate05 by fast-forward; `manager-develop` `/root/workspace_001_terminal_records` appended terminal E2/E3 only. Original runtime baseline remains2e522786; metadata commitd2b473b is not a new runtime measurement. Root read full integration and metadata receipts, full terminal QA report and entire progress append. Preserved historical bytes and698CRLF pairs in this log.
+- Exact source:252/252 file/Git-blob comparisons across candidate/integration/fresh002 reported by Git. Terminal record hash3b421c14cb511c75b7d0466ec958ceb8b24c8991f450c230cec0f90b15d653dc independently recomputed by root.001run gate accepted; finalSYNC1830 remains held; completion list remains separate from dependency readiness.
+- Design owner `/root/workspace_002_design` wrote only three local design artifacts in freshworkspace-design-system from2e522786. Root read all three; an initially nonexistent runner reference was mechanically disproved and corrected before freeze. Source CSS identity and blue/teal tokens are preserved;11surfaces×6state classes and A01–A16 handoff map delivered. Frozen hashes: systemb408cfe8593ab00c9a623d01fcbdecaaa1d8037df415c55a428c03d5284f0db9; screens014cbcce220eebcd8d2055f8633d9edec0cf6a83673a5e6673aa43fb446152fa; handoff7cd33b2577c72af20a5da1de959414106b11397fd608979a01503852a27f6ea4. These are design artifacts, not product/browser/manual-accessibility acceptance.
+- Independent handoff review is running through approved CLI twin `moai codex role-audit plan-auditor`, report target design-tree `.moai/reports/SPEC-WS-002/design/independent-handoff-review.md`. Root provisioned canonical generated read-only TOMLs verbatim with digest/readback receipt. No reviewer verdict is inferred before the actual launcher output is read.
+- QA/Security chose existing browser runner baseline+new component checks as affected-CSS scope instead of a new orchestration runner. Approved only private temporary officialaxe-core4.14.0 verification tooling with pinnedSRI, actualengine/version/fullresults and cleanup, no product/global dependency change. New fixture's actual implementation still needs identity/port/nonce/cleanup review and normal/error/timeout evidence. No002 code, fixture runtime, scan, browser/manual acceptance or hosted candidate has run yet.
+- Concurrent execution respected four active actors including root and external audit. Persistent actors retain context while idle; no duplicate hosted observer. Future failure counts include evidence-driver failures and re-scope atfive. All scientific/legacy/targetR/SYNC holds remain open.
+
 
 ### Current checkpoint — 2026-10-21 autonomous execution resumed
 
@@ -196,422 +639,6 @@ testthat suite could not be re-baselined this session due to system R upgrade fr
 
 - System R upgraded 4.5 → 4.6 between 2026-03-29 and 2026-05-17; renv library `richStudio-29a8d641/R-4.5/` is stale. `renv::restore()` needs to be run against R-4.6 before tests can re-baseline.
 - The two locally-modified files `.gitignore` and `CLAUDE.md` shown in `git status` are pre-existing harness/config drift unrelated to this session's SPECs and were not staged.
-
----
-
-## Session 2026-03-28 CDT — UI/UX Audit, Modernization & v0.1.6 Release
-
-- **Coding CLI used:** Claude Code CLI (claude-opus-4-6)
-- **Phase(s) worked on:** Phase 9 (UI/UX Modernization), Phase 10 (UI Audit & Polish)
-
-### Infrastructure
-- Restored renv environment (165 packages) via `renv::restore()` with system R 4.5.2
-- Shiny Server confirmed running richStudio_3 as user `juhur` on port 3838
-
-### Phase 9: UI/UX Modernization (3 commits)
-
-**Sidebar fixes:**
-- Sidebar now uses flexbox layout; "Hur Lab" footer pinned at viewport bottom without page scroll
-- Removed `position: absolute` / `padding-bottom: 70px` anti-pattern
-- Bookmark button restyled as sidebar menu item (was bordered button)
-
-**Landing page:**
-- Condensed from 4 boxes (2 columns) to 3 boxes (3 equal columns): Key Features, Quick Links, About
-- Hero banner compacted (`home-hero-compact` class, 16px padding, 24px font)
-- Quick Start step descriptions shortened to single lines
-- Fixed logo SVG truncation (viewBox widened from 240 to 340)
-
-**Visualization tabs:**
-- Deduplicated box headings: config boxes renamed "Selection"/"Options", result boxes keep original names
-- Fixed confusing "Not currently supported" text on cluster visualize upload
-- Removed global inline `.box-title { font-size: 20px }` override from clus_visualize_tab.R
-
-**Header:**
-- Favicon icon added to sidebar logo (later moved to CSS pseudo-element)
-- Version removed from header text
-
-### Phase 10: UI Audit & Polish — v0.1.6
-
-**Breadcrumb navigation:**
-- JavaScript breadcrumb injected into navbar via `tags$script` in app.R
-- Updates on tab change (`shown.bs.tab`) and sidebar click events
-- Maps all 8 tabs to readable paths (e.g. "Enrichment / Enrich", "Clustering / Visualize")
-- Favicon icon shown before breadcrumb text via CSS `::before` pseudo-element
-
-**Empty states:**
-- Added empty-state divs with icons and messages to all visualization result boxes
-- Enrichment Visualize: Table, Bar Plot, Dot Plot, Network boxes
-- Cluster Visualize: Cluster Heatmap, Term Heatmap boxes
-- Removed unnecessary `br()` elements between boxes
-
-**Heading consistency:**
-- All page titles standardized to `h2()` (was mix of h2/h3)
-- Cluster tab: changed from `box(title=..., solidHeader=TRUE)` to standalone `h2()` + plain `box()`
-- Added CSS for `.tab-pane > h2` to ensure consistent 22px/700 styling
-- Added `.box-body h4` rule for consistent 16px/600 section headings
-
-**Spacing:**
-- Tightened `.empty-state` padding (40px -> 24px) and icon size (48px -> 36px)
-- Home section box margin reduced to 12px
-- Workflow stepper margin reduced
-
-**Browser title fix:**
-- Reverted `dashboardHeader(title=)` from `tags$span(tags$img(...))` to plain string "richStudio"
-- Favicon in sidebar logo now via CSS `::before` pseudo-element instead of inline HTML
-
-**Version bump:**
-- `DESCRIPTION`: 0.1.5 -> 0.1.6
-- `inst/application/app.R`: app_version 0.1.5 -> 0.1.6
-- `R/home_tab.R`: default app_version 0.1.5 -> 0.1.6
-
-### Files Modified
-- `DESCRIPTION` — Version bump
-- `R/home_tab.R` — Compact hero, 3-column layout, version bump
-- `R/rr_visualize_tab.R` — h2 title, deduplicated headings, empty states
-- `R/clus_visualize_tab.R` — h2 title, deduplicated headings, empty states, removed inline CSS
-- `R/cluster_tab.R` — Plain h2 + box layout
-- `inst/application/app.R` — Breadcrumb JS, plain title, version bump
-- `inst/application/www/custom.css` — Sidebar flex, breadcrumb, compact hero, link-list-compact, empty-state sizing, heading consistency, bookmark restyle, favicon pseudo-element
-- `inst/application/www/richstudio-logo.svg` — Widened viewBox
-
-### Verification
-- All R files parse successfully
-- Playwright visual audit of all 8 pages: breadcrumb updates correctly on every navigation
-- Empty states display on visualization pages
-- Headings consistent across all pages (h2 at 22px)
-- Browser tab title shows "richStudio" (clean, no HTML)
-- Favicon visible in sidebar logo and breadcrumb
-- Version shows v0.1.6 on home page
-
-### Commits
-- `43c84a9` fix(ui): Condense landing page, fix sidebar footer, and polish UX
-- `217d9dd` fix(ui): Remove version from header, add favicon icon to sidebar logo
-- `f64a25b` feat(ui): Add breadcrumb nav, empty states, heading consistency, bump to v0.1.6
-
-### Phase 11: Code Review Bug Fixes
-
-**Deep reconnaissance** via parallel agent review of all 21 R source files. Found 3 critical, 5 high, 13 medium, 9 low issues.
-
-**Critical fixes:**
-- `R/rr_hmap.R:56`: `!which()` logic error causing data corruption in custom heatmaps
-- `R/rr_hmap.R:54`: Unqualified `drop_na()` — fixed to `tidyr::drop_na()`
-- `R/cluster_hmap.R:13`: Unqualified `as_tibble()` — fixed to `tibble::as_tibble()`
-
-**High fixes:**
-- 7 unsafe `-which()` patterns across 4 files replaced with logical negation
-- NULL guard added for `custom_data` parameter in heatmap functions
-
-**Dependency fixes:**
-- Installed richCluster v1.0.2 from CRAN
-- Added `tibble` to DESCRIPTION Imports
-
-- `532201b` fix: Critical bug fixes from code review
-
----
-
-## Session 2026-03-08 15:00 CDT — Comprehensive Code Review and Fix Session
-
-- **Coding CLI used:** Claude Code CLI (claude-opus-4-6)
-- **Phase(s) worked on:** Phase 1-4 (Critical Bug Fixes, Visualization Fixes, Production Readiness, Remaining High Fixes)
-
-### Concrete Changes Implemented
-
-**Phase 1: Code Review (3 parallel agents)**
-1. General codebase review — Reviewed 13 R source files, identified 51 issues across Critical/High/Medium/Low severity
-2. Clustering path analysis — Traced DAVID and richR Kappa data flow for single-input bugs
-3. Concurrency review — Identified 13 multi-user session isolation issues
-
-**Phase 2: Documentation**
-- Created `docs/FINDINGS-REPORT.md` with complete 51-issue catalogue
-- Created 3 SPEC documents:
-  - `docs/specs/SPEC-FIX-002-clustering-bugs.md`
-  - `docs/specs/SPEC-FIX-003-visualization-bugs.md`
-  - `docs/specs/SPEC-FIX-004-production-readiness.md`
-
-**Phase 3: Fixes Applied (direct edits + 2 parallel agents)**
-
-Visualization fixes (direct):
-- `R/rr_dot.R`: Added return(p), fixed dplyr::rename syntax
-- `R/rr_bar.R`: Fixed dplyr::rename extra argument
-- `R/rr_network.R`: Added return statement for my_net()
-- `R/rr_hmap.R`: Dynamic value_type in topterm_hmap hover text
-- `R/rr_column_handling.R`: Fixed column selection logic error
-- `R/round_table.R`: Vectorized cell-by-cell loops
-
-Clustering fixes (agent):
-- `R/rr_cluster.R`: DAVID single-input bypass via runDavidClustering()
-- `R/rr_cluster.R`: richR Kappa suffixed column creation
-
-Production readiness fixes (agent):
-- `R/save_tab.R`: Session-isolated temp dirs, filename sanitization, temp cleanup
-- `inst/application/app.R`: Session cleanup handler
-- `R/enrich_tab.R`: Filename sanitization, upload size validation, column case sensitivity
-- `R/cluster_upload_tab.R`: Filename sanitization, upload size validation
-- `R/clus_visualize_tab.R`: Added req guards for reactive dependency gap
-
-### Verification
-- All modified R files parse successfully (Rscript -e "parse()")
-- 17 features verified via Playwright browser testing
-
-### Items Completed
-- CRIT-001 through CRIT-004, CRIT-006, CRIT-007: ALL FIXED
-- HIGH-001 through HIGH-006, HIGH-008 through HIGH-011: ALL FIXED
-
-### Issues Left Open
-- CRIT-005: Blocking long-running operations (deferred to Phase 5)
-- HIGH-007: Memory copies during clustering (deferred to Phase 5)
-- 15 Medium severity items
-- Unit test coverage
-
----
-
-## Session 2026-03-08 21:54 CDT — Async Operations & Memory Optimization
-
-- **Coding CLI used:** Claude Code CLI (claude-opus-4-6)
-- **Phase(s) worked on:** Phase 5 (CRIT-005 Async Operations + HIGH-007 Memory Optimization)
-
-### Concrete Changes Implemented
-
-**SPEC created:** `docs/specs/SPEC-FIX-005-async-and-memory.md`
-
-**Async enrichment (R/enrich_tab.R):**
-- Wrapped enrichment observeEvent in future::future() + promises::then() + promises::finally()
-- All reactive inputs collected before future block (deg_inputs, species, anntype, keytype, ontology, cutoff)
-- shinyjs::disable/enable for Enrich button during background processing
-- Notification-based progress ("Enrichment analysis running in background...")
-- Promise onFulfilled updates u_rrdfs, u_rrnames, u_big_rrdf reactive values
-- Promise onRejected shows error notification with conditionMessage
-
-**Async clustering (R/cluster_tab.R):**
-- Same async pattern for clustering observeEvent (~160 lines rewritten)
-- All computation (merge_genesets, perform_clustering, build_cluster_summary, cluster_df processing) runs in future block
-- Replaced withProgress/incProgress with notification-based progress
-- Promise chain updates u_clusdfs, u_clusnames, u_cluslists, u_big_clusdf, clus_intermed
-
-**Memory optimization (R/rr_cluster.R — merge_genesets):**
-- In-place normalization via for loop (was lapply creating copies)
-- Preserve gs_names_clean before rm(genesets)
-- Reduce(function(a, b) base::merge(a, b, by='Term', all=TRUE), genesets) instead of sequential merge loop
-- rm(genesets) after merge to free copies immediately
-- Single-column fast paths for GeneID and Annot (direct assignment vs apply/Reduce)
-- Multi-column GeneID: do.call(paste, ...) + vapply(strsplit(...)) instead of row-wise apply()
-- Peak memory reduced from ~4x to ~2x
-
-**Infrastructure:**
-- `DESCRIPTION`: Added future, promises to Imports
-- `inst/application/app.R`: future::plan(multisession, workers = 2) at startup (line 26)
-
-### Files/Modules/Functions Touched
-- `R/enrich_tab.R` — enrichTabServer observeEvent(input$enrich_deg)
-- `R/cluster_tab.R` — clusterTabServer observeEvent(input$cluster)
-- `R/rr_cluster.R` — merge_genesets() function
-- `inst/application/app.R` — future::plan() setup
-- `DESCRIPTION` — Imports field
-- `docs/specs/SPEC-FIX-005-async-and-memory.md` — Design spec
-- `docs/FINDINGS-REPORT.md` — Updated CRIT-005 and HIGH-007 status to FIXED
-- `PROJECT_HANDOFF.md` — Phase 5 completion
-- `PROJECT_LOG.md` — Session history
-
-### Key Technical Decisions
-- **future + promises over callr:** Standard Shiny async pattern; promises integrate natively with Shiny's event loop for reactive value updates in onFulfilled callbacks
-- **Collect reactive inputs before future:** Reactive values cannot be read inside future() blocks (different R process). All inputs extracted as plain R objects before entering future.
-- **Notification instead of withProgress:** withProgress doesn't work well with async because the progress callback runs in the main session while computation is in a worker. Notifications are simpler and reliable.
-- **Reduce(merge) over sequential loop:** Single Reduce call creates fewer intermediate copies than a for loop with sequential merge accumulation
-- **rm(genesets) after merge:** Explicit memory release before subsequent operations on merged_gs
-
-### Problems Encountered and Resolutions
-- Playwright wait_for "Clustering completed" text timed out — the actual notification text was different. Used time-based wait instead, then verified via snapshot.
-- Background Shiny process (port 3839) was killed (exit code 144/SIGKILL) after testing completed — expected cleanup, no data loss.
-
-### Verification Performed
-- **R parse check:** All 4 modified files (enrich_tab.R, cluster_tab.R, rr_cluster.R, app.R) parse successfully
-- **Playwright async enrichment test:** Button disables immediately, "Enrichment analysis running in background..." notification appears, UI stays responsive (snapshot returns instantly), 118 GO BP terms returned after completion, button re-enables
-- **Playwright async clustering test:** Button disables, "Clustering running in background..." notification appears, 28 hierarchical clusters returned with summary table, button re-enables
-- **End-to-end flow:** Enrichment results (deg_mouse1_enriched) appear in Clustering upload tab, clustering produces valid results
-
-### Items Completed in This Session
-- CRIT-005: Blocking Long-Running Operations — FIXED
-- HIGH-007: Multiple Data Frame Copies During Clustering — FIXED
-- All Critical issues (CRIT-001 through CRIT-007): RESOLVED
-- All High issues (HIGH-001 through HIGH-011): RESOLVED
-
-### Items Still Open
-- 15 Medium severity items (see docs/FINDINGS-REPORT.md)
-- Unit test coverage (tests/testthat/ not yet created)
-
----
-
-## Session 2026-03-10 — Second Comprehensive Review & Fixes (SPEC-FIX-008)
-
-- **Coding CLI used:** Claude Code CLI (claude-opus-4-6)
-- **Phase(s) worked on:** Phase 8 (Second Review Round)
-
-### Review Method
-- 4 parallel review agents: R source files, app.R + tests, automated checks, documentation
-- Automated: parse check (21/21 pass), test suite (152/152 pass), NAMESPACE regen, devtools::check
-
-### Concrete Changes Implemented
-
-**Infrastructure fixes:**
-- `DESCRIPTION`: Added `digest` to Imports (was used without declaration)
-- `R/round_table.R`: Removed `library(knitr)` (bad practice in package code)
-- `R/package.R` + `NAMESPACE`: Added `slice_head` to dplyr importFrom
-
-**Bug fixes:**
-- `R/enrich_tab.R`: Added `req(u_big_degdf[['df']])` NULL guard before async enrichment
-- `R/rr_bar.R`: Division-by-zero guard (Annotated=0 produces NA not Inf)
-- `R/rr_dot.R`: Same division-by-zero guard
-- `R/rr_bar.R`: Added else clause for invalid `view` parameter
-- `inst/application/app.R`: Fixed session cleanup to properly clear reactiveValues entries
-
-**Dead code removal:**
-- Removed 7 unused `dataTableProxy()` variables across 5 files
-- Removed dead test file `tests/testthat/compare_david_clustering.R`
-
-### Files Modified
-- `DESCRIPTION` — Added digest to Imports
-- `R/package.R` — Added slice_head importFrom
-- `R/round_table.R` — Removed library(knitr)
-- `R/enrich_tab.R` — NULL guard, removed 2 unused proxies
-- `R/rr_bar.R` — Division-by-zero guard, invalid view error
-- `R/rr_dot.R` — Division-by-zero guard
-- `R/cluster_upload_tab.R` — Removed 2 unused proxies
-- `R/clus_visualize_tab.R` — Removed 1 unused proxy
-- `R/rr_visualize_tab.R` — Removed 2 unused proxies
-- `inst/application/app.R` — Fixed session cleanup
-- `NAMESPACE` — Regenerated (added slice_head)
-- `docs/specs/SPEC-FIX-008-review-round2.md` — Created
-
-### Verification
-- All 21 R files parse successfully
-- NAMESPACE regenerated via roxygen2
-- 152 unit tests pass (0 failures, 0 warnings)
-- renv.lock already up to date
-
-### Also Completed
-- Merged feature/SPEC-REFACTOR-001 to newly created `main` branch
-- Committed prior staged R changes as commit `43ff008`
-
----
-
-## Session 2026-01-08 — Reactive Value Anti-pattern Fix (SPEC-REFACTOR-001)
-
-- **Coding CLI used:** Claude Code CLI (claude-opus-4-6)
-- **Phase(s) worked on:** Reactive <<- anti-pattern elimination, initial test scaffolding
-
-### Concrete Changes Implemented
-- Created SPEC-REFACTOR-001 for reactive value anti-pattern fix
-- Eliminated <<- anti-patterns in reactive contexts across multiple files
-- Created initial test suite in tests/testthat/ (6 test files)
-- Added roxygen2 documentation to file management functions
-
-### Commits
-- `234f3d0` feat(spec): Add SPEC-REFACTOR-001 - Reactive Value Anti-pattern Fix
-- `b2e744b` refactor(reactive): Eliminate <<- anti-patterns in reactive contexts
-- `cde6b93` test: Add comprehensive test coverage for reactive values and workflows
-- `4ca92e0` docs: Add complete roxygen2 documentation to file management functions
-
-### Items Completed
-- <<- anti-pattern elimination across reactive contexts
-- Initial test scaffolding (6 files, ~40 test cases — all broken due to missing isolate() wrapping)
-
----
-
-## Session 2026-03-09 — Autonomous Review, Medium Severity Fixes, and Test Suite Rewrite
-
-- **Coding CLI used:** Claude Code CLI (claude-opus-4-6)
-- **Phase(s) worked on:** Phase 7 (Medium Severity Items + Test Suite Rewrite + Foundation Hygiene)
-
-### Phase 0: Deep Reconnaissance
-- Full codebase audit of all 21 R source files via 4 parallel exploration agents
-- Discovered all 152 existing tests were broken (29 FAIL of 36 attempted)
-- Root causes: reactiveValues outside isolate(), source() wrong paths, stale NAMESPACE missing 7 exports
-- renv.lock out-of-sync (future/promises/globals/listenv/parallelly not recorded)
-
-### Phase 1: Foundation Fixes
-- **NAMESPACE regeneration:** Ran roxygen2::roxygenise() — added 7 missing exports (add_file_degdf, rm_file_degdf, add_file_rrdf, rm_file_rrdf, add_file_clusdf, rm_file_clusdf, add_rr_tophmap, sanitize_filename)
-- **renv.lock sync:** Ran renv::snapshot() — recorded future 1.69.0, globals 0.19.0, listenv 0.10.0, parallelly 1.46.1, roxygen2 7.3.3
-- **package.R fix:** Replaced deprecated @docType package with "_PACKAGE" pattern
-
-### Phase 2: SPEC-Driven Implementation (3 parallel implementation agents)
-
-**SPEC-FIX-006: Test Suite Rewrite**
-- Rewrote all 6 test files to fix systemic issues
-- Wrapped all reactiveValues access in isolate()
-- Removed source("../R/...") calls — functions loaded via NAMESPACE
-- Added resolve_extdata() helpers for development-mode path resolution
-- Fixed incorrect assertions (type coercion, column names)
-- Result: 152 tests pass (was 7 pass / 29 fail)
-
-**SPEC-FIX-007: Medium Severity Items (14 of 15 addressed)**
-
-Agent Group A (R/round_table.R, R/cluster_hmap.R, R/enrich_tab.R, R/rr_network.R, R/cluster_upload_tab.R):
-- MED-002: Replaced blanket suppressWarnings with targeted withCallingHandlers
-- MED-003: Extracted magic numbers to named constants (ROUNDING_DIGITS, HEATMAP_VALUE_PRECISION)
-- MED-006: Removed redundant type coercions in enrich_tab.R
-- MED-008: Standardized rr_network.R to <- assignment throughout
-- MED-009: Added package:: namespace prefixes for external functions
-- MED-010: Removed unreachable code paths in cluster_upload_tab.R
-
-Agent Group B (R/rr_column_handling.R, multiple handlers, R/cluster_tab.R, R/save_tab.R):
-- MED-004: Optimized string matching with vectorized operations
-- MED-005: Added empty dataframe guards (req(nrow(df) > 0)) in handlers
-- MED-007: Added explicit NA checks for numeric conversions
-- MED-011: Added clus_intermed cleanup logic
-- MED-013: Added random hash to session filenames
-
-Agent Group C (R/rr_bar.R, R/rr_dot.R, R/rr_hmap.R, R/rr_network.R, R/save_tab.R, R/package.R):
-- MED-001: Added roxygen2 documentation to all plot functions
-- MED-012: Added advisory file locking for session save/load
-- MED-015: Completed package.R documentation with _PACKAGE pattern
-
-### Phase 4: Deployment Verification
-- App sources successfully — ui and server objects created
-- HTTP 200 on localhost:3839
-- Playwright smoke test: Home page renders, all navigation tabs visible
-- Enrichment tab renders with full UI controls
-
-### Files Modified (17 R files + infrastructure)
-- `R/clus_visualize_tab.R` — empty df guards
-- `R/cluster_hmap.R` — magic numbers extracted, targeted warning suppression
-- `R/cluster_tab.R` — clus_intermed cleanup, empty df guards, namespace prefixes
-- `R/cluster_upload_tab.R` — dead code removed
-- `R/enrich_tab.R` — redundant coercion removed, namespace prefixes, empty df guards
-- `R/file_handling.R` — roxygen2 exports
-- `R/package.R` — complete documentation with _PACKAGE
-- `R/round_table.R` — targeted warning suppression
-- `R/rr_bar.R` — roxygen2 docs
-- `R/rr_cluster.R` — roxygen2 docs, namespace prefixes
-- `R/rr_column_handling.R` — vectorized string matching
-- `R/rr_dot.R` — roxygen2 docs
-- `R/rr_hmap.R` — roxygen2 docs, targeted suppression
-- `R/rr_network.R` — standardized assignment, roxygen2 docs
-- `R/rr_visualize_tab.R` — empty df guards
-- `R/save_tab.R` — file locking, random filenames
-- `NAMESPACE` — 7 new exports
-- `renv.lock` — synchronized
-- `tests/testthat/*.R` — all 6 test files rewritten
-- `docs/specs/SPEC-FIX-006-test-suite-rewrite.md` — created
-- `docs/specs/SPEC-FIX-007-medium-severity-items.md` — created
-
-### Verification Performed
-- All 21 R files parse successfully
-- 152 unit tests pass (0 fail, 0 warn, 0 skip)
-- App starts and serves HTTP 200
-- Playwright: Home page and Enrichment tab render correctly
-- NAMESPACE regenerated with all exports
-- renv.lock synchronized
-
-### Items Completed
-- All 15 medium severity items addressed (14 fixed, 1 accepted)
-- Test suite fully operational (152 pass)
-- NAMESPACE and renv.lock synchronized
-- package.R documentation complete
-
-### Items Still Open
-- MED-014: Sample data contention — accepted (read-only, minimal risk)
-- Branch merge to main (ready)
-- CI/CD pipeline (not configured, recommended for production)
 
 ---
 

@@ -301,7 +301,9 @@ ws6_session <- function(tag, probe = NULL, env = parent.frame()) {
     force(func)
     counted <- if (is.function(func)) function(...) {
       log$renders[[name]] <- (if (is.null(log$renders[[name]])) 0L else log$renders[[name]]) + 1L
-      func(...)
+      value <- func(...)
+      log$values[[name]] <- value
+      value
     } else func
     original_define(name, counted, label)
   }
@@ -343,8 +345,11 @@ ws6_enables <- function(sess, id) {
              logical(1)))
 }
 
+# getOutput() drains the whole later loop (shiny:::wait_for_it), which never empties
+# while a future is unresolved; read the value the wrapped output last rendered.
 ws6_html <- function(sess, output) {
-  value <- tryCatch(sess$s$getOutput(output), error = function(e) paste("<output error:", conditionMessage(e), ">"))
+  sess$s$flushReact()
+  value <- sess$log$values[[output]]
   if (is.list(value) && !is.null(value$html)) paste(as.character(value$html), collapse = "") else
     paste(as.character(value), collapse = "")
 }
@@ -697,6 +702,7 @@ test_that("R3 REQ-003 REQ-004 capability follows the installed backend", {
   for (variant in list(list(n = 1L, interrupts = TRUE, expected = TRUE),
                        list(n = 2L, interrupts = FALSE, expected = FALSE))) {
     local({
+      unlink(file.path(dir, "release.all"))
       own <- ws6_workers(variant$n, interrupts = variant$interrupts, dir = dir)
       s1 <- ws6_session(paste0("S", variant$n))
       jobs <- ws6_install(s1)
@@ -734,7 +740,7 @@ test_that("R3b REQ-003 REQ-004 a capability-read error gives Detach and the job 
   ws6_release(dir, ws6_key("deg_a"))
   expect_true(ws6_until(function() identical(ws6_state_of(jobs, id), "succeeded"), list(s1)))
   expect_true("deg_a_enriched" %in% shiny::isolate(names(state$u_rrdfs)))
-  expect_identical(jobs$in_flight, character())
+  expect_true(ws6_until(function() !length(jobs$in_flight), list(s1)))
 })
 
 # ---- R4-R7: Stop, late Stop, unconfirmed Stop, Detach -----------------------------
@@ -1660,6 +1666,7 @@ test_that("R19 REQ-001 D3 FIFO across sessions with a live queue position", {
   expect_true(ws6_until(function() identical(ws6_state_of(x[[2]]$jobs, id2), "running"), ws6_sessions(x)[1:2]))
   ws6_own(own)
   expect_identical(spy$factory, c("S1", "S2"))
+  x[[1]]$sess$s$flushReact()
   expect_gt(ws6_renders(x[[3]]$sess, "jobs-jobs_status"), renders3)
   expect_match(ws6_html(x[[3]]$sess, "jobs-jobs_status"), sprintf(ws6_msg$ahead, 0L), fixed = TRUE)
 

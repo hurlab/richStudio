@@ -61,6 +61,8 @@ async function portFree() {
 const fixtureR = String.raw`
 library(shiny)
 library(shinydashboard)
+library(shinyjs)
+library(shinyWidgets)
 lib <- normalizePath(Sys.getenv('WORKSPACE_INSTALLED_LIBRARY'), mustWork=TRUE)
 ns <- loadNamespace('richStudio', lib.loc=lib)
 stopifnot(identical(normalizePath(getNamespaceInfo(ns, 'path'), mustWork=TRUE), file.path(lib, 'richStudio')))

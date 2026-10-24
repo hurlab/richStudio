@@ -1,7 +1,8 @@
 # SPEC-WS-006 owned jobs, queue, cancellation and stale-result guards.
 #
 # Cases R1-R30 follow the accepted dispatch plan (r6, step 4); R31-R33 reproduce code
-# review r1 findings F1-F3 and R34-R36 review r2 findings F13, F11, F12. Internals are reached through richStudio:::; only these
+# review r1 findings F1-F3, R34-R36 review r2 findings F13, F11, F12, and R37 owner
+# decision D14 (shiny >= 1.14 session teardown). Internals are reached through richStudio:::; only these
 # seams are replaced, with
 # testthat::local_mocked_bindings(.package = "richStudio"):
 #   workspace_jobs_now, workspace_jobs_free_workers, workspace_jobs_future,
@@ -2580,4 +2581,73 @@ test_that("R36 REQ-001 F12 a non-string note or error summary is dropped and the
   expect_false(startsWith(html, "ERROR:"))
   expect_match(html, "aaaaaaaa", fixed = TRUE)
   expect_match(html, "eeeeeeee", fixed = TRUE)
+})
+
+# ---- R37: state that outlives the session that created it (D14) --------------------
+
+test_that("R37 D14 the queue counter and a closed session's registry survive that session's close", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  # Start without a counter so S1 creates it, as the first user of a live process does;
+  # no reset follows before S2, so S2 meets the counter S1 created.
+  richStudio:::workspace_job_queue_reset()
+  dispatch_errors <- character()
+  withCallingHandlers({
+    dir <- withr::local_tempdir()
+    kit <- ws6_latch_runner(dir)
+    s1 <- ws6_session("S1")
+    s2 <- ws6_session("S2")
+    spy <- ws6_spy(list(s1, s2))
+    own <- ws6_workers(1L, dir = dir)
+    jobs1 <- ws6_install(s1)
+    jobs2 <- ws6_install(s2)
+    state1 <- ws6_add_deg(ws6_state(), "deg_a")
+    state2 <- ws6_add_deg(ws6_state(), "deg_b")
+    ws6_mount(s1, state1, modules = c("enrich", "panel"), runner = kit$enrichment, jobs = jobs1)
+    ws6_run(s1, "deg_a")
+    expect_false(is.null(ws6_queue()$version))
+    id1 <- ws6_last(jobs1)$run_id
+    ws6_pid(dir, ws6_key("deg_a"), list(s1), own = own)
+
+    # The worker finishes, but no callback runs before S1 closes: they all arrive after.
+    ws6_release(dir, ws6_key("deg_a"))
+    f1 <- jobs1$handles[[id1]]$future
+    deadline <- Sys.time() + 20
+    while (!isTRUE(future::resolved(f1)) && Sys.time() < deadline) Sys.sleep(0.05)
+    expect_true(future::resolved(f1))
+    s1$s$close()
+    expect_true(jobs1$closed)
+    expect_true(ws6_until(function() identical(jobs1$in_flight, character()), list(s2)))
+    ws6_settle(list(s2))
+    expect_identical(ws6_state_of(jobs1, id1), "superseded")
+    expect_false("deg_a_enriched" %in% shiny::isolate(names(state1$u_rrdfs)))
+    # A late callback's tick, announcement and queue bump stay inert after the close.
+    expect_no_error(richStudio:::workspace_jobs_bump(jobs1))
+    expect_no_error(jobs1$announce("late callback"))
+    expect_no_error(richStudio:::workspace_job_queue_bump())
+
+    # S2 submits against the counter S1 created; held queued, then dispatched.
+    spy$free <- function() 0
+    ws6_mount(s2, state2, modules = c("enrich", "panel"), runner = kit$enrichment, jobs = jobs2)
+    ws6_run(s2, "deg_b")
+    expect_length(jobs2$records, 1L)
+    id2 <- ws6_last(jobs2)$run_id
+    expect_identical(ws6_state_of(jobs2, id2), "queued")
+    expect_identical(ws6_queue_ids(), id2)
+    expect_true(richStudio:::workspace_job_queue_consistent(list(jobs1, jobs2)))
+    expect_match(ws6_html(s2, "jobs-jobs_status"), sprintf(ws6_msg$ahead, 0L), fixed = TRUE)
+    spy$free <- NULL
+    expect_true(ws6_until(function() identical(ws6_state_of(jobs2, id2), "running"), list(s2), elapse = 500))
+    expect_identical(spy$factory, c("S1", "S2"))
+    ws6_pid(dir, ws6_key("deg_b"), list(s2), own = own)
+    ws6_release(dir, ws6_key("deg_b"))
+    expect_true(ws6_until(function() identical(ws6_state_of(jobs2, id2), "succeeded"), list(s2)))
+    expect_identical(ws6_shown(s2, ws6_msg$enrich_ok), 1L)
+    expect_identical(ws6_queue_ids(), character())
+    expect_true(richStudio:::workspace_job_queue_consistent(list(jobs1, jobs2)))
+  }, message = function(m) {
+    if (grepl("job dispatch error", conditionMessage(m), fixed = TRUE)) {
+      dispatch_errors <<- c(dispatch_errors, conditionMessage(m))
+    }
+  })
+  expect_identical(dispatch_errors, character())
 })

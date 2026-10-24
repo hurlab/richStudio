@@ -1,7 +1,7 @@
 # SPEC-WS-006 owned jobs, queue, cancellation and stale-result guards.
 #
 # Cases R1-R30 follow the accepted dispatch plan (r6, step 4); R31-R33 reproduce code
-# review r1 findings F1-F3. Internals are reached through richStudio:::; only these
+# review r1 findings F1-F3 and R34-R36 review r2 findings F13, F11, F12. Internals are reached through richStudio:::; only these
 # seams are replaced, with
 # testthat::local_mocked_bindings(.package = "richStudio"):
 #   workspace_jobs_now, workspace_jobs_free_workers, workspace_jobs_future,
@@ -2415,4 +2415,169 @@ test_that("R33 REQ-001 F3 malformed saved records are dropped and the panel stil
   html <- rendered()
   expect_false(startsWith(html, "ERROR:"))
   expect_match(html, "aaaaaaaa", fixed = TRUE)
+})
+
+test_that("R34 D4 F13 a deleted cluster result no longer blocks its name for Run and Retry", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  ws6_sequential()
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  ws6_release_all(dir)
+  testthat::local_mocked_bindings(workspace_cluster_compute = kit$cluster, .package = "richStudio")
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_rr(ws6_state(), "rr1")
+  ws6_mount(s1, state, modules = c("cluster", "update", "panel"), jobs = jobs)
+  delete_k <- function(n) {
+    s1$s$setInputs("update-remove_clus_select" = "k")
+    s1$s$setInputs("update-confirm_remove_clus" = n)
+    ws6_settle(list(s1))
+  }
+  refused <- function(from) ws6_shown(s1, sprintf(ws6_msg$cluster_name, "k"), from = from)
+
+  writeLines("engine failed", file.path(dir, "fail.txt"))
+  ws6_cluster(s1, "rr1", "k")
+  failed <- ws6_last(jobs)$run_id
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, failed), "failed"), list(s1), timeout = 10))
+  unlink(file.path(dir, "fail.txt"))
+  ws6_cluster(s1, "rr1", "k")
+  first <- ws6_last(jobs)$run_id
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, first), "succeeded"), list(s1), timeout = 10))
+  ws6_settle(list(s1))
+
+  # A live result named k is still refused by Run and by Retry.
+  notes <- length(s1$log$notes)
+  ws6_cluster(s1, "rr1", "k")
+  ws6_settle(list(s1))
+  ws6_action(s1, "retry", failed)
+  ws6_settle(list(s1))
+  expect_identical(refused(notes), 2L)
+  expect_length(jobs$records, 2L)
+
+  # Deleted through the update tab: the key stays in names() with a NULL value.
+  delete_k(1L)
+  expect_true("k" %in% shiny::isolate(names(state$u_clusdfs)))
+  expect_null(shiny::isolate(state$u_clusdfs[["k"]]))
+  expect_false("k" %in% shiny::isolate(state$u_clusnames$labels))
+
+  # Run k after the deletion is admitted and publishes under k, not k_2.
+  notes <- length(s1$log$notes)
+  ws6_cluster(s1, "rr1", "k")
+  rerun <- ws6_last(jobs)$run_id
+  expect_length(jobs$records, 3L)
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, rerun), "succeeded"), list(s1), timeout = 10))
+  ws6_settle(list(s1))
+  expect_identical(refused(notes), 0L)
+  expect_identical(ws6_rec(jobs, rerun)$outputs, "k")
+  expect_identical(shiny::isolate(state$u_clusnames$labels), "k")
+
+  # Retry of the failed k after another deletion is admitted too.
+  delete_k(2L)
+  notes <- length(s1$log$notes)
+  ws6_action(s1, "retry", failed)
+  retried <- ws6_last(jobs)$run_id
+  expect_length(jobs$records, 4L)
+  expect_identical(ws6_rec(jobs, retried)$retry_of, failed)
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, retried), "succeeded"), list(s1), timeout = 10))
+  ws6_settle(list(s1))
+  expect_identical(refused(notes), 0L)
+  expect_identical(ws6_rec(jobs, retried)$outputs, "k")
+})
+
+test_that("R35 REQ-005 F11 a clustering publish error keeps the predecessor's intermediate results", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  ws6_sequential()
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  ws6_release_all(dir)
+  mode <- new.env(parent = emptyenv())
+  mode$v <- "ok"
+  testthat::local_mocked_bindings(workspace_cluster_compute = function(genesets, method, params, cluster_name) {
+    if (identical(mode$v, "atomic")) return("not a result")
+    kit$cluster(genesets = genesets, method = method, params = params, cluster_name = cluster_name)
+  }, .package = "richStudio")
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_rr(ws6_state(), "rr1")
+  ws6_mount(s1, state, modules = c("cluster", "panel"), jobs = jobs)
+  keys <- c("DistanceMatrix", "cluster_summary", "cluster_df", "method", "params")
+  intermed <- function() shiny::isolate(lapply(stats::setNames(keys, keys), function(k) state$clus_intermed[[k]]))
+  unchanged <- "Previous results are unchanged"
+
+  ws6_cluster(s1, "rr1", "k1")
+  id1 <- ws6_last(jobs)$run_id
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, id1), "succeeded"), list(s1), timeout = 10))
+  ws6_settle(list(s1))
+  before <- intermed()
+  expect_false(any(vapply(before, is.null, logical(1))))
+
+  # The result shape cannot be read: nothing is cleared.
+  mode$v <- "atomic"
+  notes <- length(s1$log$notes)
+  ws6_cluster(s1, "rr1", "k2")
+  id2 <- ws6_last(jobs)$run_id
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, id2), "failed"), list(s1), timeout = 10))
+  ws6_settle(list(s1))
+  expect_identical(ws6_shown(s1, sprintf("Clustering failed (run %s)", ws6_id8(id2)), from = notes), 1L)
+  expect_identical(ws6_shown(s1, unchanged, from = notes), 1L)
+  expect_identical(intermed(), before)
+
+  # An error after the result was read but before its intermediates were stored.
+  mode$v <- "ok"
+  shiny::isolate(state$u_big_clusdf[["df"]] <- data.frame(other = 1L))
+  notes <- length(s1$log$notes)
+  ws6_cluster(s1, "rr1", "k3")
+  id3 <- ws6_last(jobs)$run_id
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, id3), "failed"), list(s1), timeout = 10))
+  ws6_settle(list(s1))
+  expect_identical(ws6_shown(s1, unchanged, from = notes), 1L)
+  expect_identical(intermed(), before)
+})
+
+test_that("R36 REQ-001 F12 a non-string note or error summary is dropped and the status still renders", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  rec <- function(id, note = NULL, err = NULL) {
+    list(schema = "richstudio.run_record", version = 1L, run_id = id, kind = "enrichment", state = "failed",
+         created = NULL, queued_at = NULL, started = NULL, ended = NULL, settings = list(species = "human"),
+         inputs = list(list(store = "deg", label = "a", revision = 0L)), outputs = list(), retry_of = NULL,
+         imported_from = NULL, note = note, error_summary = err)
+  }
+  read_back <- function(x) richStudio:::workspace_run_records_parse(richStudio:::workspace_run_records_json(list(x)))[[1]]
+  good <- rec("aaaaaaaaaaaa", note = "kept note", err = "kept error")
+  expect_true(ws6_accepts(read_back(good)))
+  expect_true(ws6_accepts(read_back(rec("bbbbbbbbbbbb"))))
+  expect_true(ws6_accepts(rec("cccccccccccc", note = NA_character_, err = NA_character_)))
+  bad <- list(
+    note_array = rec("d00000000001", note = list("a", "b")),
+    note_empty = rec("d00000000002", note = list()),
+    note_number = rec("d00000000003", note = 5L),
+    err_object = rec("d00000000004", err = list(x = "y", z = "w")),
+    err_array = rec("d00000000005", err = list("a", "b")))
+  for (name in names(bad)) expect_false(ws6_accepts(read_back(bad[[name]])), info = name)
+
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  ws6_mount(s1, ws6_state(), modules = "panel", jobs = jobs)
+  shiny::withReactiveDomain(s1$s, richStudio:::workspace_run_records_reopen(
+    richStudio:::workspace_run_records_json(c(list(good), unname(bad))), jobs))
+  s1$s$flushReact()
+  expect_identical(ws6_ids(jobs), "aaaaaaaaaaaa")
+  expect_identical(ws6_shown(s1, sprintf("%d saved run record(s) could not be read and were dropped", length(bad))), 1L)
+  # A fresh render each time: getOutput() raises when the render errors.
+  rendered <- function() tryCatch({
+    s1$s$flushReact()
+    paste(as.character(s1$s$getOutput("jobs-jobs_status")$html), collapse = "")
+  }, error = function(e) paste("ERROR:", conditionMessage(e)))
+  html <- rendered()
+  expect_false(startsWith(html, "ERROR:"))
+  expect_match(html, "kept note", fixed = TRUE)
+
+  # Defence in depth: a malformed record already in the registry does not take the status down.
+  jobs$records[[length(jobs$records) + 1L]] <- ws6_internal_record(jobs, "eeeeeeeeeeee", "enrichment", "failed",
+    list(species = "human"), list(list(store = "deg", label = "a", revision = 0L)), note = list("a", "b"))
+  richStudio:::workspace_jobs_bump(jobs)
+  html <- rendered()
+  expect_false(startsWith(html, "ERROR:"))
+  expect_match(html, "aaaaaaaa", fixed = TRUE)
+  expect_match(html, "eeeeeeee", fixed = TRUE)
 })

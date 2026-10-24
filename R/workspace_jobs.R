@@ -34,8 +34,12 @@ workspace_job_queue_reset <- function() {
 
 # One process-level counter, created lazily at runtime, read only by sessions that
 # hold a queued record, so their queue position refreshes when others mutate the queue.
+# Created outside any session's domain: it outlives the session that first touches it,
+# and shiny >= 1.14 destroys a session's reactives when that session closes.
 workspace_job_queue_version <- function() {
-  if (is.null(.workspace_job_queue$version)) .workspace_job_queue$version <- shiny::reactiveVal(0L)
+  if (is.null(.workspace_job_queue$version)) {
+    .workspace_job_queue$version <- shiny::withReactiveDomain(NULL, shiny::reactiveVal(0L))
+  }
   .workspace_job_queue$version
 }
 
@@ -127,8 +131,10 @@ workspace_jobs_registry <- function(session, policy_loader = workspace_resource_
   jobs$records <- list()
   jobs$in_flight <- character()
   jobs$handles <- new.env(parent = emptyenv())
-  jobs$tick <- shiny::reactiveVal(0L)
-  jobs$announce <- shiny::reactiveVal("")
+  # Outside the session's domain: late callbacks reach these after the session closes,
+  # and shiny >= 1.14 destroys a session's reactives on close. Observers below stay owned.
+  jobs$tick <- shiny::withReactiveDomain(NULL, shiny::reactiveVal(0L))
+  jobs$announce <- shiny::withReactiveDomain(NULL, shiny::reactiveVal(""))
   jobs$policy_loader <- policy_loader
   jobs$ack_timeout <- ack_timeout
   jobs$imported <- character()

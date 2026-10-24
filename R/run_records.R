@@ -56,10 +56,23 @@ workspace_run_record_value_ok <- function(x) {
   (is.character(x) || is.integer(x) || is.double(x) || is.logical(x)) && length(x) == 1L && is.null(attr(x, "class"))
 }
 
+workspace_run_record_string <- function(x) is.character(x) && length(x) == 1L && !is.na(x)
+
+# One input: {store: character(1), label: character(1), revision: one number}.
+workspace_run_record_input_ok <- function(x) {
+  is.list(x) && workspace_run_record_string(x[["store"]]) && workspace_run_record_string(x[["label"]]) &&
+    is.numeric(x[["revision"]]) && length(x[["revision"]]) == 1L && !is.na(x[["revision"]])
+}
+
 workspace_run_record_validate <- function(x) {
   if (!is.list(x) || !all(workspace_run_record_fields %in% names(x))) return(FALSE)
   if (!identical(x$schema, "richstudio.run_record") || !identical(x$version, 1L)) return(FALSE)
-  if (!is.character(x$run_id) || length(x$run_id) != 1L || !is.character(x$state) || length(x$state) != 1L) return(FALSE)
+  if (!workspace_run_record_string(x$run_id)) return(FALSE)
+  states <- c("queued", "running", "cancel_requested", "succeeded", "failed", "cancelled", "detached",
+              "superseded", "interrupted")
+  if (!workspace_run_record_string(x$state) || !x$state %in% states) return(FALSE)
+  if (!workspace_run_record_string(x$kind) || !x$kind %in% c("enrichment", "clustering")) return(FALSE)
+  if (!is.list(x$inputs) || !all(vapply(x$inputs, workspace_run_record_input_ok, logical(1)))) return(FALSE)
   all(vapply(x, workspace_run_record_value_ok, logical(1)))
 }
 

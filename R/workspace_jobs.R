@@ -373,7 +373,8 @@ workspace_jobs_digest <- function(kind, sources, settings) {
 
 # Run and Retry admission. Checks run in order before any enqueue; a refusal shows
 # one notification and makes zero factory calls. Returns the run id or NULL.
-# `sources` are list(store, label, rv, value); `taken` are existing cluster names.
+# `sources` are list(store, label, rv, value); `taken` are existing cluster names, or a
+# function returning them, read at each admission so that Retry checks current names.
 workspace_jobs_submit <- function(jobs, kind, sources, settings, launch, publish, module_session, button_id,
                                   progress = "Analysis running in background...", taken = character(),
                                   retry_of = NA_character_) {
@@ -401,7 +402,7 @@ workspace_jobs_submit <- function(jobs, kind, sources, settings, launch, publish
     name <- settings$cluster_name
     reserved <- vapply(Filter(function(r) identical(r$kind, "clustering") && r$state %in% c("queued", "running"),
                               jobs$records), function(r) as.character(r$settings$cluster_name), character(1))
-    if (name %in% c(taken, reserved)) {
+    if (name %in% c(if (is.function(taken)) taken() else taken, reserved)) {
       return(refuse(sprintf("A cluster result named %s already exists; choose another name", name)))
     }
   }
@@ -546,10 +547,37 @@ workspace_jobs_launch <- function(jobs, run_id) {
 
 workspace_jobs_kind_label <- function(kind) if (identical(kind, "clustering")) "Clustering" else "Enrichment"
 
+# Labels handed out by workspace_jobs_free_label while a publication runs. Publication
+# has no rollback, so if publish() raises these are the outputs it may have written.
+.workspace_job_publication <- new.env(parent = emptyenv())
+
+workspace_jobs_publish <- function(handle, value) {
+  .workspace_job_publication$labels <- character()
+  .workspace_job_publication$active <- TRUE
+  on.exit(.workspace_job_publication$active <- FALSE, add = TRUE)
+  tryCatch(handle$publish(value), error = function(e) e)
+}
+
+# A publish error fails the record like a rejection; the note names any output that
+# was already written.
+workspace_jobs_publish_failed <- function(jobs, run_id, handle, err) {
+  summary <- workspace_jobs_error_summary(err)
+  written <- unique(.workspace_job_publication$labels)
+  note <- if (length(written)) sprintf("Publication stopped by an error; already written and kept: %s",
+                                       paste(written, collapse = ", ")) else NA_character_
+  workspace_jobs_transition(jobs, run_id, "failed", note, list(error_summary = summary))
+  text <- sprintf("%s failed (run %s): %s. Previous results are unchanged; use Retry in the job panel.",
+                  workspace_jobs_kind_label(handle$kind), substr(run_id, 1L, 8L), summary)
+  if (!is.na(note)) text <- paste0(text, " ", note, ".")
+  workspace_jobs_notify(handle, text, type = "error", duration = 10)
+  invisible(NULL)
+}
+
 workspace_jobs_on_fulfilled <- function(jobs, run_id, value) {
   handle <- jobs$handles[[run_id]]
   if (workspace_jobs_authorized(jobs, run_id) && !is.null(handle$publish)) {
-    outputs <- handle$publish(value)
+    outputs <- workspace_jobs_publish(handle, value)
+    if (inherits(outputs, "error")) return(workspace_jobs_publish_failed(jobs, run_id, handle, outputs))
     note <- attr(outputs, "note")
     workspace_jobs_transition(jobs, run_id, "succeeded", if (is.null(note)) NA_character_ else note,
                               list(outputs = as.character(outputs)))
@@ -789,7 +817,8 @@ workspace_jobs_server <- function(id, jobs) {
       jobs$tick()
       records <- jobs$records
       if (!length(records)) return(NULL)
-      shiny::tags$ul(class = "rs-job-list", lapply(records, function(rec) {
+      # One malformed record shows a placeholder instead of erroring the whole list.
+      shiny::tags$ul(class = "rs-job-list", lapply(records, function(rec) tryCatch({
         buttons <- list()
         if (workspace_jobs_action_offered(jobs, rec, "stop")) buttons <- c(buttons, list(workspace_jobs_button(ns, "stop", rec$run_id, "Stop")))
         if (workspace_jobs_action_offered(jobs, rec, "detach")) buttons <- c(buttons, list(workspace_jobs_button(ns, "detach", rec$run_id, "Detach (keeps running)")))
@@ -801,7 +830,7 @@ workspace_jobs_server <- function(id, jobs) {
           shiny::tags$span(class = "rs-job-inputs", paste("Inputs:", paste(labels, collapse = ", "))),
           shiny::tags$ul(class = "rs-job-settings", lapply(workspace_jobs_settings_text(rec$settings), shiny::tags$li)),
           buttons)
-      }))
+      }, error = function(e) shiny::tags$li(class = "rs-job", "This run record could not be displayed"))))
     })
     output$jobs_status <- shiny::renderUI({
       jobs$tick()
@@ -972,8 +1001,14 @@ workspace_jobs_rrdf_row <- function(df, label, deg, res) {
 
 # The smallest free label: `base`, else `base_<k>` with k >= 2.
 workspace_jobs_free_label <- function(base, taken) {
-  if (!base %in% taken) return(base)
+  label <- base
   k <- 2L
-  while (paste0(base, "_", k) %in% taken) k <- k + 1L
-  paste0(base, "_", k)
+  while (label %in% taken) {
+    label <- paste0(base, "_", k)
+    k <- k + 1L
+  }
+  if (isTRUE(.workspace_job_publication$active)) {
+    .workspace_job_publication$labels <- c(.workspace_job_publication$labels, label)
+  }
+  label
 }

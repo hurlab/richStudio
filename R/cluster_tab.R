@@ -420,7 +420,7 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       }
       workspace_jobs_submit(jobs, "clustering", sources, settings, launch, publish, session, "cluster",
                             progress = "Clustering running in background...",
-                            taken = shiny::isolate(c(u_clusnames$labels, names(u_clusdfs))))
+                            taken = function() shiny::isolate(c(u_clusnames$labels, names(u_clusdfs))))
 
       # Return NULL so Shiny knows this observer is async
       NULL

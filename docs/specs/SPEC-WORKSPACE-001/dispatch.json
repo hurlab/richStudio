@@ -541,6 +541,7 @@
         "R/enrich_tab.R",
         "R/cluster_tab.R",
         "R/update_tab.R",
+        "R/save_tab.R",
         "R/workspace_jobs.R",
         "R/run_records.R",
         "tests/testthat/test-workspace-jobs.R",
@@ -550,7 +551,8 @@
         "inst/application/app.R",
         "R/enrich_tab.R",
         "R/cluster_tab.R",
-        "R/update_tab.R"
+        "R/update_tab.R",
+        "R/save_tab.R"
       ],
       "new_target_files": [
         "R/workspace_jobs.R",

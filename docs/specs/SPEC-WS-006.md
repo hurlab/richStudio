@@ -4,7 +4,7 @@ title: "Persistent run status, owned jobs and stale-result protection"
 version: "0.1.0"
 status: draft
 created: "2026-10-20"
-updated: "2026-10-20"
+updated: "2026-10-23"
 author: "workspace planning team"
 priority: P1
 phase: "v0.1.7 target"
@@ -34,6 +34,7 @@ Enrichment and clustering already use future/promises. The improvement is a trut
 - `R/enrich_tab.R`
 - `R/cluster_tab.R`
 - `R/update_tab.R`
+- `R/save_tab.R` (amendment 006: load-commit and record hooks only; validated-load semantics remain SPEC-WS-007)
 
 ### New targets
 
@@ -50,7 +51,7 @@ Enrichment and clustering already use future/promises. The improvement is a trut
 
 3. Capability-probe worker-specific cancellation in the installed future backend. Enable Stop only when owned worker termination can be acknowledged without harming another job/session. Otherwise provide explicit detach/ignore-result behavior with truthful continued-running and resource consequences; never relabel it cancelled.
 
-4. Increment invalidation generations only after a delete/replacement has been validated and accepted, immediately before its successful state change; for load, fully validate the candidate first, then invalidate immediately before the successful atomic load state swap. Failed imports, cancelled file pickers and rejected replacement/deletion requests leave the current generation, jobs and workspace untouched. Session close invalidates owned work during cleanup. An obsolete callback may finish logging its own job but cannot mutate current data or success notifications. Load the reviewed001 application resource configuration through its installed loader and enforce worker admission/history bounds; avoid unbounded workers per click.
+4. Increment invalidation generations only after a delete/replacement has been validated and accepted, immediately before its successful state change; for load, fully validate the candidate first, then invalidate immediately before the successful atomic load state swap. Failed imports, cancelled file pickers and rejected replacement/deletion requests leave the current generation, jobs and workspace untouched. The existing session load in `R/save_tab.R` calls the session job registry's generation commit after its current checks and immediately before its first store assignment; SPEC-WS-007 later replaces those checks with its validated load path without removing the call. Session close invalidates owned work during cleanup. An obsolete callback may finish logging its own job but cannot mutate current data or success notifications. Load the reviewed001 application resource configuration through its installed loader and enforce worker admission/history bounds; avoid unbounded workers per click.
 
 5. Define failure as retaining previous valid results. A retry gets a new run ID; a duplicate label never overwrites a historical run. Publish a versioned read-only run record adapter for manifest and result leaves.
 
@@ -94,7 +95,7 @@ All requirements must be exercised by the listed scenarios plus scoped tests; ve
 
 ## Security and trust boundary
 
-All job stores belong to the Shiny session. Worker handles are not loaded from projects; cancel accepts validated owned run IDs only. Worker input is validated data snapshots, not arbitrary expressions from uploads. Logs exclude raw data and access tokens.
+All job stores belong to the Shiny session. Job records, handles, captured inputs and results stay session-owned. The only process-level state is a bounded, in-memory admission queue of the R process, which holds, for dispatch only, references to the owning sessions' job registries, and a queue version counter; neither is persisted, and another session can observe only counts (the number of entries ahead of its own queued job, and the queue length when the queue is full). Worker handles are not loaded from projects; cancel accepts validated owned run IDs only. Worker input is validated data snapshots, not arbitrary expressions from uploads. Logs exclude raw data and access tokens.
 
 ## Rollout and rollback
 
@@ -109,3 +110,4 @@ Drain/detach new jobs before switching back to legacy observers. Retain recorded
 ## HISTORY
 
 - 2026-10-20: Planning-only draft, authored after repository inspection and Hur Harness team consultation.
+- 2026-10-23: Amendment 006 adds `R/save_tab.R` (load-commit and run-record hooks only) and states the session ownership of job records next to the in-process admission queue; no REQ or AC text changes.

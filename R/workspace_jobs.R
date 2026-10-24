@@ -837,14 +837,17 @@ workspace_jobs_server <- function(id, jobs) {
       records <- jobs$records
       if (any(vapply(records, function(r) identical(r$state, "queued"), logical(1)))) workspace_job_queue_version()()
       if (!length(records)) return(NULL)
-      shiny::tagList(lapply(records, function(rec) {
+      # One malformed record shows a placeholder instead of erroring the whole status.
+      shiny::tagList(lapply(records, function(rec) tryCatch({
         note <- rec$note
         summary <- rec$error_summary
         shiny::tags$p(class = "rs-job-status",
           shiny::tags$code(substr(rec$run_id, 1L, 8L)), " ", workspace_jobs_status_line(jobs, rec),
           if (!is.null(note) && !is.na(note) && nzchar(note)) paste0(" — ", note),
           if (!is.null(summary) && !is.na(summary) && nzchar(summary)) paste0(" Error: ", summary))
-      }))
+      }, error = function(e) shiny::tags$p(class = "rs-job-status",
+        shiny::tags$code(tryCatch(substr(as.character(rec$run_id), 1L, 8L), error = function(e) "?")),
+        " This run record could not be displayed"))))
     })
     output$jobs_announce <- shiny::renderUI({
       line <- jobs$announce()

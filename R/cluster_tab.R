@@ -363,18 +363,25 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
         seed = TRUE
       )
 
+      # Current cluster names. Deleting a result assigns NULL, which keeps its key in
+      # names(u_clusdfs), so only keys that still hold a value count.
+      cluster_names <- function() shiny::isolate({
+        held <- shiny::reactiveValuesToList(u_clusdfs)
+        c(u_clusnames$labels, names(held)[!vapply(held, is.null, logical(1))])
+      })
+
       # 4. Update reactive values for an authorized result
       publish <- function(result) {
-        # Clear stale intermediate results from previous runs
-        # This prevents orphaned entries from accumulating across clustering sessions
+        # Stale intermediate results from previous runs are replaced only once the new
+        # result has been read and published, so a publish error keeps the predecessor's.
         intermed_keys <- c("DistanceMatrix", "cluster_summary", "cluster_df", "method", "params")
-        for (key in intermed_keys) {
-          clus_intermed[[key]] <- NULL
-        }
         if (result$success) {
+          new_intermed <- list(DistanceMatrix = result$cluster_result$distance_matrix,
+                               cluster_summary = result$cluster_result$cluster_summary,
+                               cluster_df = result$cluster_df, method = result$method,
+                               params = result$params)
           # A name created outside the lock meanwhile gets a suffix; nothing is overwritten.
-          name <- workspace_jobs_free_label(result$cluster_name,
-                                            shiny::isolate(c(u_clusnames$labels, names(u_clusdfs))))
+          name <- workspace_jobs_free_label(result$cluster_name, cluster_names())
           result$new_row$name <- name
           u_clusdfs[[name]] <- result$summary_df
           u_clusnames$labels <- unique(c(shiny::isolate(u_clusnames$labels), name))
@@ -388,14 +395,10 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
             u_big_clusdf[['df']] <- rbind(big_clusdf, result$new_row)
           }
 
-          # Store intermediate results
-          if (!is.null(result$cluster_result$distance_matrix)) {
-            clus_intermed[['DistanceMatrix']] <- result$cluster_result$distance_matrix
+          # Replace the intermediate results (a NULL entry clears its key)
+          for (key in intermed_keys) {
+            clus_intermed[[key]] <- new_intermed[[key]]
           }
-          clus_intermed[['cluster_summary']] <- result$cluster_result$cluster_summary
-          clus_intermed[['cluster_df']] <- result$cluster_df
-          clus_intermed[['method']] <- result$method
-          clus_intermed[['params']] <- result$params
 
           showNotification(
             paste("Clustering complete!", result$new_row$n_clusters,
@@ -411,6 +414,9 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
           }
           outputs
         } else {
+          for (key in intermed_keys) {
+            clus_intermed[[key]] <- NULL
+          }
           showNotification(
             "No clusters found with current parameters. Try adjusting thresholds.",
             type = "warning"
@@ -420,7 +426,7 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       }
       workspace_jobs_submit(jobs, "clustering", sources, settings, launch, publish, session, "cluster",
                             progress = "Clustering running in background...",
-                            taken = function() shiny::isolate(c(u_clusnames$labels, names(u_clusdfs))))
+                            taken = cluster_names)
 
       # Return NULL so Shiny knows this observer is async
       NULL

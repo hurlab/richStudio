@@ -139,6 +139,9 @@ ui <- function(request) {
 
       workspace_header_ui("workspace", enabled = workspace_navigation),
 
+      # Analysis job panel (SPEC-WS-006), shown above every tab.
+      workspace_jobs_ui("jobs"),
+
       tabItems(
         homeTabUI("home", tabName = "home_tab", app_version = app_version,
                   enabled = workspace_navigation),
@@ -214,6 +217,12 @@ server <- function(input, output, session) {
   u_cluslists <- reactiveValues()               # cluster info lists
   clus_intermed <- reactiveValues()             # cluster intermediate results
 
+  # Session job registry (SPEC-WS-006): owned jobs, admission queue, stale-result
+  # guards. Module servers find it in session$userData.
+  jobs <- workspace_jobs_registry(session)
+  session$userData$workspace_jobs <- jobs
+  workspace_jobs_server("jobs", jobs)
+
   # Generate unique session ID for debugging concurrent issues
   session_id <- paste0("rs_", format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
                        substr(digest::digest(runif(1)), 1, 8))
@@ -221,6 +230,7 @@ server <- function(input, output, session) {
 
   # Clean up large reactive values when session ends to free memory
   session$onSessionEnded(function() {
+    workspace_jobs_close(jobs)
     message("[richStudio] Session ended: ", session_id)
     # Clear contents of each reactiveValues store
     for (nm in shiny::isolate(names(u_degdfs)))   u_degdfs[[nm]]   <- NULL

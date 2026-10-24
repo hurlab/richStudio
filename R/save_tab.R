@@ -151,6 +151,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
                           download_handler = downloadHandler) {
 
   moduleServer(id, function(input, output, session) {
+    jobs <- workspace_jobs_peek(session)
 
     # Update select inputs
     observe({
@@ -205,6 +206,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           clusdfs = reactiveValuesToList(u_clusdfs),
           cluslists = reactiveValuesToList(u_cluslists)
         )
+        if (!is.null(jobs)) session_data$run_records_json <- workspace_run_records_json(workspace_run_records(jobs))
 
         # Use advisory file locking to prevent concurrent write corruption
         lock_path <- paste0(file, ".lock")
@@ -312,6 +314,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         }
 
         # Restore session data
+        if (!is.null(jobs)) workspace_jobs_commit_workspace_swap(jobs)
         u_degnames$labels <- session_data$degnames
         for (name in names(session_data$degdfs)) {
           u_degdfs[[name]] <- session_data$degdfs[[name]]
@@ -329,6 +332,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         for (name in names(session_data$cluslists)) {
           u_cluslists[[name]] <- session_data$cluslists[[name]]
         }
+        if (!is.null(jobs)) workspace_run_records_reopen(session_data$run_records_json, jobs)
 
         showNotification(
           paste("Session loaded successfully! Created:", session_data$created),

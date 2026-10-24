@@ -145,6 +145,9 @@ enrichTabUI <- function(id, tabName) {
 enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_rrdfs, u_big_rrdf, enrichment_runner = run_enrichment_jobs) {
 
   moduleServer(id, function(input, output, session) {
+    # Session job registry (SPEC-WS-006), shared through session$userData.
+    jobs <- workspace_jobs_for(session)
+
     # Create reactive objs to make accessible in other modules
     u_degnames_reactive <- reactive(u_degnames$labels)
     u_degdfs_reactive <- reactive(u_degdfs)
@@ -271,6 +274,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         path <- sample_deg_path(paste0(lab, '.txt'))
         df <- read.delim(path)
 
+        if (lab %in% u_degnames$labels) workspace_jobs_touch(jobs, "deg", lab)
         u_degdfs[[lab]] <- df # set u_degdfs
         u_degnames$labels <- c(u_degnames$labels, lab) # set u_degnames
         u_big_degdf[['df']] <- add_file_degdf(u_big_degdf[['df']], lab, df)
@@ -324,6 +328,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         new_name <- v
         old_name <- u_big_degdf[['df']][i, j]
         if (nchar(new_name) > 0 && nchar(old_name) > 0) {
+          workspace_jobs_touch(jobs, "deg", old_name)
           # Copy data to new name
           u_degdfs[[new_name]] <- u_degdfs[[old_name]]
           # Remove old name from reactive values
@@ -352,6 +357,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         deg_to_rm <- deg_to_rm$name
 
         # Properly remove from reactive values using NULL assignment
+        workspace_jobs_touch(jobs, "deg", deg_to_rm)
         u_degdfs[[deg_to_rm]] <- NULL
         u_degnames$labels <- setdiff(u_degnames$labels, deg_to_rm)
         review_revisions[[deg_to_rm]] <- NULL
@@ -517,14 +523,21 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       cutoff_val <- input$deg_filter_cutoff
       if (is.null(cutoff_val) || is.na(cutoff_val)) cutoff_val <- 0.05
 
-      # 2. Disable button and show notification
-      shinyjs::disable("enrich_deg")
-      showNotification("Enrichment analysis running in background...",
-                       id = "enrich_progress", duration = NULL, type = "message")
+      # 2. Admit the job. Inputs, settings and the input values are captured now; the
+      #    session job registry queues the job and launches it when a worker is free.
+      runner <- enrichment_runner
+      labels <- vapply(deg_inputs, function(x) x$name, character(1))
+      sources <- lapply(labels, function(label) list(store = "deg", label = label, rv = u_degdfs,
+                                                     value = u_degdfs[[label]]))
+      settings <- list(species = species_val, anntype = anntype_val, keytype = keytype_val,
+                       ontology = ontology_val, cutoff = cutoff_val,
+                       query = lapply(deg_inputs, function(x) list(name = x$name, query_rule = x$query_rule,
+                                                                   n_submitted = length(x$ids),
+                                                                   revision_digest = x$revision_digest)))
 
       # 3. Launch future (no reactive reads inside)
-      p <- future::future(
-        enrichment_runner(
+      launch <- function() workspace_jobs_future(
+        runner(
           deg_inputs = deg_inputs, cutoff = cutoff_val, species = species_val,
           anntype = anntype_val, keytype = keytype_val, ontology = ontology_val
         ),
@@ -532,32 +545,30 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         seed = TRUE
       )
 
-      # 4. Handle promise resolution (runs in Shiny session context)
-      promises::then(p,
-        onFulfilled = function(results) {
-          for (res in results) {
-            lab <- paste0(res$name, "_enriched")
-            u_rrdfs[[lab]] <- res$result
-            u_rrnames$labels <- unique(c(u_rrnames$labels, lab))
-            u_big_rrdf[['df']] <- add_file_rrdf(u_big_rrdf[['df']],
+      # 4. Publish an authorized result (runs in Shiny session context); an earlier
+      #    run's label is never overwritten: <name>_enriched, then <name>_enriched_<k>.
+      publish <- function(results) {
+        outputs <- character()
+        for (res in results) {
+          base <- paste0(res$name, "_enriched")
+          lab <- workspace_jobs_free_label(base, shiny::isolate(c(u_rrnames$labels, names(u_rrdfs))))
+          u_rrdfs[[lab]] <- res$result
+          u_rrnames$labels <- unique(c(shiny::isolate(u_rrnames$labels), lab))
+          if (identical(lab, base)) {
+            u_big_rrdf[['df']] <- add_file_rrdf(shiny::isolate(u_big_rrdf[['df']]),
               name = res$name, annot = res$anntype, keytype = res$keytype,
               ontology = res$ontology, species = res$species, file = FALSE)
+          } else {
+            u_big_rrdf[['df']] <- workspace_jobs_rrdf_row(shiny::isolate(u_big_rrdf[['df']]), lab, res$name, res)
           }
-          shiny::removeNotification("enrich_progress")
-          showNotification(paste(length(results), "DEG set(s) enriched successfully!"),
-                           type = "message")
-        },
-        onRejected = function(err) {
-          shiny::removeNotification("enrich_progress")
-          showNotification(paste("Enrichment error:", conditionMessage(err)),
-                           type = "error", duration = 10)
+          outputs <- c(outputs, lab)
         }
-      )
-
-      # 5. Always re-enable button
-      promises::finally(p, function() {
-        shinyjs::enable("enrich_deg")
-      })
+        showNotification(paste(length(results), "DEG set(s) enriched successfully!"),
+                         type = "message")
+        outputs
+      }
+      workspace_jobs_submit(jobs, "enrichment", sources, settings, launch, publish, session, "enrich_deg",
+                            progress = "Enrichment analysis running in background...")
 
       # Return NULL so Shiny knows this observer is async
       NULL
@@ -583,6 +594,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         new_name <- v
         old_name <- u_big_rrdf[['df']][i, j]
         if (nchar(new_name) > 0 && nchar(old_name) > 0) {
+          workspace_jobs_touch(jobs, "rr", old_name)
           # Copy data to new name
           u_rrdfs[[new_name]] <- u_rrdfs[[old_name]]
           # Remove old name from reactive values
@@ -609,6 +621,7 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         rr_to_rm <- rr_to_rm$name
 
         # Properly remove from reactive values using NULL assignment
+        workspace_jobs_touch(jobs, "rr", rr_to_rm)
         u_rrdfs[[rr_to_rm]] <- NULL
         u_rrnames$labels <- setdiff(u_rrnames$labels, rr_to_rm)
       }

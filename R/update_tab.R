@@ -81,6 +81,8 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
                             u_clusnames, u_clusdfs, u_cluslists) {
 
   moduleServer(id, function(input, output, session) {
+    # Session job registry (SPEC-WS-006): accepted renames and removals supersede jobs.
+    jobs <- workspace_jobs_for(session)
 
     # Create reactive expressions for the labels
     u_degnames_reactive <- reactive({
@@ -127,6 +129,7 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         return()
       }
 
+      workspace_jobs_touch(jobs, "deg", old_name)
       # Copy data to new name
       u_degdfs[[new_name]] <- u_degdfs[[old_name]]
       # Remove old name from reactive values
@@ -158,6 +161,7 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         return()
       }
 
+      workspace_jobs_touch(jobs, "rr", old_name)
       # Copy data to new name
       u_rrdfs[[new_name]] <- u_rrdfs[[old_name]]
       # Remove old name from reactive values
@@ -189,6 +193,7 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         return()
       }
 
+      workspace_jobs_touch(jobs, "clus", old_name)
       # Copy data to new name
       u_clusdfs[[new_name]] <- u_clusdfs[[old_name]]
       u_cluslists[[new_name]] <- u_cluslists[[old_name]]
@@ -233,6 +238,7 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
     observeEvent(input$confirm_remove_deg, {
       to_remove <- input$remove_deg_select
+      workspace_jobs_touch(jobs, "deg", to_remove)
       for (name in to_remove) {
         u_degdfs[[name]] <- NULL
       }
@@ -266,6 +272,7 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
     observeEvent(input$confirm_remove_rr, {
       to_remove <- input$remove_rr_select
+      workspace_jobs_touch(jobs, "rr", to_remove)
       for (name in to_remove) {
         u_rrdfs[[name]] <- NULL
       }
@@ -299,6 +306,7 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
     observeEvent(input$confirm_remove_clus, {
       to_remove <- input$remove_clus_select
+      workspace_jobs_touch(jobs, "clus", to_remove)
       for (name in to_remove) {
         u_clusdfs[[name]] <- NULL
         u_cluslists[[name]] <- NULL

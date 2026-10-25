@@ -48,3 +48,30 @@ test_that("dataset labels containing regex metacharacters are matched literally"
   expect_true("Pvalue_ctlX1" %in% colnames(gone))
   expect_false("Pvalue_ctl.(1)" %in% colnames(gone))
 })
+
+test_that("re-adding a dataset appends new terms and fills shared rows", {
+  rr <- ws_baseline_results()
+  joined <- richStudio:::add_custom_gs(NULL, rr$untreated, "case2", c("A", "B", "C"))
+  joined <- richStudio:::add_custom_gs(joined, rr$treated, "case", "A")
+  again <- richStudio:::add_custom_gs(joined, rr$treated, "case", c("A", "C", "D"))
+  # A is already added (kept once), C fills the row case2 already holds, D is new.
+  expect_identical(again$Term, c("A", "B", "C", "D"))
+  expect_equal(again$Pvalue_case, c(.02, NA, .03, .2))
+  expect_equal(again$Pvalue_case2, c(1e-8, 1e-7, 1e-6, NA))
+  expect_identical(again$GeneID, c("g1,g2,g3", "g1,g2,g4", "g5,g6,g7", "g5,g6,g8"))
+  # Re-adding only already-added terms changes nothing.
+  same <- richStudio:::add_custom_gs(again, rr$treated, "case", c("A", "C"))
+  expect_identical(same$Term, again$Term)
+  expect_equal(same$Pvalue_case, again$Pvalue_case)
+})
+
+test_that("remove_gs given the dataset's own columns never touches a longer label", {
+  rr <- ws_baseline_results()
+  joined <- richStudio:::add_custom_gs(NULL, rr$untreated, "x_case", c("A", "B"))
+  joined <- richStudio:::add_custom_gs(joined, rr$treated, "case", c("A", "C"))
+  gone <- richStudio:::remove_gs(joined, "case", c("A", "C"), delete_all = c("A", "C"),
+                                 gs_cols = colnames(rr$treated))
+  expect_true(all(c("Pvalue_x_case", "Padj_x_case", "GeneID_x_case") %in% colnames(gone)))
+  expect_false(any(colnames(gone) %in% c("Pvalue_case", "Padj_case", "GeneID_case")))
+  expect_identical(gone$Term, c("A", "B"))
+})

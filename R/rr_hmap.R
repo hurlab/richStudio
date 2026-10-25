@@ -56,18 +56,24 @@ add_custom_gs <- function(custom_data=NULL, gs, gs_name, term_vec) {
     } 
     # Else, gs previously added
     else { 
+      gs_own_cols <- setdiff(colnames(gs), exclude_cols)
+      
       # Get columns present in custom_data but not in gs
       cd_only_cols <- setdiff(colnames(custom_data), colnames(gs))
       gs[ , cd_only_cols] <- NA # Add cd_only_cols to gs as NA values (enables rbind)
       
       # Create dataframe of already added terms (term already added, gsname_cols are not NA)
       added_term_df <- custom_data[which(custom_data$Term %in% term_vec), ]
-      added_term_df <- added_term_df[, c('Term', which(colnames(custom_data) %in% gsname_cols))]
+      added_term_df <- added_term_df[, c('Term', gsname_cols), drop=FALSE]
       added_term_df <- tidyr::drop_na(added_term_df)
       
-      gs <- gs[!(gs$Term %in% added_term_df$Term), ] # Exclude already added terms from gs
+      gs <- gs[!(gs$Term %in% added_term_df$Term), , drop=FALSE] # Exclude already added terms from gs
       
-      custom_data <- rbind(custom_data, gs) # Rbind
+      # Terms another geneset already holds fill that row; the rest are appended
+      hit <- match(paste(gs$Annot, gs$Term), paste(custom_data$Annot, custom_data$Term))
+      shared <- !is.na(hit)
+      custom_data[hit[shared], gs_own_cols] <- gs[shared, gs_own_cols, drop=FALSE]
+      custom_data <- rbind(custom_data, gs[!shared, , drop=FALSE]) # Rbind
     }
   }
   
@@ -203,13 +209,17 @@ add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, t
 #' @param delete_all Character vector or \code{NULL}. If provided, all columns
 #'   for \code{gs_name} are removed, together with the rows of these terms that
 #'   no other geneset still holds a value for.
+#' @param gs_cols Character vector or \code{NULL}. Column names of the geneset's
+#'   own result table; when given, its merged columns are matched exactly
+#'   instead of by the \code{_gs_name} suffix.
 #' @return Updated \code{custom_data} data frame with terms/geneset removed.
-remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL) {
+remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL, gs_cols=NULL) {
   # delete entire geneset if passed "delete_all" w/ the geneset's selected terms
   if (!is.null(delete_all)) {
-    gs_cols <- gs_dataset_cols(colnames(custom_data), gs_name)
+    drop_cols <- gs_dataset_cols(colnames(custom_data), gs_name,
+                                 if (is.null(gs_cols)) NULL else setdiff(gs_cols, c("Annot", "Term")))
     # filter out gs columns
-    custom_data2 <- custom_data[, !gs_cols, drop=FALSE]
+    custom_data2 <- custom_data[, !drop_cols, drop=FALSE]
     # a row goes only if its Term was selected for this geneset and no other
     # geneset still holds a value for it
     other_cols <- setdiff(colnames(custom_data2), c("Annot", "Term", "GeneID"))

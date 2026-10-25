@@ -587,7 +587,8 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
       custom_data_reactive$df <- remove_gs(custom_data=custom_data_reactive$df,
                                            gs_name=gs_name,
                                            term_vec=input$rr_term_delete_select,
-                                           delete_all=selected_terms)
+                                           delete_all=selected_terms,
+                                           gs_cols=colnames(u_rrdfs[[gs_name]]))
       rr_term_vec_reactive[[gs_name]] <- character()
       # Remove result name from list
       rr_custom_list_reactive$labels <- setdiff(rr_custom_list_reactive$labels, gs_name)

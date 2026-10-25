@@ -6,6 +6,7 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 - logs/PROJECT_LOG_2026-H1.md — 6 sessions (2026-01 … 2026-03)
 
 ## Session Index (active, newest first)
+- 2026-10-23 → 2026-10-25 — SPEC-WS-006 accepted and integrated (9f403c2); shiny 1.14 teardown defect found in hosted CI and fixed; deployed live 2026-10-25 and verified
 - 2026-10-23 — SPEC-WS-004 accepted and integrated (4142c94); WS-001–004 deployed live and verified
 - 2026-10-22 — SPEC-WS-003 accepted via ws003-recovery; integrated and pushed
 - 2026-10-21 late — SPEC-WS-003 implemented locally; scope ws003-navigation STOP5
@@ -21,6 +22,13 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 - 2026-05-18 → 2026-05-19 — Deployment Tooling + Sync Strategy Decision
 
 ---
+
+## Session 2026-10-23 → 2026-10-25 — SPEC-WS-006 accepted and integrated (Claude Code)
+
+- SPEC-WS-006 (session job registry, bounded admission queue, owned cancellation, stale-result guards, run records) accepted at 9f403c2 and integrated into I by fast-forward (2b52c9d..9f403c2, tree equal to the card, pushed). Gating run 40150691880 7/7; tests 229/2830, 0 failed; check 5 NOTEs, headings equal; coverage 89.40%; browser 44/44. Result audit r1 PASS (Q1–Q10). Scope ws006-jobs COMPLETE 4/5. Deployed live 2026-10-25 (release richStudio-9f403c2…-20261025T023118Z) and verified with a two-session browser check.
+- Reviews r1–r5 PASS. Owner decisions D11–D15: fix F1–F3 and F11–F13 before push; diagnose then fix the hosted failure; fix the non-ASCII literal with a short review.
+- Hosted run 40091007286 failed: shiny 1.14.0 destroys reactives created in a session's domain when the session closes, so the shared queue counter broke every Run after the first session closed (reproduced in a real session: the second user is disconnected). Fixed by creating the counter and tick/announce outside the session domain (96029ee) with regression test R37. Hosted run 40141898906 then failed on a non-ASCII WARNING (em dash literals from b90eb43; also present in the first run and missed in root triage), fixed in 9f403c2.
+- Records: implementation/006/ws006-state.json (COMPLETE), ws006-root-acceptance.json, ws006-result-audit-r1.md, ws006-code-review-r1..r5.md. Retained run: ROOT/tmp/runs/ws006-result.4dU5dMit. Scratch shiny 1.14.0 library: ROOT/tmp/runs/ws006-diag.D04h9XLm/deps.
 
 ## Session 2026-10-23 — SPEC-WS-004 accepted; WS-001–004 deployed live (Claude Code)
 

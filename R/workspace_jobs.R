@@ -132,6 +132,12 @@ workspace_jobs_registry <- function(session, policy_loader = workspace_resource_
   jobs$session <- root
   jobs$owner <- substr(digest::digest(list(workspace_jobs_now(), stats::runif(1))), 1L, 16L)
   jobs$generation <- 1L
+  # Known limitation: `closed` tracks only the root session, and everything here treats the
+  # root as the unit of teardown. Shiny >= 1.14 can tear a module scope down on its own
+  # (`session$destroy(id)`) while the root lives, and a module proxy then still reports
+  # isClosed() == FALSE, so sources and publish callbacks captured from that module would be
+  # read after destruction. Nothing in R/ calls `$destroy(` today (tests R46 fails if that
+  # changes); a caller that starts doing so must first give the registry a per-module close.
   jobs$closed <- FALSE
   jobs$revisions <- new.env(parent = emptyenv())
   jobs$records <- list()

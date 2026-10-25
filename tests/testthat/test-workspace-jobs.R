@@ -2768,3 +2768,15 @@ test_that("R45 F15 a raise while removing the progress notification still releas
   expect_null(jobs$handles[[id]]$future)
   expect_identical(jobs$in_flight, character())
 })
+
+test_that("R46 O3 no package code tears down a module scope while the registry tracks only the root", {
+  dir <- file.path(testthat::test_path("..", ".."), "R")
+  testthat::skip_if_not(dir.exists(dir), "package sources are not available")
+  hits <- character()
+  for (file in list.files(dir, pattern = "[.]R$", full.names = TRUE)) {
+    lines <- readLines(file, warn = FALSE)
+    code <- lines[!grepl("^\\s*#", lines)]
+    if (any(grepl("[$]destroy\\(", code))) hits <- c(hits, basename(file))
+  }
+  expect_identical(hits, character())
+})

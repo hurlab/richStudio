@@ -582,12 +582,13 @@ rrVisTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_r
     observeEvent(input$delete_rr, {
       req(input$rr_delete_select)
       gs_name <- input$rr_delete_select
-      gs <- u_rrdfs[[gs_name]]
-      all_terms <- gs$Term
+      # Terms selected for this result; shared terms survive via other results
+      selected_terms <- as.character(rr_term_vec_reactive[[gs_name]])
       custom_data_reactive$df <- remove_gs(custom_data=custom_data_reactive$df,
                                            gs_name=gs_name,
                                            term_vec=input$rr_term_delete_select,
-                                           delete_all=TRUE)
+                                           delete_all=selected_terms)
+      rr_term_vec_reactive[[gs_name]] <- character()
       # Remove result name from list
       rr_custom_list_reactive$labels <- setdiff(rr_custom_list_reactive$labels, gs_name)
     })

@@ -44,3 +44,14 @@ test_that("delete_rr observer removes the result's rows and resets its term vect
     expect_identical(rr_term_vec_reactive[["control"]], character())
   })
 })
+
+test_that("whole-result deletion removes exclusive rows even when the term vector is out of sync", {
+  rr <- ws_baseline_results()
+  c1 <- richStudio:::add_custom_gs(NULL, rr$untreated, "control", c("A", "B", "C"))
+  both <- richStudio:::add_custom_gs(c1, rr$treated, "case", c("C", "D"))
+  gone <- richStudio:::remove_gs(both, "control", character(), delete_all = character())
+  expect_identical(sort(gone$Term), c("C", "D"))
+  expect_equal(gone$Pvalue_case[gone$Term == "C"], .03)
+  expect_identical(gone$GeneID[gone$Term == "C"], "g5,g6,g7")
+  expect_false(any(grepl("_control$", colnames(gone))))
+})

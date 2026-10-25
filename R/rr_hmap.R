@@ -207,8 +207,8 @@ add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, t
 #' @param term_vec Character vector. Terms to remove (used when
 #'   \code{delete_all} is \code{NULL}).
 #' @param delete_all Character vector or \code{NULL}. If provided, all columns
-#'   for \code{gs_name} are removed, together with the rows of these terms that
-#'   no other geneset still holds a value for.
+#'   for \code{gs_name} are removed, together with every row that no other
+#'   geneset still holds a value for. Only its non-\code{NULL} status matters.
 #' @param gs_cols Character vector or \code{NULL}. Column names of the geneset's
 #'   own result table; when given, its merged columns are matched exactly
 #'   instead of by the \code{_gs_name} suffix.
@@ -220,15 +220,15 @@ remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL, gs_cols=N
                                  if (is.null(gs_cols)) NULL else setdiff(gs_cols, c("Annot", "Term")))
     # filter out gs columns
     custom_data2 <- custom_data[, !drop_cols, drop=FALSE]
-    # a row goes only if its Term was selected for this geneset and no other
-    # geneset still holds a value for it
+    # a row with no value left in any other geneset is exclusive to this one
+    # (an orphan by definition), whatever delete_all lists; shared rows survive
     other_cols <- setdiff(colnames(custom_data2), c("Annot", "Term", "GeneID"))
     still_used <- if (length(other_cols) == 0) {
       rep(FALSE, nrow(custom_data2))
     } else {
       rowSums(!is.na(custom_data2[, other_cols, drop=FALSE])) > 0
     }
-    custom_data2 <- custom_data2[!(custom_data2$Term %in% delete_all & !still_used), , drop=FALSE]
+    custom_data2 <- custom_data2[still_used, , drop=FALSE]
     if (nrow(custom_data2) == 0) {
       custom_data2 <- data.frame()
     } else {

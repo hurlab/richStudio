@@ -42,6 +42,19 @@ For the two GitHub commit archives, extract each into its own temporary director
 
 Install required dependencies into that task library first. Do not copy compiled packages between R versions. Source-archive installation can leave `RemoteSha` fields empty in the installed DESCRIPTION, so version/path output must be paired with verified archive hashes and installation logs; version equality alone does not prove origin. An initial failed attempt activated an ignored, worktree-local renv bootstrap; it was not evidence of a successful dependency installation or a full restore.
 
+## Local CI-matching R library
+
+Local runs must resolve the same package versions as CI and the live server (R 4.6.1, Bioconductor 3.23, Posit PPM noble binaries); a stale user library once passed tests on shiny 1.12 that broke on shiny 1.14. The dedicated library lives at `~/.local/share/richStudio/rlib-r46-ci`, outside git and outside `~/R`; override the location with `RICHSTUDIO_DEV_RLIB`.
+
+- `scripts/build-dev-rlib.sh` installs the full dependency closure of `DESCRIPTION` (plus the CI tools) into that library, then richR 0.1.5, bioAnno and richCluster from the pinned archives listed above. It aborts on any sha256 mismatch and only fills what is missing, so re-running is safe.
+- `scripts/dev-r.sh <command...>` runs a command with the library first on `R_LIBS_USER`/`R_LIBS`, `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE`, and prints an identity line (R, shiny, later, richR) to stderr.
+
+```bash
+scripts/dev-r.sh Rscript --vanilla -e 'pkgload::load_all("."); testthat::test_file("tests/testthat/test-workspace-jobs.R")'
+```
+
+Tests that start worker processes (`test-dependency-integration.R`) need richStudio installed rather than `load_all`ed: `scripts/dev-r.sh R CMD INSTALL --no-docs --library=<temp-lib> .`, then put `<temp-lib>` ahead of the dev library in `R_LIBS_USER`/`R_LIBS` and run `testthat::test_file(..., package = "richStudio", load_package = "installed")`. The system site libraries stay on the search path behind the dev library; the identity line shows which library wins.
+
 ## Consumer compatibility policy
 
 These are the migration's implementation and acceptance targets; the SPEC's executable gates determine whether they pass:

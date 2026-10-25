@@ -132,7 +132,7 @@ add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, t
   # Filter gs by value_type, value_cutoff, and top_nterms
   gs <- filter(gs, gs[, value_type] < value_cutoff)
   gs <- gs %>%
-    arrange(value_type) %>%
+    arrange(.data[[value_type]]) %>%
     slice_head(n = top_nterms)
   
   # else { # Set gs to NULL vector

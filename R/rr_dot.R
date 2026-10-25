@@ -20,7 +20,7 @@
 rr_dot <- function(x, top=30, value_cutoff=0.05, value_type="Padj") {
   
   x <- filter(x, x[, value_type]<value_cutoff) 
-  x <- arrange(x, value_type) # order by ascending padj/pval
+  x <- arrange(x, .data[[value_type]]) # order by ascending padj/pval
   
   if (nrow(x) >= top) {
     x <- x[1:top, ]

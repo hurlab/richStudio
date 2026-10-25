@@ -22,7 +22,7 @@
 rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
   
   x <- filter(x, x[, value_type]<pvalue)
-  x <- arrange(x, value_type) # order by ascending padj/pval
+  x <- arrange(x, .data[[value_type]]) # order by ascending padj/pval
   
   if (nrow(x) >= top) {
     x <- x[1:top, ]

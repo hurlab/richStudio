@@ -56,7 +56,7 @@ clusterUploadTabUI <- function(id, tabName) {
               tags$div(id=ns("rrlist_box"),
                 div(style="display:inline-block; float:left", helpText("Double-click on any cell to change its value.")),
                 div(style="display:inline-block; float:right",
-                    actionBttn(ns('rrlist_help'), label=NULL, style='material-circle', status='primary', icon=icon('info'), size='xs')
+                    shinyWidgets::actionBttn(ns('rrlist_help'), label=NULL, style='material-circle', status='primary', icon=icon('info'), size='xs')
                 ),
                 br(),
                 br(),
@@ -68,7 +68,7 @@ clusterUploadTabUI <- function(id, tabName) {
               tags$div(id=ns("cluslist_box"),
                 div(style="display:inline-block; float:left", helpText("Double-click on any cell to change its value.")),
                 div(style="display:inline-block; float:right",
-                  actionBttn(ns('cluslist_help'), label=NULL, style='material-circle', status='primary', icon=icon('info'), size='xs')
+                  shinyWidgets::actionBttn(ns('cluslist_help'), label=NULL, style='material-circle', status='primary', icon=icon('info'), size='xs')
                 ),
                 br(),
                 br(),

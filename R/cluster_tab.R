@@ -364,9 +364,9 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       )
 
       # Current cluster names. Deleting a result assigns NULL, which keeps its key in
-      # names(u_clusdfs), so only keys that still hold a value count.
+      # names(u_clusdfs), so only keys that still hold a value count. Dot-prefixed keys are held too.
       cluster_names <- function() shiny::isolate({
-        held <- shiny::reactiveValuesToList(u_clusdfs)
+        held <- shiny::reactiveValuesToList(u_clusdfs, all.names = TRUE)
         c(u_clusnames$labels, names(held)[!vapply(held, is.null, logical(1))])
       })
 

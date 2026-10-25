@@ -303,7 +303,12 @@ ws6_session <- function(tag, probe = NULL, env = parent.frame()) {
     force(func)
     counted <- if (is.function(func)) function(...) {
       log$renders[[name]] <- (if (is.null(log$renders[[name]])) 0L else log$renders[[name]]) + 1L
-      value <- func(...)
+      # A failed render replaces the last good value, so a later assertion cannot read stale output.
+      log$values[[name]] <- structure(list(message = "render not completed"), class = "ws6_render_error")
+      value <- tryCatch(func(...), error = function(e) {
+        log$values[[name]] <- structure(list(message = conditionMessage(e)), class = "ws6_render_error")
+        stop(e)
+      })
       log$values[[name]] <- value
       value
     } else func
@@ -352,6 +357,7 @@ ws6_enables <- function(sess, id) {
 ws6_html <- function(sess, output) {
   sess$s$flushReact()
   value <- sess$log$values[[output]]
+  if (inherits(value, "ws6_render_error")) stop("render of ", output, " failed: ", value$message, call. = FALSE)
   if (is.list(value) && !is.null(value$html)) paste(as.character(value$html), collapse = "") else
     paste(as.character(value), collapse = "")
 }
@@ -1641,6 +1647,9 @@ ws6_three <- function(dir, kit, labels = c("deg_a", "deg_b", "deg_c"), env = par
   out
 }
 ws6_sessions <- function(x) lapply(x, `[[`, "sess")
+# Pass every session's registry, so a queued record whose queue entry was removed (a zombie)
+# is found as well as an entry whose record is missing.
+ws6_consistent <- function(x) richStudio:::workspace_job_queue_consistent(lapply(x, `[[`, "jobs"))
 
 test_that("R19 REQ-001 D3 FIFO across sessions with a live queue position", {
   withr::defer(richStudio:::workspace_job_queue_reset())
@@ -1827,7 +1836,7 @@ ws6_r24_expect <- function(r, id2, button, stores2, s1_enables = 0L) {
   expect_gte(ws6_enables(x[[2]]$sess, button), 1L)
   expect_identical(ws6_enables(x[[1]]$sess, button), s1_enables)
   expect_identical(ws6_enables(x[[3]]$sess, button), 0L)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
 }
 
 # After the immediate sweep, S1's worker is released: S3 gets it, S2 never runs.
@@ -1924,7 +1933,7 @@ ws6_r25 <- function(interrupts, env = parent.frame()) {
   x[[2]]$sess$s$flushReact()
   expect_match(ws6_html(x[[3]]$sess, "jobs-jobs_status"), sprintf(ws6_msg$ahead, 0L), fixed = TRUE)
   expect_gte(ws6_enables(x[[2]]$sess, "enrich-enrich_deg"), 1L)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   ws6_release_all(dir)
 }
 
@@ -1953,7 +1962,7 @@ test_that("R26 REQ-002 closing a session drops its queued job", {
   id3 <- ws6_last(x[[3]]$jobs)$run_id
   x[[2]]$sess$s$close()
   expect_false(id2 %in% ws6_queue_ids())
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   ws6_release(dir, ws6_key("deg_a"))
   open <- ws6_sessions(x)[c(1, 3)]
   expect_true(ws6_until(function() identical(ws6_state_of(x[[3]]$jobs, id3), "running"), open))
@@ -2206,7 +2215,7 @@ test_that("R30 REQ-002 AC-002 dispatch errors are contained to the entry that ra
   expect_false(x[[1]]$sess$s$isClosed())
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "failed")
   expect_identical(ws6_rec(x[[2]]$jobs, id2)$note, ws6_msg$could_not_start)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   expect_gte(ws6_enables(x[[2]]$sess, "enrich-enrich_deg"), 1L)
   # S1 gets only its own finally's re-enable; S3, still running, gets none.
   expect_identical(ws6_enables(x[[1]]$sess, "enrich-enrich_deg"), enables1 + 1L)
@@ -2244,7 +2253,7 @@ test_that("R30b REQ-002 AC-002 authorization, free-worker and policy errors at d
   x[[2]]$sess$s$elapse(600)
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "queued")
   expect_false(x[[2]]$sess$s$isClosed())
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   spy$free <- NULL
 
   # Policy load error at dispatch: the entry stays queued; its session is told once.
@@ -2255,7 +2264,7 @@ test_that("R30b REQ-002 AC-002 authorization, free-worker and policy errors at d
   x[[2]]$sess$s$elapse(600)
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "queued")
   expect_identical(ws6_shown(x[[2]]$sess, ws6_msg$policy_wait), 1L)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   expect_false(x[[1]]$sess$s$isClosed())
 
   # Authorization raises: the entry fails as Could not start; the next entry runs.
@@ -2267,7 +2276,7 @@ test_that("R30b REQ-002 AC-002 authorization, free-worker and policy errors at d
   ws6_own(own)
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "failed")
   expect_identical(ws6_rec(x[[2]]$jobs, id2)$note, ws6_msg$could_not_start)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   expect_false(any(vapply(ws6_sessions(x), function(s) s$s$isClosed(), logical(1))))
   ws6_release_all(dir)
   ws6_until(function() !length(x[[3]]$jobs$in_flight), ws6_sessions(x))
@@ -2647,4 +2656,115 @@ test_that("R37 D14 the queue counter and a closed session's registry survive tha
     }
   })
   expect_identical(dispatch_errors, character())
+})
+
+# ---- WS-HOLD-CLEANUP: WS-006 review minors (F5-F10, F14, F15, O3) ----------------------
+
+test_that("R38 F5 the error summary redacts credentials, bearer tokens and Windows paths", {
+  summarise <- function(msg) richStudio:::workspace_jobs_error_summary(simpleError(msg))
+  expect_identical(summarise("login failed token=abc123 now"), "login failed token=<redacted> now")
+  expect_identical(summarise("password:hunter2"), "password=<redacted>")
+  expect_identical(summarise("sent token = abc"), "sent token=<redacted>")
+  expect_identical(summarise("Authorization: Bearer abc.def-1"), "Authorization: Bearer <redacted>")
+  expect_identical(summarise("cannot open C:\\Users\\me\\secret.txt"), "cannot open <path>")
+  expect_false(grepl("hunter2|abc.def", summarise("password:hunter2 Bearer abc.def")))
+  # Unchanged behaviour: POSIX paths with two or more segments, and ordinary text.
+  expect_identical(summarise("at /home/u/secret/file.R failed"), "at <path> failed")
+  expect_identical(summarise("object 'x' not found"), "object 'x' not found")
+})
+
+test_that("R39 F6 the queue consistency check finds a queued record whose queue entry was removed", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  reg <- new.env(parent = emptyenv())
+  reg$closed <- FALSE
+  reg$records <- list(list(run_id = "zombie", state = "queued"))
+  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_false(richStudio:::workspace_job_queue_consistent(list(reg)))
+})
+
+test_that("R40 F7 ws6_html does not return stale output after a render that errors", {
+  s1 <- ws6_session("S1")
+  broken <- shiny::reactiveVal(FALSE)
+  shiny::withReactiveDomain(s1$s, {
+    s1$s$output$probe <- shiny::renderText(if (broken()) stop("render failed") else "good")
+  })
+  expect_identical(ws6_html(s1, "probe"), "good")
+  broken(TRUE)
+  expect_error(ws6_html(s1, "probe"), "render failed", fixed = TRUE)
+})
+
+test_that("R41 F8 a running clustering record reserves its name under the production session bound", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  own <- ws6_workers(2L, dir = dir)
+  testthat::local_mocked_bindings(workspace_cluster_compute = kit$cluster, .package = "richStudio")
+  expect_identical(richStudio:::workspace_job_session_queue_limit(), 1L)
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_rr(ws6_state(), c("rr1", "rr2"))
+  ws6_mount(s1, state, modules = "cluster", jobs = jobs)
+  ws6_cluster(s1, "rr1", "reserved")
+  ws6_pid(dir, ws6_key("reserved"), list(s1), own = own)
+  expect_identical(ws6_last(jobs)$state, "running")
+  ws6_cluster(s1, "rr2", "reserved")
+  expect_identical(ws6_shown(s1, sprintf(ws6_msg$cluster_name, "reserved")), 1L)
+  expect_length(jobs$records, 1L)
+  expect_identical(ws6_claims(dir, "reserved"), 1L)
+})
+
+test_that("R42 F9 imported vector settings show their values without empty names", {
+  text <- richStudio:::workspace_jobs_settings_text
+  expect_identical(text(list(selected = list("r1", "r2"))), "selected: r1, r2")
+  expect_identical(text(list(params = list(k = 3, h = 0.5))), "params: k=3, h=0.5")
+  expect_identical(text(list(mixed = list(a = 1, 2))), "mixed: a=1, 2")
+  expect_identical(text(list(selected = c("r1", "r2"))), "selected: r1, r2")
+})
+
+test_that("R43 F10 UI builders call shinyjs and shinyWidgets only through their namespaces", {
+  bare_call <- function(fn) {
+    any(grepl("(^|[^:A-Za-z0-9_.])(useShinyjs|actionBttn)\\(", deparse(body(fn)), perl = TRUE))
+  }
+  expect_true(bare_call(function() useShinyjs()))
+  expect_false(bare_call(function() shinyjs::useShinyjs()))
+  for (fn in list(richStudio:::enrichTabUI, richStudio:::clusterUploadTabUI)) expect_false(bare_call(fn))
+  expect_no_error(richStudio:::enrichTabUI("x", "enrich"))
+})
+
+test_that("R44 F14 a dot-prefixed live cluster result still reserves its name", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  ws6_sequential()
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  ws6_release_all(dir)
+  testthat::local_mocked_bindings(workspace_cluster_compute = kit$cluster, .package = "richStudio")
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_rr(ws6_state(), "rr1")
+  shiny::isolate(state$u_clusdfs[[".d"]] <- data.frame(Term = "T1", Cluster = 1L))
+  ws6_mount(s1, state, modules = "cluster", jobs = jobs)
+  ws6_cluster(s1, "rr1", ".d")
+  expect_identical(ws6_shown(s1, sprintf(ws6_msg$cluster_name, ".d")), 1L)
+  expect_length(jobs$records, 0L)
+  expect_identical(ws6_claims(dir, ".d"), 0L)
+})
+
+test_that("R45 F15 a raise while removing the progress notification still releases the job", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  ws6_sequential()
+  testthat::local_mocked_bindings(removeNotification = function(...) stop("remove failed"), .package = "shiny")
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_deg(ws6_state(), "deg_a")
+  runner <- function(deg_inputs, cutoff, species, anntype, keytype, ontology) {
+    lapply(deg_inputs, function(inp) ws6_publish_result(inp$name))
+  }
+  ws6_mount(s1, state, modules = c("enrich", "panel"), runner = runner, jobs = jobs)
+  enables <- ws6_enables(s1, "enrich-enrich_deg")
+  ws6_run(s1, "deg_a")
+  id <- ws6_last(jobs)$run_id
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, id), "succeeded"), list(s1), timeout = 10))
+  expect_true(ws6_until(function() ws6_enables(s1, "enrich-enrich_deg") > enables, list(s1), timeout = 10))
+  expect_null(jobs$handles[[id]]$future)
+  expect_identical(jobs$in_flight, character())
 })

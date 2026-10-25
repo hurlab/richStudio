@@ -106,8 +106,10 @@ workspace_jobs_error_summary <- function(cond) {
   msg <- iconv(enc2utf8(msg), "UTF-8", "UTF-8", sub = "?")
   if (is.na(msg)) msg <- ""
   msg <- gsub("[[:cntrl:]]", "", msg, perl = TRUE)
+  msg <- gsub("[A-Za-z]:\\\\[^\\s'\"]+", "<path>", msg, perl = TRUE, useBytes = TRUE)
   msg <- gsub("(?:/[^/\\s'\"]+){2,}", "<path>", msg, perl = TRUE, useBytes = TRUE)
-  msg <- gsub("(token|password|secret|key)=\\S+", "\\1=<redacted>", msg, ignore.case = TRUE, perl = TRUE)
+  msg <- gsub("(token|password|secret|key)\\s*[=:]\\s*\\S+", "\\1=<redacted>", msg, ignore.case = TRUE, perl = TRUE)
+  msg <- gsub("(Bearer)\\s+\\S+", "\\1 <redacted>", msg, ignore.case = TRUE, perl = TRUE)
   substr(msg, 1L, 300L)
 }
 
@@ -629,7 +631,9 @@ workspace_jobs_on_finally <- function(jobs, run_id) {
   }
   if (!isTRUE(jobs$closed) && !is.null(handle)) {
     if (!workspace_jobs_session_closed(workspace_jobs_root(handle$module_session))) {
-      shiny::withReactiveDomain(handle$module_session, shiny::removeNotification(paste0("job-", run_id)))
+      workspace_jobs_contain(
+        shiny::withReactiveDomain(handle$module_session, shiny::removeNotification(paste0("job-", run_id))),
+        "progress removal")
     }
     workspace_jobs_enable(handle)
   }
@@ -789,7 +793,10 @@ workspace_jobs_settings_text <- function(settings) {
     if (is.atomic(value) && length(value) && !is.null(value)) {
       out <- c(out, paste0(key, ": ", paste(as.character(value), collapse = ", ")))
     } else if (is.list(value) && length(value) && all(vapply(value, function(v) is.atomic(v) && length(v) == 1L, logical(1)))) {
-      out <- c(out, paste0(key, ": ", paste(names(value), unlist(value), sep = "=", collapse = ", ")))
+      # Imported (canonical-form) vectors are unnamed lists: show the values alone.
+      labels <- names(value)
+      prefix <- if (is.null(labels)) rep("", length(value)) else ifelse(nzchar(labels), paste0(labels, "="), "")
+      out <- c(out, paste0(key, ": ", paste0(prefix, unlist(value), collapse = ", ")))
     }
   }
   out

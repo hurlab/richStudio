@@ -47,6 +47,9 @@ enrichTabUI <- function(id, tabName) {
                         'arabidopsis', 'anopheles', 'ecoli', 'malaria', 'chipm',
                         'toxoplasma', 'sco'), selected='human'),
           br(),
+          uiOutput(ns('background_ui')),
+          uiOutput(ns('background_review')),
+          br(),
           h4("Review before Run"),
           uiOutput(ns('review_card')),
           uiOutput(ns('review_messages')),
@@ -142,7 +145,8 @@ enrichTabUI <- function(id, tabName) {
 }
 
 
-enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_rrdfs, u_big_rrdf, enrichment_runner = run_enrichment_jobs) {
+enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_rrdfs, u_big_rrdf, enrichment_runner = run_enrichment_jobs,
+                            annotation_builder = richR::buildAnnot) {
 
   moduleServer(id, function(input, output, session) {
     # Session job registry (SPEC-WS-006), shared through session$userData.
@@ -475,6 +479,104 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       if (length(messages)) tags$ul(class = "review-messages", lapply(messages, tags$li))
     })
 
+    # ---- background selector (SPEC-WS-005) --------------------------------------
+    # The default is the annotation universe. A custom background is offered only when
+    # the installed richR passes the public-route check, and it can only be submitted
+    # after a passing "Check background" for the exact lists and settings being run.
+    background_capability <- enrichment_background_capability()
+    background_check <- shiny::reactiveVal(NULL)
+    output$background_ui <- renderUI({
+      ns <- session$ns
+      default_note <- helpText(
+        "Default background: annotation universe, the genes the selected annotation source",
+        "assigns to a term. It is not your measured gene list.")
+      if (!isTRUE(background_capability$available)) {
+        return(tagList(default_note, helpText(paste("Custom background unavailable:", background_capability$reason))))
+      }
+      tagList(
+        radioButtons(ns('background_mode'), "Background (universe)",
+                     choices = c("Annotation universe (default)" = "annotation",
+                                 "Custom background (measured and annotated genes)" = "explicit")),
+        default_note,
+        conditionalPanel(sprintf("input['%s'] == 'explicit'", ns('background_mode')),
+          helpText("Only background genes found in the annotation are used (measured and annotated).",
+                   "Every query gene that is annotated must be in the background."),
+          textAreaInput(ns('background_text'), "Background genes",
+                        placeholder = "Paste genes separated by spaces, new lines, commas or semicolons"),
+          fileInput(ns('background_file'), "Or upload a background list (text, up to 5 MB)",
+                    accept = c('.txt', '.csv', '.tsv')),
+          actionButton(ns('background_check'), "Check background"))
+      )
+    })
+    background_active <- reactive({
+      isTRUE(background_capability$available) && identical(input$background_mode, "explicit")
+    })
+    background_ids <- reactive({
+      texts <- character()
+      if (isTRUE(nzchar(input$background_text))) texts <- input$background_text
+      file <- input$background_file
+      if (!is.null(file) && nrow(file)) {
+        size <- file.size(file$datapath[[1]])
+        if (is.na(size) || size > 5e6) {
+          return(list(ok = FALSE, message = "The background file exceeds 5 MB", ids = character()))
+        }
+        texts <- c(texts, paste(readLines(file$datapath[[1]], warn = FALSE), collapse = "\n"))
+      }
+      if (!length(texts)) {
+        return(list(ok = FALSE, message = "Paste or upload a background gene list", ids = character()))
+      }
+      enrichment_background_admit_text(paste(texts, collapse = "\n"))
+    })
+    # Identity of what a check covers: the background, each query list, and the settings.
+    background_key <- function(ids, entries) {
+      digest::digest(list(enrichment_background_digest(ids),
+                          lapply(entries, function(e) e$snapshot$submitted), review_settings()))
+    }
+    observeEvent(input$background_check, {
+      req(background_active())
+      review_contain({
+        admitted <- background_ids()
+        if (!isTRUE(admitted$ok)) {
+          background_check(NULL)
+          return(review_report(admitted$message))
+        }
+        entries <- review_card_data()
+        if (!length(entries)) {
+          background_check(NULL)
+          return(review_report("Select gene lists to check the background against"))
+        }
+        problems <- unlist(lapply(entries, function(e) if (!isTRUE(e$snapshot$ok)) e$snapshot$message))
+        if (length(problems)) {
+          background_check(NULL)
+          return(review_report(problems))
+        }
+        settings <- review_settings()
+        annot <- shiny::withProgress(message = "Reading annotation...", {
+          annotation_builder(species = settings$species, keytype = settings$keytype, anntype = settings$anntype)
+        })
+        annotation_ids <- enrichment_background_annotation_ids(annot, settings$anntype, settings$ontology)
+        reviews <- lapply(entries, function(e) {
+          enrichment_background_review(admitted$ids, e$snapshot$submitted, annotation_ids)
+        })
+        background_check(list(
+          key = background_key(admitted$ids, entries), ok = all(vapply(reviews, function(r) r$ok, logical(1))),
+          entries = stats::setNames(reviews, vapply(entries, function(e) e$name, character(1)))))
+      }, function() {
+        background_check(NULL)
+        review_report("The background could not be checked")
+      })
+    })
+    output$background_review <- renderUI({
+      check <- background_check()
+      if (!background_active() || is.null(check)) return(NULL)
+      tags$div(class = "review-card", lapply(names(check$entries), function(name) {
+        review <- check$entries[[name]]
+        tags$div(class = "review-card-entry", tags$h5(paste("Background check:", name)),
+          tags$ul(lapply(enrichment_background_review_lines(review), tags$li),
+                  lapply(review$problems, function(p) tags$li(class = "text-danger", p))))
+      }))
+    })
+
     # Enrich selected degs
     # test text inputs:
     # Xkr4 Rp1 Sox17
@@ -516,6 +618,24 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         NULL
       })
       if (is.null(deg_inputs)) return(NULL)
+      background_val <- NULL
+      if (background_active()) {
+        admitted <- background_ids()
+        check <- background_check()
+        if (!isTRUE(admitted$ok)) {
+          review_report(admitted$message)
+          return(NULL)
+        }
+        if (is.null(check) || !identical(check$key, background_key(admitted$ids, review_card_data()))) {
+          review_report("Check the background before running; the lists or settings changed since the last check")
+          return(NULL)
+        }
+        if (!isTRUE(check$ok)) {
+          review_report(unlist(lapply(check$entries, function(r) r$problems)))
+          return(NULL)
+        }
+        background_val <- list(mode = "explicit", ids = admitted$ids)
+      }
       species_val <- input$species_select
       anntype_val <- input$anntype_select
       keytype_val <- input$keytype_select
@@ -531,16 +651,20 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
                                                      value = u_degdfs[[label]]))
       settings <- list(species = species_val, anntype = anntype_val, keytype = keytype_val,
                        ontology = ontology_val, cutoff = cutoff_val,
+                       background = if (is.null(background_val)) "annotation universe" else
+                         sprintf("explicit %s", substr(enrichment_background_digest(background_val$ids), 1, 12)),
                        query = lapply(deg_inputs, function(x) list(name = x$name, query_rule = x$query_rule,
                                                                    n_submitted = length(x$ids),
                                                                    revision_digest = x$revision_digest)))
 
       # 3. Launch future (no reactive reads inside)
+      runner_args <- list(
+        deg_inputs = deg_inputs, cutoff = cutoff_val, species = species_val,
+        anntype = anntype_val, keytype = keytype_val, ontology = ontology_val
+      )
+      if (!is.null(background_val)) runner_args$background <- background_val
       launch <- function() workspace_jobs_future(
-        runner(
-          deg_inputs = deg_inputs, cutoff = cutoff_val, species = species_val,
-          anntype = anntype_val, keytype = keytype_val, ontology = ontology_val
-        ),
+        do.call(runner, runner_args),
         packages = "richR",
         seed = TRUE
       )
@@ -552,7 +676,10 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
         for (res in results) {
           base <- paste0(res$name, "_enriched")
           lab <- workspace_jobs_free_label(base, shiny::isolate(c(u_rrnames$labels, names(u_rrdfs))))
-          u_rrdfs[[lab]] <- res$result
+          result_df <- res$result
+          # The universe that produced this result travels with it (SPEC-WS-005).
+          attr(result_df, "richstudio_background") <- res$background
+          u_rrdfs[[lab]] <- result_df
           u_rrnames$labels <- unique(c(shiny::isolate(u_rrnames$labels), lab))
           if (identical(lab, base)) {
             u_big_rrdf[['df']] <- add_file_rrdf(shiny::isolate(u_big_rrdf[['df']]),

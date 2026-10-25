@@ -103,3 +103,13 @@ The development machine is the home computer. The measured target is Tailscale `
 Follow [the dependency deployment procedure](DEPENDENCY_DEPLOYMENT.md): prepare the shell script, independently review it and review the finished script again, then upload it over Tailscale. Only the user executes sudo. Provide the exact reviewed script path, sudo command and private server temporary log/exit-status paths after staging. Retrieve and inspect those files after execution before claiming deployment. No local deployment or agent-run sudo is authorized; the existing project deployment gates remain in force.
 
 Final [0.1.5 script safety review](../.moai/reports/SPEC-DEPENDENCY-001/deployment-audit-v015-final.md) returned **PASS** for exact script SHA256 `106a1d9b05f5302e94e188a3b50a0c82aed052303a3db89c17bb92a4d605cda5`, closing the obsolete-pin debt from round 3. Host permissions, R 4.5.2 execution, worker startup and real rollback remain unobserved. No upload or sudo execution has occurred at documentation preparation. Upload follows final documentation sync and push; script safety does not establish deployment.
+
+## Enrichment background (SPEC-WS-005)
+
+No richR release or pin change is needed: the installed public richR 0.1.5 forwards `universe` in `enrich`, `richGO` and `richKEGG`, and `tests/testthat/test-enrichment-background.R` reproduces an independent base-R `phyper` upper-tail oracle (fixture `tests/fixtures/workspace/universe-oracle.tsv`, tolerance 1e-12) for the generic, GO, KEGG and Reactome-via-`enrich` routes, in both the default and the explicit mode.
+
+- The default is the annotation universe (for GO, the requested ontology only). An explicit background is intersected with the annotation by richR, so it is labelled "measured and annotated", never the complete measured gene list.
+- Multiple-testing family: every term with at least one query gene, before the size and p-value reporting filters.
+- The custom-background control is offered only when `enrichment_background_capability()` passes (formals check plus a small replayed oracle); otherwise the control is hidden with the reason and the default route stays usable.
+- richR silently drops query genes outside the universe, so the application blocks such pairs itself and names the excluded genes.
+- Not exercised: `buildAnnot()` with real organism providers, KEGGM, `builtin = FALSE` KEGG, DAVID and GSEA.

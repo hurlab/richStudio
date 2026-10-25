@@ -209,3 +209,12 @@ enrichment_background_record <- function(enriched, background = NULL, annotation
                                      record[setdiff(names(record), not_applicable)]))
   record
 }
+
+# Annotation build plus the per-list review, run off the main process by the tab.
+# queries: unnamed list of query identifier vectors; returns one review per list.
+enrichment_background_check_job <- function(annotation_builder, settings, universe, queries) {
+  annot <- annotation_builder(species = settings$species, keytype = settings$keytype,
+                              anntype = settings$anntype)
+  annotation_ids <- enrichment_background_annotation_ids(annot, settings$anntype, settings$ontology)
+  lapply(queries, function(query) enrichment_background_review(universe, query, annotation_ids))
+}

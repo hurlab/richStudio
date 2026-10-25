@@ -306,12 +306,14 @@ test_that("the tab offers the labelled default and gates a custom background beh
     expect_true(any(grepl("Check the background", review_messages(), fixed = TRUE)))
     # The check rejects: h1 is annotated but missing from the background.
     session$setInputs(background_check = 1L)
+    eb_settle(session)
     expect_match(paste(as.character(output$background_review$html), collapse = ""), "h1", fixed = TRUE)
     session$setInputs(enrich_deg = 2L)
     eb_settle(session)
     expect_length(seen$calls, 0L)
     # A compatible background passes the check and reaches the runner.
     session$setInputs(background_text = paste0("h", 1:25, collapse = " "), background_check = 2L)
+    eb_settle(session)
     review_html <- paste(as.character(output$background_review$html), collapse = "")
     expect_match(review_html, "Effective universe", fixed = TRUE)
     session$setInputs(enrich_deg = 3L)
@@ -362,6 +364,7 @@ test_that("REQ-001 a published result carries its background identity", {
                       ont_select = "BP", deg_filter_cutoff = 0.05, degs_to_enrich = "set1",
                       background_mode = "explicit", background_text = paste0("h", 1:25, collapse = " "))
     session$setInputs(background_check = 1L)
+    eb_settle(session)
     session$setInputs(enrich_deg = 1L)
     eb_settle(session, 60L)
     labels <- shiny::isolate(u_rrnames$labels)
@@ -371,5 +374,70 @@ test_that("REQ-001 a published result carries its background identity", {
     expect_identical(carried$mapped_size, 25L)
     expect_identical(carried$background_digest,
                      richStudio:::enrichment_background_digest(paste0("h", 1:25)))
+  })
+})
+
+# ---- asynchronous check --------------------------------------------------------
+
+
+test_that("the background check runs in a future and publishes its review", {
+  previous <- future::plan()
+  withr::defer(future::plan(previous))
+  future::plan(future::sequential)
+  fx <- eb_app_fixture()
+  shiny::testServer(richStudio:::enrichTabServer, args = eb_tab_args(fx, function(...) list()), {
+    session$flushReact()
+    session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
+                      ont_select = "BP", deg_filter_cutoff = 0.05, degs_to_enrich = "set1",
+                      background_mode = "explicit", background_text = paste0("h", 1:25, collapse = " "))
+    session$setInputs(background_check = 1L)
+    eb_settle(session)
+    expect_false(shiny::isolate(background_pending()))
+    check <- shiny::isolate(background_check())
+    expect_true(check$ok)
+    expect_identical(check$entries[["set1"]]$effective_count, 25L)
+  })
+})
+
+test_that("a superseded or input-stale background check result is ignored", {
+  fx <- eb_app_fixture()
+  resolvers <- list()
+  testthat::local_mocked_bindings(
+    workspace_jobs_future = function(expr, ..., envir = parent.frame()) {
+      promises::promise(function(resolve, reject) {
+        resolvers[[length(resolvers) + 1L]] <<- list(resolve = resolve, reject = reject)
+      })
+    }, .package = "richStudio")
+  annotation <- unique(fx$long$GeneID)
+  bad <- list(richStudio:::enrichment_background_review(paste0("h", 2:25), fx$query, annotation))
+  good <- list(richStudio:::enrichment_background_review(paste0("h", 1:25), fx$query, annotation))
+  shiny::testServer(richStudio:::enrichTabServer, args = eb_tab_args(fx, function(...) list()), {
+    session$flushReact()
+    session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
+                      ont_select = "BP", deg_filter_cutoff = 0.05, degs_to_enrich = "set1",
+                      background_mode = "explicit", background_text = paste0("h", 2:25, collapse = " "))
+    session$setInputs(background_check = 1L)
+    session$setInputs(background_text = paste0("h", 1:25, collapse = " "))
+    session$setInputs(background_check = 2L)
+    expect_length(resolvers, 2L)
+    # The first (superseded) check finishes last-but-one: its result is dropped.
+    # While a check runs the button state is pending and nothing is published.
+    expect_true(shiny::isolate(background_pending()))
+    expect_null(shiny::isolate(background_check()))
+    resolvers[[1]]$resolve(bad)
+    eb_settle(session)
+    expect_null(shiny::isolate(background_check()))
+    expect_true(shiny::isolate(background_pending()))
+    resolvers[[2]]$resolve(good)
+    eb_settle(session)
+    expect_false(shiny::isolate(background_pending()))
+    expect_true(shiny::isolate(background_check())$ok)
+    # Changing the background while a check runs discards that check's result.
+    session$setInputs(background_check = 3L)
+    session$setInputs(background_text = paste0("h", 1:26, collapse = " "))
+    resolvers[[3]]$resolve(good)
+    eb_settle(session)
+    expect_null(shiny::isolate(background_check()))
+    expect_false(shiny::isolate(background_pending()))
   })
 })

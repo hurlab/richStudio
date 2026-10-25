@@ -532,6 +532,11 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
       digest::digest(list(enrichment_background_digest(ids),
                           lapply(entries, function(e) e$snapshot$submitted), review_settings()))
     }
+    # The check builds the annotation, which can take seconds to minutes, so it runs in a
+    # future like the enrichment itself and never blocks the shared R process. A newer
+    # check, or a change to the background, lists or settings, discards an older result.
+    background_pending <- shiny::reactiveVal(FALSE)
+    background_seq <- shiny::reactiveVal(0L)
     observeEvent(input$background_check, {
       req(background_active())
       review_contain({
@@ -550,25 +555,55 @@ enrichTabServer <- function(id, u_degnames, u_degdfs, u_big_degdf, u_rrnames, u_
           background_check(NULL)
           return(review_report(problems))
         }
-        settings <- review_settings()
-        annot <- shiny::withProgress(message = "Reading annotation...", {
-          annotation_builder(species = settings$species, keytype = settings$keytype, anntype = settings$anntype)
-        })
-        annotation_ids <- enrichment_background_annotation_ids(annot, settings$anntype, settings$ontology)
-        reviews <- lapply(entries, function(e) {
-          enrichment_background_review(admitted$ids, e$snapshot$submitted, annotation_ids)
-        })
-        background_check(list(
-          key = background_key(admitted$ids, entries), ok = all(vapply(reviews, function(r) r$ok, logical(1))),
-          entries = stats::setNames(reviews, vapply(entries, function(e) e$name, character(1)))))
+        seq_id <- shiny::isolate(background_seq()) + 1L
+        background_seq(seq_id)
+        launch_key <- background_key(admitted$ids, entries)
+        names_launched <- vapply(entries, function(e) e$name, character(1))
+        job_builder <- annotation_builder
+        job_settings <- review_settings()
+        job_universe <- admitted$ids
+        job_queries <- unname(lapply(entries, function(e) e$snapshot$submitted))
+        background_check(NULL)
+        background_pending(TRUE)
+        shinyjs::disable("background_check")
+        current <- function() identical(shiny::isolate(background_seq()), seq_id)
+        finish <- function() {
+          background_pending(FALSE)
+          shinyjs::enable("background_check")
+        }
+        future_check <- workspace_jobs_future(
+          enrichment_background_check_job(job_builder, job_settings, job_universe, job_queries),
+          packages = "richR", seed = TRUE)
+        promises::then(
+          promises::as.promise(future_check),
+          onFulfilled = function(reviews) {
+            if (!current()) return(invisible(NULL))
+            finish()
+            now <- shiny::isolate({
+              ids_now <- background_ids()
+              if (isTRUE(ids_now$ok)) background_key(ids_now$ids, review_card_data()) else NA_character_
+            })
+            if (!identical(now, launch_key)) return(invisible(NULL))
+            background_check(list(
+              key = launch_key, ok = all(vapply(reviews, function(r) r$ok, logical(1))),
+              entries = stats::setNames(reviews, names_launched)))
+          },
+          onRejected = function(e) {
+            if (!current()) return(invisible(NULL))
+            finish()
+            review_report("The background could not be checked")
+          })
+        NULL
       }, function() {
         background_check(NULL)
         review_report("The background could not be checked")
       })
     })
     output$background_review <- renderUI({
+      if (!background_active()) return(NULL)
+      if (isTRUE(background_pending())) return(tags$p(class = "help-block", "Checking background..."))
       check <- background_check()
-      if (!background_active() || is.null(check)) return(NULL)
+      if (is.null(check)) return(NULL)
       tags$div(class = "review-card", lapply(names(check$entries), function(name) {
         review <- check$entries[[name]]
         tags$div(class = "review-card-entry", tags$h5(paste("Background check:", name)),

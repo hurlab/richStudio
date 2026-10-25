@@ -104,7 +104,7 @@ enrichment_background_admit_text <- function(text) {
 
 # Genes the annotation assigns to a term; GO is scoped to the requested ontology.
 enrichment_background_annotation_ids <- function(annot, anntype, ontology) {
-  df <- if (methods::is(annot, "Annot")) annot@annot else annot
+  df <- if (inherits(annot, "Annot")) annot@annot else annot
   if (!is.data.frame(df) || !"GeneID" %in% names(df)) return(character())
   if (identical(anntype, "GO") && "ONTOLOGYALL" %in% names(df) && !is.null(ontology) && nzchar(ontology)) {
     df <- df[!is.na(df$ONTOLOGYALL) & df$ONTOLOGYALL == ontology, , drop = FALSE]

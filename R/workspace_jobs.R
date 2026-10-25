@@ -218,7 +218,7 @@ workspace_jobs_transition <- function(jobs, run_id, state, note = NA_character_,
   workspace_jobs_update(jobs, run_id, values)
   rec <- workspace_jobs_record(jobs, run_id)
   line <- sprintf("Run %s (%s): %s", substr(run_id, 1L, 8L), rec$kind, workspace_jobs_state_label(state))
-  if (!is.na(note) && nzchar(note)) line <- paste(line, "—", note)
+  if (!is.na(note) && nzchar(note)) line <- paste(line, "\u2014", note)
   jobs$announce(line)
   if (state %in% c("succeeded", "superseded", "interrupted")) {
     handle <- jobs$handles[[run_id]]
@@ -849,7 +849,7 @@ workspace_jobs_server <- function(id, jobs) {
         summary <- rec$error_summary
         shiny::tags$p(class = "rs-job-status",
           shiny::tags$code(substr(rec$run_id, 1L, 8L)), " ", workspace_jobs_status_line(jobs, rec),
-          if (!is.null(note) && !is.na(note) && nzchar(note)) paste0(" — ", note),
+          if (!is.null(note) && !is.na(note) && nzchar(note)) paste0(" \u2014 ", note),
           if (!is.null(summary) && !is.na(summary) && nzchar(summary)) paste0(" Error: ", summary))
       }, error = function(e) shiny::tags$p(class = "rs-job-status",
         shiny::tags$code(tryCatch(substr(as.character(rec$run_id), 1L, 8L), error = function(e) "?")),

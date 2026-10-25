@@ -26,7 +26,7 @@
 #'
 #' \strong{Session Save/Load:}
 #' Save and restore complete analysis sessions (DEG sets, enrichment results,
-#' clustering results) in RDS or JSON format for reproducibility.
+#' clustering results) as lossless JSON files for reproducibility.
 #'
 #' @section Dependencies:
 #' Key packages required by richStudio:

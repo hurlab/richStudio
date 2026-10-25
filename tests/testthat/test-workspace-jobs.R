@@ -554,8 +554,8 @@ ws6_data_only <- function(x) {
 
 ws6_accepts <- function(x) tryCatch(!isFALSE(richStudio:::workspace_run_record_validate(x)), error = function(e) FALSE)
 
-ws6_save <- function(sess, path, format) {
-  sess$s$setInputs("save-session_name" = "ws6", "save-save_format" = format)
+ws6_save <- function(sess, path) {
+  sess$s$setInputs("save-session_name" = "ws6")
   shiny::isolate(shiny::withReactiveDomain(sess$s, sess$log$download(path)))
   withr::defer(unlink(paste0(path, ".lock")), envir = parent.frame())
   invisible(path)
@@ -567,9 +567,8 @@ ws6_load <- function(sess, path, name = basename(path)) {
   sess$s$setInputs("save-load_session" = sess$log$load_n)
 }
 
-ws6_saved_records <- function(path, format) {
-  value <- if (format == "rds") readRDS(path)$run_records_json else
-    jsonlite::read_json(path, simplifyVector = TRUE)$run_records_json
+ws6_saved_records <- function(path) {
+  value <- jsonlite::read_json(path, simplifyVector = TRUE)$run_records_json
   richStudio:::workspace_run_records_parse(value)
 }
 
@@ -1111,8 +1110,8 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   kit <- ws6_latch_runner(dir)
   own <- ws6_workers(1L, dir = dir)
   payload <- ws_baseline_session()
-  valid <- withr::local_tempfile(fileext = ".rds")
-  saveRDS(payload, valid)
+  valid <- withr::local_tempfile(fileext = ".json")
+  richStudio:::session_json_write(payload, valid)
   s1 <- ws6_session("S1")
   ws6_close_wiring(s1)
   state <- ws6_add_deg(ws6_state(), "deg_a")
@@ -1120,7 +1119,7 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   ws6_run(s1, "deg_a")
   ws6_pid(dir, ws6_key("deg_a"), list(s1), own = own)
   enables <- ws6_enables(s1, "enrich-enrich_deg")
-  ws6_load(s1, valid, "valid.rds")
+  ws6_load(s1, valid, "valid.json")
   expect_identical(shiny::isolate(state$u_rrnames$labels), payload$rrnames)
   notes <- length(s1$log$notes)
   ws6_release(dir, ws6_key("deg_a"))
@@ -1135,16 +1134,16 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   expect_match(ws6_last(jobs)$note, "workspace replaced", fixed = TRUE)
   expect_identical(jobs$generation, 2L)
 
-  # A file rejected at save_tab.R:274-277 (no version) leaves the job valid.
-  invalid <- withr::local_tempfile(fileext = ".rds")
-  saveRDS(list(degnames = "x"), invalid)
+  # A file rejected for lacking a version leaves the job valid.
+  invalid <- withr::local_tempfile(fileext = ".json")
+  jsonlite::write_json(list(degnames = "x"), invalid, auto_unbox = TRUE)
   s2 <- ws6_session("S2")
   ws6_close_wiring(s2)
   state2 <- ws6_add_deg(ws6_state(), "deg_b")
   ws6_mount(s2, state2, modules = c("enrich", "save"), runner = kit$enrichment)
   ws6_run(s2, "deg_b")
   ws6_pid(dir, ws6_key("deg_b"), list(s2), own = own)
-  ws6_load(s2, invalid, "invalid.rds")
+  ws6_load(s2, invalid, "invalid.json")
   expect_identical(ws6_shown(s2, "Invalid session file format"), 1L)
   ws6_release(dir, ws6_key("deg_b"))
   expect_true(ws6_until(function() "deg_b_enriched" %in% shiny::isolate(names(state2$u_rrdfs)), list(s2)))
@@ -1156,13 +1155,11 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   s3 <- ws6_session("S3")
   state3 <- ws6_add_deg(ws6_state(), "deg_c")
   ws6_mount(s3, state3, modules = "save")
-  for (format in c("rds", "json")) {
-    saved <- withr::local_tempfile(fileext = paste0(".", format))
-    ws6_save(s3, saved, format)
-    fields <- if (format == "rds") names(readRDS(saved)) else names(jsonlite::read_json(saved))
-    expect_identical(fields, c("version", "created", "degnames", "degdfs", "rrnames", "rrdfs",
-                               "clusnames", "clusdfs", "cluslists"))
-  }
+  saved <- withr::local_tempfile(fileext = ".json")
+  ws6_save(s3, saved)
+  fields <- names(jsonlite::read_json(saved))
+  expect_identical(fields, c("version", "created", "degnames", "degdfs", "rrnames", "rrdfs",
+                             "clusnames", "clusdfs", "cluslists", "df_schema"))
   expect_null(s3$s$userData$workspace_jobs)
 })
 
@@ -1866,14 +1863,14 @@ test_that("R24b REQ-002 AC-001 a queued job is superseded by a session load in i
   withr::defer(richStudio:::workspace_job_queue_reset())
   r <- ws6_r24(s2_modules = c("enrich", "save", "panel"))
   x <- r$x
-  valid <- withr::local_tempfile(fileext = ".rds")
-  saveRDS(ws_baseline_session(), valid)
+  valid <- withr::local_tempfile(fileext = ".json")
+  richStudio:::session_json_write(ws_baseline_session(), valid)
   ws6_run(x[[2]]$sess, "deg_2")
   id2 <- ws6_last(x[[2]]$jobs)$run_id
   ws6_run(x[[3]]$sess, "deg_3")
   id3 <- ws6_last(x[[3]]$jobs)$run_id
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "queued")
-  ws6_load(x[[2]]$sess, valid, "valid.rds")
+  ws6_load(x[[2]]$sess, valid, "valid.json")
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "superseded")
   expect_match(ws6_rec(x[[2]]$jobs, id2)$note, "workspace replaced", fixed = TRUE)
   stores2 <- ws6_snapshot(x[[2]]$state)
@@ -2041,8 +2038,8 @@ test_that("R28 REQ-001 REQ-002 saved queued and running records reopen as interr
   ws6_run(src, "x3")
   states <- vapply(jobs_src$records, `[[`, character(1), "state")
   expect_identical(states, c("succeeded", "running", "queued"))
-  saved <- withr::local_tempfile(fileext = ".rds")
-  ws6_save(src, saved, "rds")
+  saved <- withr::local_tempfile(fileext = ".json")
+  ws6_save(src, saved)
 
   state_dst <- ws6_add_deg(ws6_state(), "live")
   ws6_mount(dst, state_dst, modules = c("enrich", "save", "panel"), runner = kit$enrichment, jobs = jobs_dst)
@@ -2050,14 +2047,14 @@ test_that("R28 REQ-001 REQ-002 saved queued and running records reopen as interr
   ws6_pid(dir, ws6_key("live"), list(dst), own = own)
   live <- ws6_last(jobs_dst)
   # The saved running record takes the live record's run id, forcing a collision.
-  payload <- readRDS(saved)
+  payload <- richStudio:::session_json_read(saved)
   records <- richStudio:::workspace_run_records_parse(payload$run_records_json)
   records[[2]]$run_id <- live$run_id
   payload$run_records_json <- richStudio:::workspace_run_records_json(records)
-  saveRDS(payload, saved)
+  richStudio:::session_json_write(payload, saved)
   queue <- length(ws6_queue()$entries)
   factory <- length(spy$factory)
-  ws6_load(dst, saved, "saved.rds")
+  ws6_load(dst, saved, "saved.json")
 
   expect_identical(ws6_rec(jobs_dst, live$run_id)$state, "running")
   expect_identical(ws6_rec(jobs_dst, live$run_id)$inputs, live$inputs)
@@ -2117,7 +2114,7 @@ ws6_internal_record <- function(jobs, run_id, kind, state, settings, inputs, out
        error_summary = NA_character_, stop_supported = FALSE)
 }
 
-test_that("R29 REQ-001 run records survive RDS and JSON saves losslessly", {
+test_that("R29 REQ-001 run records survive JSON saves losslessly", {
   withr::defer(richStudio:::workspace_job_queue_reset())
   latin1 <- "\xe9t\xe9"
   Encoding(latin1) <- "latin1"
@@ -2146,7 +2143,7 @@ test_that("R29 REQ-001 run records survive RDS and JSON saves losslessly", {
       list(species = "human", anntype = "KEGG", keytype = "ENTREZID", ontology = "", cutoff = 0.05, query = list()),
       list(input("deg", "b", 2L), input("deg", "c")), retry_of = "aaaaaaaaaaaa"))
 
-  for (format in c("rds", "json")) for (pick in list(1:6, 2L, integer())) {
+  for (format in "json") for (pick in list(1:6, 2L, integer())) {
     src <- ws6_session("SRC")
     jobs <- ws6_install(src)
     jobs$records <- build(jobs)[pick]
@@ -2161,8 +2158,8 @@ test_that("R29 REQ-001 run records survive RDS and JSON saves losslessly", {
       expect_identical(names(at_save[[1]]$settings), c("species", "anntype", "keytype", "ontology", "cutoff", "query"))
     }
     saved <- withr::local_tempfile(fileext = paste0(".", format))
-    ws6_save(src, saved, format)
-    loaded <- ws6_saved_records(saved, format)
+    ws6_save(src, saved)
+    loaded <- ws6_saved_records(saved)
     expect_length(loaded, length(pick))
     for (i in seq_along(pick)) expect_true(identical(loaded[[i]], at_save[[i]]), info = paste(format, i))
 

@@ -119,7 +119,7 @@ Upload DEG sets or enrichment results in various formats:
 
 ### Save/Load Session
 
-- Save analysis state as RDS or JSON
+- Save analysis state as lossless JSON (legacy .rds sessions: see docs/SESSION_FILES.md)
 - Reload sessions to continue analysis
 - Export individual results (CSV, TSV, Excel)
 - Export all results as ZIP archive

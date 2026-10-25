@@ -233,8 +233,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
         rrdfs = list(one = result), clusnames = character(),
         clusdfs = list(), cluslists = list()
       )
-      saved <- tempfile(fileext = ".rds", tmpdir = temporary)
-      saveRDS(legacy_session, saved)
+      saved <- tempfile(fileext = ".json", tmpdir = temporary)
+      richStudio:::session_json_write(legacy_session, saved)
       u_degnames <- shiny::reactiveValues(labels = character())
       u_degdfs <- shiny::reactiveValues()
       u_rrnames <- shiny::reactiveValues(labels = character())
@@ -253,7 +253,7 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
         {
           session$setInputs(
             load_session_file = list(
-              datapath = saved, name = "legacy.rds", size = file.info(saved)$size,
+              datapath = saved, name = "legacy.json", size = file.info(saved)$size,
               type = "application/octet-stream"
             ),
             load_session = 1
@@ -655,7 +655,7 @@ test_that("session download handler writes an enrichment result that reloads", {
     download_capture$handler <- list(filename = filename, content = content)
     shiny::downloadHandler(filename = filename, content = content, ...)
   }
-  saved <- tempfile(fileext = ".rds")
+  saved <- tempfile(fileext = ".json")
 
   shiny::testServer(saveTabServer, args = list(
     id = "save", u_degnames = deg_names, u_degdfs = deg_dfs,
@@ -663,15 +663,15 @@ test_that("session download handler writes an enrichment result that reloads", {
     u_clusnames = clus_names, u_clusdfs = clus_dfs, u_cluslists = clus_lists,
     download_handler = download_factory
   ), {
-    session$setInputs(session_name = "dependency roundtrip", save_format = "rds")
-    expect_identical(download_capture$handler$filename(), "dependency roundtrip.rds")
+    session$setInputs(session_name = "dependency roundtrip")
+    expect_identical(download_capture$handler$filename(), "dependency roundtrip.json")
     download_capture$handler$content(saved)
   })
 
   expect_true(file.exists(saved))
-  session_data <- readRDS(saved)
+  session_data <- jsonlite::read_json(saved, simplifyVector = TRUE)
   expect_identical(session_data$version, "1.0")
-  expect_identical(session_data$rrdfs$deg1_enriched, produced)
+  expect_identical(session_data$rrnames, "deg1_enriched")
 
   loaded_rr_names <- shiny::reactiveValues(labels = character())
   loaded_rr_dfs <- shiny::reactiveValues()

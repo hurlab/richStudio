@@ -1,60 +1,5 @@
 # Characterize the installed legacy module with owned synthetic session files.
-# RDS cases describe trusted compatibility only, not untrusted-input safety.
-
-test_that("RDS session save and restore preserves multidataset values and types", {
-  state <- ws_baseline_state(populated = TRUE)
-  empty <- ws_baseline_results()$treated[FALSE, , drop = FALSE]
-  state$u_rrnames$labels <- c("untreated", "treated", "empty")
-  state$u_rrdfs$empty <- empty
-  saved <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".rds")
-  withr::defer(unlink(paste0(saved, ".lock")))
-  callbacks <- new.env(parent = emptyenv())
-  capture_download <- function(filename, content, ...) {
-    callbacks$filename <- filename
-    callbacks$content <- content
-    shiny::downloadHandler(filename, content, ...)
-  }
-  args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
-                  "u_clusnames", "u_clusdfs", "u_cluslists")]
-  args$download_handler <- capture_download
-  shiny::testServer(richStudio::saveTabServer, args = args, {
-    session$setInputs(session_name = "../study:one", save_format = "rds")
-    expect_identical(callbacks$filename(), "_study_one.rds")
-    callbacks$content(saved)
-    expect_false(file.exists(paste0(saved, ".lock")))
-    expect_identical(output$rr_summary,
-                     "3 enrichment result(s):\nuntreated\ntreated\nempty")
-  })
-  payload <- readRDS(saved)
-  expect_identical(payload$version, "1.0")
-  expect_s3_class(payload$created, "POSIXct")
-  expect_identical(payload$rrdfs$empty, empty)
-  expect_identical(payload$rrdfs$treated$Padj, c(0.04, NA_real_, 0.3))
-  expect_identical(payload$cluslists$fixture$Padj_treated,
-                   c(0.04, NA_real_, NA_real_, 0.3))
-
-  restored <- ws_baseline_state()
-  args <- restored[names(args)[names(args) != "download_handler"]]
-  shiny::testServer(richStudio::saveTabServer, args = args, {
-    expect_identical(output$deg_summary, "No DEG sets loaded")
-    expect_identical(output$rr_summary, "No enrichment results")
-    expect_identical(output$clus_summary, "No clustering results")
-    session$setInputs(load_session_file = list(name = "owned.RDS", datapath = saved))
-    session$setInputs(load_session = 1L)
-    expect_identical(u_degnames$labels, payload$degnames)
-    expect_identical(u_rrnames$labels, payload$rrnames)
-    expect_identical(u_clusnames$labels, payload$clusnames)
-    for (name in names(payload$degdfs)) {
-      expect_identical(u_degdfs[[name]], payload$degdfs[[name]])
-    }
-    for (name in names(payload$rrdfs)) {
-      expect_identical(u_rrdfs[[name]], payload$rrdfs[[name]])
-    }
-    expect_identical(u_clusdfs$fixture, payload$clusdfs$fixture)
-    expect_identical(u_cluslists$fixture, payload$cluslists$fixture)
-    expect_identical(output$clus_summary, "1 clustering result(s):\nfixture")
-  })
-})
+# Session files are JSON only; RDS uploads are refused (see test-session-json.R).
 
 test_that("JSON session download restores populated tables and missing values", {
   state <- ws_baseline_state(populated = TRUE)
@@ -95,7 +40,7 @@ test_that("JSON session download restores populated tables and missing values", 
   })
 })
 
-test_that("empty RDS sessions restore empty labels and typed empty tables", {
+test_that("empty JSON sessions restore empty labels and typed empty tables", {
   payload <- ws_baseline_session()
   payload$degnames <- character()
   payload$degdfs <- list()
@@ -104,13 +49,13 @@ test_that("empty RDS sessions restore empty labels and typed empty tables", {
   payload$clusnames <- character()
   payload$clusdfs <- list()
   payload$cluslists <- list()
-  saved <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".rds")
-  saveRDS(payload, saved)
+  saved <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".json")
+  richStudio:::session_json_write(payload, saved)
   state <- ws_baseline_state()
   args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
                   "u_clusnames", "u_clusdfs", "u_cluslists")]
   shiny::testServer(richStudio::saveTabServer, args = args, {
-    session$setInputs(load_session_file = list(name = "empty.rds", datapath = saved))
+    session$setInputs(load_session_file = list(name = "empty.json", datapath = saved))
     session$setInputs(load_session = 1L)
     expect_identical(u_degnames$labels, character())
     expect_identical(u_clusnames$labels, character())
@@ -124,20 +69,20 @@ test_that("empty RDS sessions restore empty labels and typed empty tables", {
 test_that("rejected session files leave populated analysis state unchanged", {
   state <- ws_baseline_state(populated = TRUE)
   expected <- ws_baseline_session()
-  saved <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".rds")
-  locked <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".rds")
+  saved <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".json")
+  locked <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".json")
   lock <- paste0(locked, ".lock")
   withr::defer(unlink(lock))
-  saveRDS(list(created = "not a versioned session"), saved)
-  saveRDS(expected, locked)
+  jsonlite::write_json(list(created = "not a versioned session"), saved, auto_unbox = TRUE)
+  richStudio:::session_json_write(expected, locked)
   expect_true(file.create(lock))
   args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
                   "u_clusnames", "u_clusdfs", "u_cluslists")]
   shiny::testServer(richStudio::saveTabServer, args = args, {
     uploads <- list(
-      list(name = "invalid.rds", datapath = saved),
+      list(name = "invalid.json", datapath = saved),
       list(name = "unsupported.txt", datapath = saved),
-      list(name = "locked.rds", datapath = locked)
+      list(name = "locked.json", datapath = locked)
     )
     for (i in seq_along(uploads)) {
       session$setInputs(load_session_file = uploads[[i]])
@@ -219,7 +164,7 @@ test_that("save UI exposes namespaced session and export controls with format gu
   html <- as.character(richStudio::saveTabUI("persist", "saved-analysis"))
   expect_match(html, 'id="shiny-tab-saved-analysis"', fixed = TRUE)
   expect_match(html, "Save &amp; Load Analysis Session", fixed = TRUE)
-  for (control in c("session_name", "save_format", "download_session",
+  for (control in c("session_name", "download_session",
                     "load_session_file", "load_session", "deg_summary",
                     "rr_summary", "clus_summary", "export_rr_select",
                     "export_rr_format", "export_rr", "export_clus_select",
@@ -230,11 +175,8 @@ test_that("save UI exposes namespaced session and export controls with format gu
                     "export_rr_format", "export_clus_select", "export_clus_format")) {
     expect_match(html, paste0('for="persist-', control, '"'), fixed = TRUE)
   }
-  expect_match(html, 'name="persist-save_format" value="rds" checked="checked"', fixed = TRUE)
-  expect_match(html, 'name="persist-save_format" value="json"', fixed = TRUE)
-  expect_match(html, 'accept=".rds,.json,.RDS,.JSON"', fixed = TRUE)
-  expect_match(html, "RDS format preserves all R objects exactly.", fixed = TRUE)
-  expect_match(html, "JSON format is more portable but may lose some data types.", fixed = TRUE)
+  expect_match(html, 'accept=".json,.JSON"', fixed = TRUE)
+  expect_match(html, "Sessions are saved as JSON with full numeric precision", fixed = TRUE)
   expect_match(html, "Loading a session will replace your current analysis state.", fixed = TRUE)
   expect_match(html, "Download all results as a ZIP archive", fixed = TRUE)
   for (kind in c("rr", "clus")) {

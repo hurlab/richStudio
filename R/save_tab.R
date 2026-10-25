@@ -50,27 +50,20 @@ saveTabUI <- function(id, tabName) {
                    value = paste0("richstudio_session_",
                                   format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
                                   paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = ""))),
-          radioButtons(ns('save_format'), "Save format:",
-            choices = c(
-              "RDS (Recommended)" = "rds",
-              "JSON (Portable)" = "json"
-            ),
-            selected = "rds"
-          ),
           br(),
           downloadButton(ns('download_session'), "Download Session", class = "btn-primary btn-lg"),
           br(), br(),
-          helpText("RDS format preserves all R objects exactly. JSON format is more portable but may lose some data types.")
+          helpText("Sessions are saved as JSON with full numeric precision, so values reload exactly. Older .rds session files cannot be uploaded; convert them locally first (see docs/SESSION_FILES.md).")
         )
       ),
 
       # Load session box
       column(width = 6,
         box(title = "Load Session", status = "success", width = NULL, solidHeader = TRUE,
-          p("Upload a previously saved session file to restore your analysis state."),
+          p("Upload a previously saved JSON session file to restore your analysis state."),
           hr(),
           fileInput(ns('load_session_file'), "Choose session file",
-                   accept = c('.rds', '.json', '.RDS', '.JSON')),
+                   accept = c('.json', '.JSON')),
           br(),
           actionButton(ns('load_session'), "Load Session", class = "btn-success btn-lg"),
           br(), br(),
@@ -190,8 +183,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     # Download session handler
     output$download_session <- download_handler(
       filename = function() {
-        ext <- if (input$save_format == "rds") ".rds" else ".json"
-        paste0(sanitize_filename(input$session_name), ext)
+        paste0(sanitize_filename(input$session_name), ".json")
       },
       content = function(file) {
         # Collect all session data
@@ -217,25 +209,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         }
         on.exit({ close(lock_conn); unlink(lock_path) }, add = TRUE)
 
-        if (input$save_format == "rds") {
-          saveRDS(session_data, file)
-        } else {
-          # JSON export (convert data frames appropriately)
-          json_data <- session_data
-          json_data$degdfs <- lapply(json_data$degdfs, function(df) {
-            if (is.data.frame(df)) as.list(df) else df
-          })
-          json_data$rrdfs <- lapply(json_data$rrdfs, function(df) {
-            if (is.data.frame(df)) as.list(df) else df
-          })
-          json_data$clusdfs <- lapply(json_data$clusdfs, function(df) {
-            if (is.data.frame(df)) as.list(df) else df
-          })
-          json_data$cluslists <- lapply(json_data$cluslists, function(df) {
-            if (is.data.frame(df)) as.list(df) else df
-          })
-          jsonlite::write_json(json_data, file, auto_unbox = TRUE, pretty = TRUE)
-        }
+        session_json_write(session_data, file)
 
         showNotification("Session saved successfully!", type = "message")
       }
@@ -248,6 +222,20 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       tryCatch({
         file_path <- input$load_session_file$datapath
         file_ext <- tools::file_ext(input$load_session_file$name)
+
+        # Refuse anything but JSON before the file is opened: deserializing an
+        # uploaded RDS can execute attacker-chosen code on the server.
+        if (tolower(file_ext) != "json" || session_json_looks_like_rds(file_path)) {
+          showNotification(
+            paste("Only JSON session files can be uploaded. RDS session files are not",
+                  "accepted because loading them is unsafe on a shared server. To convert",
+                  "an .rds file you trust, run on your own computer:",
+                  "Rscript scripts/convert-trusted-session.R session.rds session.json",
+                  "and upload the .json file (see docs/SESSION_FILES.md)."),
+            type = "error", duration = NULL
+          )
+          return(NULL)
+        }
 
         # Check for advisory lock from a concurrent save operation
         lock_path <- paste0(file_path, ".lock")
@@ -270,22 +258,10 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           }
         }
 
-        if (tolower(file_ext) == "rds") {
-          session_data <- readRDS(file_path)
-          # Validate deserialized object is a plain list with expected structure
-          if (!is.list(session_data) || is.null(session_data$version)) {
-            showNotification("Invalid session file format", type = "error")
-            return(NULL)
-          }
-        } else if (tolower(file_ext) == "json") {
-          session_data <- jsonlite::read_json(file_path, simplifyVector = TRUE)
-          # Convert lists back to data frames
-          session_data$degdfs <- lapply(session_data$degdfs, as.data.frame)
-          session_data$rrdfs <- lapply(session_data$rrdfs, as.data.frame)
-          session_data$clusdfs <- lapply(session_data$clusdfs, as.data.frame)
-          session_data$cluslists <- lapply(session_data$cluslists, as.data.frame)
-        } else {
-          stop("Unsupported file format. Use .rds or .json files.")
+        session_data <- session_json_read(file_path)
+        if (is.null(session_data$version)) {
+          showNotification("Invalid session file format", type = "error")
+          return(NULL)
         }
 
         # Validate session version compatibility

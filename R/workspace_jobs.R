@@ -14,9 +14,13 @@ workspace_jobs_future <- function(expr, ..., envir = parent.frame()) {
 workspace_jobs_cancel <- function(f) future::cancel(f)
 workspace_jobs_resolved <- function(f) future::resolved(f)
 
-# @MX:NOTE: [AUTO] SPEC-WS-006 constants held for adoption into the 001 policy (as 004's review_line_bytes_limit).
-workspace_job_queue_limit <- function() 8L
-workspace_job_session_queue_limit <- function() 1L
+# Queue bounds are read from the installed 001 resource policy (single source).
+workspace_job_queue_limit <- function() {
+  as.integer(workspace_resource_policy()$limits$job_queue_process)
+}
+workspace_job_session_queue_limit <- function() {
+  as.integer(workspace_resource_policy()$limits$job_queue_session)
+}
 
 # ---- process-level admission queue (in-process, in-memory, bounded) -----------------
 

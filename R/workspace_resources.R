@@ -2,7 +2,8 @@
 workspace_resource_keys <- function() {
   c("upload_bytes", "rows", "columns", "string_bytes", "decoded_bytes",
     "archive_bytes", "archive_expanded_bytes", "archive_members", "archive_depth",
-    "render_rows", "graph_nodes", "graph_edges", "workers", "history_runs", "temp_bytes")
+    "render_rows", "graph_nodes", "graph_edges", "workers", "job_queue_process", "job_queue_session",
+    "history_runs", "temp_bytes")
 }
 
 workspace_validate_resource_policy <- function(policy) {

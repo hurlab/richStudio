@@ -66,14 +66,36 @@ async function profileProcesses(profile: string) {
   }
   return [...new Map(found.map(record => [record.pid, record])).values()];
 }
+// A zombie keeps its process group but its environ reads empty, and a process caught mid-exec can
+// read empty too; neither is a foreign joiner. Re-read before judging, and say what was seen.
+async function groupMemberOwned(record: Identity, marker: string): Promise<boolean> {
+  let seen: { state: string; environBytes?: number; readError?: string } | undefined;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const now = await identity(record.pid);
+    if (!now || now.start !== record.start || now.state === 'Z' || now.state === 'X') return false;
+    try {
+      const environment = await fs.readFile(`/proc/${record.pid}/environ`, 'utf8');
+      if (environment.split('\0').includes(marker)) return true;
+      seen = { state: now.state, environBytes: environment.length };
+    } catch (error) {
+      // A process that exits between the identity read and this read loses its mm: EACCES/ESRCH/ENOENT.
+      const code = (error as NodeJS.ErrnoException).code;
+      if (!['ENOENT', 'ESRCH', 'EACCES'].includes(code ?? '')) throw error;
+      seen = { state: now.state, readError: code };
+    }
+    await delay(20);
+  }
+  let cmdline = '';
+  try { cmdline = (await fs.readFile(`/proc/${record.pid}/cmdline`, 'utf8')).split('\0').join(' '); } catch { /* exited while reporting */ }
+  throw new Error(`Unknown process joined owned fixture group: ${JSON.stringify({ ...record, ...seen, cmdline })}`);
+}
 async function fixtureProcesses(owner: Identity, nonce: string) {
   const found: Identity[] = [];
   for (const entry of (await fs.readdir('/proc')).filter(x => /^\d+$/.test(x))) {
     const record=await identity(Number(entry));
     if (!record || record.group !== owner.group) continue;
     try {
-      const environment=(await fs.readFile(`/proc/${entry}/environ`,'utf8')).split('\0');
-      if (!environment.includes(`WS_COMPONENT_NONCE=${nonce}`)) throw new Error('Unknown process joined owned fixture group');
+      if (!await groupMemberOwned(record, `WS_COMPONENT_NONCE=${nonce}`)) continue;
       found.push(record);
     } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
   }
@@ -310,11 +332,27 @@ async function open(page: Page, component: { nonce: string }) {
 }
 const actionIds = ['a-act','b-act','a-update','a-unavailable','a-filled','a-open','a-change','a-remove'];
 const dialogKeys = ['a-confirm-cancel','a-confirm-confirm'];
+// page.screenshot({ fullPage: true }) under native browser zoom records only the top-left
+// CSS-sized quarter of the page. Page.getLayoutMetrics reports contentSize in device pixels
+// (CSS size times zoom), so a scale-1 clip of exactly that size records the whole document.
+async function fullPageScreenshot(page: Page) {
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    const { contentSize } = await cdp.send('Page.getLayoutMetrics');
+    const clip = { x: 0, y: 0, width: contentSize.width, height: contentSize.height, scale: 1 };
+    const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip });
+    const body = Buffer.from(data, 'base64');
+    return { body, width: body.readUInt32BE(16), height: body.readUInt32BE(20) };
+  } finally {
+    await cdp.detach();
+  }
+}
 async function layout(page: Page, info: TestInfo, name: string) {
   const bounds = await page.evaluate(() => {
     const region = document.querySelector<HTMLElement>('.rs-workspace-table-scroll')!;
     return { innerWidth, innerHeight, outerWidth, outerHeight, dpr: devicePixelRatio,
       visualScale: visualViewport?.scale, screenWidth: screen.width, screenHeight: screen.height, rootWidth: document.documentElement.scrollWidth,
+      rootHeight: document.documentElement.scrollHeight,
       region: { width: region.clientWidth, scroll: region.scrollWidth, label: region.getAttribute('aria-labelledby'), tab: region.tabIndex },
       inventory: [...document.querySelectorAll<HTMLButtonElement>('#fixture button')].map(button => button.id || 'a-confirm-'+button.value) };
   });
@@ -360,7 +398,12 @@ async function layout(page: Page, info: TestInfo, name: string) {
   await expect(dialog).not.toBeVisible(); await expect(page.locator('#applied')).toHaveText(String(applied+1));
   await expect(page.locator('#a-open')).toBeFocused(); await expect(page.locator('#a-open')).toBeInViewport();
   await attach(info,name,{...bounds,actions,keyboardReached:reached,dialogActions});
-  await info.attach(`${name}.png`, { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
+  // The PNG must hold the whole document in device pixels, which at native 200% zoom is twice its CSS size.
+  const shot = await fullPageScreenshot(page);
+  expect(Math.abs(shot.width - bounds.rootWidth * bounds.dpr), `${name} PNG width`).toBeLessThanOrEqual(2);
+  expect(Math.abs(shot.height - bounds.rootHeight * bounds.dpr), `${name} PNG height`).toBeLessThanOrEqual(2);
+  await attach(info,`${name}-capture`,{ pngWidth: shot.width, pngHeight: shot.height, dpr: bounds.dpr, rootWidth: bounds.rootWidth, rootHeight: bounds.rootHeight });
+  await info.attach(`${name}.png`, { body: shot.body, contentType: 'image/png' });
   return bounds;
 }
 

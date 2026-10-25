@@ -949,7 +949,8 @@ workspace_cluster_compute <- function(genesets, method, params, cluster_name) {
         dplyr::ungroup()
     }
 
-    # Build summary data (one row per cluster) for visualization heatmap
+    # Build summary data (one row per cluster) for visualization heatmap; the
+    # row is the representative term's, so the values describe that term
     pval_padj_cols <- grep("^(Pvalue_|Padj_)", colnames(cluster_df), value = TRUE)
     summary_cols <- c("Cluster", "Representative_Term", pval_padj_cols)
     available_summary_cols <- intersect(summary_cols, colnames(cluster_df))
@@ -957,13 +958,13 @@ workspace_cluster_compute <- function(genesets, method, params, cluster_name) {
     if (length(available_summary_cols) >= 2) {
       summary_df <- cluster_df %>%
         dplyr::group_by(Cluster) %>%
-        dplyr::slice(1) %>%
+        dplyr::slice(max(match(Representative_Term[1], Term), 1L, na.rm = TRUE)) %>%
         dplyr::ungroup()
       summary_df <- as.data.frame(summary_df[, available_summary_cols, drop = FALSE])
     } else {
       summary_df <- cluster_df %>%
         dplyr::group_by(Cluster) %>%
-        dplyr::slice(1) %>%
+        dplyr::slice(max(match(Representative_Term[1], Term), 1L, na.rm = TRUE)) %>%
         dplyr::ungroup()
       summary_df <- as.data.frame(summary_df[, intersect(c("Cluster", "Representative_Term"), colnames(cluster_df)), drop = FALSE])
     }

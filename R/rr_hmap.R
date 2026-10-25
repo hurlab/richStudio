@@ -8,6 +8,16 @@
 # updating all call sites.
 
 
+# Columns belonging to one dataset: the merged tables name them
+# "<column>_<gs_name>", so match the literal "_<gs_name>" suffix (no regex).
+# When the dataset's own columns are known (base_cols) the match is exact.
+gs_dataset_cols <- function(col_names, gs_name, base_cols=NULL) {
+  if (!is.null(base_cols)) {
+    return(col_names %in% paste(base_cols, gs_name, sep="_"))
+  }
+  endsWith(col_names, paste0("_", gs_name)) & !(col_names %in% c("Annot", "Term", "GeneID"))
+}
+
 #' Add custom-selected terms from a geneset to the combined dataframe
 #'
 #' Merges user-selected terms from a geneset into the cumulative
@@ -28,6 +38,7 @@ add_custom_gs <- function(custom_data=NULL, gs, gs_name, term_vec) {
   
   # Append filename to all colnames except "Annot" and "Term"
   exclude_cols <- c("Annot", "Term")
+  gs_orig <- colnames(gs)
   colnames(gs) <- ifelse(colnames(gs) %in% exclude_cols, colnames(gs), 
                          paste(colnames(gs), gs_name, sep="_"))
   
@@ -35,8 +46,9 @@ add_custom_gs <- function(custom_data=NULL, gs, gs_name, term_vec) {
   if (is.null(custom_data) || nrow(custom_data) == 0) {
     custom_data <- gs
   } else {
-    # Match anything + _ + (gs_name)
-    gsname_cols <-  c(grep(paste0(".*_", gs_name), colnames(custom_data), value=TRUE))
+    # Columns already added for this geneset (exact names, no regex)
+    gsname_cols <- colnames(custom_data)[gs_dataset_cols(
+      colnames(custom_data), gs_name, setdiff(gs_orig, exclude_cols))]
     
     # If gs not previously added
     if (length(gsname_cols) == 0) {
@@ -130,15 +142,18 @@ add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, t
   
   # Append filename to all colnames except "Annot" and "Term"
   exclude_cols <- c("Annot", "Term")
+  gs_orig <- colnames(gs)
   colnames(gs) <- ifelse(colnames(gs) %in% exclude_cols, colnames(gs), 
                          paste(colnames(gs), gs_name, sep="_"))
   
-  # If gs already added, remove corresponding columns
-  same_gs_cols <- grepl(gs_name, colnames(custom_data))
-  custom_data <- custom_data[, !same_gs_cols]
+  # If gs already added, remove corresponding columns (exact names, no regex)
+  same_gs_cols <- gs_dataset_cols(colnames(custom_data), gs_name,
+                                  setdiff(gs_orig, exclude_cols))
+  custom_data <- custom_data[, !same_gs_cols, drop=FALSE]
   
-  # If no other gs in custom_data...
-  if (is.null(custom_data) || nrow(custom_data) == 0 || length(colnames(custom_data)) == 3) {
+  # If no other gs in custom_data (no dataset-specific columns remain)...
+  if (is.null(custom_data) || nrow(custom_data) == 0 ||
+      all(colnames(custom_data) %in% c("Annot", "Term", "GeneID"))) {
     custom_data <- gs # Set gs as the new custom_data
   } else { # Else, merge
     custom_data <- base::merge(custom_data, gs, by=c('Annot', 'Term'), all=TRUE)
@@ -186,18 +201,34 @@ add_topterm_gs <- function(custom_data, gs, gs_name, value_type, value_cutoff, t
 #' @param term_vec Character vector. Terms to remove (used when
 #'   \code{delete_all} is \code{NULL}).
 #' @param delete_all Character vector or \code{NULL}. If provided, all columns
-#'   for \code{gs_name} and all rows matching these terms are removed.
+#'   for \code{gs_name} are removed, together with the rows of these terms that
+#'   no other geneset still holds a value for.
 #' @return Updated \code{custom_data} data frame with terms/geneset removed.
 remove_gs <- function(custom_data, gs_name, term_vec, delete_all=NULL) {
-  # delete entire geneset if passed term_vec arg "delete_all" w/ all terms
+  # delete entire geneset if passed "delete_all" w/ the geneset's selected terms
   if (!is.null(delete_all)) {
-    # match anything + _ + (gs_name)
-    gs_cols <- c(grep(paste0(".*_", gs_name), colnames(custom_data), value=TRUE))
-    # filter out gs columns and term rows
-    custom_data2 <- custom_data[, !(colnames(custom_data) %in% gs_cols)]
-    custom_data2 <- custom_data2[!(custom_data2$Term %in% delete_all), ]
+    gs_cols <- gs_dataset_cols(colnames(custom_data), gs_name)
+    # filter out gs columns
+    custom_data2 <- custom_data[, !gs_cols, drop=FALSE]
+    # a row goes only if its Term was selected for this geneset and no other
+    # geneset still holds a value for it
+    other_cols <- setdiff(colnames(custom_data2), c("Annot", "Term", "GeneID"))
+    still_used <- if (length(other_cols) == 0) {
+      rep(FALSE, nrow(custom_data2))
+    } else {
+      rowSums(!is.na(custom_data2[, other_cols, drop=FALSE])) > 0
+    }
+    custom_data2 <- custom_data2[!(custom_data2$Term %in% delete_all & !still_used), , drop=FALSE]
     if (nrow(custom_data2) == 0) {
       custom_data2 <- data.frame()
+    } else {
+      # surviving shared terms describe the remaining genesets only
+      geneid_cols <- grep("^GeneID_", colnames(custom_data2), value=TRUE)
+      if ("GeneID" %in% colnames(custom_data2) && length(geneid_cols) > 0) {
+        custom_data2$GeneID <- apply(custom_data2[, geneid_cols, drop=FALSE], 1, function(x) {
+          paste(unique(x[!is.na(x)]), collapse=',')
+        })
+      }
     }
   } 
   # else only delete selected terms

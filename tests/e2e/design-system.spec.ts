@@ -875,7 +875,9 @@ async function nativeZoom(component: Component, info: TestInfo) {
     } finally {
       await context?.close();
       const end=Date.now()+5000;
-      while ((await profileProcesses(profile)).length && Date.now()<end) await delay(25);
+      // Wait for both the profile-token processes and every observed identity (children carry no token).
+      const survivors = async () => (await profileProcesses(profile)).length > 0 || (await Promise.all(observed.map(same))).some(Boolean);
+      while (await survivors() && Date.now()<end) await delay(25);
       const remaining=await profileProcesses(profile);
       const observedRemaining=await Promise.all(observed.map(async record => ({...record,alive:await same(record)})));
       await attach(info,'zoom-cleanup',{ profile,remaining,observedRemaining });

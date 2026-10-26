@@ -14,9 +14,14 @@ workspace_jobs_future <- function(expr, ..., envir = parent.frame()) {
 workspace_jobs_cancel <- function(f) future::cancel(f)
 workspace_jobs_resolved <- function(f) future::resolved(f)
 
-# @MX:NOTE: [AUTO] SPEC-WS-006 constants held for adoption into the 001 policy (as 004's review_line_bytes_limit).
-workspace_job_queue_limit <- function() 8L
-workspace_job_session_queue_limit <- function() 1L
+# Queue bounds come from the 001 resource policy (single source). Admission passes the policy
+# its registry's loader already returned, so an injected loader governs the bounds too.
+workspace_job_queue_limit <- function(policy = workspace_resource_policy()) {
+  as.integer(policy$limits$job_queue_process)
+}
+workspace_job_session_queue_limit <- function(policy = workspace_resource_policy()) {
+  as.integer(policy$limits$job_queue_session)
+}
 
 # ---- process-level admission queue (in-process, in-memory, bounded) -----------------
 
@@ -102,8 +107,10 @@ workspace_jobs_error_summary <- function(cond) {
   msg <- iconv(enc2utf8(msg), "UTF-8", "UTF-8", sub = "?")
   if (is.na(msg)) msg <- ""
   msg <- gsub("[[:cntrl:]]", "", msg, perl = TRUE)
+  msg <- gsub("[A-Za-z]:\\\\[^\\s'\"]+", "<path>", msg, perl = TRUE, useBytes = TRUE)
   msg <- gsub("(?:/[^/\\s'\"]+){2,}", "<path>", msg, perl = TRUE, useBytes = TRUE)
-  msg <- gsub("(token|password|secret|key)=\\S+", "\\1=<redacted>", msg, ignore.case = TRUE, perl = TRUE)
+  msg <- gsub("(token|password|secret|key)\\s*[=:]\\s*\\S+", "\\1=<redacted>", msg, ignore.case = TRUE, perl = TRUE)
+  msg <- gsub("(Bearer)\\s+\\S+", "\\1 <redacted>", msg, ignore.case = TRUE, perl = TRUE)
   substr(msg, 1L, 300L)
 }
 
@@ -126,6 +133,12 @@ workspace_jobs_registry <- function(session, policy_loader = workspace_resource_
   jobs$session <- root
   jobs$owner <- substr(digest::digest(list(workspace_jobs_now(), stats::runif(1))), 1L, 16L)
   jobs$generation <- 1L
+  # Known limitation: `closed` tracks only the root session, and everything here treats the
+  # root as the unit of teardown. Shiny >= 1.14 can tear a module scope down on its own
+  # (`session$destroy(id)`) while the root lives, and a module proxy then still reports
+  # isClosed() == FALSE, so sources and publish callbacks captured from that module would be
+  # read after destruction. Nothing in R/ calls `$destroy(` today (tests R46 fails if that
+  # changes); a caller that starts doing so must first give the registry a per-module close.
   jobs$closed <- FALSE
   jobs$revisions <- new.env(parent = emptyenv())
   jobs$records <- list()
@@ -401,7 +414,7 @@ workspace_jobs_submit <- function(jobs, kind, sources, settings, launch, publish
     }
   }
   queued <- sum(vapply(jobs$records, function(r) identical(r$state, "queued"), logical(1)))
-  if (queued >= workspace_job_session_queue_limit()) {
+  if (queued >= workspace_job_session_queue_limit(policy)) {
     return(refuse("This session already has a queued job; wait for it to start or stop it"))
   }
   if (identical(kind, "clustering")) {
@@ -414,7 +427,7 @@ workspace_jobs_submit <- function(jobs, kind, sources, settings, launch, publish
   }
   workspace_job_queue_prune()
   waiting <- length(.workspace_job_queue$entries)
-  if (waiting >= workspace_job_queue_limit()) {
+  if (waiting >= workspace_job_queue_limit(policy)) {
     return(refuse(sprintf("The server job queue is full (%d waiting); try again later", waiting)))
   }
 
@@ -625,7 +638,9 @@ workspace_jobs_on_finally <- function(jobs, run_id) {
   }
   if (!isTRUE(jobs$closed) && !is.null(handle)) {
     if (!workspace_jobs_session_closed(workspace_jobs_root(handle$module_session))) {
-      shiny::withReactiveDomain(handle$module_session, shiny::removeNotification(paste0("job-", run_id)))
+      workspace_jobs_contain(
+        shiny::withReactiveDomain(handle$module_session, shiny::removeNotification(paste0("job-", run_id))),
+        "progress removal")
     }
     workspace_jobs_enable(handle)
   }
@@ -785,7 +800,10 @@ workspace_jobs_settings_text <- function(settings) {
     if (is.atomic(value) && length(value) && !is.null(value)) {
       out <- c(out, paste0(key, ": ", paste(as.character(value), collapse = ", ")))
     } else if (is.list(value) && length(value) && all(vapply(value, function(v) is.atomic(v) && length(v) == 1L, logical(1)))) {
-      out <- c(out, paste0(key, ": ", paste(names(value), unlist(value), sep = "=", collapse = ", ")))
+      # Imported (canonical-form) vectors are unnamed lists: show the values alone.
+      labels <- names(value)
+      prefix <- if (is.null(labels)) rep("", length(value)) else ifelse(nzchar(labels), paste0(labels, "="), "")
+      out <- c(out, paste0(key, ": ", paste0(prefix, unlist(value), collapse = ", ")))
     }
   }
   out

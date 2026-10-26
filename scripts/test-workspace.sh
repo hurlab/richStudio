@@ -369,7 +369,7 @@ probe <- function(role) {
   counters <- get(".counters",asNamespace("covr"))
   selected <- function() Filter(function(x) "workspace_resource_keys" %in% x$functions, as.list(counters))
   before <- sum(vapply(selected(),function(x)x$value,numeric(1)))
-  stopifnot(length(fun())==15L,length(fun())==15L)
+  stopifnot(length(fun())==17L,length(fun())==17L)
   hits <- sum(vapply(selected(),function(x)x$value,numeric(1)))-before
   stopifnot(hits==2)
   saveRDS(selected(),file.path(Sys.getenv("ARTIFACTS"),paste0("coverage-",role,"-calibration.rds")))

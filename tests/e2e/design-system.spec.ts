@@ -32,6 +32,8 @@ async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
 
+// A pid that exits during a /proc scan reports ENOENT or ESRCH; either means it is not a member.
+function processGone(error: unknown) { return ['ENOENT', 'ESRCH'].includes((error as NodeJS.ErrnoException).code ?? ''); }
 type Identity = { pid: number; parent: number; group: number; start: string; state: string };
 async function identity(pid: number): Promise<Identity | undefined> {
   try {
@@ -39,7 +41,7 @@ async function identity(pid: number): Promise<Identity | undefined> {
     const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
     return { pid, parent: Number(fields[1]), group: Number(fields[2]), start: fields[19], state: fields[0] };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    if (processGone(error)) return undefined;
     throw error;
   }
 }
@@ -62,7 +64,7 @@ async function profileProcesses(profile: string) {
     try {
       const args = (await fs.readFile(`/proc/${entry}/cmdline`, 'utf8')).split('\0');
       if (args.includes(`--user-data-dir=${profile}`)) found.push(...await descendants(record));
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    } catch (error) { if (!processGone(error)) throw error; }
   }
   return [...new Map(found.map(record => [record.pid, record])).values()];
 }
@@ -97,7 +99,7 @@ async function fixtureProcesses(owner: Identity, nonce: string) {
     try {
       if (!await groupMemberOwned(record, `WS_COMPONENT_NONCE=${nonce}`)) continue;
       found.push(record);
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    } catch (error) { if (!processGone(error)) throw error; }
   }
   return found;
 }
@@ -109,9 +111,9 @@ async function listeners(port: number, processes: Identity[]) {
     try {
       for (const fd of await fs.readdir(`/proc/${record.pid}/fd`)) {
         try { const link = await fs.readlink(`/proc/${record.pid}/fd/${fd}`); if (sockets.some(inode => `socket:[${inode}]` === link)) owners.push(record.pid); }
-        catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+        catch (error) { if (!processGone(error)) throw error; }
       }
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    } catch (error) { if (!processGone(error)) throw error; }
   }
   return { port, sockets, owners: [...new Set(owners)] };
 }

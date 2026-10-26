@@ -14,6 +14,8 @@ import net from 'node:net';
 const port = 3873;
 const url = `http://127.0.0.1:${port}`;
 
+// A pid that exits during a /proc scan reports ENOENT or ESRCH; either means it is not a member.
+function processGone(error: unknown) { return ['ENOENT', 'ESRCH'].includes((error as NodeJS.ErrnoException).code ?? ''); }
 type Identity = { pid: number; parent: number; group: number; start: string; state: string };
 async function identity(pid: number): Promise<Identity | undefined> {
   try {
@@ -21,7 +23,7 @@ async function identity(pid: number): Promise<Identity | undefined> {
     const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
     return { pid, parent: Number(fields[1]), group: Number(fields[2]), start: fields[19], state: fields[0] };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    if (processGone(error)) return undefined;
     throw error;
   }
 }
@@ -33,6 +35,29 @@ const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
+// A zombie keeps its process group but its environ reads empty, and a process caught mid-exec can
+// read empty too; neither is a foreign joiner. Re-read before judging, and say what was seen.
+async function groupMemberOwned(record: Identity, marker: string): Promise<boolean> {
+  let seen: { state: string; environBytes?: number; readError?: string } | undefined;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const now = await identity(record.pid);
+    if (!now || now.start !== record.start || now.state === 'Z' || now.state === 'X') return false;
+    try {
+      const environment = await fs.readFile(`/proc/${record.pid}/environ`, 'utf8');
+      if (environment.split('\0').includes(marker)) return true;
+      seen = { state: now.state, environBytes: environment.length };
+    } catch (error) {
+      // A process that exits between the identity read and this read loses its mm: EACCES/ESRCH/ENOENT.
+      const code = (error as NodeJS.ErrnoException).code;
+      if (!['ENOENT', 'ESRCH', 'EACCES'].includes(code ?? '')) throw error;
+      seen = { state: now.state, readError: code };
+    }
+    await delay(20);
+  }
+  let cmdline = '';
+  try { cmdline = (await fs.readFile(`/proc/${record.pid}/cmdline`, 'utf8')).split('\0').join(' '); } catch { /* exited while reporting */ }
+  throw new Error(`Unknown process joined owned fixture group: ${JSON.stringify({ ...record, ...seen, cmdline })}`);
+}
 // Every process in the owner's group must carry the nonce; anything else is a foreign joiner.
 async function fixtureProcesses(owner: Identity, nonce: string) {
   const found: Identity[] = [];
@@ -40,10 +65,9 @@ async function fixtureProcesses(owner: Identity, nonce: string) {
     const record = await identity(Number(entry));
     if (!record || record.group !== owner.group) continue;
     try {
-      const environment = (await fs.readFile(`/proc/${entry}/environ`, 'utf8')).split('\0');
-      if (!environment.includes(`WS_JOBS_NONCE=${nonce}`)) throw new Error('Unknown process joined owned fixture group');
+      if (!await groupMemberOwned(record, `WS_JOBS_NONCE=${nonce}`)) continue;
       found.push(record);
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    } catch (error) { if (!processGone(error)) throw error; }
   }
   return found;
 }

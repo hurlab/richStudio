@@ -43,4 +43,6 @@ test_that("job queue limits come from the installed resource policy", {
   testthat::local_mocked_bindings(workspace_resource_policy = function(...) changed, .package = "richStudio")
   expect_identical(richStudio:::workspace_job_queue_limit(), 3L)
   expect_identical(richStudio:::workspace_job_session_queue_limit(), 2L)
+  expect_identical(richStudio:::workspace_job_queue_limit(policy), 8L)
+  expect_identical(richStudio:::workspace_job_session_queue_limit(changed), 2L)
 })

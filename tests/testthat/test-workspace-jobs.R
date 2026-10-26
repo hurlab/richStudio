@@ -680,7 +680,7 @@ test_that("R2 REQ-001 REQ-002 duplicate clicks, policy refusal and reserved clus
   ws6_pid(dir, ws6_key("deg_c"), list(s3), own = own)
   # Check 3 (one queued job per session) runs before check 4; allow two queued
   # jobs so that the reserved name, not the queue bound, decides the refusal.
-  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function(...) 2L, .package = "richStudio")
   ws6_cluster(s3, "rr1", "reserved")
   expect_identical(ws6_last(jobs3)$state, "queued")
   ws6_cluster(s3, "rr2", "reserved")
@@ -1730,7 +1730,7 @@ test_that("R21 REQ-001 a session without a running job still holds at most one q
 
 test_that("R21b REQ-001 the per-session bound reads workspace_job_session_queue_limit()", {
   withr::defer(richStudio:::workspace_job_queue_reset())
-  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function(...) 2L, .package = "richStudio")
   dir <- withr::local_tempdir()
   kit <- ws6_latch_runner(dir)
   x <- ws6_three(dir, kit, labels = c("deg_a", "deg_b"))
@@ -1750,7 +1750,7 @@ test_that("R21b REQ-001 the per-session bound reads workspace_job_session_queue_
 
 test_that("R22 REQ-001 the process queue bound refuses with the queue length only", {
   withr::defer(richStudio:::workspace_job_queue_reset())
-  testthat::local_mocked_bindings(workspace_job_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_job_queue_limit = function(...) 2L, .package = "richStudio")
   dir <- withr::local_tempdir()
   kit <- ws6_latch_runner(dir)
   x <- ws6_three(dir, kit, labels = c("deg_a", "deg_b", "deg_c", "deg_d"))
@@ -2779,4 +2779,23 @@ test_that("R46 O3 no package code tears down a module scope while the registry t
     if (any(grepl("[$]destroy\\(", code))) hits <- c(hits, basename(file))
   }
   expect_identical(hits, character())
+})
+
+test_that("R47 REQ-001 the queue bounds come from the injected policy loader", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  loaded <- richStudio:::workspace_resource_policy()
+  loaded$limits$job_queue_session <- 2L
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  x <- ws6_three(dir, kit, labels = c("deg_a", "deg_b"), policy_loader = function() loaded)
+  shiny::isolate(ws6_add_deg(x[[1]]$state, "deg_a_3"))
+  own <- ws6_workers(1L, dir = dir)
+  ws6_run(x[[2]]$sess, "deg_b")
+  ws6_pid(dir, ws6_key("deg_b"), ws6_sessions(x), own = own)
+  ws6_run(x[[1]]$sess, "deg_a")
+  ws6_run(x[[1]]$sess, "deg_a_2")
+  expect_identical(vapply(x[[1]]$jobs$records, `[[`, character(1), "state"), c("queued", "queued"))
+  ws6_run(x[[1]]$sess, "deg_a_3")
+  expect_identical(ws6_shown(x[[1]]$sess, ws6_msg$session_queue), 1L)
+  expect_length(x[[1]]$jobs$records, 2L)
 })

@@ -14,12 +14,13 @@ workspace_jobs_future <- function(expr, ..., envir = parent.frame()) {
 workspace_jobs_cancel <- function(f) future::cancel(f)
 workspace_jobs_resolved <- function(f) future::resolved(f)
 
-# Queue bounds are read from the installed 001 resource policy (single source).
-workspace_job_queue_limit <- function() {
-  as.integer(workspace_resource_policy()$limits$job_queue_process)
+# Queue bounds come from the 001 resource policy (single source). Admission passes the policy
+# its registry's loader already returned, so an injected loader governs the bounds too.
+workspace_job_queue_limit <- function(policy = workspace_resource_policy()) {
+  as.integer(policy$limits$job_queue_process)
 }
-workspace_job_session_queue_limit <- function() {
-  as.integer(workspace_resource_policy()$limits$job_queue_session)
+workspace_job_session_queue_limit <- function(policy = workspace_resource_policy()) {
+  as.integer(policy$limits$job_queue_session)
 }
 
 # ---- process-level admission queue (in-process, in-memory, bounded) -----------------
@@ -413,7 +414,7 @@ workspace_jobs_submit <- function(jobs, kind, sources, settings, launch, publish
     }
   }
   queued <- sum(vapply(jobs$records, function(r) identical(r$state, "queued"), logical(1)))
-  if (queued >= workspace_job_session_queue_limit()) {
+  if (queued >= workspace_job_session_queue_limit(policy)) {
     return(refuse("This session already has a queued job; wait for it to start or stop it"))
   }
   if (identical(kind, "clustering")) {
@@ -426,7 +427,7 @@ workspace_jobs_submit <- function(jobs, kind, sources, settings, launch, publish
   }
   workspace_job_queue_prune()
   waiting <- length(.workspace_job_queue$entries)
-  if (waiting >= workspace_job_queue_limit()) {
+  if (waiting >= workspace_job_queue_limit(policy)) {
     return(refuse(sprintf("The server job queue is full (%d waiting); try again later", waiting)))
   }
 

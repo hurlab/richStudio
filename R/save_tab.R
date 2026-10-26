@@ -53,7 +53,11 @@ saveTabUI <- function(id, tabName) {
           br(),
           downloadButton(ns('download_session'), "Download Session", class = "btn-primary btn-lg"),
           br(), br(),
-          helpText("Sessions are saved as JSON with full numeric precision, so values reload exactly. Older .rds session files cannot be uploaded; convert them locally first (see docs/SESSION_FILES.md).")
+          helpText("Sessions are saved as JSON with full numeric precision, so values reload exactly. Older .rds session files cannot be uploaded; convert them locally first (see docs/SESSION_FILES.md)."),
+          hr(),
+          h4("Reproducible project"),
+          p("A project (.zip) adds a manifest with parameters, versions, statistics and a generated methods summary to the exact tables."),
+          downloadButton(ns('download_project'), "Download Project", class = "btn-default")
         )
       ),
 
@@ -67,7 +71,13 @@ saveTabUI <- function(id, tabName) {
           br(),
           actionButton(ns('load_session'), "Load Session", class = "btn-success btn-lg"),
           br(), br(),
-          helpText("Loading a session will replace your current analysis state.")
+          helpText("Loading a session will replace your current analysis state."),
+          hr(),
+          h4("Open a project"),
+          fileInput(ns('load_project_file'), "Choose project file",
+                   accept = c('.zip', '.ZIP')),
+          actionButton(ns('load_project'), "Open Project", class = "btn-default"),
+          helpText("A project is checked completely before anything is replaced; a rejected project changes nothing.")
         )
       )
     ),
@@ -99,6 +109,9 @@ saveTabUI <- function(id, tabName) {
       column(width = 12,
         box(title = "Export Individual Results", status = "warning", width = NULL, collapsible = TRUE, collapsed = TRUE,
           p("Export specific results as individual files."),
+          checkboxInput(ns('export_safe'),
+                        "Spreadsheet-safe text (prefix cells that begin with = + - @ so a spreadsheet does not run them as formulas)",
+                        value = TRUE),
           fluidRow(
             column(width = 4,
               h4("Export Enrichment Result"),
@@ -180,6 +193,28 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       }
     })
 
+    # Cleared entries stay as NULL-valued keys in a reactiveValues; they are not data.
+    live_values <- function(rv) Filter(Negate(is.null), reactiveValuesToList(rv))
+
+    # The session as a plain list: what both the JSON session and the project save.
+    session_snapshot <- function() {
+      list(
+        version = "1.0",
+        created = Sys.time(),
+        degnames = u_degnames$labels,
+        degdfs = live_values(u_degdfs),
+        rrnames = u_rrnames$labels,
+        rrdfs = live_values(u_rrdfs),
+        clusnames = u_clusnames$labels,
+        clusdfs = live_values(u_clusdfs),
+        cluslists = reactiveValuesToList(u_cluslists)
+      )
+    }
+
+    stores <- list(u_degnames = u_degnames, u_degdfs = u_degdfs, u_rrnames = u_rrnames,
+                   u_rrdfs = u_rrdfs, u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
+                   u_cluslists = u_cluslists)
+
     # Download session handler
     output$download_session <- download_handler(
       filename = function() {
@@ -187,17 +222,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       },
       content = function(file) {
         # Collect all session data
-        session_data <- list(
-          version = "1.0",
-          created = Sys.time(),
-          degnames = u_degnames$labels,
-          degdfs = reactiveValuesToList(u_degdfs),
-          rrnames = u_rrnames$labels,
-          rrdfs = reactiveValuesToList(u_rrdfs),
-          clusnames = u_clusnames$labels,
-          clusdfs = reactiveValuesToList(u_clusdfs),
-          cluslists = reactiveValuesToList(u_cluslists)
-        )
+        session_data <- session_snapshot()
         if (!is.null(jobs)) session_data$run_records_json <- workspace_run_records_json(workspace_run_records(jobs))
 
         # Use advisory file locking to prevent concurrent write corruption
@@ -212,6 +237,25 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         session_json_write(session_data, file)
 
         showNotification("Session saved successfully!", type = "message")
+      }
+    )
+
+    # Download project handler: manifest + exact tables + methods text in one ZIP.
+    # Plain downloadHandler: download_handler stays the JSON session's injection seam.
+    output$download_project <- downloadHandler(
+      filename = function() {
+        paste0(sanitize_filename(input$session_name), ".zip")
+      },
+      content = function(file) {
+        records <- if (is.null(jobs)) list() else workspace_run_records(jobs)
+        saved <- tryCatch({
+          project_write(session_snapshot(), records, file)
+          TRUE
+        }, error = function(e) {
+          showNotification(paste("Project could not be saved:", conditionMessage(e)), type = "error")
+          FALSE
+        })
+        if (saved) showNotification("Project saved successfully!", type = "message")
       }
     )
 
@@ -289,26 +333,10 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           )
         }
 
-        # Restore session data
-        if (!is.null(jobs)) workspace_jobs_commit_workspace_swap(jobs)
-        u_degnames$labels <- session_data$degnames
-        for (name in names(session_data$degdfs)) {
-          u_degdfs[[name]] <- session_data$degdfs[[name]]
-        }
-
-        u_rrnames$labels <- session_data$rrnames
-        for (name in names(session_data$rrdfs)) {
-          u_rrdfs[[name]] <- session_data$rrdfs[[name]]
-        }
-
-        u_clusnames$labels <- session_data$clusnames
-        for (name in names(session_data$clusdfs)) {
-          u_clusdfs[[name]] <- session_data$clusdfs[[name]]
-        }
-        for (name in names(session_data$cluslists)) {
-          u_cluslists[[name]] <- session_data$cluslists[[name]]
-        }
-        if (!is.null(jobs)) workspace_run_records_reopen(session_data$run_records_json, jobs)
+        # Validate the whole candidate, then apply it in one swap (job generation
+        # invalidated first); a malformed file never reaches the stores.
+        candidate <- project_legacy_candidate(session_data)
+        project_commit_candidate(candidate, stores, jobs)
 
         showNotification(
           paste("Session loaded successfully! Created:", session_data$created),
@@ -319,6 +347,21 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       }, error = function(e) {
         showNotification(paste("Error loading session:", e$message), type = "error")
       })
+    })
+
+    # Open project handler: the archive is validated completely into a data-only
+    # candidate before the workspace or any job is touched.
+    observeEvent(input$load_project, {
+      req(input$load_project_file)
+      file_path <- input$load_project_file$datapath
+      candidate <- tryCatch(project_import_read(file_path), error = function(e) e)
+      if (inherits(candidate, "error")) {
+        showNotification(paste("Project could not be opened:", conditionMessage(candidate)),
+                         type = "error", duration = NULL)
+        return(NULL)
+      }
+      project_commit_candidate(candidate, stores, jobs)
+      showNotification("Project opened successfully!", type = "message", duration = 5)
     })
 
     # Export enrichment result
@@ -347,6 +390,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           )
         }
 
+        if (isTRUE(input$export_safe) && input$export_rr_format != "xlsx") df <- project_spreadsheet_safe(df)
         if (input$export_rr_format == "csv") {
           write.csv(df, file, row.names = FALSE)
         } else if (input$export_rr_format == "tsv") {
@@ -383,6 +427,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           )
         }
 
+        if (isTRUE(input$export_safe) && input$export_clus_format != "xlsx") df <- project_spreadsheet_safe(df)
         if (input$export_clus_format == "csv") {
           write.csv(df, file, row.names = FALSE)
         } else if (input$export_clus_format == "tsv") {
@@ -392,6 +437,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         }
       }
     )
+
+    # Labels are user text: archive members get a safe, unique file name instead.
+    export_member_names <- function(labels) {
+      paste0(make.unique(vapply(labels, sanitize_filename, character(1), USE.NAMES = FALSE), sep = "_"), ".csv")
+    }
 
     # Export all results as ZIP
     output$export_all <- downloadHandler(
@@ -411,10 +461,12 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         if (length(u_degnames$labels) > 0) {
           deg_dir <- file.path(export_dir, "deg_sets")
           dir.create(deg_dir, showWarnings = FALSE)
-          for (name in u_degnames$labels) {
-            df <- u_degdfs[[name]]
+          member_names <- export_member_names(u_degnames$labels)
+          for (i in seq_along(u_degnames$labels)) {
+            df <- u_degdfs[[u_degnames$labels[i]]]
             if (!is.null(df)) {
-              write.csv(df, file.path(deg_dir, paste0(name, ".csv")), row.names = FALSE)
+              if (isTRUE(input$export_safe)) df <- project_spreadsheet_safe(df)
+              write.csv(df, file.path(deg_dir, member_names[i]), row.names = FALSE)
             }
           }
         }
@@ -423,10 +475,12 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         if (length(u_rrnames$labels) > 0) {
           rr_dir <- file.path(export_dir, "enrichment_results")
           dir.create(rr_dir, showWarnings = FALSE)
-          for (name in u_rrnames$labels) {
-            df <- u_rrdfs[[name]]
+          member_names <- export_member_names(u_rrnames$labels)
+          for (i in seq_along(u_rrnames$labels)) {
+            df <- u_rrdfs[[u_rrnames$labels[i]]]
             if (!is.null(df)) {
-              write.csv(df, file.path(rr_dir, paste0(name, ".csv")), row.names = FALSE)
+              if (isTRUE(input$export_safe)) df <- project_spreadsheet_safe(df)
+              write.csv(df, file.path(rr_dir, member_names[i]), row.names = FALSE)
             }
           }
         }
@@ -435,10 +489,12 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         if (length(u_clusnames$labels) > 0) {
           clus_dir <- file.path(export_dir, "clustering_results")
           dir.create(clus_dir, showWarnings = FALSE)
-          for (name in u_clusnames$labels) {
-            df <- u_clusdfs[[name]]
+          member_names <- export_member_names(u_clusnames$labels)
+          for (i in seq_along(u_clusnames$labels)) {
+            df <- u_clusdfs[[u_clusnames$labels[i]]]
             if (!is.null(df)) {
-              write.csv(df, file.path(clus_dir, paste0(name, ".csv")), row.names = FALSE)
+              if (isTRUE(input$export_safe)) df <- project_spreadsheet_safe(df)
+              write.csv(df, file.path(clus_dir, member_names[i]), row.names = FALSE)
             }
           }
         }

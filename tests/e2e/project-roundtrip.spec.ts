@@ -9,21 +9,55 @@ import path from 'node:path';
 // bundled demo results (go1, go2, kegg1) stand in for a finished analysis; the project
 // ZIP is inspected independently of the application (member list, manifest, recomputed
 // digests) with the Python standard library, and a rejected project is shown to change
-// nothing. Desktop viewport only: the Save tab is reached through the sidebar, whose
-// off-canvas behaviour is covered by workspace-entry.spec.ts.
+// nothing. It runs in both viewport
+// projects; the Save tab is reached through the sidebar, opened off-canvas when narrow.
 
 async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
 
+// Narrow viewports use the off-canvas sidebar (AdminLTE below 768px), driven by the
+// body.sidebar-open class; its slide transition must finish before the next decision.
+// Same routing as workspace-entry.spec.ts.
+const homeLink = (page: Page) => page.locator('.sidebar-menu a[href="#shiny-tab-home_tab"]');
+const isNarrow = (page: Page) => (page.viewportSize()?.width ?? 1280) < 768;
+
+async function waitSidebarClosed(page: Page) {
+  await expect(page.locator('body.sidebar-open')).toHaveCount(0);
+  await expect.poll(async () => {
+    const bounds = await homeLink(page).boundingBox();
+    return bounds ? bounds.x + bounds.width : Number.POSITIVE_INFINITY;
+  }).toBeLessThanOrEqual(0);
+}
+
+async function openSidebar(page: Page) {
+  if (isNarrow(page) && !(await page.locator('body.sidebar-open').count())) {
+    await waitSidebarClosed(page);
+    await page.getByRole('button', { name: /Toggle navigation/ }).click();
+    await expect(page.locator('body.sidebar-open')).toHaveCount(1);
+  }
+  await homeLink(page).scrollIntoViewIfNeeded();
+  await expect(homeLink(page)).toBeInViewport();
+}
+
+async function closeNavigation(page: Page) {
+  if (await page.locator('body.sidebar-open').count()) {
+    await page.getByRole('button', { name: /Toggle navigation/ }).click();
+  }
+  if (isNarrow(page)) await waitSidebarClosed(page);
+}
+
 async function openSaveTab(page: Page) {
+  await openSidebar(page);
   const href = 'a[href="#shiny-tab-save_tab"]';
   const link = page.locator(`.sidebar-menu ${href}`);
   if (!(await link.isVisible())) {
     await page.locator('.sidebar-menu li.treeview', { has: page.locator(href) }).locator(':scope > a').click();
   }
   await link.click();
+  await closeNavigation(page);
   await expect(page.locator('#shiny-tab-save_tab')).toHaveClass(/\bactive\b/);
+  await page.locator('#save-download_project').scrollIntoViewIfNeeded();
   await expect(page.locator('#save-download_project')).toBeVisible();
 }
 
@@ -59,8 +93,6 @@ async function openProject(page: Page, file: string) {
 }
 
 test('REQ-001 REQ-003 REQ-004 AC-001 AC-003 a project saves, is inspected, and opens in a new session', async ({ page }, info) => {
-  test.skip(info.project.name !== 'chromium-desktop', 'Sidebar routing is exercised by the narrow-viewport entry spec');
-
   // 1. Results exist: load the bundled demo and go to the Save tab.
   await page.locator('#home-load_demo').click();
   await expect(page.locator('#workspace-active_result')).toHaveValue('go1');

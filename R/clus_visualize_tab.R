@@ -73,6 +73,7 @@ clusVisTabUI <- function(id, tabName) {
             box(title = "Detailed Cluster Info", status = "info", width = NULL,
               solidHeader = TRUE,
               p("View and export individual term data for cluster results"),
+              uiOutput(ns("linked_term")),
               fluidRow(
                 column(4,
                   selectInput(ns("cluslist_select"), "Select cluster result", choices=NULL, multiple=FALSE),
@@ -96,7 +97,7 @@ clusVisTabUI <- function(id, tabName) {
 }
 
 
-clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big_rrdf, u_clusnames, u_clusdfs, u_big_clusdf, u_cluslists) {
+clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big_rrdf, u_clusnames, u_clusdfs, u_big_clusdf, u_cluslists, selection = NULL) {
   
   moduleServer(id, function(input, output, session) {
     
@@ -227,6 +228,22 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       plot_cluslist_hmap()
     })
     
+    # Term selected in the results explorer (SPEC-WS-008): which clusters of the chosen
+    # cluster result contain it, matched by term ID. Display only.
+    if (is.null(selection)) selection <- workspace_selection_state()
+    output$linked_term <- renderUI({
+      info <- selection$info()
+      if (is.null(info)) {
+        return(tags$p("No term is selected in the results explorer."))
+      }
+      detail <- if (length(input$cluslist_select)) u_cluslists[[input$cluslist_select]] else NULL
+      links <- explorer_cluster_links(detail, info$id)
+      tags$div(class = "rs-workspace rs-workspace-card",
+        tags$p("Selected in the results explorer: ", tags$strong(workspace_text(info$label, "label", missing = TRUE)),
+               " (", workspace_text(info$id, "id", missing = TRUE), ")"),
+        tags$ul(explorer_cluster_ui(if (length(input$cluslist_select)) input$cluslist_select else "No cluster result chosen", links)))
+    })
+
     # Reactively update which cluster list table is read based on selection
     cluslist_to_table <- reactive ({
       req(input$cluslist_select)
@@ -258,4 +275,4 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
     )
     
   })
-}
+}

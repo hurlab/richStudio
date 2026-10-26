@@ -204,6 +204,38 @@ test_that("AC-003 a tampered table or file is caught by its digest", {
   expect_rejected(pi_edit(path, tables_text = function(t) "{not json", fix_digests = TRUE), "not valid JSON")
 })
 
+# Patch the declared uncompressed size of the FIRST entry in both its local header
+# (PK\003\004, +22) and its central-directory record (PK\001\002, +24).
+pi_lie_about_size <- function(path, declared = 100L) {
+  bytes <- readBin(path, "raw", file.size(path))
+  at <- function(sig) {
+    hits <- which(bytes[seq_len(length(bytes) - 3L)] == sig[1] & bytes[seq_len(length(bytes) - 3L) + 1L] == sig[2] &
+                    bytes[seq_len(length(bytes) - 3L) + 2L] == sig[3] & bytes[seq_len(length(bytes) - 3L) + 3L] == sig[4])
+    hits[1]
+  }
+  size <- pi_le(declared, 4)
+  local <- at(as.raw(c(0x50, 0x4b, 0x03, 0x04)))
+  central <- at(as.raw(c(0x50, 0x4b, 0x01, 0x02)))
+  bytes[local + 22L + 0:3] <- size
+  bytes[central + 24L + 0:3] <- size
+  writeBin(bytes, path)
+  invisible(path)
+}
+
+test_that("AC-003 an archive whose declared size lies is rejected with a safe message", {
+  dir <- withr::local_tempdir()
+  writeLines(strrep("x", 300000), file.path(dir, "manifest.json"))
+  writeLines("{}", file.path(dir, "tables.json"))
+  lie <- withr::local_tempfile(fileext = ".zip")
+  zip::zipr(lie, c("manifest.json", "tables.json"), root = dir)
+  pi_lie_about_size(lie, 100L)
+  expect_equal(zip::zip_list(lie)$uncompressed_size[1], 100)
+  err <- tryCatch(pi_read(lie), error = function(e) e)
+  expect_s3_class(err, "richstudio_project_invalid")
+  expect_match(conditionMessage(err), "could not be extracted", fixed = TRUE)
+  expect_false(grepl("/tmp|Rtmp|rzip", conditionMessage(err)))
+})
+
 test_that("AC-003 import never evaluates anything it reads", {
   sentinel <- file.path(tempdir(), "pi-sentinel-should-not-exist")
   unlink(sentinel)
@@ -313,7 +345,7 @@ pi_state <- function() {
 # Cleared entries stay as NULL-valued keys (the app's own reset does the same), so only
 # live values count as "present".
 pi_snapshot <- function(state) {
-  live <- function(rv) Filter(Negate(is.null), shiny::reactiveValuesToList(rv))
+  live <- function(rv) Filter(Negate(is.null), shiny::reactiveValuesToList(rv, all.names = TRUE))
   shiny::isolate(list(
     degnames = state$u_degnames$labels, degdfs = live(state$u_degdfs),
     rrnames = state$u_rrnames$labels, rrdfs = live(state$u_rrdfs),
@@ -553,4 +585,67 @@ test_that("AC-004 REQ-004 a pending worker's late result is rejected after a leg
   malformed <- withr::local_tempfile(fileext = ".json")
   jsonlite::write_json(list(version = "1.0", degnames = 5), malformed, auto_unbox = TRUE)
   pi_pending(pi_open_json, fixture, malformed)
+})
+
+test_that("an unexpected (non-validation) import error shows no raw message or server path", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  testthat::local_mocked_bindings(
+    project_import_read = function(...) stop("boom /tmp/Rtmpabc123/secret.zip", call. = FALSE),
+    .package = "richStudio")
+  state <- pi_populate(pi_state())
+  app <- pi_app(state)
+  before <- pi_snapshot(state)
+  pi_open_project(app, pi_valid())
+  notes <- pi_notes(app)
+  expect_true(any(grepl("could not be read as a project", notes, fixed = TRUE)))
+  expect_false(any(grepl("/tmp|Rtmp|boom", notes)))
+  expect_identical(pi_snapshot(state), before)
+  expect_identical(app$jobs$generation, 1L)
+})
+
+test_that("labels that start with a dot are saved in the JSON session and the project and reopen intact", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  session <- pi_session()
+  names(session$degdfs) <- ".hidden_deg"
+  session$degnames <- ".hidden_deg"
+  names(session$rrdfs) <- ".hidden_rr"
+  session$rrnames <- ".hidden_rr"
+  names(session$clusdfs) <- ".hidden_clus"
+  names(session$cluslists) <- ".hidden_clus"
+  session$clusnames <- ".hidden_clus"
+  state <- pi_state()
+  shiny::isolate({
+    state$u_degnames$labels <- session$degnames
+    state$u_degdfs[[".hidden_deg"]] <- session$degdfs[[1]]
+    state$u_rrnames$labels <- session$rrnames
+    state$u_rrdfs[[".hidden_rr"]] <- session$rrdfs[[1]]
+    state$u_clusnames$labels <- session$clusnames
+    state$u_clusdfs[[".hidden_clus"]] <- session$clusdfs[[1]]
+    state$u_cluslists[[".hidden_clus"]] <- session$cluslists[[1]]
+  })
+  project <- withr::local_tempfile(fileext = ".zip")
+  json <- withr::local_tempfile(fileext = ".json")
+  shiny::testServer(richStudio::saveTabServer,
+    args = state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs", "u_clusnames", "u_clusdfs", "u_cluslists")], {
+      session$setInputs(session_name = "dots")
+      file.copy(output$download_project, project, overwrite = TRUE)
+      file.copy(output$download_session, json, overwrite = TRUE)
+    })
+  candidate <- pi_read(project)
+  expect_identical(candidate$degdfs, session$degdfs)
+  expect_identical(candidate$rrdfs, session$rrdfs)
+  expect_identical(candidate$clusdfs, session$clusdfs)
+  expect_identical(candidate$cluslists, session$cluslists)
+  saved <- richStudio:::session_json_read(json)
+  expect_identical(names(saved$degdfs), ".hidden_deg")
+  expect_identical(names(saved$rrdfs), ".hidden_rr")
+  expect_identical(names(saved$cluslists), ".hidden_clus")
+
+  # Opening it restores the dotted entries.
+  app <- pi_app(pi_populate(pi_state()))
+  pi_open_project(app, project)
+  after <- pi_snapshot(app$state)
+  expect_identical(names(after$degdfs), ".hidden_deg")
+  expect_identical(after$degdfs[[".hidden_deg"]], session$degdfs[[1]])
+  expect_identical(names(after$cluslists), ".hidden_clus")
 })

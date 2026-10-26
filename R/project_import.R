@@ -89,7 +89,8 @@ project_list_archive <- function(path, policy) {
 # Extract one validated member into the private staging directory and re-check its
 # real size against what the central directory declared.
 project_extract_member <- function(path, name, declared, stage) {
-  zip::unzip(path, files = name, exdir = stage)
+  tryCatch(zip::unzip(path, files = name, exdir = stage),
+           error = function(e) project_invalid("The project archive member ", name, " could not be extracted"))
   out <- file.path(stage, name)
   if (!file.exists(out) || is.na(file.size(out)) || file.size(out) > declared) {
     project_invalid("The project archive member ", name, " does not match its declared size")

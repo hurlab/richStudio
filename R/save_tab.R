@@ -194,7 +194,8 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     })
 
     # Cleared entries stay as NULL-valued keys in a reactiveValues; they are not data.
-    live_values <- function(rv) Filter(Negate(is.null), reactiveValuesToList(rv))
+    # all.names keeps labels that start with a dot.
+    live_values <- function(rv) Filter(Negate(is.null), reactiveValuesToList(rv, all.names = TRUE))
 
     # The session as a plain list: what both the JSON session and the project save.
     session_snapshot <- function() {
@@ -207,7 +208,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         rrdfs = live_values(u_rrdfs),
         clusnames = u_clusnames$labels,
         clusdfs = live_values(u_clusdfs),
-        cluslists = reactiveValuesToList(u_cluslists)
+        cluslists = live_values(u_cluslists)
       )
     }
 
@@ -356,7 +357,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       file_path <- input$load_project_file$datapath
       candidate <- tryCatch(project_import_read(file_path), error = function(e) e)
       if (inherits(candidate, "error")) {
-        showNotification(paste("Project could not be opened:", conditionMessage(candidate)),
+        # Only validation messages (written for the user) are shown; anything else,
+        # which may carry server paths, is replaced by a generic text.
+        reason <- if (inherits(candidate, "richstudio_project_invalid")) conditionMessage(candidate) else
+          "The file could not be read as a project"
+        showNotification(paste("Project could not be opened:", reason),
                          type = "error", duration = NULL)
         return(NULL)
       }

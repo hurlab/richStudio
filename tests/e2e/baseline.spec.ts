@@ -2,9 +2,11 @@ import { test, expect, fixturePath, openNavigation } from './fixtures';
 
 test('installed workspace imports synthetic enrichment without analysis', async ({ page }) => {
   await openNavigation(page);
-  await page.getByRole('link', { name: /\bClustering\b/ }).click();
-  await openNavigation(page);
-  await page.getByRole('link', { name: /Upload files$/ }).click();
+  const uploadLink = page.getByRole('link', { name: /Upload files$/ });
+  if (!(await uploadLink.isVisible())) {
+    await page.getByRole('link', { name: /\bClustering\b/ }).click();
+  }
+  await uploadLink.click();
   const upload = page.getByRole('tabpanel').filter({ has: page.getByText('Upload enrichment results for clustering', { exact: true }) });
   await upload.getByLabel('Select files', { exact: true }).setInputFiles(fixturePath('imported-results.tsv'));
   await expect(upload.getByRole('cell', { name: 'imported-results.tsv', exact: true })).toBeVisible();

@@ -6,10 +6,24 @@
 #
 
 # Ensure package code is available when running outside an installed package.
-pkg_root <- tryCatch(
-  normalizePath(file.path(getwd(), "..", ".."), mustWork = TRUE),
-  error = function(e) NULL
-)
+app_root_candidates <- function() {
+  wd <- normalizePath(getwd(), mustWork = FALSE)
+  candidates <- c(getOption("richStudio.appdir"), wd, dirname(wd),
+                  dirname(dirname(wd)), system.file(package = "richStudio"))
+  candidates <- unique(as.character(candidates))
+  candidates <- candidates[!is.na(candidates) & nzchar(candidates)]
+  vapply(candidates, normalizePath, character(1), mustWork = FALSE)
+}
+app_package_root <- function() {
+  for (candidate in app_root_candidates()) {
+    description <- file.path(candidate, "DESCRIPTION")
+    if (!file.exists(description)) next
+    fields <- tryCatch(read.dcf(description, fields = "Package"), error = function(e) NULL)
+    if (!is.null(fields) && identical(unname(fields[[1L]]), "richStudio")) return(candidate)
+  }
+  NULL
+}
+pkg_root <- app_package_root()
 richStudio_namespace <- NULL
 
 if (!is.null(pkg_root) && file.exists(file.path(pkg_root, "DESCRIPTION"))) {

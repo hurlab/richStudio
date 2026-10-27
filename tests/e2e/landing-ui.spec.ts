@@ -5,6 +5,9 @@ test('landing shows release information and keeps empty dataset controls hidden'
   page.on('pageerror', error => errors.push(error.message));
   await expect(page.locator('#loading-overlay')).toBeHidden();
   await expect(page.locator('.version-pill')).toHaveText(/v\d+\.\d+\.\d+/);
+  if (process.env.EXPECTED_RELEASE_BUILD) {
+    await expect(page.locator('.version-pill')).toContainText(`Build ${process.env.EXPECTED_RELEASE_BUILD}`);
+  }
   await expect(page.locator('#workspace-header')).toBeHidden();
   await expect(page.getByLabel('Change dataset', { exact: true })).toBeHidden();
   await page.screenshot({ path: info.outputPath('landing.png'), fullPage: true });

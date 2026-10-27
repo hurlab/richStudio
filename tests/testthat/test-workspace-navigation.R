@@ -175,6 +175,10 @@ test_that("landing version and build are read from package and release metadata"
   root <- tempfile("richstudio-release-")
   dir.create(root)
   writeLines(c("Package: richStudio", "Version: 9.8.7"), file.path(root, "DESCRIPTION"))
+  app_dir <- file.path(root, "application")
+  dir.create(app_dir)
+  expect_identical(richStudio:::workspace_package_root(candidates = c(app_dir, root)),
+                   normalizePath(root))
   writeLines("0123456789abcdef0123456789abcdef01234567", file.path(root, ".release-commit"))
   release <- richStudio:::workspace_release_metadata(root)
   expect_identical(release$version, "9.8.7")

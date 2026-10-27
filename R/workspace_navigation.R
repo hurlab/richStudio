@@ -9,7 +9,27 @@ workspace_demo_labels <- c("go1", "go2", "kegg1")
 
 # Version comes from the package metadata; deployed builds use their stamped
 # release commit, while a source checkout may use git as a development fallback.
+workspace_package_root <- function(root = NULL, candidates = NULL) {
+  if (is.null(candidates)) {
+    wd <- normalizePath(getwd(), mustWork = FALSE)
+    candidates <- c(getOption("richStudio.appdir"), wd, dirname(wd),
+                    dirname(dirname(wd)), system.file(package = "richStudio"))
+  }
+  candidates <- unique(as.character(c(root, candidates)))
+  candidates <- candidates[!is.na(candidates) & nzchar(candidates)]
+  candidates <- vapply(candidates, normalizePath, character(1), mustWork = FALSE)
+  candidates <- unique(candidates)
+  for (candidate in candidates) {
+    description <- file.path(candidate, "DESCRIPTION")
+    if (!file.exists(description)) next
+    fields <- tryCatch(read.dcf(description, fields = "Package"), error = function(e) NULL)
+    if (!is.null(fields) && identical(unname(fields[[1L]]), "richStudio")) return(candidate)
+  }
+  NULL
+}
+
 workspace_release_metadata <- function(root = NULL) {
+  root <- workspace_package_root(root)
   description <- if (!is.null(root)) file.path(root, "DESCRIPTION") else NULL
   version <- if (!is.null(description) && file.exists(description)) {
     as.character(read.dcf(description, fields = "Version")[[1L]])

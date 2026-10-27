@@ -7,18 +7,52 @@ workspace_tabs <- c("home_tab", "enrich_tab", "rr_visualize_tab", "cluster_uploa
 workspace_sidebar_id <- "workspace_sidebar"
 workspace_demo_labels <- c("go1", "go2", "kegg1")
 
+# Version comes from the package metadata; deployed builds use their stamped
+# release commit, while a source checkout may use git as a development fallback.
+workspace_release_metadata <- function(root = NULL) {
+  description <- if (!is.null(root)) file.path(root, "DESCRIPTION") else NULL
+  version <- if (!is.null(description) && file.exists(description)) {
+    as.character(read.dcf(description, fields = "Version")[[1L]])
+  } else if (requireNamespace("richStudio", quietly = TRUE)) {
+    as.character(utils::packageVersion("richStudio"))
+  } else {
+    NA_character_
+  }
+
+  valid_build <- function(value) length(value) == 1L && !is.na(value) &&
+    grepl("^[[:xdigit:]]{7,40}$", value)
+  release_file <- if (!is.null(root)) file.path(root, ".release-commit") else NULL
+  build <- if (!is.null(release_file) && file.exists(release_file)) {
+    trimws(readLines(release_file, n = 1L, warn = FALSE))
+  } else {
+    NA_character_
+  }
+  if (valid_build(build)) build <- substr(build, 1L, 7L)
+  if (!valid_build(build) && !is.null(root) &&
+      file.exists(file.path(root, ".git"))) {
+    candidate <- tryCatch(system2("git", c("-C", shQuote(root), "rev-parse", "--short", "HEAD"),
+                                  stdout = TRUE, stderr = FALSE), error = function(e) character())
+    if (length(candidate) == 1L && valid_build(candidate)) build <- substr(candidate, 1L, 7L)
+  }
+  if (!valid_build(build)) build <- NULL
+  if (length(version) != 1L || is.na(version) || !nzchar(version)) version <- NULL
+  list(version = version, build = build)
+}
+
 # Sidebar menu. Route strings are unchanged in both release-switch states; only
 # the two figure captions differ.
 workspace_sidebar_menu <- function(enabled = TRUE) {
   figures <- if (isTRUE(enabled)) c("Enrichment figures", "Cluster figures") else c("Visualize", "Visualize")
   shinydashboard::sidebarMenu(id = if (isTRUE(enabled)) workspace_sidebar_id,
-    shinydashboard::menuItem("Home", icon = shiny::icon("house"), tabName = "home_tab"),
+    shinydashboard::menuItem("Home", icon = shiny::icon("house"), tabName = "home_tab", selected = TRUE),
     shiny::tags$li(class = "header", "ANALYSIS"),
     shinydashboard::menuItem("Enrichment", icon = shiny::icon("flask"), tabName = "enrich_tab_group",
+      startExpanded = TRUE,
       shinydashboard::menuSubItem("Enrich", icon = shiny::icon("play-circle"), tabName = "enrich_tab"),
       shinydashboard::menuSubItem(figures[1], icon = shiny::icon("chart-bar"), tabName = "rr_visualize_tab")
     ),
     shinydashboard::menuItem("Clustering", icon = shiny::icon("layer-group"), tabName = "cluster_tab_group",
+      startExpanded = TRUE,
       shinydashboard::menuSubItem("Upload files", icon = shiny::icon("file-arrow-up"), tabName = "cluster_upload_tab"),
       shinydashboard::menuSubItem("Cluster", icon = shiny::icon("vials"), tabName = "cluster_tab"),
       shinydashboard::menuSubItem(figures[2], icon = shiny::icon("chart-line"), tabName = "clus_visualize_tab")
@@ -95,6 +129,11 @@ workspace_recorded_facts <- function(metadata, name) {
 workspace_header_ui <- function(id = "workspace", enabled = TRUE) {
   if (!isTRUE(enabled)) return(NULL)
   ns <- shiny::NS(id)
+  shiny::uiOutput(ns("container"))
+}
+
+workspace_header_content_ui <- function(id = "workspace") {
+  ns <- shiny::NS(id)
   shiny::tags$section(id = ns("header"), class = "rs-workspace rs-workspace-card",
     `aria-label` = "Active workspace",
     shiny::uiOutput(ns("summary")),
@@ -108,6 +147,11 @@ workspace_header_ui <- function(id = "workspace", enabled = TRUE) {
 workspaceHeaderServer <- function(id, active_result, u_rrnames, u_big_rrdf, navigate) {
   shiny::moduleServer(id, function(input, output, session) {
     labels <- shiny::reactive(as.character(u_rrnames$labels))
+
+    output$container <- shiny::renderUI({
+      if (!length(labels())) return(NULL)
+      workspace_header_content_ui(session$ns(NULL))
+    })
 
     # Keep the chooser in step with the stores; a removed active label is cleared.
     shiny::observe({

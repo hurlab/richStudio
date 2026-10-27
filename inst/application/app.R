@@ -92,7 +92,13 @@ if (richCluster_available) {
   message("Install from CRAN with: install.packages('richCluster')")
 }
 
-app_version <- "0.1.6"
+app_release <- if (!is.null(richStudio_namespace)) {
+  base::get("workspace_release_metadata", envir = richStudio_namespace)(pkg_root)
+} else {
+  workspace_release_metadata(pkg_root)
+}
+app_version <- app_release$version
+app_build <- app_release$build
 
 # UI Definition
 ui <- function(request) {
@@ -144,7 +150,7 @@ ui <- function(request) {
 
       tabItems(
         homeTabUI("home", tabName = "home_tab", app_version = app_version,
-                  enabled = workspace_navigation),
+                  app_build = app_build, enabled = workspace_navigation),
         enrichTabUI("enrich", tabName = "enrich_tab"),
         rrVisTabUI("rr_visualize", tabName = "rr_visualize_tab"),
         clusterUploadTabUI("cluster_upload", tabName = "cluster_upload_tab"),
@@ -156,6 +162,19 @@ ui <- function(request) {
       tags$head(
         tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
         tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+        if (workspace_navigation) tags$script(HTML("
+          document.addEventListener('click', function(event) {
+            var link = event.target.closest('.sidebar-menu > li.treeview > a');
+            if (!link) return;
+            var menu = link.nextElementSibling;
+            if (!menu || !menu.classList.contains('treeview-menu')) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var open = menu.style.display !== 'none';
+            menu.style.display = open ? 'none' : 'block';
+            menu.classList.toggle('menu-open', !open);
+          }, true);
+        ")),
         tags$script(HTML(paste0("
           $(document).on('shiny:connected', function() {
             // Hide loading overlay with fade
@@ -307,7 +326,7 @@ server <- function(input, output, session) {
 # available without exporting those implementation functions.
 if (!is.null(richStudio_namespace)) {
   ui_environment <- list2env(
-    list(app_version = app_version),
+    list(app_version = app_version, app_build = app_build),
     parent = richStudio_namespace
   )
   environment(ui) <- ui_environment

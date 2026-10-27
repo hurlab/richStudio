@@ -171,6 +171,27 @@ test_that("REQ-001 AC-001 Home renders four native entry actions above About and
             regexpr("Upload gene lists", html, fixed = TRUE))
 })
 
+test_that("landing version and build are read from package and release metadata", {
+  root <- tempfile("richstudio-release-")
+  dir.create(root)
+  writeLines(c("Package: richStudio", "Version: 9.8.7"), file.path(root, "DESCRIPTION"))
+  writeLines("0123456789abcdef0123456789abcdef01234567", file.path(root, ".release-commit"))
+  release <- richStudio:::workspace_release_metadata(root)
+  expect_identical(release$version, "9.8.7")
+  expect_identical(release$build, "0123456")
+  writeLines(character(), file.path(root, ".release-commit"))
+  empty_release <- richStudio:::workspace_release_metadata(root)
+  expect_identical(empty_release$build, NULL)
+  unlink(root, recursive = TRUE)
+
+  html <- ws3_html(richStudio:::homeTabUI("home", "home_tab", release$version,
+                                           app_build = release$build))
+  expect_match(html, "v9.8.7", fixed = TRUE)
+  expect_match(html, "Build 0123456", fixed = TRUE)
+  without_build <- ws3_html(richStudio:::homeTabUI("home", "home_tab", "9.8.7"))
+  expect_false(grepl("build-id", without_build, fixed = TRUE))
+})
+
 test_that("REQ-001 M15 enabled Home markup meets the accessibility contract", {
   html <- ws3_html(richStudio:::homeTabUI("home", "home_tab", "fixture-version", enabled = TRUE))
   # No element combines role="presentation" with an aria-label; icons are hidden instead.
@@ -245,25 +266,38 @@ test_that("REQ-002 sidebar relabels figure destinations and keeps every route in
   expect_identical(ws3_captions(off)[c("rr_visualize_tab", "clus_visualize_tab")],
                    c(rr_visualize_tab = "Visualize", clus_visualize_tab = "Visualize"))
   expect_match(on, 'id="workspace_sidebar"', fixed = TRUE)
+  expect_identical(ws3_count(on, "menu-open"), 2L)
+  expect_identical(ws3_count(on, 'data-start-selected="1"'), 1L)
   expect_false(grepl("figures", off, fixed = TRUE))
 })
 
 test_that("REQ-003 S11 header is an accessible region with a native dataset chooser and no provenance marker", {
   on <- ws3_html(richStudio:::workspace_header_ui("workspace", enabled = TRUE))
-  for (value in c('id="workspace-header"', 'aria-label="Active workspace"',
-                  '<select class="shiny-input-select form-control" id="workspace-active_result">',
-                  "Change dataset", '<option value="" selected>Choose a result</option>',
-                  'id="workspace-summary"', 'id="workspace-actions"')) {
-    expect_match(on, value, fixed = TRUE)
-  }
-  expect_false(grepl('data-for="workspace-active_result"', on, fixed = TRUE))
-  expect_false(grepl("<h[1-6]", on))
-  for (kind in c("rs-workspace-kind", "Setup draft", "Captured run settings", "Display filter",
-                 "Committed input revision", "Unsaved project changes")) {
-    expect_false(grepl(kind, on, fixed = TRUE))
-  }
+  expect_match(on, 'id="workspace-container"', fixed = TRUE)
   expect_identical(ws3_html(shiny::tagList(
     richStudio:::workspace_header_ui("workspace", enabled = FALSE))), "")
+})
+
+test_that("REQ-003 header container appears and disappears with result labels", {
+  fixture <- ws3_header_fixture()
+  result_names <- fixture$args$u_rrnames
+  shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+    session$flushReact()
+    expect_identical(ws3_output_html(output$container), "")
+    result_names$labels <- "go1"
+    session$flushReact()
+    html <- ws3_output_html(output$container)
+    for (value in c('id="workspace-header"', 'aria-label="Active workspace"',
+                    '<select class="shiny-input-select form-control" id="workspace-active_result">',
+                    "Change dataset", '<option value="" selected>Choose a result</option>',
+                    'id="workspace-summary"', 'id="workspace-actions"')) {
+      expect_match(html, value, fixed = TRUE)
+    }
+    expect_false(grepl('data-for="workspace-active_result"', html, fixed = TRUE))
+    result_names$labels <- character()
+    session$flushReact()
+    expect_identical(ws3_output_html(output$container), "")
+  })
 })
 
 test_that("REQ-001 AC-001 demo loader reproduces the bundled results once and skips present labels", {

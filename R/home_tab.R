@@ -23,7 +23,7 @@ homeQuickStartUI <- function(id) {
   )
 }
 
-homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
+homeTabUI <- function(id, tabName, app_version = NULL, enabled = TRUE, app_build = NULL) {
   ns <- NS(id)
   enabled <- isTRUE(enabled)
   # Enabled-Home accessibility adjustments; with the switch off every helper returns
@@ -78,7 +78,8 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
               class = "home-subtitle"),
             p("Run GO, KEGG, or Reactome enrichment directly, or import results from tools like clusterProfiler or DAVID. Cluster functionally related terms using multiple algorithms and explore results through interactive plots.",
               class = "home-subtitle"),
-            span(class = "version-pill", paste0("v", app_version))
+            span(class = "version-pill", if (is.null(app_version)) "richStudio" else paste0("v", app_version),
+              if (!is.null(app_build)) span(class = "build-id", paste0(" · Build ", app_build)))
           )
         )
       )
@@ -136,7 +137,8 @@ homeTabUI <- function(id, tabName, app_version = "0.1.6", enabled = TRUE) {
             # #475569 is 7.58:1 on the white card (the muted colour gives 2.56:1).
             p(tags$small(
               style = if (enabled) "color: #475569;" else "color: var(--rs-text-muted);",
-              paste0("richStudio v", app_version, " | R Shiny | GPL-3 License")
+              paste0("richStudio", if (!is.null(app_version)) paste0(" v", app_version),
+                " | R Shiny | GPL-3 License")
             ))
           )
         )

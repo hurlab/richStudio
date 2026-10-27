@@ -79,7 +79,7 @@ homeTabUI <- function(id, tabName, app_version = NULL, enabled = TRUE, app_build
             p("Run GO, KEGG, or Reactome enrichment directly, or import results from tools like clusterProfiler or DAVID. Cluster functionally related terms using multiple algorithms and explore results through interactive plots.",
               class = "home-subtitle"),
             span(class = "version-pill", if (is.null(app_version)) "richStudio" else paste0("v", app_version),
-              if (!is.null(app_build)) span(class = "build-id", paste0(" · Build ", app_build)))
+              if (!is.null(app_build)) span(class = "build-id", paste0(" | Build ", app_build)))
           )
         )
       )

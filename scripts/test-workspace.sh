@@ -713,7 +713,7 @@ resource_measurements() {
 case "$MODE" in
   serve)
     installed
-    timeout --kill-after=5s 300s Rscript --vanilla -e 'tryCatch(shiny::runApp(system.file("application",package="richStudio"),host="127.0.0.1",port=3871,launch.browser=FALSE),finally=future::plan(future::sequential))' &
+    timeout --kill-after=5s 900s Rscript --vanilla -e 'tryCatch(shiny::runApp(system.file("application",package="richStudio"),host="127.0.0.1",port=3871,launch.browser=FALSE),finally=future::plan(future::sequential))' &
     server_pid=$!
     trap 'kill -TERM "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; rm -rf -- "$SCRATCH"' EXIT
     wait "$server_pid"

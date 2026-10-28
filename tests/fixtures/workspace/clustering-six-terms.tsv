@@ -1,0 +1,7 @@
+Term	Annot	GeneID	Pvalue	Padj
+A1	Alpha one	g1,g2,g3,g4	0.00001	0.0001
+A2	Alpha two	g1,g2,g3,g5	0.00002	0.0002
+A3	Alpha three	g1,g2,g4,g5	0.00003	0.0003
+B1	Beta one	g6,g7,g8,g9	0.00004	0.0004
+B2	Beta two	g6,g7,g8,g10	0.00005	0.0005
+B3	Beta three	g6,g7,g9,g10	0.00006	0.0006

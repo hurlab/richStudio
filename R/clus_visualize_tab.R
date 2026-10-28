@@ -191,40 +191,64 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
     
       
     
-    # Update heatmap when cluster result selection changes
-    observeEvent(input$clusdf_select, {
-      req(input$clusdf_select)
-
-      df <- u_clusdfs[[input$clusdf_select]]
-      req(df, nrow(df) > 0)
-      term_vec_reactive(unique(df$Representative_Term))
-
-      cluslist_df <- u_cluslists[[input$clusdf_select]]
-      req(cluslist_df, nrow(cluslist_df) > 0)
-
-      hmap <- comprehensive_hmap(final_data=df, cluster_list=cluslist_df,
-                                 value_type=input$big_value_type, value_by=input$value_by)
-      
-      output$clusdf_hmap <- renderPlotly({
-        hmap
-      })
+    selected_cluster <- reactive({
+      name <- input$clusdf_select
+      if (is.null(name) || length(name) != 1L || !nzchar(name)) return(NULL)
+      df <- u_clusdfs[[name]]
+      cluslist_df <- u_cluslists[[name]]
+      if (!is.data.frame(df) || !nrow(df) || !is.data.frame(cluslist_df) || !nrow(cluslist_df)) {
+        return(NULL)
+      }
+      list(df = df, cluster_list = cluslist_df)
     })
-    
-    # plot indiv cluster hmap
+
+    observeEvent(selected_cluster(), {
+      selected <- selected_cluster()
+      if (!is.null(selected)) term_vec_reactive(unique(selected$df$Representative_Term))
+    }, ignoreNULL = TRUE)
+
+    summary_heatmap <- reactive({
+      selected <- selected_cluster()
+      if (is.null(selected)) return(NULL)
+      comprehensive_hmap(final_data = selected$df, cluster_list = selected$cluster_list,
+                         value_type = input$big_value_type, value_by = input$value_by)
+    })
+
+    observe({
+      if (inherits(summary_heatmap(), "plotly")) {
+        shinyjs::hide("clusdf_hmap_empty")
+      } else {
+        shinyjs::show("clusdf_hmap_empty")
+      }
+    })
+
+    output$clusdf_hmap <- renderPlotly({
+      hmap <- summary_heatmap()
+      req(inherits(hmap, "plotly"))
+      hmap
+    })
+
     plot_cluslist_hmap <- reactive({
-      req(input$indiv_clus_select, input$clusdf_select)
-
-      df <- u_clusdfs[[input$clusdf_select]]
-      cluslist_df <- u_cluslists[[input$clusdf_select]]
-      req(df, cluslist_df)
-      
-      hmap <- cluster_hmap(cluster_list=cluslist_df, term_vec=input$indiv_clus_select, 
-                           final_data=df, value_type=input$small_value_type)
-      return(hmap)
+      selected <- selected_cluster()
+      terms <- input$indiv_clus_select
+      if (is.null(selected) || is.null(terms) || !length(terms) ||
+          !all(terms %in% selected$df$Representative_Term)) return(NULL)
+      cluster_hmap(cluster_list = selected$cluster_list, term_vec = terms,
+                   final_data = selected$df, value_type = input$small_value_type)
     })
-    
+
+    observe({
+      if (inherits(plot_cluslist_hmap(), "plotly")) {
+        shinyjs::hide("indiv_hmap_empty")
+      } else {
+        shinyjs::show("indiv_hmap_empty")
+      }
+    })
+
     output$indiv_clus_hmap <- renderPlotly({
-      plot_cluslist_hmap()
+      hmap <- plot_cluslist_hmap()
+      req(inherits(hmap, "plotly"))
+      hmap
     })
     
     # Reactively update which cluster list table is read based on selection

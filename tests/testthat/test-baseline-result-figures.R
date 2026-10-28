@@ -255,3 +255,65 @@ test_that("cluster module links selected summary representatives and term tables
     expect_identical(u_cluslists$fixture, x$cluster_list)
   })
 })
+
+test_that("cluster heatmap controls rerender and empty-state messages follow valid plots", {
+  state <- ws_baseline_state()
+  state$u_clusnames$labels <- "fixture"
+  expected_summary <- data.frame(
+    Cluster = 1L, Representative_Term = "A1", Pvalue_fixture = 0.01, Padj_fixture = 0.02
+  )
+  expected_terms <- data.frame(
+    Cluster = c(1L, 1L), Term = c("A1", "A2"), Representative_Term = c("A1", "A1"),
+    Pvalue_fixture = c(0.01, 0.04), Padj_fixture = c(0.02, 0.06)
+  )
+  state$u_clusdfs$fixture <- expected_summary
+  state$u_cluslists$fixture <- expected_terms
+  args <- state[intersect(names(state), names(formals(richStudio:::clusVisTabServer)))]
+  args$id <- "clusters"
+  owned_session <- shiny::MockShinySession$new()
+  withr::defer(owned_session$close())
+  sent <- new.env(parent = emptyenv())
+  sent$custom <- list()
+  original_custom <- owned_session$sendCustomMessage
+  withr::defer(owned_session$sendCustomMessage <- original_custom)
+  owned_session$sendCustomMessage <- function(type, message) {
+    sent$custom[[length(sent$custom) + 1L]] <- list(type = type, message = message)
+    original_custom(type, message)
+  }
+
+  shiny::testServer(richStudio:::clusVisTabServer, args = args, session = owned_session, {
+    session$flushReact()
+    session$setInputs(clusdf_select = "fixture", big_value_type = "Padj", value_by = "mean",
+                      small_value_type = "Padj")
+    padj <- output$clusdf_hmap
+    expect_match(padj, "-log10(Padj) by Cluster", fixed = TRUE)
+
+    session$setInputs(big_value_type = "Pvalue")
+    pvalue <- output$clusdf_hmap
+    expect_false(identical(padj, pvalue))
+    expect_match(pvalue, "-log10(Pvalue) by Cluster", fixed = TRUE)
+
+    session$setInputs(value_by = "min")
+    minimum <- output$clusdf_hmap
+    expect_false(identical(pvalue, minimum))
+    expect_match(minimum, "-log10(Pvalue) by Cluster", fixed = TRUE)
+    expect_identical(u_clusdfs$fixture, expected_summary)
+    expect_identical(u_cluslists$fixture, expected_terms)
+
+    session$setInputs(indiv_clus_select = "A1")
+    expect_match(output$indiv_clus_hmap, "A1", fixed = TRUE)
+    actions <- sent$custom
+    expect_true(any(vapply(actions, function(x) identical(x$type, "shinyjs-hide") &&
+      identical(x$message$id, "clusters-clusdf_hmap_empty"), logical(1))))
+    expect_true(any(vapply(actions, function(x) identical(x$type, "shinyjs-hide") &&
+      identical(x$message$id, "clusters-indiv_hmap_empty"), logical(1))))
+
+    session$setInputs(clusdf_select = "", indiv_clus_select = character())
+    session$flushReact()
+    actions <- sent$custom
+    expect_true(any(vapply(actions, function(x) identical(x$type, "shinyjs-show") &&
+      identical(x$message$id, "clusters-clusdf_hmap_empty"), logical(1))))
+    expect_true(any(vapply(actions, function(x) identical(x$type, "shinyjs-show") &&
+      identical(x$message$id, "clusters-indiv_hmap_empty"), logical(1))))
+  })
+})

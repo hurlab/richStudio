@@ -331,7 +331,8 @@ server <- function(input, output, session) {
   saveTabServer("save",
     u_degnames = u_degnames, u_degdfs = u_degdfs,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs,
-    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists
+    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists,
+    u_big_rrdf = u_big_rrdf, u_big_clusdf = u_big_clusdf
   )
 }
 

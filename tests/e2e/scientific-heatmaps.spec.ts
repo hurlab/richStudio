@@ -105,15 +105,34 @@ async function selectResultTrace(page: Page, name: string) {
   const clusters = Number(values[nameIndex + 2]);
   expect(nameIndex).toBeGreaterThanOrEqual(0);
   expect(Number.isInteger(clusters) && clusters > 0).toBe(true);
-  // Selection updates before the Shiny plot. A different method's previous
-  // graph must not be accepted merely because it has more than six cells.
+  // Keep the accepted frame together with the selection and count checks,
+  // so a reactive selection reset cannot pass during a transient render.
+  let captured: Heatmap[] = [];
+  let previous = '';
+  let stableFrames = 0;
+  const observations: Array<{ selected: string; clusters: number; recalculating: boolean }> = [];
   await expect.poll(async () => {
-    const trace = mainTrace(await heatmaps(page));
-    return trace ? new Set(trace.cells.map(cell => cell.y)).size : 0;
-  }, { timeout: 60_000 }).toBe(clusters);
-  const trace = mainTrace(await heatmaps(page));
-  if (!trace) throw new Error(`Missing numeric trace for ${name}`);
-  return trace;
+    const selected = await page.locator('#clus_visualize-clusdf_select').inputValue();
+    const recalculating = await page.locator('#clus_visualize-clusdf_hmap').evaluate(element =>
+      element.classList.contains('recalculating'));
+    const traces = await heatmaps(page);
+    const trace = mainTrace(traces);
+    const actualClusters = trace ? new Set(trace.cells.map(cell => cell.y)).size : 0;
+    observations.push({ selected, clusters: actualClusters, recalculating });
+    const signature = JSON.stringify(traces);
+    if (selected === name && actualClusters === clusters && !recalculating) {
+      stableFrames = signature === previous ? stableFrames + 1 : 1;
+      captured = traces;
+    } else stableFrames = 0;
+    previous = signature;
+    return stableFrames >= 3;
+  }, { timeout: 60_000, intervals: [100, 250, 500] }).toBe(true).finally(() => {
+    const transitions = observations.filter((value, index, all) =>
+      index === 0 || JSON.stringify(value) !== JSON.stringify(all[index - 1]));
+    console.log('TRACE_SELECTION', JSON.stringify({ name, expectedClusters: clusters,
+      rowValues: values, framesObserved: observations.length, transitions }));
+  });
+  return captured;
 }
 
 async function saveEvidence(info: TestInfo, name: string, value: unknown) {
@@ -323,12 +342,14 @@ test('fresh synthetic TSV upload runs both corrected backends and preserves miss
   const traces: Record<string, Heatmap[]> = {};
   await goToTab(page, 'clus_visualize_tab');
   for (const name of names) {
-    const trace = await selectResultTrace(page, name);
+    const captured = await selectResultTrace(page, name);
+    const trace = mainTrace(captured);
+    if (!trace) throw new Error(`Missing numeric trace for ${name}`);
     expect(trace.cells).toHaveLength(4);
     assertUniqueCells(trace);
     expect(trace.cells.filter(cell => cell.z === null)).toHaveLength(1);
     expect(trace.cells.filter(cell => cell.z === 0)).toHaveLength(1);
-    traces[name] = await heatmaps(page);
+    traces[name] = captured;
   }
   await page.screenshot({ path: info.outputPath('synthetic-upload-compute.png'), fullPage: true });
   const saved = await downloadSession(page, info, 'synthetic-gui-roundtrip');
@@ -337,8 +358,8 @@ test('fresh synthetic TSV upload runs both corrected backends and preserves miss
     await loadSession(fresh.page, saved, names);
     await goToTab(fresh.page, 'clus_visualize_tab');
     for (const name of names) {
-      await selectResultTrace(fresh.page, name);
-      await expect.poll(async () => mainTrace(await heatmaps(fresh.page))?.cells).toEqual(mainTrace(traces[name])?.cells);
+      const captured = await selectResultTrace(fresh.page, name);
+      expect(mainTrace(captured)?.cells).toEqual(mainTrace(traces[name])?.cells);
     }
     await downloadSession(fresh.page, info, 'synthetic-gui-restored');
   } finally {
@@ -367,11 +388,13 @@ test('GSE63310 real TSV inputs run corrected Kappa hierarchical and DAVID backen
   const traces: Record<string, Heatmap[]> = {};
   await goToTab(page, 'clus_visualize_tab');
   for (const name of names) {
-    const trace = await selectResultTrace(page, name);
+    const captured = await selectResultTrace(page, name);
+    const trace = mainTrace(captured);
+    if (!trace) throw new Error(`Missing numeric trace for ${name}`);
     expect(trace.cells.length).toBeGreaterThan(6);
     assertUniqueCells(trace);
     expect(trace.cells.every(cell => /^cluster:\d+$/.test(cell.y))).toBe(true);
-    traces[name] = await heatmaps(page);
+    traces[name] = captured;
     await page.screenshot({ path: info.outputPath(`${name}.png`), fullPage: true });
   }
   const saved = await downloadSession(page, info, 'gse63310-gui-roundtrip');
@@ -380,8 +403,8 @@ test('GSE63310 real TSV inputs run corrected Kappa hierarchical and DAVID backen
     await loadSession(fresh.page, saved, names);
     await goToTab(fresh.page, 'clus_visualize_tab');
     for (const name of names) {
-      await selectResultTrace(fresh.page, name);
-      await expect.poll(async () => mainTrace(await heatmaps(fresh.page))?.cells, { timeout: 60_000 }).toEqual(mainTrace(traces[name])?.cells);
+      const captured = await selectResultTrace(fresh.page, name);
+      expect(mainTrace(captured)?.cells).toEqual(mainTrace(traces[name])?.cells);
     }
     await downloadSession(fresh.page, info, 'gse63310-gui-restored');
   } finally {

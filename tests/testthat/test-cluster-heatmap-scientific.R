@@ -150,3 +150,34 @@ test_that("all-missing summary heatmaps retain distinct cluster coordinates", {
   expect_true(all(grepl("Not available", main$text, fixed=TRUE)))
   expect_identical(x, original)
 })
+
+test_that("changing cluster results does not reset the result selectors", {
+  state <- ws_baseline_state()
+  state$u_clusnames$labels <- c("hierarchical", "DAVID")
+  state$u_clusdfs$hierarchical <- data.frame(Cluster=1L, Representative_Term="first", Padj_case=.01)
+  state$u_cluslists$hierarchical <- data.frame(Cluster=1L, Term="first", Padj_case=.01)
+  state$u_clusdfs$DAVID <- data.frame(Cluster=30L, Representative_Term="second", Padj_case=.001)
+  state$u_cluslists$DAVID <- data.frame(Cluster=30L, Term="second", Padj_case=.001)
+  args <- state[intersect(names(state), names(formals(richStudio:::clusVisTabServer)))]
+  mock <- shiny::MockShinySession$new()
+  messages <- list()
+  mock$sendInputMessage <- function(inputId, message) {
+    messages[[length(messages) + 1L]] <<- list(id=inputId, message=message)
+  }
+  shiny::testServer(richStudio:::clusVisTabServer, args=args, session=mock, {
+    session$setInputs(clusdf_select="hierarchical", big_value_type="Padj", value_by="mean",
+                      small_value_type="Padj")
+    session$flushReact()
+    messages <<- list()
+    session$setInputs(clusdf_select="DAVID")
+    session$flushReact()
+    ids <- vapply(messages, `[[`, character(1), "id")
+    expect_false(any(grepl("clusdf_select$", ids)))
+    expect_false(any(grepl("cluslist_select$", ids)))
+    expect_true(any(grepl("indiv_clus_select$", ids)))
+    expect_identical(unname(term_vec_reactive()), "cluster:30")
+    trace <- plotly::plotly_build(summary_heatmap())$x$data[[1]]
+    expect_identical(as.character(trace$y), "cluster:30")
+    expect_identical(as.numeric(trace$z), 3)
+  })
+})

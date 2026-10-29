@@ -28,6 +28,9 @@ test_that("method selection keeps corrected Kappa as the default and names its f
     ))
     session$setInputs(clustering_method = "richR")
     expect_match(output$method_description$html, "enrichment-score", fixed = TRUE)
+    expect_match(output$method_description$html, "Legacy", ignore.case = TRUE)
+    expect_match(output$method_description$html, "Kappa", fixed = TRUE)
+    expect_match(output$method_description$html, "For a different algorithm", fixed = TRUE)
   })
 })
 
@@ -71,10 +74,10 @@ test_that("corrected Kappa dispatch agrees with an independent binary-membership
   expect_equal(unname(perfect$distance_matrix), matrix(1, 2, 2))
 })
 
-test_that("legacy enrichment-score errors guide users without invoking a replacement", {
+test_that("legacy enrichment-score errors retain their exact API message without a replacement", {
   fallback_calls <- 0L
   testthat::local_mocked_bindings(
-    cluster_richR = function(...) stop("Enrichment score too high, No significant cluster"),
+    cluster_richR = function(...) stop("Enrichment score too high, No significant cluster\n"),
     cluster_hierarchical = function(...) {
       fallback_calls <<- fallback_calls + 1L
       stop("unexpected replacement")
@@ -89,8 +92,7 @@ test_that("legacy enrichment-score errors guide users without invoking a replace
   error <- tryCatch(perform_clustering(input, "richR"), error = identity)
   expect_s3_class(error, "error")
   expect_match(conditionMessage(error), "Enrichment score too high", fixed = TRUE)
-  expect_match(conditionMessage(error), "Legacy Kappa - richR", fixed = TRUE)
-  expect_match(conditionMessage(error), "Hierarchical Kappa/Jaccard - richCluster", fixed = TRUE)
+  expect_identical(conditionMessage(error), "Clustering failed: Enrichment score too high, No significant cluster\n")
   expect_identical(fallback_calls, 0L)
 })
 
@@ -104,7 +106,7 @@ test_that("empty legacy results remain explicit non-results without new metadata
   expect_identical(result, list(success = FALSE))
 })
 
-test_that("a small real legacy score rejection retains its backend and guidance", {
+test_that("a small real legacy score rejection retains the provider error verbatim", {
   input <- data.frame(
     Term = c("A1", "A2", "A3", "B"), Annot = paste0("id", 1:4),
     GeneID = c(rep("g1,g2,g3", 3), "g4,g5,g6"), Pvalue = 0.9, Padj = 0.9
@@ -112,6 +114,5 @@ test_that("a small real legacy score rejection retains its backend and guidance"
   error <- tryCatch(perform_clustering(input, "richR"), error = identity)
   expect_s3_class(error, "error")
   expect_match(conditionMessage(error), "Enrichment score too high", fixed = TRUE)
-  expect_match(conditionMessage(error), "Legacy Kappa - richR", fixed = TRUE)
-  expect_match(conditionMessage(error), "For a different algorithm", fixed = TRUE)
+  expect_identical(conditionMessage(error), "Clustering failed: Enrichment score too high, No significant cluster\n")
 })

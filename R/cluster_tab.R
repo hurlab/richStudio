@@ -178,8 +178,10 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       desc <- switch(method,
         "richR" = tags$span(
           tags$strong("Warning:", style = "color: #d9534f;"),
-          " This legacy method can be slow and can reject inputs at its enrichment-score threshold. ",
-          "It uses richR::richCluster, a separate algorithm from the richCluster methods above."
+          " This legacy Kappa method can be slow and can reject inputs at its enrichment-score threshold. ",
+          "It uses richR::richCluster, a separate algorithm from the richCluster methods above. ",
+          if (is_richCluster_available())
+            "For a different algorithm, select Hierarchical Kappa/Jaccard - richCluster or DAVID-style - richCluster."
         ),
         "hierarchical" = "Uses corrected Kappa or Jaccard similarity and selectable linkage (single/complete/average/ward) from richCluster. The default is Kappa with average linkage.",
         "david" = "Uses the richCluster DAVID-style seed-and-merge algorithm with Kappa similarity. This is distinct from the legacy richR algorithm.",

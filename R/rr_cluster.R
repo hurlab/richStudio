@@ -282,15 +282,7 @@ perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_
            stop(paste("Unknown clustering method:", method))
     )
   }, error = function(e) {
-    message <- paste("Clustering failed:", conditionMessage(e))
-    if (identical(method, "richR") &&
-        grepl("Enrichment score too high", conditionMessage(e), fixed = TRUE)) {
-      message <- paste0(message,
-        " Legacy Kappa - richR has its own enrichment-score threshold. ",
-        "For a different algorithm, select Hierarchical Kappa/Jaccard - richCluster ",
-        "or DAVID-style - richCluster.")
-    }
-    stop(message, call. = FALSE)
+    stop(paste("Clustering failed:", conditionMessage(e)), call. = FALSE)
   })
 
   result$method <- method

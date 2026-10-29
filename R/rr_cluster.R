@@ -282,7 +282,15 @@ perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_
            stop(paste("Unknown clustering method:", method))
     )
   }, error = function(e) {
-    stop(paste("Clustering failed:", e$message))
+    message <- paste("Clustering failed:", conditionMessage(e))
+    if (identical(method, "richR") &&
+        grepl("Enrichment score too high", conditionMessage(e), fixed = TRUE)) {
+      message <- paste0(message,
+        " Legacy Kappa - richR has its own enrichment-score threshold. ",
+        "For a different algorithm, select Hierarchical Kappa/Jaccard - richCluster ",
+        "or DAVID-style - richCluster.")
+    }
+    stop(message, call. = FALSE)
   })
 
   result$method <- method
@@ -731,8 +739,8 @@ build_cluster_summary <- function(cluster_df) {
 get_clustering_methods <- function() {
   methods <- list(
     "richR" = list(
-      name = "richR (Original)",
-      description = "Kappa-based clustering using the original richR::richCluster method",
+      name = "Legacy Kappa - richR",
+      description = "Legacy richR::richCluster algorithm with its own enrichment-score threshold; distinct from richCluster methods",
       available = TRUE
     )
   )
@@ -740,23 +748,23 @@ get_clustering_methods <- function() {
   # Check if richCluster is available for additional methods
   if (is_richCluster_available()) {
     methods$hierarchical <- list(
-      name = "Hierarchical (richCluster)",
-      description = "Flexible hierarchical clustering with selectable distance metrics and linkage methods",
+      name = "Hierarchical Kappa/Jaccard - richCluster",
+      description = "Corrected Kappa/Jaccard similarity with selectable hierarchical linkage using richCluster",
       available = TRUE
     )
     methods$david <- list(
-      name = "DAVID Method",
-      description = "DAVID-style functional clustering with multiple linkage thresholds",
+      name = "DAVID-style - richCluster",
+      description = "DAVID-style seed-and-merge clustering with Kappa similarity using richCluster",
       available = TRUE
     )
   } else {
     methods$hierarchical <- list(
-      name = "Hierarchical (richCluster) - Not Available",
+      name = "Hierarchical Kappa/Jaccard - richCluster - Not Available",
       description = "Install richCluster package to enable this method",
       available = FALSE
     )
     methods$david <- list(
-      name = "DAVID Method - Not Available",
+      name = "DAVID-style - richCluster - Not Available",
       description = "Install richCluster package to enable this method",
       available = FALSE
     )

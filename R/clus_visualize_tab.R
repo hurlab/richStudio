@@ -204,7 +204,7 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
 
     observeEvent(selected_cluster(), {
       selected <- selected_cluster()
-      if (!is.null(selected)) term_vec_reactive(unique(selected$df$Representative_Term))
+      if (!is.null(selected)) term_vec_reactive(hmap_cluster_choices(selected$df))
     }, ignoreNULL = TRUE)
 
     summary_heatmap <- reactive({
@@ -232,7 +232,8 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       selected <- selected_cluster()
       terms <- input$indiv_clus_select
       if (is.null(selected) || is.null(terms) || !length(terms) ||
-          !all(terms %in% selected$df$Representative_Term)) return(NULL)
+          !all(terms %in% c(unname(hmap_cluster_choices(selected$df)),
+                           selected$df$Representative_Term))) return(NULL)
       cluster_hmap(cluster_list = selected$cluster_list, term_vec = terms,
                    final_data = selected$df, value_type = input$small_value_type)
     })

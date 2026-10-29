@@ -144,9 +144,9 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
         # All methods available, default to hierarchical
         radioButtons(ns('clustering_method'), NULL,
           choices = c(
-            "Hierarchical Clustering" = "hierarchical",
-            "DAVID Functional Clustering" = "david",
-            "richR (Original Kappa)" = "richR"
+            "Hierarchical Kappa/Jaccard - richCluster" = "hierarchical",
+            "DAVID-style - richCluster" = "david",
+            "Legacy Kappa - richR" = "richR"
           ),
           selected = "hierarchical",
           inline = TRUE
@@ -156,7 +156,7 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
         tagList(
           radioButtons(ns('clustering_method'), NULL,
             choices = c(
-              "richR (Original Kappa)" = "richR"
+              "Legacy Kappa - richR" = "richR"
             ),
             selected = "richR",
             inline = TRUE
@@ -178,11 +178,11 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       desc <- switch(method,
         "richR" = tags$span(
           tags$strong("Warning:", style = "color: #d9534f;"),
-          " This method can be slow with large datasets. ",
-          "Original Kappa-based clustering from the richR package. Groups terms based on gene overlap similarity using Cohen's Kappa coefficient."
+          " This legacy method can be slow and can reject inputs at its enrichment-score threshold. ",
+          "It uses richR::richCluster, a separate algorithm from the richCluster methods above."
         ),
-        "hierarchical" = "Flexible hierarchical clustering with selectable distance metrics (Kappa/Jaccard) and linkage methods (single/complete/average/ward). Recommended for most use cases.",
-        "david" = "DAVID-style functional clustering algorithm with multiple linkage thresholds for seed-based grouping.",
+        "hierarchical" = "Uses corrected Kappa or Jaccard similarity and selectable linkage (single/complete/average/ward) from richCluster. The default is Kappa with average linkage.",
+        "david" = "Uses the richCluster DAVID-style seed-and-merge algorithm with Kappa similarity. This is distinct from the legacy richR algorithm.",
         NULL
       )
       if (is.null(desc)) return(NULL)
@@ -262,11 +262,11 @@ clusterTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
               )
             ),
             column(width = 6,
-              h4("P-value Filter"),
-              numericInput(ns('hier_min_value'), "Max p-value to include",
+              h4("Raw Pvalue Filter"),
+              numericInput(ns('hier_min_value'), "Raw Pvalue cutoff (exclusive)",
                 value = 0.1, min = 0, max = 1, step = 0.01
               ),
-              helpText("Terms with higher p-values are excluded")
+              helpText("Keeps terms with raw Pvalue strictly below this cutoff in each input; this is not a Padj filter.")
             )
           )
         )

@@ -249,7 +249,8 @@ test_that("cluster module links selected summary representatives and term tables
     expect_error(cluslist_to_table(), class = "shiny.silent.error")
     session$setInputs(big_value_type = "Padj", value_by = "mean",
                       clusdf_select = "fixture", cluslist_select = "fixture")
-    expect_identical(term_vec_reactive(), c("A", "D"))
+    expect_identical(term_vec_reactive(), stats::setNames(c("cluster:1", "cluster:2"),
+      c("Cluster 1 | A", "Cluster 2 | D")))
     expect_identical(cluslist_to_table(), x$cluster_list)
     expect_identical(u_clusdfs$fixture, x$summary)
     expect_identical(u_cluslists$fixture, x$cluster_list)

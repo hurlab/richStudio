@@ -170,8 +170,8 @@ test('clustering plot controls refresh, session restore rebuilds tracking lists,
   await chooseSelectize(page, 'clus_visualize-clusdf_select', methods[0].name);
   const placeholder = page.locator('#clus_visualize-clusdf_hmap_empty');
   await waitForHeatmap(page, [
-    { term: 'A1', value: 3.699 },
-    { term: 'B1', value: 3.301 },
+    { term: 'cluster:1', value: 3.699 },
+    { term: 'cluster:2', value: 3.301 },
   ]);
   const initialPadjMean = await readHeatmapValues(page);
   await expect(page.locator('#clus_visualize-clusdf_hmap .main-svg').first()).toBeVisible();
@@ -179,15 +179,15 @@ test('clustering plot controls refresh, session restore rebuilds tracking lists,
 
   await chooseSelectize(page, 'clus_visualize-big_value_type', 'Pvalue');
   await waitForHeatmap(page, [
-    { term: 'A1', value: 4.699 },
-    { term: 'B1', value: 4.301 },
+    { term: 'cluster:1', value: 4.699 },
+    { term: 'cluster:2', value: 4.301 },
   ]);
   const afterPvalueMean = await readHeatmapValues(page);
   // Changing the aggregation must update the existing plot without reselecting data.
   await chooseSelectize(page, 'clus_visualize-value_by', 'min');
   await waitForHeatmap(page, [
-    { term: 'A1', value: 5 },
-    { term: 'B1', value: 4.3979 },
+    { term: 'cluster:1', value: 5 },
+    { term: 'cluster:2', value: 4.3979 },
   ]);
   const afterPvalueMin = await readHeatmapValues(page);
   await expect(placeholder).toBeHidden();

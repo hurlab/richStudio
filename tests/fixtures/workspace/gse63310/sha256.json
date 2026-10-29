@@ -1,0 +1,26 @@
+{
+  "Basal_vs_LP_down.tsv": {
+    "sha256": "66dbf309168e2653621523f2c8f139d3988ede44a985040eb639593720f7aa8f",
+    "bytes": 370187
+  },
+  "Basal_vs_LP_up.tsv": {
+    "sha256": "2d7e93e4cdf6d4e38491ae695ee5a0f68f2210a8ee3f2bee35b367b5830b9fb0",
+    "bytes": 484446
+  },
+  "Basal_vs_ML_down.tsv": {
+    "sha256": "269a42f985c5898cfaa512df6cd44e70c8c8ab0bccdad1d0969ace818fd4e0e6",
+    "bytes": 358288
+  },
+  "Basal_vs_ML_up.tsv": {
+    "sha256": "47fb768011c308db1d51d7fd0183e51da67d5058facadb537404807c06dc2593",
+    "bytes": 488572
+  },
+  "LP_vs_ML_down.tsv": {
+    "sha256": "fff09f94d408a63e81174cc379f6e62aa97dee6184484c87820d53fb436e5b5c",
+    "bytes": 257457
+  },
+  "LP_vs_ML_up.tsv": {
+    "sha256": "e06a9f02ca98da18905e88639a313be6593c89dc97814e0826901d12970b8035",
+    "bytes": 306562
+  }
+}

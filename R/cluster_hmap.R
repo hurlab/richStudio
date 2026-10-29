@@ -107,6 +107,7 @@ comprehensive_hmap <- function(final_data, cluster_list, value_type="Padj", valu
   melted_data <- melted_data[order(ordering), ]
   melted_data$raw_value <- hmap_numeric_pvalues(melted_data$value, "comprehensive_hmap")
   melted_data$value <- hmap_display_values(melted_data$raw_value)
+  if (all(is.na(melted_data$value))) melted_data$value <- I(melted_data$value)
   melted_data$cluster_key <- paste0("cluster:", melted_data$Cluster)
   description <- ifelse(is.na(melted_data$raw_value), "Not available",
     ifelse(melted_data$raw_value == 0,
@@ -159,9 +160,23 @@ cluster_hmap <- function(cluster_list, term_vec, final_data, value_type="Padj") 
   notes <- matrix(ifelse(is.na(raw_values), "Not available",
                          ifelse(raw_values == 0, "0 (display floor)", as.character(raw_values))),
                   nrow=nrow(raw_values), dimnames=dimnames(clusty))
+  notes <- matrix(paste0("Term: ", rownames(clusty)[row(clusty)],
+                          "<br>Analysis: ", colnames(clusty)[col(clusty)],
+                          "<br>", value_type, ": ", notes,
+                          "<br>-log10(", value_type, "): ", clusty),
+                  nrow=nrow(clusty), dimnames=dimnames(clusty))
+  # heatmaply cannot infer a color domain when every cell is missing.
+  # AsIs keeps plotly from mapping the NA matrix through a numeric palette.
+  if (all(is.na(clusty))) {
+    return(plotly::plot_ly(
+      x=colnames(clusty), y=rownames(clusty), z=I(clusty), text=notes,
+      type="heatmap", hoverinfo="text", hoverongaps=TRUE, showscale=FALSE
+    ) %>% layout(title="No available values", plot_bgcolor="#eeeeee",
+                 xaxis=list(title="Analysis"), yaxis=list(title="Term")))
+  }
   heatmaply(
     clusty, row_side_colors=data.frame("Cluster"=as.character(selected$Cluster), check.names=FALSE),
-    cellnote=notes, plot_method="plotly", cluster_rows=FALSE, cluster_cols=FALSE,
+    custom_hovertext=notes, plot_method="plotly", cluster_rows=FALSE, cluster_cols=FALSE,
     Rowv=FALSE, Colv=FALSE, main=paste0("-log10(", value_type, ") by Term"),
     key.title=paste0("-log10(", value_type, ")"), na.value="#eeeeee"
   )

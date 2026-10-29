@@ -95,3 +95,58 @@ test_that("cluster UI choices use stable IDs despite repeated representative nam
     expect_s3_class(plot_cluslist_hmap(), "plotly")
   })
 })
+
+test_that("individual hover explains raw probabilities and the zero display floor", {
+  x <- scientific_heatmap_fixture()
+  original <- x
+  plot <- richStudio:::cluster_hmap(x$details, "Shared", x$summary)
+  traces <- Filter(function(trace) identical(trace$type, "heatmap") &&
+                     "case" %in% colnames(trace$z), plotly::plotly_build(plot)$x$data)
+  main <- traces[[1]]
+  hover <- as.character(main$text)
+  expect_true(any(grepl("Padj: 0 (display floor)", hover, fixed=TRUE)))
+  expect_true(any(grepl("Padj: 0.01", hover, fixed=TRUE)))
+  expect_true(any(grepl("Padj: Not available", hover, fixed=TRUE)))
+  expect_true(all(grepl("Term: Cluster", hover, fixed=TRUE)))
+  expect_true(all(grepl("Analysis: case", hover, fixed=TRUE)))
+  expect_true(all(grepl("-log10(Padj):", hover, fixed=TRUE)))
+  expect_equal(sum(is.na(main$z)), 1L)
+  expect_true(any(as.numeric(main$z) > 300, na.rm=TRUE))
+  expect_identical(x, original)
+})
+
+
+test_that("all-missing individual heatmaps retain NA cells without palette errors", {
+  for (n in c(1L, 3L)) {
+    summary <- data.frame(Cluster=1L, Representative_Term="A", Padj_case=NA_real_)
+    details <- data.frame(Cluster=rep(1L, n), Term=LETTERS[seq_len(n)],
+                          Padj_case=NA_real_, Padj_control=NA_real_)
+    original <- details
+    if (n == 1L) details$Padj_control <- NULL
+    built <- NULL
+    expect_warning(built <- plotly::plotly_build(
+      richStudio:::cluster_hmap(details, "cluster:1", summary)), NA)
+    main <- Filter(function(trace) identical(trace$type, "heatmap"), built$x$data)[[1]]
+    expect_true(all(is.na(main$z)))
+    expect_equal(length(main$z), n * if (n == 1L) 1L else 2L)
+    expect_true(all(grepl("Not available", as.character(main$text), fixed=TRUE)))
+    expect_identical(built$x$layout$plot_bgcolor, "#eeeeee")
+    expect_identical(details$Padj_case, original$Padj_case)
+  }
+})
+
+
+test_that("all-missing summary heatmaps retain distinct cluster coordinates", {
+  x <- scientific_heatmap_fixture()
+  x$details$Padj_case <- NA_real_
+  original <- x
+  built <- NULL
+  expect_warning(built <- plotly::plotly_build(
+    richStudio:::comprehensive_hmap(x$summary, x$details)), NA)
+  main <- built$x$data[[1]]
+  expect_true(all(is.na(main$z)))
+  expect_length(main$z, 4L)
+  expect_equal(anyDuplicated(paste(main$x, main$y)), 0L)
+  expect_true(all(grepl("Not available", main$text, fixed=TRUE)))
+  expect_identical(x, original)
+})

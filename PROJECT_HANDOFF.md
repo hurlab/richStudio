@@ -1,5 +1,16 @@
 # richStudio Project Handoff
 
+## Active fix — 2026-10-30: large-heatmap readability (Hur Harness)
+
+- User explicitly requested autonomous planning, independent review and implementation using the Hur Harness structure. Scope is overlapping cluster heatmap labels; preserve all data, IDs, ordering, statistical values, missing masks, full-term access and public interfaces. No unrelated modernization or global linter/gate changes.
+- New isolated worktree `/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility`, branch `WT-heatmap-legibility`, baseline dab528d64d65d68f305f11f02c5909e7abf94949. Started from fresh remote default c422c77 and fast-forwarded the deployed scientific dependency branch. Primary checkout branch/source remain untouched; production remains7317862.
+- Verified issue HMAP-001: on1280x720 and375x667, bundled hierarchical141rows have140overlapping adjacent label pairs, DAVID139rows have138; measured row pitch4.82–4.89px versus14px label height. Both plot containers are800px; baseline document horizontal overflow is0. Treat this user-prioritized presentation issue as Fix Now.
+- Fresh QA baseline: own-worktree package install,21affected tests/219assertions,0failure/error/warning/skip; four actual browser method/viewport measurements. Immutable bundled/GSE numeric/table/ID/NA/hover baselines saved under `.moai/reports/heatmap-legibility/qa/`. Prior hosted731CI metrics are historical evidence, not a fresh full-suite run.
+- Dependency graph: SPEC-HEATMAP-001 + fresh QA/security baselines -> independent plan review -> isolated Implementer -> independent code review -> scoped QA/security gate -> hosted full CI. One fix SPEC is expected; any verified dependent findings re-enter this graph. Full suite/check/coverage runs only in CI, scoped verification locally.
+- Persistent roles: heatmap_reviewer, heatmap_qa, heatmap_security; SPEC author heatmap_spec. Concurrency respects the four-active-agent runtime limit by retaining idle reviewers between gates. One isolated Implementer will own the two R source files and run-phase evidence; QA independently owns new regression files. Planner/reviewer do not implement each other's work. The plan must handle canonical render_rows2000, bounded canvas/viewport, explicit rare oversize row navigation/export scope, narrow-screen labels and safe term text.
+- Local Node dependencies privately provisioned from unchanged lock; actual ast-grep0.42.0 canonical baseline26rules/0findings/0errors/negative-canaryPASS. npm audit0; limited62path secret-pattern scan0. Actual Plotly label probe executes0maliciouspayloads withpositivecanaryactive. No Critical/High found in measured scope; Radvisorycoverage and earlier-hostcause gaps remain documented. SPECv0.1.1 strictlint0 and independent plan r2APPROVED. CleanQA RED6tests/77assertions:71pass/6featurefailures/0errors/warnings/skips; scientific preservation49/49PASS. Implementation queue is now unblocked.
+
+
 ## Current follow-up — 2026-10-30 (Codex)
 
 - Active worktree: `/home/juhur/.moai/worktrees/projects/richStudio/scientific-heatmap-adoption`, branch `WT-scientific-heatmap-adoption`. Validated application commit `73178628106d9b160831d476f80171e4f4d0bf61`; documentation-only commits may follow it. This follow-up continued in Codex; Claude Code entries below are historical.

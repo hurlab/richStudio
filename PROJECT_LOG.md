@@ -6,6 +6,7 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 - logs/PROJECT_LOG_2026-H1.md — 6 sessions (2026-01 … 2026-03)
 
 ## Session Index (active, newest first)
+- 2026-10-30 — Hur Harness heatmap-readability plan/review/implementation started; fresh overlap baseline measured
 - 2026-10-30 — Production7317862 deployment verified: publicHTTP/Shiny, both bundled clustering methods and113source hashes; large-heatmap label crowding recorded
 - 2026-10-29 — Codex scientific heatmap/backend/GUI repair and seven manuscript figure sets; exact-source server preflight passed; hosted/deployment closure recorded in current handoff
 - 2026-10-23 → 2026-10-25 — SPEC-WS-006 accepted and integrated (9f403c2); shiny 1.14 teardown defect found in hosted CI and fixed; deployed live 2026-10-25 and verified
@@ -25,6 +26,16 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 
 ---
 
+
+## Session 2026-10-30 — Heatmap readability fix (Hur Harness)
+
+- Plan reviewr1 required explicit displayed-order mapping and a nonrejecting long-ID alias contract. SPECauthor revisedv0.1.1, strictlint0; independent Reviewerr2APPROVED. Tall-plot annotation/export bounds clarified. Fresh security26ASTrules0findings/errors/activecanary, npm0, limited62pathsecret0 and browserlabelprobe0maliciousexecution. Clean independentQA RED6tests/77assertions,71pass/6featurefail/0errors, numeric49/49PASS. Dispatchone isolated Implementer for2Rfiles; QA E2E authoring remains parallel with no shared-file conflict.
+
+- User authorized autonomous plan -> review -> implementation for crowded heatmap row labels. Applied harness-hur-code-review-and-fix and the required installed ~/.claude/commands/harness-hur-default.md structure, scoped to this confirmed issue. No between-phase approval pauses; higher-priority progress updates remain concise.
+- Created heatmap-legibility via moai CLI. Remote main had advanced71commits beyond the primary checkout; isolated new tree was fast-forwarded to actual origin/main c422c77, then the already-deployed dependency branch dab528d. Renamed isolated branch WT-heatmap-legibility; no primary branch switch/reset/stash or primary source edit.
+- Dispatch graph: SPEC-HEATMAP-001 + QA/security baseline -> independent plan review -> isolated Implementer -> independent Reviewer -> scoped QA/security gates -> hosted CI. Initial roles spawned: manager-spec planner, persistent Reviewer, QA, Security Auditor. Idle roles release active slots; runtime cap4includingroot, no artificial implementation batches.
+- QA fresh baseline:21tests/219assertions PASS0failure/error/warning/skip. Desktop/narrow actual141/139rows show140/138overlap pairs,4.82–4.89px pitch versus14px labels. Numeric/ID/NA/full-hover baselines for bundled and real GSE data retained. No production mutation.
+- Tooling: private npm ci from unchanged lockfile and offline ast-grep rebuild yield0.42.0. Initial chained dependency symlink precheck failed; npm's recorded removal of the own non-directory link and private install succeeded; old dependency target was not modified. Initial AST shim failure is retained. SPEC and security baseline are pending at this entry.
 
 ## Session 2026-10-30 — Production deployment verification (Codex)
 

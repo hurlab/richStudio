@@ -89,4 +89,3 @@ can accidentally retry digest/install failures: keep transport phase separate.
 
 Rollback only this followup's explicit CI/test paths; preserve R5 product and
 other sessions' edits. No state migration or pin rollback is involved.
-

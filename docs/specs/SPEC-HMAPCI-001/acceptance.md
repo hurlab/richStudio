@@ -70,4 +70,3 @@ Preserve installed canonical LSP/AST thresholds and gate configuration. Reports
 must distinguish observed status from inference, identify tree/SHA, and list gaps.
 An unresolved hosted full-job failure blocks closure; retrying unchanged is
 evidence collection, not proof of correction.
-

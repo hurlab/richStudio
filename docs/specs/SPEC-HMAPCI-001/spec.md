@@ -114,4 +114,3 @@ full-job failure blocks completion even when its cause is outside the permitted 
 | Version | Date | Change |
 |---|---|---|
 |0.1.0|2026-10-30|Separate bounded CI-harness followup for frozen R5 product; initial draft.|
-

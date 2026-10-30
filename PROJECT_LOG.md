@@ -1,5 +1,9 @@
 # PROJECT_LOG.md (active) — richStudio
 
+- Harness R3/R4: independent R3 verification30tests/325assertions and all four immutable scientific snapshots pass. Reviewer verified a final fitting one-character term was suppressed by the width guard; QA isolated it with clean RED112assertions/111pass/1expectedfailure. R4 changes only that guard; independent frozen-source review APPROVED exact cluster_hmap SHA fbb6b9dbc2c0cc83a0e6fb8fda1735d5de6baa11290a48e7da95897f4ce10966. Browser/LSP/full CI gates remain pending; no production change.
+
+- Hur Harness R2 -> R3: installed independent R28tests/306assertions and four full golden comparisons pass. Reviewer closed four R1 findings but reproduced a seven-column Unicode excerpt against the newly explicit eight-column requirement. QA observed missing SVG labels on a one-row final window and Single case while dense/export/resize and visible-limit recovery cases pass. Root retained acceptance unchanged and dispatched R3 for source fixes; R2 installed library/evidence remains immutable. No source integration or hosted CI claim yet.
+
 - 2026-10-30 Hur Harness R1 -> R2: independent Reviewer and Security verified undeclared htmltools/htmlwidgets calls; QA demonstrated hidden2001 resource rejection and exported-note/x-label overlap; Reviewer reproduced a19-character ID losing its term. Scoped R27tests/300assertions and four full scientific baselines pass, while the browser gate remains blocked. Root reactivated SPEC owner for a narrow acceptance/metadata amendment and the isolated Implementer for four fixes. QA released stronger regression files and stopped its R1 server/readers. No product commit, CI dispatch or production switch for this fix yet.
 
 Historical entries and checkpoints are preserved verbatim. Newest first.

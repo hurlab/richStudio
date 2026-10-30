@@ -93,7 +93,7 @@ m1_to_mN_commit_strategy: root-owned-explicit-scoped-files
 
 ```yaml
 sync_complete_at: 2026-10-30T22:05:34Z
-sync_commit_sha: pending-backfill
+sync_commit_sha: d6344982e96e38f4d8d10ae897a1b31d64d13878
 sync_status: completed-eight-bounded-acceptances-source-security-remote-approved
 documentation: docs/quality/deployment-recovery-20261030.md
 ac_source: docs/specs/SPEC-DEPLOYRECOVERY-001/spec.md

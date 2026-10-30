@@ -6,7 +6,80 @@ _Plan v0.1.1 approved; root-authorized v0.1.2 R1 clarifications authored for rev
 
 ## §E.2 Run-phase Evidence
 
-### Current R4 candidate — fitting one-character term
+### Current R5 candidate — complete labels inside the canvas
+
+**Claim.** R5 is frozen for independent final review/QA. Reflection before the
+last allowed retry: earlier geometry checked label width and matrix-side bounds,
+but missed Plotly's left tick padding. A236px text width was below the240px
+column limit yet extended4.82px left of the canvas. R5 changes exactly two
+compact-label budget constants from28to27columns. The compact alias delimiter,
+eight-column Unicode excerpt minimum, one-character-term guard, all original
+IDs/terms/trace cells and physical sizing remain intact. A longer ID may now use
+its allowed display alias to keep the full meaningful term excerpt inside the
+actual canvas; its full original ID remains in hover/choices/trace keys.
+
+**Evidence.** The actual installed immutable R4 and fresh R5 widgets were opened
+in the bundled Plotly2.25.2 renderer at640px width. Every SVG tick label was
+measured against both canvas edges, and the actual native camera action downloaded
+PNGs. `impl/r5/geometry-and-png.json` records:
+
+| Actual installed widget | Minimum label left relative to canvas | Maximum text width | Right edge relative to canvas | Actual camera PNG |
+|---|---|---|---|---|
+| R4 normal141, reproduced failure |−4.815643px|236.015625px|231.199982px|1000×2788|
+| R5 normal141 |+3.621857px|227.578125px|231.199982px|1000×2788|
+| R5 last400of2000unique101-character IDs, A+wide-Unicode term |+15.043732px|216.15625px|231.199982px|1000×7450|
+
+The normal trace retains282cells; the2000-ID trace retains4000cells with400active
+SVG ticks in its last logical window. The aliased excerpt is
+`Display row 2000|A中中中中…`, whose retained term has nine display columns before
+ellipsis. All labels fit completely inside the left canvas edge and stop before
+the matrix at240px. Actual camera downloads are `impl/r5/normal-r4.png`,
+`normal-r5.png` and `alias-r5.png`. The viewed bottom-row comparison
+`actual-png-bottom-row-comparison.png`, cropped from those actual downloads,
+visibly confirms R4 clips the leading C in Cluster while R5 retains the whole
+prefix. This establishes PNG text containment beyond a width-only inference.
+
+Fresh installed R5 tests used the original two scoped files plus the current
+independent parent QA legibility file, including both15/16-character one-letter
+cases and the Unicode/single-row regressions (`impl/r5/tests.log`):
+
+```text
+   tests   passed   failed   errors warnings  skipped
+      23      208        0        0        0        0
+R/cluster_hmap.R STYLE_TOTAL 0
+R/clus_visualize_tab.R STYLE_TOTAL 0
+```
+
+Air0.12 `format --check` and CRLF-aware diff check exited0. R5's product diff from
+approved R4 is exactly the two27-column constants in R/cluster_hmap.R. No
+integration-tree, R4 installation, test, SPEC body or other product file changed.
+
+**Baseline-attribution.** This round measured child HEAD
+`45c7a05ac5248233328671f709220aa11d066c65` (parent-authorized R4 commit) plus the
+uncommitted two-constant fix. Branch remains WT-heatmap-legibility-impl.
+Fresh installed package:
+`/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility-impl/.moai/reports/heatmap-legibility/impl/library-r5/richStudio`.
+R/cluster_hmap.R SHA256:
+`45916b7eaba82461bcfede67bdd85bae9a05e9dfe589abf00e45288c50bb4dd1`.
+R/clus_visualize_tab.R and DESCRIPTION retain hashes
+`f480db19cc719047da55d51092ad288959dcf9ffbe2ee10ee1a07c3e0df80722` and
+`fadc8cda247581b65ea6015b1aac4e9d984e6afd8f42dabd6c6e23071ced714a`.
+All R commands scrubbed profile/environment/site-library variables in the same
+compound invocation, disabled renv autoloading and loaded the installed candidate
+before supplied dependency libraries. Browser processes closed in finally blocks.
+
+**Gaps.** Independent final code/security/Shiny QA, canonical JSON-RPC zero-LSP
+and hosted CI verdicts remain their owners' pending measurements. The standalone
+installed-widget browser/PNG check does not claim the complete application
+acceptance matrix. Hosted integration-branch CI (`main`) owns the repository-wide
+suite/check/coverage verdict, **PENDING** at this report time. No R5 commit,
+staging, push or status transition was performed by the Implementer.
+
+**Residual-risk.** Final QA must attribute complete browser/keyboard/resize,
+scientific-golden and saved-session evidence to these frozen R5 hashes; prior R4
+or R3 acceptance observations alone cannot close the new candidate.
+
+### Historical R4 candidate — superseded by R5 below
 
 **Claim.** R4 changes only the compact-label term guard from `budget >= 2L` to
 `budget >= 1L`. Reflection before retry: the prior cases covered long excerpts,
@@ -336,8 +409,8 @@ fallback and note bounds still require actual browser measurement.
 
 ```yaml
 run_complete_at: null
-run_commit_sha: pending-authorized-M1
-run_status: R4-pending-independent-review-and-QA
+run_commit_sha: pending-parent-R5-commit
+run_status: R5-pending-independent-review-and-QA
 ac_pass_count: 0
 ac_fail_count: 0
 preserve_list_post_run_count: 2

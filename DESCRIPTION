@@ -37,6 +37,8 @@ Imports:
     tidyr,
     ggplot2,
     plotly,
+    htmltools,
+    htmlwidgets,
     heatmaply,
     reshape2,
     rlang,

@@ -169,5 +169,5 @@ byte-equivalence supports the representation-only correction. Final independent
 coverage8737/9521=91.76557084% against85%,14/14strict-profile canaries and
 64matching source digests. Historical denominator differences do not establish
 coverage non-regression. Five NOTEs and deployment/publication gaps remain
-explicit. Sync SHA is deliberately pending-backfill until the root-owned commit;
-this document does not attempt to cite its own future commit hash.
+explicit. Sync SHA is backfilled to actual completed-status/report sync commit
+`8500d2d8aeee964e49c829842e4f56c378858bde`, not the later metadata-backfill commit.

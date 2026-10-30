@@ -12,7 +12,7 @@ const sourceRoot = path.resolve(__dirname, '../..');
 const requireLocal = createRequire(__filename);
 const url = 'http://127.0.0.1:3872';
 const frozen = {
-  'R/workspace_components.R': 'f13e697ffcae12303cb0ff9aa159df9bf4f3284fb9272f366205de7744a8d9a1',
+  'R/workspace_components.R': 'ad4ab20cedc8c716d9511fd926e3e268a5458ac36a2576302968c25295dd0a51',
   'inst/application/www/custom.css': '92fdf6e04d0660037165b958c3dccf181f1b2f3258f25156f46b328dedb29d5e',
   'tests/testthat/test-workspace-components.R': 'a3c6ba91477caa5b2666c24c8e3b7dd93e02b0cc71fc3203e086f37bf5d66c42',
   'docs/design/workspace-design-system.md': '808b54610ab346c3037aaff2a9309baf24ab3a7d53862d9febea4a8f396d0ef0',

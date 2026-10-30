@@ -75,7 +75,7 @@ jobs:
             ('sessioninfo','https://cran.r-project.org/src/contrib/sessioninfo_1.2.4.tar.gz','fe855e84941126c272d5a0ae39b14f1c92d7076550d7be627389d452b7d61bd4'),
             ('xopen','https://cran.r-project.org/src/contrib/xopen_1.0.1.tar.gz','e3b278b8c324a1aa2650141dd89d01253eea5c2555007422c797915689b29aec'),
             ('lintr','https://cran.r-project.org/src/contrib/lintr_3.4.0.tar.gz','54144e68b70289edff7eed4fc8d00efacd1ddd51c032dc1e88bfb657c10a89dc'),
-            ('languageserver','https://cran.r-project.org/src/contrib/Archive/languageserver/languageserver_0.3.16.tar.gz','6079525a1c846eeeb4ab484e9229bdfad8783a1fcec18cc5cca8300706b772e5'),
+            ('languageserver','https://cran.r-project.org/src/contrib/languageserver_0.3.20.tar.gz','80be3dc71a5219cfb98d930e9eac01c968aa2d151cd10bad7ce3ec198fa6d4a6'),
             ('rcmdcheck','https://cran.r-project.org/src/contrib/rcmdcheck_1.4.0.tar.gz','bbd4ef7d514b8c2076196a7c4a6041d34623d55fbe73f2771758ce61fd32c9d0'),
           ]
           sources=tooling_sources+[

@@ -19,53 +19,57 @@
 #'   \code{"value"} for -log10 transformed significance values. Default
 #'   \code{"rich"}.
 #' @return A plotly bar plot object.
-rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
-  
-  x <- filter(x, x[, value_type]<pvalue)
+rr_bar <- function(
+  x,
+  top = 25,
+  pvalue = 0.05,
+  value_type = "Padj",
+  view = "rich"
+) {
+  x <- filter(x, x[, value_type] < pvalue)
   x <- arrange(x, value_type) # order by ascending padj/pval
-  
+
   if (nrow(x) >= top) {
     x <- x[1:top, ]
   }
-  
+
   # rename padj/pval col to "final_value"
   suppressWarnings({
     x <- dplyr::rename(x, final_value = any_of(value_type))
   })
-  
+
   x$final_value <- -log10(as.numeric(x$final_value))
   x$final_value <- round(x$final_value, 4)
-  
+
   annotated <- as.numeric(x$Annotated)
   annotated[annotated == 0] <- NA
   x$rich <- as.numeric(x$Significant) / annotated
   x$rich <- round(x$rich, 4)
 
-  x$Term <- factor(x$Term,levels=x$Term[order(x$final_value)])
+  x$Term <- factor(x$Term, levels = x$Term[order(x$final_value)])
 
   # view rich score
   if (view == "rich") {
     p <- plot_ly(
-      data = x, 
+      data = x,
       x = ~rich,
       y = ~Term,
-      type = 'bar',
+      type = "bar",
       text = ~rich,
-      hoverinfo = ~paste0(Term, "<br>", "Rich score: ", rich)
+      hoverinfo = ~ paste0(Term, "<br>", "Rich score: ", rich)
     ) %>%
       layout(
         title = "Rich Score for Enriched Terms",
         xaxis = list(title = "Rich Score"),
         yaxis = list(title = "Term", categoryorder = "trace", nticks = top)
       )
-  }
-  # view -log10(value_type)
-  else if (view == "value") {
+  } else if (view == "value") {
+    # Display the negative base-10 logarithm of the selected value.
     p <- plot_ly(
-      data = x, 
+      data = x,
       x = ~final_value,
       y = ~Term,
-      type = 'bar',
+      type = "bar",
       text = ~final_value
     ) %>%
       layout(
@@ -76,6 +80,5 @@ rr_bar <- function(x, top=25, pvalue=0.05, value_type="Padj", view="rich") {
   } else {
     stop("Invalid view parameter: '", view, "'. Must be 'rich' or 'value'.")
   }
-  return(p)
-
+  p
 }

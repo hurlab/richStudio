@@ -380,7 +380,7 @@ ws6_mount <- function(sess, state, modules = "enrich", runner = NULL, jobs = NUL
                    u_big_degdf = state$u_big_degdf, u_rrnames = state$u_rrnames,
                    u_rrdfs = state$u_rrdfs, u_big_rrdf = state$u_big_rrdf)
       if (!is.null(runner)) args$enrichment_runner <- runner
-      do.call(richStudio:::enrichTabServer, args)
+      do.call(richStudio:::enrich_tab_server, args)
     }
     if ("cluster" %in% modules) {
       richStudio::clusterTabServer("cluster", u_degnames = state$u_degnames, u_degdfs = state$u_degdfs,
@@ -389,7 +389,7 @@ ws6_mount <- function(sess, state, modules = "enrich", runner = NULL, jobs = NUL
         u_cluslists = state$u_cluslists, clus_intermed = state$clus_intermed)
     }
     if ("upload" %in% modules) {
-      richStudio:::clusterUploadTabServer("cluster_upload", u_degnames = state$u_degnames,
+      richStudio:::cluster_upload_tab_server("cluster_upload", u_degnames = state$u_degnames,
         u_degdfs = state$u_degdfs, u_rrnames = state$u_rrnames, u_rrdfs = state$u_rrdfs,
         u_big_rrdf = state$u_big_rrdf, u_clusnames = state$u_clusnames, u_clusdfs = state$u_clusdfs,
         u_big_clusdf = state$u_big_clusdf, u_cluslists = state$u_cluslists)
@@ -675,7 +675,7 @@ test_that("R2 REQ-001 REQ-002 duplicate clicks, policy refusal and reserved clus
   ws6_pid(dir, ws6_key("deg_c"), list(s3), own = own)
   # Check 3 (one queued job per session) runs before check 4; allow two queued
   # jobs so that the reserved name, not the queue bound, decides the refusal.
-  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_session_queue_limit = function() 2L, .package = "richStudio")
   ws6_cluster(s3, "rr1", "reserved")
   expect_identical(ws6_last(jobs3)$state, "queued")
   ws6_cluster(s3, "rr2", "reserved")
@@ -1609,8 +1609,8 @@ test_that("R18 REQ-001 D2 the installed app installs the registry, panel and clo
   expect_true(nzchar(path))
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
   at <- function(pattern, fixed = TRUE) as.integer(regexpr(pattern, text, fixed = fixed))
-  module_calls <- c("workspace_navigation_server(", "enrichTabServer(", "rrVisTabServer(",
-                    "clusterUploadTabServer(", "clusterTabServer(", "clusVisTabServer(",
+  module_calls <- c("workspace_navigation_server(", "enrich_tab_server(", "rr_vis_tab_server(",
+                    "cluster_upload_tab_server(", "clusterTabServer(", "clus_vis_tab_server(",
                     "updateTabServer(", "saveTabServer(")
   first_module <- min(vapply(module_calls, function(p) { i <- at(p); if (i < 0L) .Machine$integer.max else i }, 1L))
   registry <- at("workspace_jobs_registry(")
@@ -1722,9 +1722,9 @@ test_that("R21 REQ-001 a session without a running job still holds at most one q
   expect_identical(spy$factory, "S2")
 })
 
-test_that("R21b REQ-001 the per-session bound reads workspace_job_session_queue_limit()", {
+test_that("R21b REQ-001 the per-session bound reads workspace_session_queue_limit()", {
   withr::defer(richStudio:::workspace_job_queue_reset())
-  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_session_queue_limit = function() 2L, .package = "richStudio")
   dir <- withr::local_tempdir()
   kit <- ws6_latch_runner(dir)
   x <- ws6_three(dir, kit, labels = c("deg_a", "deg_b"))

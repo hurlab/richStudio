@@ -13,52 +13,121 @@
 #' @export
 updateTabUI <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(tabName = tabName,
+  tabItem(
+    tabName = tabName,
     h2("Manage Files"),
     p("Rename or remove uploaded files and analysis results."),
-
     fluidRow(
       # Rename box
-      column(width = 6,
-        box(title = "Rename", status = "primary", width = NULL, solidHeader = TRUE,
+      column(
+        width = 6,
+        box(
+          title = "Rename",
+          status = "primary",
+          width = NULL,
+          solidHeader = TRUE,
           h4("Rename DEG Set"),
-          selectInput(ns("rename_deg_select"), "Select DEG set", choices = NULL, multiple = FALSE),
-          textInput(ns("new_deg_name"), "New name", placeholder = "Enter new name"),
-          actionButton(ns('rename_deg_btn'), "Rename DEG", class = "btn-primary"),
+          selectInput(
+            ns("rename_deg_select"),
+            "Select DEG set",
+            choices = NULL,
+            multiple = FALSE
+          ),
+          textInput(
+            ns("new_deg_name"),
+            "New name",
+            placeholder = "Enter new name"
+          ),
+          actionButton(
+            ns("rename_deg_btn"),
+            "Rename DEG",
+            class = "btn-primary"
+          ),
           hr(),
-
           h4("Rename Enrichment Result"),
-          selectInput(ns("rename_rr_select"), "Select enrichment result", choices = NULL, multiple = FALSE),
-          textInput(ns("new_rr_name"), "New name", placeholder = "Enter new name"),
-          actionButton(ns('rename_rr_btn'), "Rename Result", class = "btn-primary"),
+          selectInput(
+            ns("rename_rr_select"),
+            "Select enrichment result",
+            choices = NULL,
+            multiple = FALSE
+          ),
+          textInput(
+            ns("new_rr_name"),
+            "New name",
+            placeholder = "Enter new name"
+          ),
+          actionButton(
+            ns("rename_rr_btn"),
+            "Rename Result",
+            class = "btn-primary"
+          ),
           hr(),
-
           h4("Rename Cluster Result"),
-          selectInput(ns("rename_clus_select"), "Select cluster result", choices = NULL, multiple = FALSE),
-          textInput(ns("new_clus_name"), "New name", placeholder = "Enter new name"),
-          actionButton(ns('rename_clus_btn'), "Rename Cluster", class = "btn-primary")
+          selectInput(
+            ns("rename_clus_select"),
+            "Select cluster result",
+            choices = NULL,
+            multiple = FALSE
+          ),
+          textInput(
+            ns("new_clus_name"),
+            "New name",
+            placeholder = "Enter new name"
+          ),
+          actionButton(
+            ns("rename_clus_btn"),
+            "Rename Cluster",
+            class = "btn-primary"
+          )
         )
       ),
 
       # Remove box
-      column(width = 6,
-        box(title = "Remove", status = "danger", width = NULL, solidHeader = TRUE,
+      column(
+        width = 6,
+        box(
+          title = "Remove",
+          status = "danger",
+          width = NULL,
+          solidHeader = TRUE,
           h4("Remove DEG Sets"),
-          selectInput(ns("remove_deg_select"), "Select DEG sets to remove",
-                     choices = NULL, multiple = TRUE),
-          actionButton(ns('remove_deg_btn'), "Remove Selected DEGs", class = "btn-danger"),
+          selectInput(
+            ns("remove_deg_select"),
+            "Select DEG sets to remove",
+            choices = NULL,
+            multiple = TRUE
+          ),
+          actionButton(
+            ns("remove_deg_btn"),
+            "Remove Selected DEGs",
+            class = "btn-danger"
+          ),
           hr(),
-
           h4("Remove Enrichment Results"),
-          selectInput(ns("remove_rr_select"), "Select enrichment results to remove",
-                     choices = NULL, multiple = TRUE),
-          actionButton(ns('remove_rr_btn'), "Remove Selected Results", class = "btn-danger"),
+          selectInput(
+            ns("remove_rr_select"),
+            "Select enrichment results to remove",
+            choices = NULL,
+            multiple = TRUE
+          ),
+          actionButton(
+            ns("remove_rr_btn"),
+            "Remove Selected Results",
+            class = "btn-danger"
+          ),
           hr(),
-
           h4("Remove Cluster Results"),
-          selectInput(ns("remove_clus_select"), "Select cluster results to remove",
-                     choices = NULL, multiple = TRUE),
-          actionButton(ns('remove_clus_btn'), "Remove Selected Clusters", class = "btn-danger")
+          selectInput(
+            ns("remove_clus_select"),
+            "Select cluster results to remove",
+            choices = NULL,
+            multiple = TRUE
+          ),
+          actionButton(
+            ns("remove_clus_btn"),
+            "Remove Selected Clusters",
+            class = "btn-danger"
+          )
         )
       )
     )
@@ -77,11 +146,19 @@ updateTabUI <- function(id, tabName) {
 #' @param u_clusdfs Reactive values for cluster result dataframes
 #' @param u_cluslists Reactive values for cluster list details
 #' @export
-updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
-                            u_clusnames, u_clusdfs, u_cluslists) {
-
+updateTabServer <- function(
+  id,
+  u_degnames,
+  u_degdfs,
+  u_rrnames,
+  u_rrdfs,
+  u_clusnames,
+  u_clusdfs,
+  u_cluslists
+) {
   moduleServer(id, function(input, output, session) {
-    # Session job registry (SPEC-WS-006): accepted renames and removals supersede jobs.
+    # Session job registry (SPEC-WS-006): accepted renames and removals
+    # supersede jobs.
     jobs <- workspace_jobs_for(session)
 
     # Create reactive expressions for the labels
@@ -97,14 +174,38 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
     # Update select inputs based on available files
     observe({
-      updateSelectInput(session, 'rename_deg_select', choices = u_degnames_reactive())
-      updateSelectInput(session, 'remove_deg_select', choices = u_degnames_reactive())
+      updateSelectInput(
+        session,
+        "rename_deg_select",
+        choices = u_degnames_reactive()
+      )
+      updateSelectInput(
+        session,
+        "remove_deg_select",
+        choices = u_degnames_reactive()
+      )
 
-      updateSelectInput(session, 'rename_rr_select', choices = u_rrnames_reactive())
-      updateSelectInput(session, 'remove_rr_select', choices = u_rrnames_reactive())
+      updateSelectInput(
+        session,
+        "rename_rr_select",
+        choices = u_rrnames_reactive()
+      )
+      updateSelectInput(
+        session,
+        "remove_rr_select",
+        choices = u_rrnames_reactive()
+      )
 
-      updateSelectInput(session, 'rename_clus_select', choices = u_clusnames_reactive())
-      updateSelectInput(session, 'remove_clus_select', choices = u_clusnames_reactive())
+      updateSelectInput(
+        session,
+        "rename_clus_select",
+        choices = u_clusnames_reactive()
+      )
+      updateSelectInput(
+        session,
+        "remove_clus_select",
+        choices = u_clusnames_reactive()
+      )
     })
 
     # ============================================
@@ -125,7 +226,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         return()
       }
       if (new_name %in% u_degnames$labels) {
-        showNotification("A DEG set with this name already exists", type = "error")
+        showNotification(
+          "A DEG set with this name already exists",
+          type = "error"
+        )
         return()
       }
 
@@ -140,7 +244,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
       # Clear the text input
       updateTextInput(session, "new_deg_name", value = "")
-      showNotification(paste("Renamed", old_name, "to", new_name), type = "message")
+      showNotification(
+        paste("Renamed", old_name, "to", new_name),
+        type = "message"
+      )
     })
 
     # Rename enrichment result
@@ -149,7 +256,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       new_name <- trimws(input$new_rr_name)
 
       if (is.null(old_name) || nchar(old_name) == 0) {
-        showNotification("Please select an enrichment result to rename", type = "warning")
+        showNotification(
+          "Please select an enrichment result to rename",
+          type = "warning"
+        )
         return()
       }
       if (nchar(new_name) == 0) {
@@ -157,7 +267,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         return()
       }
       if (new_name %in% u_rrnames$labels) {
-        showNotification("An enrichment result with this name already exists", type = "error")
+        showNotification(
+          "An enrichment result with this name already exists",
+          type = "error"
+        )
         return()
       }
 
@@ -172,7 +285,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
       # Clear the text input
       updateTextInput(session, "new_rr_name", value = "")
-      showNotification(paste("Renamed", old_name, "to", new_name), type = "message")
+      showNotification(
+        paste("Renamed", old_name, "to", new_name),
+        type = "message"
+      )
     })
 
     # Rename cluster result
@@ -181,7 +297,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       new_name <- trimws(input$new_clus_name)
 
       if (is.null(old_name) || nchar(old_name) == 0) {
-        showNotification("Please select a cluster result to rename", type = "warning")
+        showNotification(
+          "Please select a cluster result to rename",
+          type = "warning"
+        )
         return()
       }
       if (nchar(new_name) == 0) {
@@ -189,7 +308,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         return()
       }
       if (new_name %in% u_clusnames$labels) {
-        showNotification("A cluster result with this name already exists", type = "error")
+        showNotification(
+          "A cluster result with this name already exists",
+          type = "error"
+        )
         return()
       }
 
@@ -206,7 +328,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
       # Clear the text input
       updateTextInput(session, "new_clus_name", value = "")
-      showNotification(paste("Renamed", old_name, "to", new_name), type = "message")
+      showNotification(
+        paste("Renamed", old_name, "to", new_name),
+        type = "message"
+      )
     })
 
     # ============================================
@@ -223,9 +348,12 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       ns <- session$ns
       showModal(modalDialog(
         title = "Confirm Removal",
-        div(class = "modal-confirm",
-          p(icon("triangle-exclamation"),
-            sprintf("Remove %d DEG set(s)?", length(to_remove))),
+        div(
+          class = "modal-confirm",
+          p(
+            icon("triangle-exclamation"),
+            sprintf("Remove %d DEG set(s)?", length(to_remove))
+          ),
           tags$ul(lapply(to_remove, tags$li))
         ),
         footer = tagList(
@@ -244,22 +372,31 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       }
       u_degnames$labels <- setdiff(u_degnames$labels, to_remove)
       removeModal()
-      showNotification(paste("Removed", length(to_remove), "DEG set(s)"), type = "message")
+      showNotification(
+        paste("Removed", length(to_remove), "DEG set(s)"),
+        type = "message"
+      )
     })
 
     # Remove enrichment results - show confirmation dialog
     observeEvent(input$remove_rr_btn, {
       to_remove <- input$remove_rr_select
       if (is.null(to_remove) || length(to_remove) == 0) {
-        showNotification("Please select enrichment results to remove", type = "warning")
+        showNotification(
+          "Please select enrichment results to remove",
+          type = "warning"
+        )
         return()
       }
       ns <- session$ns
       showModal(modalDialog(
         title = "Confirm Removal",
-        div(class = "modal-confirm",
-          p(icon("triangle-exclamation"),
-            sprintf("Remove %d enrichment result(s)?", length(to_remove))),
+        div(
+          class = "modal-confirm",
+          p(
+            icon("triangle-exclamation"),
+            sprintf("Remove %d enrichment result(s)?", length(to_remove))
+          ),
           tags$ul(lapply(to_remove, tags$li))
         ),
         footer = tagList(
@@ -278,27 +415,40 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       }
       u_rrnames$labels <- setdiff(u_rrnames$labels, to_remove)
       removeModal()
-      showNotification(paste("Removed", length(to_remove), "enrichment result(s)"), type = "message")
+      showNotification(
+        paste("Removed", length(to_remove), "enrichment result(s)"),
+        type = "message"
+      )
     })
 
     # Remove cluster results - show confirmation dialog
     observeEvent(input$remove_clus_btn, {
       to_remove <- input$remove_clus_select
       if (is.null(to_remove) || length(to_remove) == 0) {
-        showNotification("Please select cluster results to remove", type = "warning")
+        showNotification(
+          "Please select cluster results to remove",
+          type = "warning"
+        )
         return()
       }
       ns <- session$ns
       showModal(modalDialog(
         title = "Confirm Removal",
-        div(class = "modal-confirm",
-          p(icon("triangle-exclamation"),
-            sprintf("Remove %d cluster result(s)?", length(to_remove))),
+        div(
+          class = "modal-confirm",
+          p(
+            icon("triangle-exclamation"),
+            sprintf("Remove %d cluster result(s)?", length(to_remove))
+          ),
           tags$ul(lapply(to_remove, tags$li))
         ),
         footer = tagList(
           modalButton("Cancel"),
-          actionButton(ns("confirm_remove_clus"), "Remove", class = "btn-danger")
+          actionButton(
+            ns("confirm_remove_clus"),
+            "Remove",
+            class = "btn-danger"
+          )
         ),
         easyClose = TRUE
       ))
@@ -313,7 +463,10 @@ updateTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       }
       u_clusnames$labels <- setdiff(u_clusnames$labels, to_remove)
       removeModal()
-      showNotification(paste("Removed", length(to_remove), "cluster result(s)"), type = "message")
+      showNotification(
+        paste("Removed", length(to_remove), "cluster result(s)"),
+        type = "message"
+      )
     })
   })
 }

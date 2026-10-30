@@ -94,9 +94,9 @@ if (requireNamespace("bioAnno", quietly = TRUE)) {
 }
 
 # richCluster is optional - load the supported public API version if available
-richCluster_available <- requireNamespace("richCluster", quietly = TRUE) &&
+rich_cluster_available <- requireNamespace("richCluster", quietly = TRUE) &&
   utils::packageVersion("richCluster") >= "2.0.1"
-if (richCluster_available) {
+if (rich_cluster_available) {
   library(richCluster)
 } else if (requireNamespace("richCluster", quietly = TRUE)) {
   message("Note: richCluster 2.0.1 or newer is required for hierarchical and DAVID clustering.")
@@ -163,13 +163,13 @@ ui <- function(request) {
       workspace_jobs_ui("jobs"),
 
       tabItems(
-        homeTabUI("home", tabName = "home_tab", app_version = app_version,
+        home_tab_ui("home", tabName = "home_tab", app_version = app_version,
                   app_build = app_build, enabled = workspace_navigation),
-        enrichTabUI("enrich", tabName = "enrich_tab"),
-        rrVisTabUI("rr_visualize", tabName = "rr_visualize_tab"),
-        clusterUploadTabUI("cluster_upload", tabName = "cluster_upload_tab"),
+        enrich_tab_ui("enrich", tabName = "enrich_tab"),
+        rr_vis_tab_ui("rr_visualize", tabName = "rr_visualize_tab"),
+        cluster_upload_tab_ui("cluster_upload", tabName = "cluster_upload_tab"),
         clusterTabUI("cluster", tabName = "cluster_tab"),
-        clusVisTabUI("clus_visualize", tabName = "clus_visualize_tab"),
+        clus_vis_tab_ui("clus_visualize", tabName = "clus_visualize_tab"),
         updateTabUI("update", tabName = "update_tab"),
         saveTabUI("save", tabName = "save_tab")
       ),
@@ -289,18 +289,18 @@ server <- function(input, output, session) {
     )
   }
 
-  enrichTabServer("enrich",
+  enrich_tab_server("enrich",
     u_degnames = u_degnames, u_degdfs = u_degdfs, u_big_degdf = u_big_degdf,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf
   )
 
-  rrVisTabServer("rr_visualize",
+  rr_vis_tab_server("rr_visualize",
     u_degnames = u_degnames, u_degdfs = u_degdfs, u_big_degdf = u_big_degdf,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
     u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists
   )
 
-  clusterUploadTabServer("cluster_upload",
+  cluster_upload_tab_server("cluster_upload",
     u_degnames = u_degnames, u_degdfs = u_degdfs,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
     u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
@@ -315,7 +315,7 @@ server <- function(input, output, session) {
     clus_intermed = clus_intermed
   )
 
-  clusVisTabServer("clus_visualize",
+  clus_vis_tab_server("clus_visualize",
     u_degnames = u_degnames, u_degdfs = u_degdfs,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
     u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,

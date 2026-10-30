@@ -252,12 +252,12 @@ test_that("get_clustering_methods returns valid methods", {
   expect_true(is.logical(methods$richR$available))
 })
 
-test_that("is_richCluster_available works correctly", {
+test_that("is_rich_cluster_available works correctly", {
   # Test richCluster package availability check
-  # Note: is_richCluster_available is an internal (non-exported) function,
+  # Note: is_rich_cluster_available is an internal (non-exported) function,
   # so we access it via the package namespace
 
-  result <- richStudio:::is_richCluster_available()
+  result <- richStudio:::is_rich_cluster_available()
 
   expect_true(is.logical(result))
   expect_length(result, 1)

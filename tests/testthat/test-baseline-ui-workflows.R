@@ -16,15 +16,15 @@ test_that("characterize home and module UIs expose namespaced controls in applic
       library(package, character.only = TRUE)
     }
   }
-  home <- as.character(richStudio:::homeTabUI("home", "welcome", "fixture-version"))
+  home <- as.character(richStudio:::home_tab_ui("home", "welcome", "fixture-version"))
   expect_match(home, 'id="shiny-tab-welcome"', fixed = TRUE)
   expect_match(home, "vfixture-version", fixed = TRUE)
   expect_match(home, "Upload gene lists", fixed = TRUE)
   expect_match(home, "Load demo results", fixed = TRUE)
   expect_match(home, 'alt="richStudio logo"', fixed = TRUE)
   cases <- list(
-    list(richStudio:::enrichTabUI, "deg_files", "upload_degtext", "enrich_deg"),
-    list(richStudio:::clusterUploadTabUI, "rr_files", "remove_rr", "remove_clus"),
+    list(richStudio:::enrich_tab_ui, "deg_files", "upload_degtext", "enrich_deg"),
+    list(richStudio:::cluster_upload_tab_ui, "rr_files", "remove_rr", "remove_clus"),
     list(richStudio::clusterTabUI, "selected_rrs", "cluster_name", "cluster"),
     list(richStudio::updateTabUI, "rename_deg_btn", "rename_rr_btn", "rename_clus_btn")
   )
@@ -61,8 +61,8 @@ test_that("characterize DEG upload selects CSV and TSV and maintains metadata th
   write.csv(first, csv, row.names = FALSE)
   write.table(second, tsv, sep = "\t", row.names = FALSE)
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::enrichTabServer,
-    args = ws_ui_args(richStudio:::enrichTabServer, state), {
+  shiny::testServer(richStudio:::enrich_tab_server,
+    args = ws_ui_args(richStudio:::enrich_tab_server, state), {
       session$flushReact()
       session$setInputs(deg_files = data.frame(
         name = c("first.csv", "second.tsv"), datapath = c(csv, tsv)))
@@ -91,8 +91,8 @@ test_that("characterize DEG upload selects CSV and TSV and maintains metadata th
 
 test_that("characterize pasted genes are parsed by the installed enrichment module", {
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::enrichTabServer,
-    args = ws_ui_args(richStudio:::enrichTabServer, state), {
+  shiny::testServer(richStudio:::enrich_tab_server,
+    args = ws_ui_args(richStudio:::enrich_tab_server, state), {
       session$flushReact()
       session$setInputs(deg_text = "g1, g2;g3\ng4", degtext_name = "pasted", upload_degtext = 1L)
       expect_identical(u_degdfs$pasted, data.frame(GeneID = c("g1", "g2", "g3", "g4")))
@@ -109,8 +109,8 @@ test_that("characterize result upload retains provider columns and raw versus ad
   write.csv(imported, csv, row.names = FALSE)
   write.table(imported, tsv, sep = "\t", row.names = FALSE)
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::clusterUploadTabServer,
-    args = ws_ui_args(richStudio:::clusterUploadTabServer, state), {
+  shiny::testServer(richStudio:::cluster_upload_tab_server,
+    args = ws_ui_args(richStudio:::cluster_upload_tab_server, state), {
       session$flushReact()
       session$setInputs(rr_files = data.frame(name = c("results.csv", "results.tsv"),
                                               datapath = c(csv, tsv)))
@@ -146,8 +146,8 @@ test_that("characterize result upload retains provider columns and raw versus ad
 test_that("characterize cluster table rename and removal move summary and membership together", {
   state <- ws_baseline_state(populated = TRUE)
   expected <- ws_baseline_cluster_tables()
-  shiny::testServer(richStudio:::clusterUploadTabServer,
-    args = ws_ui_args(richStudio:::clusterUploadTabServer, state), {
+  shiny::testServer(richStudio:::cluster_upload_tab_server,
+    args = ws_ui_args(richStudio:::cluster_upload_tab_server, state), {
       session$flushReact()
       session$setInputs(clus_table_select = "fixture")
       expect_identical(clusdf_to_table(), expected$summary)
@@ -258,8 +258,8 @@ test_that("characterize clustering controls render method-specific parameters wi
 test_that("characterize enrichment module manages existing result metadata without changing measurements", {
   state <- ws_baseline_state(populated = TRUE)
   rr <- ws_baseline_results()
-  shiny::testServer(richStudio:::enrichTabServer,
-    args = ws_ui_args(richStudio:::enrichTabServer, state), {
+  shiny::testServer(richStudio:::enrich_tab_server,
+    args = ws_ui_args(richStudio:::enrich_tab_server, state), {
       session$flushReact()
       session$setInputs(rr_table_select = "treated")
       expect_identical(rr_to_table(), rr$treated)
@@ -419,8 +419,8 @@ test_that("custom heatmap selection and term removal preserve disjoint datasets 
   state$u_rrnames$labels <- c("control", "case")
   state$u_rrdfs$control <- raw$untreated
   state$u_rrdfs$case <- raw$treated
-  args <- ws_ui_args(richStudio:::rrVisTabServer, state)
-  shiny::testServer(richStudio:::rrVisTabServer, args = args, {
+  args <- ws_ui_args(richStudio:::rr_vis_tab_server, state)
+  shiny::testServer(richStudio:::rr_vis_tab_server, args = args, {
     session$flushReact()
     session$setInputs(edit_hmap_box = "Custom terms", select_cushmap = "control",
       cushmap_select_table_rows_selected = 1:2, cushmap_valtype = "Padj",
@@ -473,8 +473,8 @@ test_that("top heatmap edits replace only the selected disjoint-label dataset", 
   state$u_rrnames$labels <- c("control", "case")
   state$u_rrdfs$control <- raw$untreated
   state$u_rrdfs$case <- raw$treated
-  shiny::testServer(richStudio:::rrVisTabServer,
-    args = ws_ui_args(richStudio:::rrVisTabServer, state), {
+  shiny::testServer(richStudio:::rr_vis_tab_server,
+    args = ws_ui_args(richStudio:::rr_vis_tab_server, state), {
       session$flushReact()
       session$setInputs(edit_hmap_box = "Top terms", select_tophmap = c("control", "case"),
         tophmap_valtype = "Pvalue", tophmap_cutoff = .05, tophmap_nterms = 3)
@@ -588,8 +588,8 @@ test_that("visualization uploads parse CSV and TSV while preserving an unrelated
   state$u_rrdfs$sentinel <- raw$untreated
   state$u_big_rrdf$df <- data.frame(name = "sentinel", from_deg = "No",
     annot = "?", keytype = "?", ontology = "?", species = "?")
-  shiny::testServer(richStudio:::rrVisTabServer,
-    args = ws_ui_args(richStudio:::rrVisTabServer, state), {
+  shiny::testServer(richStudio:::rr_vis_tab_server,
+    args = ws_ui_args(richStudio:::rr_vis_tab_server, state), {
       session$flushReact()
       session$setInputs(rr_files = data.frame(name = c("result.csv", "result.tsv"),
                                                datapath = c(csv, tsv)))

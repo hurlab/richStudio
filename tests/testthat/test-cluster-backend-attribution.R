@@ -77,7 +77,7 @@ test_that("corrected Kappa dispatch agrees with an independent binary-membership
 test_that("legacy enrichment-score errors retain their exact API message without a replacement", {
   fallback_calls <- 0L
   testthat::local_mocked_bindings(
-    cluster_richR = function(...) stop("Enrichment score too high, No significant cluster\n"),
+    cluster_rich_r = function(...) stop("Enrichment score too high, No significant cluster\n"),
     cluster_hierarchical = function(...) {
       fallback_calls <<- fallback_calls + 1L
       stop("unexpected replacement")
@@ -98,7 +98,7 @@ test_that("legacy enrichment-score errors retain their exact API message without
 
 test_that("empty legacy results remain explicit non-results without new metadata", {
   testthat::local_mocked_bindings(
-    cluster_richR = function(...) list(cluster_df = data.frame(), cluster_summary = data.frame()),
+    cluster_rich_r = function(...) list(cluster_df = data.frame(), cluster_summary = data.frame()),
     .package = "richStudio"
   )
   input <- data.frame(Term = "A", GeneID = "g1,g2", Pvalue = 0.01, Padj = 0.02)

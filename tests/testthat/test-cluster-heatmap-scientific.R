@@ -83,8 +83,8 @@ test_that("cluster UI choices use stable IDs despite repeated representative nam
   state$u_clusnames$labels <- "duplicates"
   state$u_clusdfs$duplicates <- x$summary
   state$u_cluslists$duplicates <- x$details
-  args <- state[intersect(names(state), names(formals(richStudio:::clusVisTabServer)))]
-  shiny::testServer(richStudio:::clusVisTabServer, args = args, {
+  args <- state[intersect(names(state), names(formals(richStudio:::clus_vis_tab_server)))]
+  shiny::testServer(richStudio:::clus_vis_tab_server, args = args, {
     session$setInputs(clusdf_select = "duplicates", big_value_type = "Padj", value_by = "mean",
                       small_value_type = "Padj")
     session$flushReact()
@@ -158,13 +158,13 @@ test_that("changing cluster results does not reset the result selectors", {
   state$u_cluslists$hierarchical <- data.frame(Cluster=1L, Term="first", Padj_case=.01)
   state$u_clusdfs$DAVID <- data.frame(Cluster=30L, Representative_Term="second", Padj_case=.001)
   state$u_cluslists$DAVID <- data.frame(Cluster=30L, Term="second", Padj_case=.001)
-  args <- state[intersect(names(state), names(formals(richStudio:::clusVisTabServer)))]
+  args <- state[intersect(names(state), names(formals(richStudio:::clus_vis_tab_server)))]
   mock <- shiny::MockShinySession$new()
   messages <- list()
   mock$sendInputMessage <- function(inputId, message) {
     messages[[length(messages) + 1L]] <<- list(id=inputId, message=message)
   }
-  shiny::testServer(richStudio:::clusVisTabServer, args=args, session=mock, {
+  shiny::testServer(richStudio:::clus_vis_tab_server, args=args, session=mock, {
     session$setInputs(clusdf_select="hierarchical", big_value_type="Padj", value_by="mean",
                       small_value_type="Padj")
     session$flushReact()

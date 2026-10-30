@@ -1,14 +1,17 @@
 # Functions to merge and cluster enrichment results
 #
-# This module provides clustering functionality for functional enrichment results.
+# This module provides clustering functionality for functional enrichment
+# results.
 # It supports multiple clustering methods:
 #   1. richR::richCluster - Original Kappa-based clustering (from richR package)
-#   2. richCluster::cluster - Hierarchical clustering with flexible linkage methods
+#   2. richCluster::cluster - Hierarchical clustering with flexible linkage
+# methods
 #   3. richCluster::david_cluster - DAVID's functional clustering algorithm
 #
 # @author richStudio Development Team
 
-#' @importFrom dplyr %>% group_by summarise arrange first n ungroup select any_of mutate
+#' @importFrom dplyr %>% group_by summarise arrange first n ungroup select
+#' any_of mutate
 #' @importFrom rlang .data
 
 # Null-coalescing operator (define at top so it's available throughout)
@@ -16,21 +19,26 @@
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
 
-# Ensure pipe is available when dplyr isn't attached (e.g., in non-tidyverse contexts)
+# Ensure pipe is available when dplyr isn't attached (e.g., in non-tidyverse
+# contexts)
 if (!exists("%>%")) {
   `%>%` <- dplyr::`%>%`
 }
 
 #' Check if richCluster package is available
 #'
-#' @param require_package Function used to check whether richCluster can be loaded.
+#' @param require_package Function used to check whether richCluster can be
+#' loaded.
 #'   Defaults to \code{requireNamespace}.
-#' @param package_version Function used to obtain the installed richCluster version.
+#' @param package_version Function used to obtain the installed richCluster
+#' version.
 #'   Defaults to \code{utils::packageVersion}.
 #' @return TRUE if richCluster is installed and loadable, FALSE otherwise
 #' @keywords internal
-is_richCluster_available <- function(require_package = requireNamespace,
-                                     package_version = utils::packageVersion) {
+is_rich_cluster_available <- function(
+  require_package = requireNamespace,
+  package_version = utils::packageVersion
+) {
   require_package("richCluster", quietly = TRUE) &&
     package_version("richCluster") >= "2.0.1"
 }
@@ -40,11 +48,19 @@ is_richCluster_available <- function(require_package = requireNamespace,
 #' Coerces column types and fills required columns to avoid downstream errors.
 #' @keywords internal
 normalize_geneset <- function(df) {
-  if (is.null(df) || nrow(df) == 0) return(df)
-  if (!("Term" %in% names(df))) stop("Geneset is missing required column 'Term'")
+  if (is.null(df) || nrow(df) == 0) {
+    return(df)
+  }
+  if (!("Term" %in% names(df))) {
+    stop("Geneset is missing required column 'Term'")
+  }
   # Ensure required columns exist
-  if (!("GeneID" %in% names(df))) df$GeneID <- NA_character_
-  if (!("Annot" %in% names(df))) df$Annot <- df$Term
+  if (!("GeneID" %in% names(df))) {
+    df$GeneID <- NA_character_
+  }
+  if (!("Annot" %in% names(df))) {
+    df$Annot <- df$Term
+  }
 
   # Coerce types
   df$Term <- as.character(df$Term)
@@ -67,11 +83,14 @@ normalize_geneset <- function(df) {
 #' Merge multiple genesets (enrichment results) for clustering
 #'
 #' Combines multiple enrichment result dataframes by merging on the Term column.
-#' GeneIDs are combined (unique), p-values are averaged, and columns are suffixed
+#' GeneIDs are combined (unique), p-values are averaged, and columns are
+#' suffixed
 #' with the geneset name for traceability.
 #'
-#' @param genesets A named list of dataframes, each containing enrichment results.
-#'   Each dataframe must have at least columns: Term, GeneID, Pvalue, Padj, Annot.
+#' @param genesets A named list of dataframes, each containing enrichment
+#' results.
+#'   Each dataframe must have at least columns: Term, GeneID, Pvalue, Padj,
+#' Annot.
 #'
 #' @return A merged dataframe with combined GeneIDs, averaged p-values, and
 #'   per-geneset columns suffixed with geneset names.
@@ -90,7 +109,6 @@ normalize_geneset <- function(df) {
 #'
 #' @export
 merge_genesets <- function(genesets) {
-
   if (length(genesets) == 0) {
     stop("No genesets provided for merging")
   }
@@ -129,13 +147,21 @@ merge_genesets <- function(genesets) {
 
   # Suffix all non 'Term' columns with their geneset name
   for (i in seq_along(genesets)) {
-    rownames(genesets[[i]]) <- NULL  # prevents rownames from messing up
+    rownames(genesets[[i]]) <- NULL # prevents rownames from messing up
     non_term_cols <- colnames(genesets[[i]])
-    term_idx <- which(non_term_cols == 'Term')
+    term_idx <- which(non_term_cols == "Term")
     if (length(term_idx) == 0) {
-      stop(paste("Geneset", names(genesets)[i], "does not have a 'Term' column"))
+      stop(paste(
+        "Geneset",
+        names(genesets)[i],
+        "does not have a 'Term' column"
+      ))
     }
-    non_term_cols[-term_idx] <- paste(non_term_cols[-term_idx], names(genesets)[i], sep = "_")
+    non_term_cols[-term_idx] <- paste(
+      non_term_cols[-term_idx],
+      names(genesets)[i],
+      sep = "_"
+    )
     colnames(genesets[[i]]) <- non_term_cols
   }
 
@@ -146,13 +172,16 @@ merge_genesets <- function(genesets) {
   if (length(genesets) == 1) {
     merged_gs <- genesets[[1]]
   } else {
-    merged_gs <- Reduce(function(a, b) base::merge(a, b, by = 'Term', all = TRUE), genesets)
+    merged_gs <- Reduce(
+      function(a, b) base::merge(a, b, by = "Term", all = TRUE),
+      genesets
+    )
   }
   # Free original geneset copies now that merge is complete
   rm(genesets)
 
   # Combine unique 'GeneID' elements
-  geneid_cols <- paste('GeneID', gs_names_clean, sep = "_")
+  geneid_cols <- paste("GeneID", gs_names_clean, sep = "_")
   geneid_cols_present <- geneid_cols[geneid_cols %in% colnames(merged_gs)]
   if (length(geneid_cols_present) > 0) {
     if (length(geneid_cols_present) == 1) {
@@ -160,51 +189,67 @@ merge_genesets <- function(genesets) {
     } else {
       # Paste all GeneID columns, then deduplicate per row
       raw_ids <- do.call(paste, c(merged_gs[geneid_cols_present], sep = ","))
-      merged_gs$GeneID <- vapply(strsplit(raw_ids, ","), function(x) {
-        paste(unique(x[!is.na(x) & x != "NA" & nzchar(x)]), collapse = ",")
-      }, character(1))
+      merged_gs$GeneID <- vapply(
+        strsplit(raw_ids, ","),
+        function(x) {
+          paste(unique(x[!is.na(x) & x != "NA" & nzchar(x)]), collapse = ",")
+        },
+        character(1)
+      )
     }
   }
 
   # Combine unique 'Annot' elements
-  annot_cols <- paste('Annot', gs_names_clean, sep = "_")
+  annot_cols <- paste("Annot", gs_names_clean, sep = "_")
   annot_cols_present <- annot_cols[annot_cols %in% colnames(merged_gs)]
   if (length(annot_cols_present) > 0) {
     if (length(annot_cols_present) == 1) {
       merged_gs$Annot <- merged_gs[[annot_cols_present]]
     } else {
-      merged_gs$Annot <- apply(merged_gs[, annot_cols_present, drop = FALSE], 1, function(x) {
-        paste(unique(na.omit(as.character(x))), collapse = ',')
-      })
+      merged_gs$Annot <- apply(
+        merged_gs[, annot_cols_present, drop = FALSE],
+        1,
+        function(x) {
+          paste(unique(na.omit(as.character(x))), collapse = ",")
+        }
+      )
     }
     merged_gs <- dplyr::select(merged_gs, -dplyr::any_of(annot_cols_present))
   }
 
   # Average Pvalue
-  pval_cols <- paste('Pvalue', gs_names_clean, sep = "_")
+  pval_cols <- paste("Pvalue", gs_names_clean, sep = "_")
   pval_cols_present <- pval_cols[pval_cols %in% colnames(merged_gs)]
   if (length(pval_cols_present) > 0) {
-    merged_gs$Pvalue <- rowMeans(merged_gs[, pval_cols_present, drop = FALSE], na.rm = TRUE)
+    merged_gs$Pvalue <- rowMeans(
+      merged_gs[, pval_cols_present, drop = FALSE],
+      na.rm = TRUE
+    )
   }
 
   # Average Padj
-  padj_cols <- paste('Padj', gs_names_clean, sep = "_")
+  padj_cols <- paste("Padj", gs_names_clean, sep = "_")
   padj_cols_present <- padj_cols[padj_cols %in% colnames(merged_gs)]
   if (length(padj_cols_present) > 0) {
-    merged_gs$Padj <- rowMeans(merged_gs[, padj_cols_present, drop = FALSE], na.rm = TRUE)
+    merged_gs$Padj <- rowMeans(
+      merged_gs[, padj_cols_present, drop = FALSE],
+      na.rm = TRUE
+    )
   }
 
-  return(merged_gs)
+  merged_gs
 }
 
 
 #' Perform clustering using the selected method
 #'
-#' This is the main clustering dispatcher function that routes to the appropriate
+#' This is the main clustering dispatcher function that routes to the
+#' appropriate
 #' clustering implementation based on the selected method.
 #'
 #' @param merged_gs Merged geneset dataframe (output of merge_genesets)
-#' @param method Clustering method: "richR" (original), "hierarchical", or "david"
+#' @param method Clustering method: "richR" (original), "hierarchical", or
+#' "david"
 #' @param params List of clustering parameters (varies by method):
 #'   \itemize{
 #'     \item richR: cutoff, overlap, minSize
@@ -221,7 +266,8 @@ merge_genesets <- function(genesets) {
 #' @return A list containing clustering results with components:
 #'   \itemize{
 #'     \item cluster_df: Dataframe with cluster assignments and term details
-#'     \item cluster_summary: Summary dataframe with cluster representative terms
+#'     \item cluster_summary: Summary dataframe with cluster representative
+#' terms
 #'     \item method: The clustering method used
 #'     \item params: Parameters used for clustering
 #'   }
@@ -245,8 +291,13 @@ merge_genesets <- function(genesets) {
 #' @seealso \code{\link{merge_genesets}}, \code{\link{get_clustering_methods}}
 #'
 #' @export
-perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_names = NULL, raw_genesets = NULL) {
-
+perform_clustering <- function(
+  merged_gs,
+  method = "richR",
+  params = list(),
+  gs_names = NULL,
+  raw_genesets = NULL
+) {
   # Validate input
   if (is.null(merged_gs) || nrow(merged_gs) == 0) {
     stop("No data provided for clustering")
@@ -255,7 +306,10 @@ perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_
   required_cols <- c("Term", "GeneID")
   missing_cols <- setdiff(required_cols, colnames(merged_gs))
   if (length(missing_cols) > 0) {
-    stop(paste("Missing required columns:", paste(missing_cols, collapse = ", ")))
+    stop(paste(
+      "Missing required columns:",
+      paste(missing_cols, collapse = ", ")
+    ))
   }
 
   # Ensure numeric Pvalue/Padj
@@ -267,28 +321,39 @@ perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_
   }
 
   # Check if richCluster is available for hierarchical/david methods
-  if (method %in% c("hierarchical", "david") && !is_richCluster_available()) {
+  if (method %in% c("hierarchical", "david") && !is_rich_cluster_available()) {
     stop(paste0(
-      "richCluster 2.0.1 or newer is required for the '", method, "' method.\n",
+      "richCluster 2.0.1 or newer is required for the '",
+      method,
+      "' method.\n",
       "Install or update it with: install.packages('richCluster')"
     ))
   }
 
-  result <- tryCatch({
-    switch(method,
-           "richR" = cluster_richR(merged_gs, params, gs_names),
-           "hierarchical" = cluster_hierarchical(merged_gs, params, gs_names, raw_genesets),
-           "david" = cluster_david(merged_gs, params, gs_names, raw_genesets),
-           stop(paste("Unknown clustering method:", method))
-    )
-  }, error = function(e) {
-    stop(paste("Clustering failed:", conditionMessage(e)), call. = FALSE)
-  })
+  result <- tryCatch(
+    {
+      switch(
+        method,
+        "richR" = cluster_rich_r(merged_gs, params, gs_names),
+        "hierarchical" = cluster_hierarchical(
+          merged_gs,
+          params,
+          gs_names,
+          raw_genesets
+        ),
+        "david" = cluster_david(merged_gs, params, gs_names, raw_genesets),
+        stop(paste("Unknown clustering method:", method))
+      )
+    },
+    error = function(e) {
+      stop(paste("Clustering failed:", conditionMessage(e)), call. = FALSE)
+    }
+  )
 
   result$method <- method
   result$params <- params
 
-  return(result)
+  result
 }
 
 
@@ -302,12 +367,13 @@ perform_clustering <- function(merged_gs, method = "richR", params = list(), gs_
 #' @param gs_names Geneset names for output
 #' @return Clustering result list
 #' @keywords internal
-cluster_richR <- function(merged_gs, params, gs_names) {
-
+cluster_rich_r <- function(merged_gs, params, gs_names) {
   # Set defaults
-  cutoff <- params$cutoff %||% 0.5      # kappa similarity threshold (0-1); terms must meet this to join a cluster
-  overlap <- params$overlap %||% 0.5    # minimum fraction of shared genes (0-1) required to link two terms
-  minSize <- params$minSize %||% 2
+  # kappa similarity threshold (0-1); terms must meet this to join a cluster
+  cutoff <- params$cutoff %||% 0.5
+  # minimum fraction of shared genes (0-1) required to link two terms
+  overlap <- params$overlap %||% 0.5
+  min_size <- params$minSize %||% 2
 
   # Perform clustering using richR
   clustered_gs <- richR::richCluster(
@@ -315,7 +381,7 @@ cluster_richR <- function(merged_gs, params, gs_names) {
     gene = NULL,
     cutoff = cutoff,
     overlap = overlap,
-    minSize = minSize
+    minSize = min_size
   )
 
   # Check if clustering returned results
@@ -329,36 +395,50 @@ cluster_richR <- function(merged_gs, params, gs_names) {
 
   # Order clusters by ascending cluster number
   if ("AnnotationCluster" %in% colnames(clustered_gs)) {
-    clustered_gs <- clustered_gs[order(as.numeric(clustered_gs$AnnotationCluster)), ]
+    clustered_gs <- clustered_gs[
+      order(as.numeric(clustered_gs$AnnotationCluster)),
+    ]
   }
 
   # For single enrichment results, merged_gs has Pvalue/Padj/GeneID directly
-  # (not Pvalue_name/Padj_name). Add suffixed copies so get_cluster_list_richR
+  # (not Pvalue_name/Padj_name). Add suffixed copies so get_cluster_list_rich_r
   # and downstream visualization (comprehensive_hmap) work correctly.
   if (!is.null(gs_names) && length(gs_names) == 1) {
     gs <- gs_names[1]
-    if ("Pvalue" %in% colnames(merged_gs) && !paste0("Pvalue_", gs) %in% colnames(merged_gs)) {
+    if (
+      "Pvalue" %in%
+        colnames(merged_gs) &&
+        !paste0("Pvalue_", gs) %in% colnames(merged_gs)
+    ) {
       merged_gs[[paste0("Pvalue_", gs)]] <- merged_gs$Pvalue
     }
-    if ("Padj" %in% colnames(merged_gs) && !paste0("Padj_", gs) %in% colnames(merged_gs)) {
+    if (
+      "Padj" %in%
+        colnames(merged_gs) &&
+        !paste0("Padj_", gs) %in% colnames(merged_gs)
+    ) {
       merged_gs[[paste0("Padj_", gs)]] <- merged_gs$Padj
     }
-    if ("GeneID" %in% colnames(merged_gs) && !paste0("GeneID_", gs) %in% colnames(merged_gs)) {
+    if (
+      "GeneID" %in%
+        colnames(merged_gs) &&
+        !paste0("GeneID_", gs) %in% colnames(merged_gs)
+    ) {
       merged_gs[[paste0("GeneID_", gs)]] <- merged_gs$GeneID
     }
   }
 
   # Build cluster list with term details
-  cluster_list <- get_cluster_list_richR(clustered_gs, merged_gs, gs_names)
+  cluster_list <- get_cluster_list_rich_r(clustered_gs, merged_gs, gs_names)
 
   # Build cluster summary dataframe
   cluster_summary <- build_cluster_summary(cluster_list)
 
-  return(list(
+  list(
     cluster_df = cluster_list,
     cluster_summary = cluster_summary,
     raw_result = clustered_gs
-  ))
+  )
 }
 
 
@@ -369,17 +449,25 @@ cluster_richR <- function(merged_gs, params, gs_names) {
 #'
 #' @param merged_gs Merged geneset dataframe
 #' @param params List with: distance_metric (kappa/jaccard), distance_cutoff,
-#'   linkage_method (single/complete/average/ward), linkage_cutoff, min_terms, min_value
+#'   linkage_method (single/complete/average/ward), linkage_cutoff, min_terms,
+#' min_value
 #' @param gs_names Geneset names for output
 #' @return Clustering result list
 #' @keywords internal
-cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
-
+cluster_hierarchical <- function(
+  merged_gs,
+  params,
+  gs_names,
+  raw_genesets = NULL
+) {
   # Set defaults
   distance_metric <- params$distance_metric %||% "kappa"
-  distance_cutoff <- params$distance_cutoff %||% 0.5  # pairwise similarity cutoff (0-1) for kappa/Jaccard; pairs at or above this are considered connected
+  # pairwise similarity cutoff (0-1) for kappa/Jaccard; pairs at or above this
+  # are considered connected
+  distance_cutoff <- params$distance_cutoff %||% 0.5
   linkage_method <- params$linkage_method %||% "average"
-  linkage_cutoff <- params$linkage_cutoff %||% 0.5    # dendrogram cut height (0-1) at which clusters are extracted
+  # dendrogram cut height (0-1) at which clusters are extracted
+  linkage_cutoff <- params$linkage_cutoff %||% 0.5
   min_terms <- params$min_terms %||% 2
   min_value <- params$min_value %||% 0.1
 
@@ -400,7 +488,9 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
   })
   # Remove any empty dataframes after filtering
   enrichment_list <- enrichment_list[vapply(
-    enrichment_list, function(df) is.data.frame(df) && nrow(df) > 0, logical(1)
+    enrichment_list,
+    function(df) is.data.frame(df) && nrow(df) > 0,
+    logical(1)
   )]
   if (length(enrichment_list) == 0) {
     return(list(
@@ -444,13 +534,25 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
     # and downstream visualization (comprehensive_hmap) work correctly.
     if (length(gs_names) == 1) {
       gs <- gs_names[1]
-      if ("Pvalue" %in% colnames(merged_gs) && !paste0("Pvalue_", gs) %in% colnames(merged_gs)) {
+      if (
+        "Pvalue" %in%
+          colnames(merged_gs) &&
+          !paste0("Pvalue_", gs) %in% colnames(merged_gs)
+      ) {
         merged_gs[[paste0("Pvalue_", gs)]] <- merged_gs$Pvalue
       }
-      if ("Padj" %in% colnames(merged_gs) && !paste0("Padj_", gs) %in% colnames(merged_gs)) {
+      if (
+        "Padj" %in%
+          colnames(merged_gs) &&
+          !paste0("Padj_", gs) %in% colnames(merged_gs)
+      ) {
         merged_gs[[paste0("Padj_", gs)]] <- merged_gs$Padj
       }
-      if ("GeneID" %in% colnames(merged_gs) && !paste0("GeneID_", gs) %in% colnames(merged_gs)) {
+      if (
+        "GeneID" %in%
+          colnames(merged_gs) &&
+          !paste0("GeneID_", gs) %in% colnames(merged_gs)
+      ) {
         merged_gs[[paste0("GeneID_", gs)]] <- merged_gs$GeneID
       }
     }
@@ -462,12 +564,12 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
   # Build cluster summary
   cluster_summary <- build_cluster_summary(cluster_df)
 
-  return(list(
+  list(
     cluster_df = cluster_df,
     cluster_summary = cluster_summary,
     raw_result = cluster_result,
     distance_matrix = cluster_result$distance_matrix
-  ))
+  )
 }
 
 
@@ -483,12 +585,13 @@ cluster_hierarchical <- function(merged_gs, params, gs_names, raw_genesets = NUL
 #' @return Clustering result list
 #' @keywords internal
 cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
-
   # Set defaults
-  similarity_threshold <- params$similarity_threshold %||% 0.5         # DAVID kappa-similarity threshold (0-1) for seeding initial groups
+  # DAVID kappa-similarity threshold (0-1) for seeding initial groups
+  similarity_threshold <- params$similarity_threshold %||% 0.5
   initial_group_membership <- params$initial_group_membership %||% 3
   final_group_membership <- params$final_group_membership %||% 3
-  multiple_linkage_threshold <- params$multiple_linkage_threshold %||% 0.5  # min fraction of shared members (0-1) required to merge two groups
+  # min fraction of shared members (0-1) required to merge two groups
+  multiple_linkage_threshold <- params$multiple_linkage_threshold %||% 0.5
 
   # Prepare input
   enrichment_list <- raw_genesets %||% list(merged_gs)
@@ -525,13 +628,25 @@ cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
     # and downstream visualization (comprehensive_hmap) work correctly.
     if (length(gs_names) == 1) {
       gs <- gs_names[1]
-      if ("Pvalue" %in% colnames(merged_gs) && !paste0("Pvalue_", gs) %in% colnames(merged_gs)) {
+      if (
+        "Pvalue" %in%
+          colnames(merged_gs) &&
+          !paste0("Pvalue_", gs) %in% colnames(merged_gs)
+      ) {
         merged_gs[[paste0("Pvalue_", gs)]] <- merged_gs$Pvalue
       }
-      if ("Padj" %in% colnames(merged_gs) && !paste0("Padj_", gs) %in% colnames(merged_gs)) {
+      if (
+        "Padj" %in%
+          colnames(merged_gs) &&
+          !paste0("Padj_", gs) %in% colnames(merged_gs)
+      ) {
         merged_gs[[paste0("Padj_", gs)]] <- merged_gs$Padj
       }
-      if ("GeneID" %in% colnames(merged_gs) && !paste0("GeneID_", gs) %in% colnames(merged_gs)) {
+      if (
+        "GeneID" %in%
+          colnames(merged_gs) &&
+          !paste0("GeneID_", gs) %in% colnames(merged_gs)
+      ) {
         merged_gs[[paste0("GeneID_", gs)]] <- merged_gs$GeneID
       }
     }
@@ -542,11 +657,11 @@ cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
   # Build cluster summary
   cluster_summary <- build_cluster_summary(cluster_df)
 
-  return(list(
+  list(
     cluster_df = cluster_df,
     cluster_summary = cluster_summary,
     raw_result = cluster_result
-  ))
+  )
 }
 
 
@@ -557,8 +672,7 @@ cluster_david <- function(merged_gs, params, gs_names, raw_genesets = NULL) {
 #' @param gs_names Geneset names
 #' @return Dataframe with cluster assignments and term details
 #' @keywords internal
-get_cluster_list_richR <- function(clustered_gs, merged_gs, gs_names) {
-
+get_cluster_list_rich_r <- function(clustered_gs, merged_gs, gs_names) {
   if (is.null(gs_names) || length(gs_names) == 0) {
     gs_names <- "merged"
   }
@@ -568,9 +682,10 @@ get_cluster_list_richR <- function(clustered_gs, merged_gs, gs_names) {
     return(data.frame())
   }
 
-
   # Get list of Annots in cluster, index=cluster#
-  term_indices <- lapply(clustered_gs$Cluster, function(x) unlist(strsplit(x, ',')))
+  term_indices <- lapply(clustered_gs$Cluster, function(x) {
+    unlist(strsplit(x, ","))
+  })
 
   # For each cluster #, find matching row in merged_gs corresponding to Annot
   cluster_list <- data.frame()
@@ -606,10 +721,13 @@ get_cluster_list_richR <- function(clustered_gs, merged_gs, gs_names) {
     paste0("GeneID_", gs_names)
   )
 
-  available_cols <- intersect(c(base_cols, geneset_cols), colnames(cluster_list))
+  available_cols <- intersect(
+    c(base_cols, geneset_cols),
+    colnames(cluster_list)
+  )
   cluster_list <- cluster_list[, available_cols, drop = FALSE]
 
-  return(cluster_list)
+  cluster_list
 }
 
 
@@ -621,8 +739,9 @@ get_cluster_list_richR <- function(clustered_gs, merged_gs, gs_names) {
 #' @return Updated cluster dataframe
 #' @keywords internal
 add_geneset_columns <- function(cluster_df, merged_gs, gs_names) {
-
-  if (!("Term" %in% colnames(cluster_df)) || !("Term" %in% colnames(merged_gs))) {
+  if (
+    !("Term" %in% colnames(cluster_df)) || !("Term" %in% colnames(merged_gs))
+  ) {
     return(cluster_df)
   }
 
@@ -652,8 +771,15 @@ drop_numeric_dataset_aliases <- function(cluster_df, gs_names) {
   }
 
   fields <- c("Pvalue", "Padj", "GeneID")
-  positional <- grep("^(Pvalue|Padj|GeneID)_[0-9]+$", names(cluster_df), value = TRUE)
-  named <- unlist(lapply(fields, function(field) paste0(field, "_", gs_names)), use.names = FALSE)
+  positional <- grep(
+    "^(Pvalue|Padj|GeneID)_[0-9]+$",
+    names(cluster_df),
+    value = TRUE
+  )
+  named <- unlist(
+    lapply(fields, function(field) paste0(field, "_", gs_names)),
+    use.names = FALSE
+  )
   aliases <- setdiff(positional, named)
   if (length(aliases) > 0) {
     cluster_df <- cluster_df[, !names(cluster_df) %in% aliases, drop = FALSE]
@@ -670,41 +796,49 @@ drop_numeric_dataset_aliases <- function(cluster_df, gs_names) {
 #' @return Summary dataframe with cluster representatives
 #' @keywords internal
 build_cluster_summary <- function(cluster_df) {
-
   if (is.null(cluster_df) || nrow(cluster_df) == 0) {
     return(data.frame())
   }
 
   # Check for required columns
-  if (!("Cluster" %in% colnames(cluster_df)) || !("Term" %in% colnames(cluster_df))) {
+  if (
+    !("Cluster" %in% colnames(cluster_df)) ||
+      !("Term" %in% colnames(cluster_df))
+  ) {
     return(data.frame())
   }
 
   # Get representative term per cluster (most significant by Pvalue or Padj)
-  value_col <- if ("Padj" %in% colnames(cluster_df)) "Padj" else if ("Pvalue" %in% colnames(cluster_df)) "Pvalue" else NULL
+  value_col <- if ("Padj" %in% colnames(cluster_df)) {
+    "Padj"
+  } else if ("Pvalue" %in% colnames(cluster_df)) {
+    "Pvalue"
+  } else {
+    NULL
+  }
 
   if (is.null(value_col)) {
     # No p-value column, just count terms
     summary_df <- cluster_df %>%
-      dplyr::group_by(Cluster) %>%
+      dplyr::group_by(.data[["Cluster"]]) %>%
       dplyr::summarise(
-        Representative_Term = dplyr::first(Term),
+        Representative_Term = dplyr::first(.data[["Term"]]),
         n_terms = dplyr::n(),
         .groups = "drop"
       )
   } else {
     summary_df <- cluster_df %>%
-      dplyr::group_by(Cluster) %>%
+      dplyr::group_by(.data[["Cluster"]]) %>%
       dplyr::arrange(.data[[value_col]]) %>%
       dplyr::summarise(
-        Representative_Term = dplyr::first(Term),
+        Representative_Term = dplyr::first(.data[["Term"]]),
         n_terms = dplyr::n(),
         min_pvalue = min(.data[[value_col]], na.rm = TRUE),
         .groups = "drop"
       )
   }
 
-  return(summary_df)
+  summary_df
 }
 
 
@@ -732,21 +866,32 @@ get_clustering_methods <- function() {
   methods <- list(
     "richR" = list(
       name = "Legacy Kappa - richR",
-      description = "Legacy richR::richCluster algorithm with its own enrichment-score threshold; distinct from richCluster methods",
+      description = paste0(
+        "Legacy richR::richCluster algorithm with its own ",
+        "enrichment-score threshold; distinct from ",
+        "richCluster methods"
+      ),
       available = TRUE
     )
   )
 
   # Check if richCluster is available for additional methods
-  if (is_richCluster_available()) {
+  if (is_rich_cluster_available()) {
     methods$hierarchical <- list(
       name = "Hierarchical Kappa/Jaccard - richCluster",
-      description = "Corrected Kappa/Jaccard similarity with selectable hierarchical linkage using richCluster",
+      description = paste0(
+        "Corrected Kappa/Jaccard similarity with ",
+        "selectable hierarchical linkage using ",
+        "richCluster"
+      ),
       available = TRUE
     )
     methods$david <- list(
       name = "DAVID-style - richCluster",
-      description = "DAVID-style seed-and-merge clustering with Kappa similarity using richCluster",
+      description = paste0(
+        "DAVID-style seed-and-merge clustering with Kappa ",
+        "similarity using richCluster"
+      ),
       available = TRUE
     )
   } else {
@@ -762,5 +907,5 @@ get_clustering_methods <- function() {
     )
   }
 
-  return(methods)
+  methods
 }

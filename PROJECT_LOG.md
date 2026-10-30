@@ -6,6 +6,7 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 - logs/PROJECT_LOG_2026-H1.md — 6 sessions (2026-01 … 2026-03)
 
 ## Session Index (active, newest first)
+- 2026-10-29 — Codex scientific heatmap/backend/GUI repair and seven manuscript figure sets; exact-source server preflight passed; hosted/deployment closure recorded in current handoff
 - 2026-10-23 → 2026-10-25 — SPEC-WS-006 accepted and integrated (9f403c2); shiny 1.14 teardown defect found in hosted CI and fixed; deployed live 2026-10-25 and verified
 - 2026-10-23 — SPEC-WS-004 accepted and integrated (4142c94); WS-001–004 deployed live and verified
 - 2026-10-22 — SPEC-WS-003 accepted via ws003-recovery; integrated and pushed
@@ -22,6 +23,19 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 - 2026-05-18 → 2026-05-19 — Deployment Tooling + Sync Strategy Decision
 
 ---
+
+
+## Session 2026-10-29 — Scientific clustering and manuscript figures (Codex)
+
+- LSP sync recovery: hosted652e498 completed7/7jobs PASS (249tests/2987assertions,0failure/error/warning/skip; Rcheck0E/0W/5N; coverage89.78%). At user request, repaired43object-usage warnings and all2405informational diagnostics without relaxing canonical gates. Actual new complete-package JSON-RPC run observed0total diagnostics across27Rfiles, syncPASS/release_hold=false. Public interfaces and exact literal values preserved; fresh installed-candidate tests/GSE identity and new CI are pending at this entry. Evidence `.moai/reports/lsp-sync-cleanup/`.
+
+- User authorized priorities1–3 fixes/integration/testing, then manuscript figures; server deployment may proceed after checks, formal release later. Isolated branch `WT-scientific-heatmap-adoption` from666c120; product/test commits4daf04b,f7812d5,5cd8b91,57b5a15 pushed. Last CLI in this follow-up: Codex.
+- Preserved missing values, cluster IDs and duplicate representative labels; display-only raw-zero floor explained; all-NA rendering fixed. Detailed source review confirmed compiled engines already use richCluster2.0.1 corrected Kappa implementation; legacy richR remains separately attributed, with no silent fallback or threshold tuning.
+- Independent saved-data verification caught a real selector reset: individual-choice updates also reset the result selector. Reproduced in actual browser input transitions and MockShinySession, split observers, added causal regression. Final local8GUI/8independent saved-data checks pass, real engines366/254clusters retain977/5missing cells and no coordinate collisions.
+- Exact57b5a15 server private preflight passed63tests/779assertions,0failure/error/warning/skip,193R4.6 namespaces and Shiny app construction; live666c120 untouched. Hosted40957954737 pending closure at this entry: five jobs pass, full in progress, first browser57PASS/1fixture-startup FAIL with safe cleanup and unobserved cause. Do not silently relabel this first attempt successful.
+- Refreshed seven scientific figure sets with21PNG/PDF/SVG exports and a seven-page vector atlas. Canonical analysis unchanged. Three independent reviewers verified values/NA/ranks/provenance/rendering and closed QC sample-exclusion wording and original-ORA-vs-filtered-summary caption findings; shared colour limits applied. Bundle has218verified member hashes; see current handoff for archive digest and locations.
+- Follow-up correction652e498: full57bCI revealed two introduced API/UI text-compatibility regressions (249tests2984PASS1failure1error); restored exact provider message and Kappa method description, moved guidance to GUI.33affected tests409assertions and independent compatibility probe PASS. New hosted40966347363 pending; exact-source server652preflight passed90tests/1155assertions,193R4.6namespaces and appconstruction. No numeric changes; reviewed scientific/figure modules unchanged.
+- Deployment wrapper prepared atserver652e498 with expected-old-release guard, fixed SHA and script digest. Preflight ready; CI marker only after actual green. Interactive sudo authentication is required from owner; no live switch or formal public release in this follow-up yet.
 
 ## Session 2026-10-23 → 2026-10-25 — SPEC-WS-006 accepted and integrated (Claude Code)
 

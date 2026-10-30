@@ -70,8 +70,8 @@ root <- normalizePath(getwd(), mustWork=TRUE)
 dir.create(file.path(root, 'pids'), showWarnings=FALSE)
 dir.create(file.path(root, 'release'), showWarnings=FALSE)
 future::plan(future::multisession, workers=I(as.integer(Sys.getenv('WS_JOBS_WORKERS'))))
-enrichTabUI <- getFromNamespace('enrichTabUI', 'richStudio')
-enrichTabServer <- getFromNamespace('enrichTabServer', 'richStudio')
+enrich_tab_ui <- getFromNamespace('enrich_tab_ui', 'richStudio')
+enrich_tab_server <- getFromNamespace('enrich_tab_server', 'richStudio')
 jobs_ui <- getFromNamespace('workspace_jobs_ui', 'richStudio')
 jobs_server <- getFromNamespace('workspace_jobs_server', 'richStudio')
 jobs_registry <- getFromNamespace('workspace_jobs_registry', 'richStudio')
@@ -102,7 +102,7 @@ ui <- dashboardPage(
   dashboardBody(shinyjs::useShinyjs(),
     tags$div(id='fixture', 'data-nonce'=Sys.getenv('WS_JOBS_NONCE')),
     jobs_ui('jobs'),
-    tabItems(enrichTabUI('enrich', tabName='enrich_tab'),
+    tabItems(enrich_tab_ui('enrich', tabName='enrich_tab'),
       tabItem(tabName='other_tab', h2('Other tab'), p('Navigation target'))))
 )
 server <- function(input, output, session) {
@@ -117,7 +117,7 @@ server <- function(input, output, session) {
   session$userData$workspace_jobs <- jobs
   session$onSessionEnded(function() jobs_close(jobs))
   jobs_server('jobs', jobs)
-  enrichTabServer('enrich', u_degnames=u_degnames, u_degdfs=u_degdfs, u_big_degdf=u_big_degdf,
+  enrich_tab_server('enrich', u_degnames=u_degnames, u_degdfs=u_degdfs, u_big_degdf=u_big_degdf,
     u_rrnames=u_rrnames, u_rrdfs=u_rrdfs, u_big_rrdf=u_big_rrdf, enrichment_runner=latch_runner)
 }
 runApp(shinyApp(ui, server), host='127.0.0.1', port=${port}, launch.browser=FALSE)

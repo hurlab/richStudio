@@ -18,8 +18,10 @@ sanitize_filename <- function(name) {
   # Remove leading dots (hidden files)
   name <- gsub("^\\.+", "", name)
   # Fallback if empty
-  if (nchar(name) == 0) name <- "export"
-  return(name)
+  if (nchar(name) == 0) {
+    name <- "export"
+  }
+  name
 }
 
 #' Save Tab UI
@@ -30,14 +32,19 @@ sanitize_filename <- function(name) {
 #' @export
 saveTabUI <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(tabName = tabName,
+  tabItem(
+    tabName = tabName,
     h2("Save & Load Analysis Session"),
     p("Save your current analysis session or load a previously saved session."),
-
     fluidRow(
       # Save session box
-      column(width = 6,
-        box(title = "Save Session", status = "primary", width = NULL, solidHeader = TRUE,
+      column(
+        width = 6,
+        box(
+          title = "Save Session",
+          status = "primary",
+          width = NULL,
+          solidHeader = TRUE,
           p("Download your current analysis state including:"),
           tags$ul(
             tags$li("DEG sets"),
@@ -46,11 +53,19 @@ saveTabUI <- function(id, tabName) {
             tags$li("Session settings")
           ),
           hr(),
-          textInput(ns('session_name'), "Session name",
-                   value = paste0("richstudio_session_",
-                                  format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
-                                  paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = ""))),
-          radioButtons(ns('save_format'), "Save format:",
+          textInput(
+            ns("session_name"),
+            "Session name",
+            value = paste0(
+              "richstudio_session_",
+              format(Sys.time(), "%Y%m%d_%H%M%S"),
+              "_",
+              paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = "")
+            )
+          ),
+          radioButtons(
+            ns("save_format"),
+            "Save format:",
             choices = c(
               "RDS (Recommended)" = "rds",
               "JSON (Portable)" = "json"
@@ -58,43 +73,82 @@ saveTabUI <- function(id, tabName) {
             selected = "rds"
           ),
           br(),
-          downloadButton(ns('download_session'), "Download Session", class = "btn-primary btn-lg"),
-          br(), br(),
-          helpText("RDS format preserves all R objects exactly. JSON format is more portable but may lose some data types.")
+          downloadButton(
+            ns("download_session"),
+            "Download Session",
+            class = "btn-primary btn-lg"
+          ),
+          br(),
+          br(),
+          helpText(
+            paste0(
+              "RDS format preserves all R objects exactly. JSON ",
+              "format is more portable but may lose some data ",
+              "types."
+            )
+          )
         )
       ),
 
       # Load session box
-      column(width = 6,
-        box(title = "Load Session", status = "success", width = NULL, solidHeader = TRUE,
-          p("Upload a previously saved session file to restore your analysis state."),
+      column(
+        width = 6,
+        box(
+          title = "Load Session",
+          status = "success",
+          width = NULL,
+          solidHeader = TRUE,
+          p(
+            paste0(
+              "Upload a previously saved session file to ",
+              "restore your analysis state."
+            )
+          ),
           hr(),
-          fileInput(ns('load_session_file'), "Choose session file",
-                   accept = c('.rds', '.json', '.RDS', '.JSON')),
+          fileInput(
+            ns("load_session_file"),
+            "Choose session file",
+            accept = c(".rds", ".json", ".RDS", ".JSON")
+          ),
           br(),
-          actionButton(ns('load_session'), "Load Session", class = "btn-success btn-lg"),
-          br(), br(),
-          helpText("Loading a session will replace your current analysis state.")
+          actionButton(
+            ns("load_session"),
+            "Load Session",
+            class = "btn-success btn-lg"
+          ),
+          br(),
+          br(),
+          helpText(
+            "Loading a session will replace your current analysis state."
+          )
         )
       )
     ),
 
     # Session info box
     fluidRow(
-      column(width = 12,
-        box(title = "Current Session Summary", status = "info", width = NULL, collapsible = TRUE,
+      column(
+        width = 12,
+        box(
+          title = "Current Session Summary",
+          status = "info",
+          width = NULL,
+          collapsible = TRUE,
           fluidRow(
-            column(width = 4,
+            column(
+              width = 4,
               h4("DEG Sets"),
-              verbatimTextOutput(ns('deg_summary'))
+              verbatimTextOutput(ns("deg_summary"))
             ),
-            column(width = 4,
+            column(
+              width = 4,
               h4("Enrichment Results"),
-              verbatimTextOutput(ns('rr_summary'))
+              verbatimTextOutput(ns("rr_summary"))
             ),
-            column(width = 4,
+            column(
+              width = 4,
               h4("Clustering Results"),
-              verbatimTextOutput(ns('clus_summary'))
+              verbatimTextOutput(ns("clus_summary"))
             )
           )
         )
@@ -103,28 +157,51 @@ saveTabUI <- function(id, tabName) {
 
     # Export individual results
     fluidRow(
-      column(width = 12,
-        box(title = "Export Individual Results", status = "warning", width = NULL, collapsible = TRUE, collapsed = TRUE,
+      column(
+        width = 12,
+        box(
+          title = "Export Individual Results",
+          status = "warning",
+          width = NULL,
+          collapsible = TRUE,
+          collapsed = TRUE,
           p("Export specific results as individual files."),
           fluidRow(
-            column(width = 4,
+            column(
+              width = 4,
               h4("Export Enrichment Result"),
-              selectInput(ns('export_rr_select'), "Select result", choices = NULL),
-              selectInput(ns('export_rr_format'), "Format",
-                         choices = c("CSV" = "csv", "TSV" = "tsv", "Excel" = "xlsx")),
-              downloadButton(ns('export_rr'), "Export")
+              selectInput(
+                ns("export_rr_select"),
+                "Select result",
+                choices = NULL
+              ),
+              selectInput(
+                ns("export_rr_format"),
+                "Format",
+                choices = c("CSV" = "csv", "TSV" = "tsv", "Excel" = "xlsx")
+              ),
+              downloadButton(ns("export_rr"), "Export")
             ),
-            column(width = 4,
+            column(
+              width = 4,
               h4("Export Clustering Result"),
-              selectInput(ns('export_clus_select'), "Select result", choices = NULL),
-              selectInput(ns('export_clus_format'), "Format",
-                         choices = c("CSV" = "csv", "TSV" = "tsv", "Excel" = "xlsx")),
-              downloadButton(ns('export_clus'), "Export")
+              selectInput(
+                ns("export_clus_select"),
+                "Select result",
+                choices = NULL
+              ),
+              selectInput(
+                ns("export_clus_format"),
+                "Format",
+                choices = c("CSV" = "csv", "TSV" = "tsv", "Excel" = "xlsx")
+              ),
+              downloadButton(ns("export_clus"), "Export")
             ),
-            column(width = 4,
+            column(
+              width = 4,
               h4("Export All Results"),
               p("Download all results as a ZIP archive"),
-              downloadButton(ns('export_all'), "Export All")
+              downloadButton(ns("export_all"), "Export All")
             )
           )
         )
@@ -137,22 +214,43 @@ saveTabUI <- function(id, tabName) {
 # Rebuild only facts available from legacy result objects. Missing scientific
 # provenance stays unknown; matching successful run records may provide method.
 workspace_saved_cluster_method <- function(name, records_json) {
-  records <- tryCatch(workspace_run_records_parse(records_json), error = function(e) list())
-  methods <- vapply(Filter(function(record) {
-    if (!workspace_run_record_validate(record) || !identical(record$kind, "clustering") ||
-        !identical(record$state, "succeeded")) return(FALSE)
-    outputs <- record$outputs
-    settings <- record$settings
-    is.list(settings) && is.character(settings$method) && length(settings$method) == 1L &&
-      !is.na(settings$method) && nzchar(settings$method) &&
-      (identical(outputs, name) || (is.character(outputs) && name %in% outputs))
-  }, records), function(record) record$settings$method, character(1))
+  records <- tryCatch(
+    workspace_run_records_parse(records_json),
+    error = function(e) list()
+  )
+  methods <- vapply(
+    Filter(
+      function(record) {
+        if (
+          !workspace_run_record_validate(record) ||
+            !identical(record$kind, "clustering") ||
+            !identical(record$state, "succeeded")
+        ) {
+          return(FALSE)
+        }
+        outputs <- record$outputs
+        settings <- record$settings
+        is.list(settings) &&
+          is.character(settings$method) &&
+          length(settings$method) == 1L &&
+          !is.na(settings$method) &&
+          nzchar(settings$method) &&
+          (identical(outputs, name) ||
+             (is.character(outputs) && name %in% outputs))
+      },
+      records
+    ),
+    function(record) record$settings$method,
+    character(1)
+  )
   methods <- unique(methods)
   if (length(methods) == 1L) methods else "?"
 }
 
 workspace_legacy_rr_tracking <- function(labels) {
-  if (!length(labels)) return(NULL)
+  if (!length(labels)) {
+    return(NULL)
+  }
   rows <- lapply(labels, function(name) {
     row <- add_file_rrdf(NULL, name, file = TRUE)
     row$from_deg <- "?"
@@ -163,45 +261,92 @@ workspace_legacy_rr_tracking <- function(labels) {
 
 workspace_legacy_clus_tracking <- function(session_data) {
   labels <- session_data$clusnames
-  if (!length(labels)) return(NULL)
+  if (!length(labels)) {
+    return(NULL)
+  }
   rows <- lapply(labels, function(name) {
     details <- session_data$cluslists[[name]]
     summary <- session_data$clusdfs[[name]]
-    cluster_values <- if (is.data.frame(details) && "Cluster" %in% names(details)) details$Cluster else
-      if (is.data.frame(summary) && "Cluster" %in% names(summary)) summary$Cluster else integer()
-    data.frame(name = name, method = workspace_saved_cluster_method(name, session_data$run_records_json),
-      n_clusters = as.integer(length(unique(cluster_values[!is.na(cluster_values)]))),
-      n_terms = if (is.data.frame(details)) as.integer(nrow(details)) else NA_integer_,
-      stringsAsFactors = FALSE)
+    cluster_values <- if (
+      is.data.frame(details) && "Cluster" %in% names(details)
+    ) {
+      details$Cluster
+    } else if (is.data.frame(summary) && "Cluster" %in% names(summary)) {
+      summary$Cluster
+    } else {
+      integer()
+    }
+    data.frame(
+      name = name,
+      method = workspace_saved_cluster_method(
+        name,
+        session_data$run_records_json
+      ),
+      n_clusters = as.integer(length(unique(cluster_values[
+        !is.na(cluster_values)
+      ]))),
+      n_terms = if (is.data.frame(details)) {
+        as.integer(nrow(details))
+      } else {
+        NA_integer_
+      },
+      stringsAsFactors = FALSE
+    )
   })
   do.call(rbind, rows)
 }
 
 workspace_saved_tracking_state <- function(session_data) {
   restore <- function(field, legacy_value, labels, columns) {
-    if (!field %in% names(session_data)) return(list(df = legacy_value))
+    if (!field %in% names(session_data)) {
+      return(list(df = legacy_value))
+    }
     value <- session_data[[field]]
-    if (!is.list(value) || (length(value) && is.null(names(value))) ||
-        anyDuplicated(names(value)) || any(!vapply(value, function(x) is.null(x) || is.data.frame(x), logical(1)))) {
+    if (
+      !is.list(value) ||
+        (length(value) && is.null(names(value))) ||
+        anyDuplicated(names(value)) ||
+        any(
+          !vapply(value, function(x) is.null(x) || is.data.frame(x), logical(1))
+        )
+    ) {
       stop("Invalid ", field, " tracking metadata", call. = FALSE)
     }
-    if (!length(value)) return(list(df = legacy_value))
-    if (!"df" %in% names(value)) stop("Invalid ", field, " tracking metadata", call. = FALSE)
-    if (is.null(value$df)) return(list(df = legacy_value))
+    if (!length(value)) {
+      return(list(df = legacy_value))
+    }
+    if (!"df" %in% names(value)) {
+      stop("Invalid ", field, " tracking metadata", call. = FALSE)
+    }
+    if (is.null(value$df)) {
+      return(list(df = legacy_value))
+    }
     df <- value$df
-    if (!identical(names(df), columns) || !"name" %in% names(df) ||
-        anyNA(df$name) || any(!nzchar(as.character(df$name))) || anyDuplicated(as.character(df$name)) ||
-        !is.character(df$name)) {
+    if (
+      !identical(names(df), columns) ||
+        !"name" %in% names(df) ||
+        anyNA(df$name) ||
+        any(!nzchar(as.character(df$name))) ||
+        anyDuplicated(as.character(df$name)) ||
+        !is.character(df$name)
+    ) {
       stop("Invalid ", field, " tracking metadata", call. = FALSE)
     }
     if (field == "big_clusdf") {
       valid_counts <- function(counts) {
-        if (!is.numeric(counts) || any(is.nan(counts))) return(FALSE)
+        if (!is.numeric(counts) || any(is.nan(counts))) {
+          return(FALSE)
+        }
         known <- counts[!is.na(counts)]
         all(is.finite(known) & known >= 0 & known == floor(known))
       }
-      if (!is.character(df$method) || anyNA(df$method) || any(!nzchar(df$method)) ||
-          !valid_counts(df$n_clusters) || !valid_counts(df$n_terms)) {
+      if (
+        !is.character(df$method) ||
+          anyNA(df$method) ||
+          any(!nzchar(df$method)) ||
+          !valid_counts(df$n_clusters) ||
+          !valid_counts(df$n_terms)
+      ) {
         stop("Invalid ", field, " tracking metadata", call. = FALSE)
       }
     }
@@ -221,10 +366,18 @@ workspace_saved_tracking_state <- function(session_data) {
   rr_legacy <- workspace_legacy_rr_tracking(session_data$rrnames)
   clus_legacy <- workspace_legacy_clus_tracking(session_data)
   list(
-    big_rrdf = restore("big_rrdf", rr_legacy, session_data$rrnames,
-                      c("name", "from_deg", "annot", "keytype", "ontology", "species")),
-    big_clusdf = restore("big_clusdf", clus_legacy, session_data$clusnames,
-                         c("name", "method", "n_clusters", "n_terms"))
+    big_rrdf = restore(
+      "big_rrdf",
+      rr_legacy,
+      session_data$rrnames,
+      c("name", "from_deg", "annot", "keytype", "ontology", "species")
+    ),
+    big_clusdf = restore(
+      "big_clusdf",
+      clus_legacy,
+      session_data$clusnames,
+      c("name", "method", "n_clusters", "n_terms")
+    )
   )
 }
 
@@ -243,18 +396,30 @@ workspace_saved_tracking_state <- function(session_data) {
 #' @param u_big_rrdf Reactive values for enrichment result tracking metadata
 #' @param u_big_clusdf Reactive values for cluster result tracking metadata
 #' @export
-saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
-                          u_clusnames, u_clusdfs, u_cluslists,
-                          download_handler = downloadHandler, u_big_rrdf = NULL,
-                          u_big_clusdf = NULL) {
-
+saveTabServer <- function(
+  id,
+  u_degnames,
+  u_degdfs,
+  u_rrnames,
+  u_rrdfs,
+  u_clusnames,
+  u_clusdfs,
+  u_cluslists,
+  download_handler = downloadHandler,
+  u_big_rrdf = NULL,
+  u_big_clusdf = NULL
+) {
   moduleServer(id, function(input, output, session) {
     jobs <- workspace_jobs_peek(session)
 
     # Update select inputs
     observe({
-      updateSelectInput(session, 'export_rr_select', choices = u_rrnames$labels)
-      updateSelectInput(session, 'export_clus_select', choices = u_clusnames$labels)
+      updateSelectInput(session, "export_rr_select", choices = u_rrnames$labels)
+      updateSelectInput(
+        session,
+        "export_clus_select",
+        choices = u_clusnames$labels
+      )
     })
 
     # Session summaries
@@ -272,7 +437,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       if (n == 0) {
         "No enrichment results"
       } else {
-        paste0(n, " enrichment result(s):\n", paste(u_rrnames$labels, collapse = "\n"))
+        paste0(
+          n,
+          " enrichment result(s):\n",
+          paste(u_rrnames$labels, collapse = "\n")
+        )
       }
     })
 
@@ -281,7 +450,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
       if (n == 0) {
         "No clustering results"
       } else {
-        paste0(n, " clustering result(s):\n", paste(u_clusnames$labels, collapse = "\n"))
+        paste0(
+          n,
+          " clustering result(s):\n",
+          paste(u_clusnames$labels, collapse = "\n")
+        )
       }
     })
 
@@ -304,18 +477,37 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           clusdfs = reactiveValuesToList(u_clusdfs),
           cluslists = reactiveValuesToList(u_cluslists)
         )
-        if (!is.null(u_big_rrdf)) session_data$big_rrdf <- reactiveValuesToList(u_big_rrdf)
-        if (!is.null(u_big_clusdf)) session_data$big_clusdf <- reactiveValuesToList(u_big_clusdf)
-        if (!is.null(jobs)) session_data$run_records_json <- workspace_run_records_json(workspace_run_records(jobs))
+        if (!is.null(u_big_rrdf)) {
+          session_data$big_rrdf <- reactiveValuesToList(u_big_rrdf)
+        }
+        if (!is.null(u_big_clusdf)) {
+          session_data$big_clusdf <- reactiveValuesToList(u_big_clusdf)
+        }
+        if (!is.null(jobs)) {
+          session_data$run_records_json <- workspace_run_records_json(
+            workspace_run_records(jobs)
+          )
+        }
 
         # Use advisory file locking to prevent concurrent write corruption
         lock_path <- paste0(file, ".lock")
-        lock_conn <- tryCatch(file(lock_path, open = "w"), error = function(e) NULL)
+        lock_conn <- tryCatch(file(lock_path, open = "w"), error = function(e) {
+          NULL
+        })
         if (is.null(lock_conn)) {
-          showNotification("Could not acquire file lock. Save aborted.", type = "error")
+          showNotification(
+            "Could not acquire file lock. Save aborted.",
+            type = "error"
+          )
           return(NULL)
         }
-        on.exit({ close(lock_conn); unlink(lock_path) }, add = TRUE)
+        on.exit(
+          {
+            close(lock_conn)
+            unlink(lock_path)
+          },
+          add = TRUE
+        )
 
         if (input$save_format == "rds") {
           saveRDS(session_data, file)
@@ -341,7 +533,12 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
               })
             }
           }
-          jsonlite::write_json(json_data, file, auto_unbox = TRUE, pretty = TRUE)
+          jsonlite::write_json(
+            json_data,
+            file,
+            auto_unbox = TRUE,
+            pretty = TRUE
+          )
         }
 
         showNotification("Session saved successfully!", type = "message")
@@ -352,136 +549,188 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     observeEvent(input$load_session, {
       req(input$load_session_file)
 
-      tryCatch({
-        file_path <- input$load_session_file$datapath
-        file_ext <- tools::file_ext(input$load_session_file$name)
+      tryCatch(
+        {
+          file_path <- input$load_session_file$datapath
+          file_ext <- tools::file_ext(input$load_session_file$name)
 
-        # Check for advisory lock from a concurrent save operation
-        lock_path <- paste0(file_path, ".lock")
-        if (file.exists(lock_path)) {
-          # Wait briefly for lock to clear (up to 3 seconds)
-          lock_cleared <- FALSE
-          for (i in seq_len(6)) {
-            Sys.sleep(0.5)
-            if (!file.exists(lock_path)) {
-              lock_cleared <- TRUE
-              break
+          # Check for advisory lock from a concurrent save operation
+          lock_path <- paste0(file_path, ".lock")
+          if (file.exists(lock_path)) {
+            # Wait briefly for lock to clear (up to 3 seconds)
+            lock_cleared <- FALSE
+            for (i in seq_len(6)) {
+              Sys.sleep(0.5)
+              if (!file.exists(lock_path)) {
+                lock_cleared <- TRUE
+                break
+              }
+            }
+            if (!lock_cleared) {
+              showNotification(
+                paste0(
+                  "Session file is currently being written. Please ",
+                  "try again shortly."
+                ),
+                type = "warning"
+              )
+              return(NULL)
             }
           }
-          if (!lock_cleared) {
-            showNotification(
-              "Session file is currently being written. Please try again shortly.",
-              type = "warning"
-            )
-            return(NULL)
-          }
-        }
 
-        if (tolower(file_ext) == "rds") {
-          session_data <- readRDS(file_path)
-          # Validate deserialized object is a plain list with expected structure
-          if (!is.list(session_data) || is.null(session_data$version)) {
-            showNotification("Invalid session file format", type = "error")
-            return(NULL)
+          if (tolower(file_ext) == "rds") {
+            session_data <- readRDS(file_path)
+            # Validate deserialized object is a plain list with expected
+            # structure
+            if (!is.list(session_data) || is.null(session_data$version)) {
+              showNotification("Invalid session file format", type = "error")
+              return(NULL)
+            }
+          } else if (tolower(file_ext) == "json") {
+            session_data <- jsonlite::read_json(
+              file_path,
+              simplifyVector = TRUE
+            )
+            # Convert lists back to data frames
+            session_data$degdfs <- lapply(session_data$degdfs, as.data.frame)
+            session_data$rrdfs <- lapply(session_data$rrdfs, as.data.frame)
+            session_data$clusdfs <- lapply(session_data$clusdfs, as.data.frame)
+            session_data$cluslists <- lapply(
+              session_data$cluslists,
+              as.data.frame
+            )
+            for (field in c("big_rrdf", "big_clusdf")) {
+              if (!is.null(session_data[[field]])) {
+                session_data[[field]] <- lapply(
+                  session_data[[field]],
+                  function(df) {
+                    if (is.null(df) || is.data.frame(df)) {
+                      df
+                    } else {
+                      as.data.frame(df)
+                    }
+                  }
+                )
+              }
+            }
+          } else {
+            stop("Unsupported file format. Use .rds or .json files.")
           }
-        } else if (tolower(file_ext) == "json") {
-          session_data <- jsonlite::read_json(file_path, simplifyVector = TRUE)
-          # Convert lists back to data frames
-          session_data$degdfs <- lapply(session_data$degdfs, as.data.frame)
-          session_data$rrdfs <- lapply(session_data$rrdfs, as.data.frame)
-          session_data$clusdfs <- lapply(session_data$clusdfs, as.data.frame)
-          session_data$cluslists <- lapply(session_data$cluslists, as.data.frame)
-          for (field in c("big_rrdf", "big_clusdf")) {
-            if (!is.null(session_data[[field]])) {
-              session_data[[field]] <- lapply(session_data[[field]], function(df) {
-                if (is.null(df) || is.data.frame(df)) df else as.data.frame(df)
-              })
+
+          # Validate session version compatibility
+          current_version <- "1.0"
+          if (!is.null(session_data$version)) {
+            session_version <- as.character(session_data$version)
+            # Compare major versions (before the decimal)
+            current_major <- as.integer(strsplit(current_version, "\\.")[[1]][
+              1
+            ])
+            session_major <- as.integer(strsplit(session_version, "\\.")[[1]][
+              1
+            ])
+
+            if (session_major > current_major) {
+              showNotification(
+                paste(
+                  paste0(
+                    "Warning: This session was created with a newer ",
+                    "version of richStudio (v"
+                  ),
+                  session_version,
+                  "). Some features may not work correctly."
+                ),
+                type = "warning",
+                duration = 10
+              )
+            }
+          } else {
+            # Very old session without version info
+            showNotification(
+              paste0(
+                "Note: This session was created with an older ",
+                "version of richStudio."
+              ),
+              type = "message",
+              duration = 5
+            )
+          }
+
+          restored_tracking <- if (
+            !is.null(u_big_rrdf) || !is.null(u_big_clusdf)
+          ) {
+            workspace_saved_tracking_state(session_data)
+          } else {
+            NULL
+          }
+
+          # Restore session data
+          if (!is.null(jobs)) {
+            workspace_jobs_commit_swap(jobs)
+          }
+          u_degnames$labels <- session_data$degnames
+          for (name in names(session_data$degdfs)) {
+            u_degdfs[[name]] <- session_data$degdfs[[name]]
+          }
+
+          u_rrnames$labels <- session_data$rrnames
+          for (name in names(session_data$rrdfs)) {
+            u_rrdfs[[name]] <- session_data$rrdfs[[name]]
+          }
+
+          u_clusnames$labels <- session_data$clusnames
+          for (name in names(session_data$clusdfs)) {
+            u_clusdfs[[name]] <- session_data$clusdfs[[name]]
+          }
+          for (name in names(session_data$cluslists)) {
+            u_cluslists[[name]] <- session_data$cluslists[[name]]
+          }
+          if (!is.null(u_big_rrdf)) {
+            for (name in isolate(names(u_big_rrdf))) {
+              u_big_rrdf[[name]] <- NULL
+            }
+            for (name in names(restored_tracking$big_rrdf)) {
+              u_big_rrdf[[name]] <- restored_tracking$big_rrdf[[name]]
             }
           }
-        } else {
-          stop("Unsupported file format. Use .rds or .json files.")
-        }
-
-        # Validate session version compatibility
-        current_version <- "1.0"
-        if (!is.null(session_data$version)) {
-          session_version <- as.character(session_data$version)
-          # Compare major versions (before the decimal)
-          current_major <- as.integer(strsplit(current_version, "\\.")[[1]][1])
-          session_major <- as.integer(strsplit(session_version, "\\.")[[1]][1])
-
-          if (session_major > current_major) {
-            showNotification(
-              paste("Warning: This session was created with a newer version of richStudio (v",
-                    session_version, "). Some features may not work correctly."),
-              type = "warning",
-              duration = 10
-            )
+          if (!is.null(u_big_clusdf)) {
+            for (name in isolate(names(u_big_clusdf))) {
+              u_big_clusdf[[name]] <- NULL
+            }
+            for (name in names(restored_tracking$big_clusdf)) {
+              u_big_clusdf[[name]] <- restored_tracking$big_clusdf[[name]]
+            }
           }
-        } else {
-          # Very old session without version info
+          if (!is.null(jobs)) {
+            workspace_run_records_reopen(session_data$run_records_json, jobs)
+          }
+
           showNotification(
-            "Note: This session was created with an older version of richStudio.",
+            paste(
+              "Session loaded successfully! Created:",
+              session_data$created
+            ),
             type = "message",
             duration = 5
           )
+        },
+        error = function(e) {
+          showNotification(
+            paste("Error loading session:", e$message),
+            type = "error"
+          )
         }
-
-        restored_tracking <- if (!is.null(u_big_rrdf) || !is.null(u_big_clusdf)) {
-          workspace_saved_tracking_state(session_data)
-        } else {
-          NULL
-        }
-
-        # Restore session data
-        if (!is.null(jobs)) workspace_jobs_commit_workspace_swap(jobs)
-        u_degnames$labels <- session_data$degnames
-        for (name in names(session_data$degdfs)) {
-          u_degdfs[[name]] <- session_data$degdfs[[name]]
-        }
-
-        u_rrnames$labels <- session_data$rrnames
-        for (name in names(session_data$rrdfs)) {
-          u_rrdfs[[name]] <- session_data$rrdfs[[name]]
-        }
-
-        u_clusnames$labels <- session_data$clusnames
-        for (name in names(session_data$clusdfs)) {
-          u_clusdfs[[name]] <- session_data$clusdfs[[name]]
-        }
-        for (name in names(session_data$cluslists)) {
-          u_cluslists[[name]] <- session_data$cluslists[[name]]
-        }
-        if (!is.null(u_big_rrdf)) {
-          for (name in isolate(names(u_big_rrdf))) u_big_rrdf[[name]] <- NULL
-          for (name in names(restored_tracking$big_rrdf)) {
-            u_big_rrdf[[name]] <- restored_tracking$big_rrdf[[name]]
-          }
-        }
-        if (!is.null(u_big_clusdf)) {
-          for (name in isolate(names(u_big_clusdf))) u_big_clusdf[[name]] <- NULL
-          for (name in names(restored_tracking$big_clusdf)) {
-            u_big_clusdf[[name]] <- restored_tracking$big_clusdf[[name]]
-          }
-        }
-        if (!is.null(jobs)) workspace_run_records_reopen(session_data$run_records_json, jobs)
-
-        showNotification(
-          paste("Session loaded successfully! Created:", session_data$created),
-          type = "message",
-          duration = 5
-        )
-
-      }, error = function(e) {
-        showNotification(paste("Error loading session:", e$message), type = "error")
-      })
+      )
     })
 
     # Export enrichment result
     output$export_rr <- downloadHandler(
       filename = function() {
         req(input$export_rr_select)
-        paste0(sanitize_filename(input$export_rr_select), ".", input$export_rr_format)
+        paste0(
+          sanitize_filename(input$export_rr_select),
+          ".",
+          input$export_rr_format
+        )
       },
       content = function(file) {
         req(input$export_rr_select)
@@ -517,7 +766,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     output$export_clus <- downloadHandler(
       filename = function() {
         req(input$export_clus_select)
-        paste0(sanitize_filename(input$export_clus_select), ".", input$export_clus_format)
+        paste0(
+          sanitize_filename(input$export_clus_select),
+          ".",
+          input$export_clus_format
+        )
       },
       content = function(file) {
         req(input$export_clus_select)
@@ -552,8 +805,13 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
     # Export all results as ZIP
     output$export_all <- downloadHandler(
       filename = function() {
-        paste0("richstudio_export_", format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
-               paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = ""), ".zip")
+        paste0(
+          "richstudio_export_",
+          format(Sys.time(), "%Y%m%d_%H%M%S"),
+          "_",
+          paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = ""),
+          ".zip"
+        )
       },
       content = function(file) {
         # Create a unique temporary directory per export to avoid collisions
@@ -570,7 +828,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           for (name in u_degnames$labels) {
             df <- u_degdfs[[name]]
             if (!is.null(df)) {
-              write.csv(df, file.path(deg_dir, paste0(name, ".csv")), row.names = FALSE)
+              write.csv(
+                df,
+                file.path(deg_dir, paste0(name, ".csv")),
+                row.names = FALSE
+              )
             }
           }
         }
@@ -582,7 +844,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           for (name in u_rrnames$labels) {
             df <- u_rrdfs[[name]]
             if (!is.null(df)) {
-              write.csv(df, file.path(rr_dir, paste0(name, ".csv")), row.names = FALSE)
+              write.csv(
+                df,
+                file.path(rr_dir, paste0(name, ".csv")),
+                row.names = FALSE
+              )
             }
           }
         }
@@ -594,7 +860,11 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
           for (name in u_clusnames$labels) {
             df <- u_clusdfs[[name]]
             if (!is.null(df)) {
-              write.csv(df, file.path(clus_dir, paste0(name, ".csv")), row.names = FALSE)
+              write.csv(
+                df,
+                file.path(clus_dir, paste0(name, ".csv")),
+                row.names = FALSE
+              )
             }
           }
         }

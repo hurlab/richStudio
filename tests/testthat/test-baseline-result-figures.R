@@ -2,8 +2,8 @@
 # or the future workspace identity/provenance contract.
 
 test_that("result and cluster controls retain namespaces and supported defaults", {
-  rr <- as.character(richStudio:::rrVisTabUI("results", "result_tab"))
-  cl <- as.character(richStudio:::clusVisTabUI("clusters", "cluster_tab"))
+  rr <- as.character(richStudio:::rr_vis_tab_ui("results", "result_tab"))
+  cl <- as.character(richStudio:::clus_vis_tab_ui("clusters", "cluster_tab"))
   for (id in c("select_table", "select_bar", "bar_valtype", "dot_cutoff",
                "select_tophmap", "cushmap_add_rr", "rr_term_delete_select")) {
     expect_match(rr, paste0('id="results-', id, '"'), fixed = TRUE)
@@ -207,8 +207,8 @@ test_that("table formatting preserves labels provider content and typed missingn
 test_that("result module selections use the chosen dataset without mutating result stores", {
   state <- ws_baseline_state(populated = TRUE)
   original <- ws_baseline_results()
-  args <- state[intersect(names(state), names(formals(richStudio:::rrVisTabServer)))]
-  shiny::testServer(richStudio:::rrVisTabServer, args = args, {
+  args <- state[intersect(names(state), names(formals(richStudio:::rr_vis_tab_server)))]
+  shiny::testServer(richStudio:::rr_vis_tab_server, args = args, {
     session$flushReact()
     expect_error(get_rr_table(), class = "shiny.silent.error")
     expect_null(plot_topterm_heatmap())
@@ -242,8 +242,8 @@ test_that("result module selections use the chosen dataset without mutating resu
 test_that("cluster module links selected summary representatives and term tables", {
   state <- ws_baseline_state(populated = TRUE)
   x <- ws_baseline_cluster_tables()
-  args <- state[intersect(names(state), names(formals(richStudio:::clusVisTabServer)))]
-  shiny::testServer(richStudio:::clusVisTabServer, args = args, {
+  args <- state[intersect(names(state), names(formals(richStudio:::clus_vis_tab_server)))]
+  shiny::testServer(richStudio:::clus_vis_tab_server, args = args, {
     session$flushReact()
     expect_null(term_vec_reactive())
     expect_error(cluslist_to_table(), class = "shiny.silent.error")
@@ -269,7 +269,7 @@ test_that("cluster heatmap controls rerender and empty-state messages follow val
   )
   state$u_clusdfs$fixture <- expected_summary
   state$u_cluslists$fixture <- expected_terms
-  args <- state[intersect(names(state), names(formals(richStudio:::clusVisTabServer)))]
+  args <- state[intersect(names(state), names(formals(richStudio:::clus_vis_tab_server)))]
   args$id <- "clusters"
   owned_session <- shiny::MockShinySession$new()
   withr::defer(owned_session$close())
@@ -282,7 +282,7 @@ test_that("cluster heatmap controls rerender and empty-state messages follow val
     original_custom(type, message)
   }
 
-  shiny::testServer(richStudio:::clusVisTabServer, args = args, session = owned_session, {
+  shiny::testServer(richStudio:::clus_vis_tab_server, args = args, session = owned_session, {
     session$flushReact()
     session$setInputs(clusdf_select = "fixture", big_value_type = "Padj", value_by = "mean",
                       small_value_type = "Padj")

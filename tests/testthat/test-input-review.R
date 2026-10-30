@@ -177,8 +177,8 @@ ir_rr_snapshot <- function(state) {
 }
 
 ir_result_servers <- list(
-  cluster_upload = richStudio:::clusterUploadTabServer,
-  rr_visualize = richStudio:::rrVisTabServer
+  cluster_upload = richStudio:::cluster_upload_tab_server,
+  rr_visualize = richStudio:::rr_vis_tab_server
 )
 
 ir_html <- function(x) if (is.list(x)) x$html else as.character(x)
@@ -394,8 +394,8 @@ test_that("case 2 the pending card maps a gene list and refuses an over-limit un
   genes_path <- ir_write_table(genes)
   note_path <- ir_write_table(note)
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::clusterUploadTabServer,
-    args = state[intersect(names(formals(richStudio:::clusterUploadTabServer)), names(state))], {
+  shiny::testServer(richStudio:::cluster_upload_tab_server,
+    args = state[intersect(names(formals(richStudio:::cluster_upload_tab_server)), names(state))], {
       session$flushReact()
       session$setInputs(rr_files = data.frame(name = "genes.tsv", datapath = genes_path))
       expect_match(ir_html(output$intake_pending), "Column Genes looks like a gene list", fixed = TRUE)
@@ -416,8 +416,8 @@ test_that("case 2 the pending card maps a gene list and refuses an over-limit un
 
 test_that("case 2 a pasted gene list with an over-limit token is refused", {
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::enrichTabServer,
-    args = state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))], {
+  shiny::testServer(richStudio:::enrich_tab_server,
+    args = state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))], {
       session$flushReact()
       session$setInputs(deg_text = paste("TP53", strrep("B", 1031L)), degtext_name = "long",
                         upload_degtext = 1L)
@@ -440,8 +440,8 @@ test_that("case 3 hostile labels and column names render as text in every review
     expect_false(grepl("<b>", html, fixed = TRUE))
   }
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::enrichTabServer,
-    args = state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))], {
+  shiny::testServer(richStudio:::enrich_tab_server,
+    args = state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))], {
       session$flushReact()
       session$setInputs(deg_files = data.frame(name = c(hostile, "names.xlsx"),
                                                datapath = c(deg_text, deg_xlsx)))
@@ -614,9 +614,9 @@ test_that("case 6 AC-001 REQ-001 recorded worker IDs equal the card and revision
     ids
   }, .package = "richStudio")
   state <- ir_deg_state(list(fx = fx, fx_default = fx))
-  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args <- state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))]
   args$enrichment_runner <- rec$runner
-  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
     session$flushReact()
     session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
                       ont_select = "BP", deg_filter_cutoff = 0.05, deg_table_select = "fx",
@@ -662,7 +662,7 @@ test_that("case 7 REQ-002 AC-004 preview, commit and cutoff authority agree", {
     dependency_annot_object("Reactome", dependency_annotation_fixture("Reactome", c7$gene))
   })
   state <- ir_deg_state(list(c7 = c7, c7_default = c7, c7_live = c7))
-  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args <- state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))]
   args$enrichment_runner <- rec$runner
   expected_bytes <- function() {
     file <- tempfile(fileext = ".txt")
@@ -670,7 +670,7 @@ test_that("case 7 REQ-002 AC-004 preview, commit and cutoff authority agree", {
     readBin(file, "raw", file.info(file)$size)
   }
   download_bytes <- function(path) readBin(path, "raw", file.info(path)$size)
-  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
     session$flushReact()
     session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
                       ont_select = "BP", deg_export_type = ".txt", deg_table_select = "c7",
@@ -730,12 +730,12 @@ test_that("case 8 a committed list that changed blocks Run; rename moves and rem
   calls <- new.env(parent = emptyenv())
   calls$n <- 0L
   state <- ir_deg_state(list(c8 = c8))
-  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args <- state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))]
   args$enrichment_runner <- function(...) {
     calls$n <- calls$n + 1L
     list()
   }
-  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
     session$flushReact()
     session$setInputs(deg_table_select = "c8", review_gene_col = "__default__",
                       review_p_col = "__default__", review_cutoff = 0.05, review_commit = 1L)
@@ -765,12 +765,12 @@ test_that("case 9 S11 zero genes at Run stop with the field message and keep res
     state$u_big_rrdf$df <- richStudio::add_file_rrdf(NULL, "old", file = FALSE)
   })
   before <- ir_rr_snapshot(state)
-  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args <- state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))]
   args$enrichment_runner <- function(...) {
     calls$n <- calls$n + 1L
     list()
   }
-  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
     session$flushReact()
     session$setInputs(rr_table_select = "old_enriched", degs_to_enrich = "c9", enrich_deg = 1L)
     ir_settle(session, 3L)
@@ -784,8 +784,8 @@ test_that("case 9 S11 zero genes at Run stop with the field message and keep res
 test_that("case 10 REQ-005 unmeasured mapping counts are marked unavailable without numbers", {
   df <- data.frame(gene = c("g1", "g2"), Padj = c(0.01, 0.02))
   state <- ir_deg_state(list(c10 = df))
-  shiny::testServer(richStudio:::enrichTabServer,
-    args = state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))], {
+  shiny::testServer(richStudio:::enrich_tab_server,
+    args = state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))], {
       session$flushReact()
       session$setInputs(degs_to_enrich = "c10", deg_filter_cutoff = 0.05)
       card <- ir_html(output$review_card)
@@ -846,8 +846,8 @@ test_that("case 11 the worker applies query_rule, checks the snapshot and prefer
 
 test_that("case 12 pasted lists split on whitespace, commas and semicolons only", {
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::enrichTabServer,
-    args = state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))], {
+  shiny::testServer(richStudio:::enrich_tab_server,
+    args = state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))], {
       session$flushReact()
       session$setInputs(deg_text = "HLA-A ENSG00000141510.18, TP53;BRCA1", degtext_name = "p1",
                         upload_degtext = 1L)
@@ -862,7 +862,7 @@ test_that("case 12 pasted lists split on whitespace, commas and semicolons only"
       expect_true("A gene list named p1 already exists" %in% review_messages())
     })
   ir_attach_ui_packages()
-  html <- as.character(richStudio:::enrichTabUI("enrich", "enrich_tab"))
+  html <- as.character(richStudio:::enrich_tab_ui("enrich", "enrich_tab"))
   expect_match(html, "Separate genes with spaces, new lines, commas or semicolons", fixed = TRUE)
   expect_false(grepl("any non-alphanumeric character", html, fixed = TRUE))
   for (text in c("Preview — not committed", "Commit input revision",
@@ -1020,8 +1020,8 @@ test_that("case 14 AC-002 an adjusted-only import invents no raw p-values and ex
                                         Pvalue = c(0.01, 0.02), Padj = c(0.03, 0.04)))
   hierarchical <- "Raw p-values: not provided. Hierarchical clustering requires raw p-values (column Pvalue)."
   state <- ws_baseline_state()
-  shiny::testServer(richStudio:::rrVisTabServer,
-    args = state[intersect(names(formals(richStudio:::rrVisTabServer)), names(state))], {
+  shiny::testServer(richStudio:::rr_vis_tab_server,
+    args = state[intersect(names(formals(richStudio:::rr_vis_tab_server)), names(state))], {
       session$flushReact()
       session$setInputs(rr_files = data.frame(name = "fdr.tsv", datapath = fdr_path))
       expect_null(u_rrnames$labels)
@@ -1039,8 +1039,8 @@ test_that("case 14 AC-002 an adjusted-only import invents no raw p-values and ex
                    "Gene membership: not provided. Clustering needs gene membership (column GeneID).",
                    fixed = TRUE)
     })
-  shiny::testServer(richStudio:::clusterUploadTabServer,
-    args = state[intersect(names(formals(richStudio:::clusterUploadTabServer)), names(state))], {
+  shiny::testServer(richStudio:::cluster_upload_tab_server,
+    args = state[intersect(names(formals(richStudio:::cluster_upload_tab_server)), names(state))], {
       session$flushReact()
       card <- ir_html(output$imported_results_card)
       expect_match(card, "fdr.tsv", fixed = TRUE)
@@ -1101,10 +1101,10 @@ test_that("case 16 F2 a Latin-1 gene ID previews, commits and reaches the worker
   expected <- as.character(legacy$gene[1:2])
   rec <- ir_recorder(ir_rich_builder(expected))
   state <- ws_baseline_state()
-  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args <- state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))]
   args$enrichment_runner <- rec$runner
   done <- new.env(parent = emptyenv())
-  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
     session$flushReact()
     session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
                       ont_select = "BP", deg_filter_cutoff = 0.05,
@@ -1196,14 +1196,14 @@ test_that("case 18 F1 F2 an unexpected error in an intake observer becomes a mes
   })
   deg_before <- ir_deg_snapshot(state)
   rr_before <- ir_rr_snapshot(state)
-  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args <- state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))]
   args$enrichment_runner <- function(...) {
     calls$n <- calls$n + 1L
     list()
   }
   deg_file <- ir_write_table(data.frame(gene = "g9", Padj = 0.01))
   done <- new.env(parent = emptyenv())
-  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
     session$flushReact()
     session$setInputs(deg_table_select = "c18", review_gene_col = "__default__",
                       review_p_col = "__default__", review_cutoff = 0.05, rr_table_select = "old_enriched")
@@ -1245,7 +1245,7 @@ test_that("case 19 F6 a missing resource policy blocks Run and paste", {
   })
   deg_before <- ir_deg_snapshot(state)
   rr_before <- ir_rr_snapshot(state)
-  args <- state[intersect(names(formals(richStudio:::enrichTabServer)), names(state))]
+  args <- state[intersect(names(formals(richStudio:::enrich_tab_server)), names(state))]
   args$enrichment_runner <- function(...) {
     calls$n <- calls$n + 1L
     list()
@@ -1253,7 +1253,7 @@ test_that("case 19 F6 a missing resource policy blocks Run and paste", {
   testthat::local_mocked_bindings(workspace_resource_policy = function(...) stop("policy missing"),
                                   .package = "richStudio")
   done <- new.env(parent = emptyenv())
-  shiny::testServer(richStudio:::enrichTabServer, args = args, {
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
     session$flushReact()
     session$setInputs(degs_to_enrich = "c19", enrich_deg = 1L)
     ir_settle(session, 3L)

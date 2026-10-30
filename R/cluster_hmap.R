@@ -142,7 +142,7 @@ hmap_axis_labels <- function(final_data) {
   # A nine-column budget retains at least eight columns before any ellipsis.
   term_width <- nchar(paste0(final_data$Representative_Term), type = "width")
   excerpt_width <- pmin(9L, term_width) + as.integer(term_width > 9L)
-  aliases <- nchar(prefixes, type = "width") + 3L + excerpt_width > 28L
+  aliases <- nchar(prefixes, type = "width") + 3L + excerpt_width > 27L
   prefixes[aliases] <- paste0(
     "Display row ",
     rev(seq_along(ids))[aliases]
@@ -151,7 +151,7 @@ hmap_axis_labels <- function(final_data) {
     seq_along(ids),
     function(i) {
       separator <- if (aliases[i]) "|" else " | "
-      budget <- 28L - nchar(prefixes[i], type = "width") - nchar(separator)
+      budget <- 27L - nchar(prefixes[i], type = "width") - nchar(separator)
       label <- prefixes[i]
       if (budget >= 1L) {
         term <- paste0(final_data$Representative_Term[i])

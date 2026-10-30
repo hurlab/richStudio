@@ -6,6 +6,7 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 - logs/PROJECT_LOG_2026-H1.md — 6 sessions (2026-01 … 2026-03)
 
 ## Session Index (active, newest first)
+- 2026-10-30 — Production7317862 deployment verified: publicHTTP/Shiny, both bundled clustering methods and113source hashes; large-heatmap label crowding recorded
 - 2026-10-29 — Codex scientific heatmap/backend/GUI repair and seven manuscript figure sets; exact-source server preflight passed; hosted/deployment closure recorded in current handoff
 - 2026-10-23 → 2026-10-25 — SPEC-WS-006 accepted and integrated (9f403c2); shiny 1.14 teardown defect found in hosted CI and fixed; deployed live 2026-10-25 and verified
 - 2026-10-23 — SPEC-WS-004 accepted and integrated (4142c94); WS-001–004 deployed live and verified
@@ -24,6 +25,13 @@ Historical entries and checkpoints are preserved verbatim. Newest first.
 
 ---
 
+
+## Session 2026-10-30 — Production deployment verification (Codex)
+
+- Owner ran the prepared7317862deploy wrapper. Live release is `/opt/richStudio/releases/richStudio-73178628106d9b160831d476f80171e4f4d0bf61-20261030T045606Z`; marker73178628106d9b160831d476f80171e4f4d0bf61. shiny-server active; internal/publicHTTP200; actual public Shiny connection PASS.
+- Production private-library runtime R4.6.1/richStudio0.1.6/richR0.1.5/richCluster2.0.1 verified.113source/config/test hashes match actual hosted CI40994809432 with0drift.
+- Actual public bundled GO1/GO2 workflows PASS: hierarchical141clusters/282cells/108missing, DAVID139/278/105;0duplicate coordinates, retained selections and0page errors. All282hierarchical cell values/NA masks match hosted CI. Two actual screenshots inspected; crowded row labels at this scale remain a presentation issue.
+- First ad-hoc Plotly reader handled only nested arrays and failed on flat trace data; fixed the reader using existing CI handling. Product code unchanged. Evidence `.moai/reports/lsp-sync-cleanup/post-deploy-20261030/`. Prior full CI/preflight evidence retained; full suites were not rerun on production. Formal release/tag/archive publication remains separate.
 
 ## Session 2026-10-29 — Scientific clustering and manuscript figures (Codex)
 

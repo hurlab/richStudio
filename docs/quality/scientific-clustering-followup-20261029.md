@@ -59,16 +59,14 @@ Latest7317862 CI40994809432 completes7/7jobs successfully:253tests/3007passed,0f
 
  Actual diagnostics and scoped proofs are retained under `.moai/reports/lsp-sync-cleanup/`.
 
-## Deployment and remaining action
+## Deployment verified — 2026-10-30
 
-Server deployment is authorized after validation. The live target was mechanically observed at666c120. SSH works, but sudo requires interactive password authentication. The prepared final wrapper is `/home/juhur/richStudio-deploy-scientific-7317862/deploy.sh`; it checks the exact preflight and CI SHA, the unchanged current release, and the reviewed deployment-script hash before the existing immutable-release/atomic-symlink workflow runs. Both preflight.ok and ci.ok now contain73178628106d9b160831d476f80171e4f4d0bf61, after observed7/7CI success, zero actual LSP diagnostics and matching server preflight. The live target was revalidated before the marker was written.
+The owner executed the prepared7317862wrapper. The live target is `/opt/richStudio/releases/richStudio-73178628106d9b160831d476f80171e4f4d0bf61-20261030T045606Z`, with `.release-commit`73178628106d9b160831d476f80171e4f4d0bf61. shiny-server is active; internal and publicHTTP responses are200. A fresh process resolves R4.6.1 and richStudio0.1.6/richR0.1.5/richCluster2.0.1 from the actual release library. All113selected source/config/test hashes match the hosted CI candidate with0drift.
 
-No live switch, formal release/tag or public archive has occurred in this follow-up. The remaining owner-authenticated command is:
+The actual public Shiny browser session loads bundled GO1/GO2/KEGG1 tables and completes GO1/GO2 hierarchical and DAVID clustering. Hierarchical produces141clusters/282cells/108missing; DAVID139/278/105. Both plots have unique coordinates and retained result selections, with0browser page errors. All282hierarchical cell values and NA positions match the hosted CI trace. These are functional smoke measurements with the established method-specific input filtering. Both screenshots were inspected; row labels overlap when this many clusters are shown together, leaving a presentation/readability follow-up.
 
-```bash
-ssh -t juhur@100.94.67.89 'sudo bash /home/juhur/richStudio-deploy-scientific-7317862/deploy.sh'
-```
+The first ad-hoc verification reader assumed a nested Plotly matrix and failed on flat trace data. Its log is retained; the corrected reader uses the existing CI flat/matrix handling and waits for the selected result's cluster count and3stable frames. No product code was changed by this check. The browser context closed after completed jobs.
 
-After the owner authenticates this invocation, verify the actual live release/build identity, HTTP health and targeted GUI behavior. The latest candidate has its own successful CI and matching server preflight. Formal release/archive remains a separate final step.
+The prior253CI tests,58CI GUI journeys and94server-preflight tests remain validation evidence, not a claim that those full suites ran again on production. Formal release/tag/archive publication is still separate. The owner authentication/deployment step is completed; the old guarded deployment command should not be repeated.
 
-Local evidence root (gitignored): `.moai/reports/scientific-heatmap-adoption/`, including `progress.md`, `e2e/final3-all/execution-receipt.json`, `server-final/final-preflight-receipt.json`, earlier failed artifacts and figure bundle receipt. Latest hosted run: https://github.com/hurlab/richStudio/actions/runs/40994809432 . Fresh LSP/CI/fixture/server evidence: `.moai/reports/lsp-sync-cleanup/`, including `final-evidence-summary.json`.
+Fresh post-deployment evidence: `.moai/reports/lsp-sync-cleanup/post-deploy-20261030/report.md`, runtime/source/trace receipts and two screenshots. Complete CI evidence: `.moai/reports/lsp-sync-cleanup/final-evidence-summary.json` and [hosted run40994809432](https://github.com/hurlab/richStudio/actions/runs/40994809432). Earlier scientific/figure evidence remains under `.moai/reports/scientific-heatmap-adoption/`.

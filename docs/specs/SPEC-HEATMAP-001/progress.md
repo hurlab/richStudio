@@ -2,7 +2,7 @@
 
 ## §E.1 Plan-phase Audit-Ready Signal
 
-_Plan v0.1.1 approved; root-authorized v0.1.2 R1 clarifications authored for review._
+_Plan v0.1.2 independently APPROVED; see [the amendment review](../../../.moai/reports/heatmap-legibility/plan-review-v012.md). This approval covers the plan only._
 
 ## §E.2 Run-phase Evidence
 

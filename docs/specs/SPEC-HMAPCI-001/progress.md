@@ -66,4 +66,61 @@ m1_to_mN_commit_strategy: root-explicit-path-commit-after-independent-review
 
 ## §E.4 Sync-phase Audit-Ready Signal
 
-_<pending sync-phase>_
+```yaml
+sync_complete_at: null
+sync_commit_sha: pending-backfill
+sync_status: local-ready-hosted-full-and-browser-retry-pending
+documentation: docs/quality/heatmap-legibility-20261030.md
+ac_source: docs/specs/SPEC-HMAPCI-001/acceptance.md
+tier: M
+b12_self_test_a: not-run-no-CHANGELOG-emission
+b12_self_test_b: not-run-no-CHANGELOG-emission
+b12_self_test_c: not-run-no-CHANGELOG-emission
+changelog_entry_position: none
+frontmatter_status_transitions:
+  completed: not-applied-hosted-CI-pending
+local_evidence:
+  controls: 21-cases-9-ownership-10-transport-2-watchdog
+  local_GUI: six-passed
+  frozen_application: 52-files-unchanged
+  invariants: strict90-all11pins-seven-jobs-unchanged
+  code_review: approved-exact-frozen-candidate
+  scoped_security: no-open-Critical-High-Medium
+hosted_evidence:
+  run: 41065823052
+  source_sha: b7b072fad907d54258b22a0e746348f652ceb665
+  documentation_head: 08e947173b56160510adad1a36e4c02296fb570d
+  source_equivalence: only-progress-metadata-commits-after-hosted-source
+  passed_jobs: prepare-diagnostics-negative-resources-scan
+  full: in-progress
+  browser_first_attempt: 65-passed-1-failed-zero-skipped-flaky
+  browser_failure: unchanged-desktop-MV3-worker-wait-before-native-zoom-proof
+  prepare_controls: three-groups-zero-failures-errors-skips
+  canonical_LSP: candidate-all-zero-sync-PASS-release_hold-false
+  serve_terminal: configured1800-status-minus15-signal15-reapedtrue-errornull
+canary_compliance_check:
+  controlled_watchdog: normal7-timeout124-both-reaped
+  hosted_canonical_gates: passed-diagnostics-negative-scan
+  assertions_and_pins: unchanged
+remaining_gaps:
+  hosted_full: pending
+  same_SHA_browser_retry: authorized-only-after-first-run-terminal
+  hosted_MV3_cause: unknown
+  local_probe: SIGTRAP-before-launch-acceptance-not-native-zoom-PASS
+  historical_minus9_and_old_reset_terminal_exit: unknown
+  deployment: candidate-not-verified
+```
+
+Observed independent evidence is under `.moai/reports/heatmap-ci-stability/`:
+`code-review-r1.md`, `security/postfix-r1.md`, `qa/report.md`,
+`native-zoom-triage.md`, `native-zoom-local/report.md` and
+`hosted-41065823052/{current-state.json,prepare,diagnostics,browser}`.
+The prepare job invokes `python3 scripts/test-ci-harness-regressions.py --tree
+<absolute-candidate-tree> --artifacts <evidence-directory>`: its actual hosted
+summary reports tests3/failures0/errors0/skips0/passedtrue. Hosted diagnostics
+run `bash scripts/test-workspace.sh diagnostics sync`; JSON reports candidate
+all0, syncPASS and release_holdfalse. Browser command remains canonical
+`npx --no-install playwright test`; first JSON records65expected/1unexpected,
+zero skips/flaky. Actual serve−15 is teardown, not timeout124. These stored
+results were inspected by documentation, not rerun. Current application hashes
+match frozen R5; final all-seven success and exact-source retry remain required.

@@ -506,7 +506,7 @@ m1_to_mN_commit_strategy: root-managed-recorded-R4-and-R5-source-commits-no-git-
 ```yaml
 sync_complete_at: null
 sync_commit_sha: pending-backfill
-sync_status: local-static-and-eight-browser-gates-pass-hosted-CI-pending
+sync_status: local-ready-hosted-full-and-browser-retry-pending
 documentation: docs/quality/heatmap-legibility-20261030.md
 ac_source: docs/specs/SPEC-HEATMAP-001/acceptance.md
 tier: M
@@ -517,44 +517,48 @@ changelog_entry_position: none
 frontmatter_status_transitions:
   completed: not-applied-hosted-CI-pending
 local_evidence:
-  source_sha: 390460288ec06afab90a8d792c321fb6d54c3033
-  documentation_head: 18adda9d84ade65aa81acae677a3361e24ffe72b
-  source_hashes: unchanged-at-documentation-head
-  numerical_baseline_sha: 73178628106d9b160831d476f80171e4f4d0bf61
   scoped_R: 31-tests-337-assertions-zero-failures-errors-warnings-skips
-  golden_comparisons: four-full-fixture-comparisons-exact
-  canonical_LSP: baseline-total-0-candidate-total-0-sync-PASS-release_hold-false
-  TypeScript: exit-0-11-intended-inputs-verified
-  AST: 26-rule-documents-zero-findings-zero-errors
-  browser: eight-passed-zero-failed-skipped-flaky
+  golden: four-full-fixtures-exact
+  heatmap_GUI: eight-passed-both-viewports
+  empty_data_GUI: two-passed-no-allocation-valid10-recovery
+  native_PNG: both-viewports-full-labels-rows-note-1000x6890-and-1000x7450
+  code_review: approved-exact-frozen-candidate
+  scoped_security: no-open-Critical-High-Medium
+hosted_evidence:
+  run: 41065823052
+  source_sha: b7b072fad907d54258b22a0e746348f652ceb665
+  documentation_head: 08e947173b56160510adad1a36e4c02296fb570d
+  source_equivalence: only-progress-metadata-commits-after-hosted-source
+  passed_jobs: prepare-diagnostics-negative-resources-scan
+  full: in-progress
+  browser_first_attempt: 65-passed-1-failed-zero-skipped-flaky
+  browser_failure: unchanged-desktop-MV3-worker-wait-before-native-zoom-proof
+  prepare_controls: three-groups-zero-failures-errors-skips
+  canonical_LSP: candidate-all-zero-sync-PASS-release_hold-false
+  serve_terminal: configured1800-status-minus15-signal15-reapedtrue-errornull
 canary_compliance_check:
-  actual_R_JSON_RPC: verified
-  AST_negative_canary: detected
-gaps:
-  QA_final_report_and_narrow_PNG_visual_review: pending
-  hosted_CI: seven-job-run-pending
+  controlled_watchdog: normal7-timeout124-both-reaped
+  hosted_canonical_gates: passed-diagnostics-negative-scan
+  assertions_and_pins: unchanged
+remaining_gaps:
+  hosted_full: pending
+  same_SHA_browser_retry: authorized-only-after-first-run-terminal
+  hosted_MV3_cause: unknown
+  local_probe: SIGTRAP-before-launch-acceptance-not-native-zoom-PASS
+  historical_minus9_and_old_reset_terminal_exit: unknown
   deployment: candidate-not-verified
 ```
 
-Evidence inspected in this integration tree under
-`.moai/reports/heatmap-legibility/`: `qa/candidate-r5/unit-and-golden.log`,
-`qa/candidate-r5/snapshot-comparison.json`, `local-sync-r5/lsp-diagnostics.json`,
-`local-sync-r5/runner.log` and `security-final-r5/ast-grep.json`.
-The orchestrator's recorded invocation used a single compound environment scrub,
-explicit R libraries and `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE`, then
-`WORKSPACE_BASELINE_SHA=73178628106d9b160831d476f80171e4f4d0bf61`
-and `WORKSPACE_ARTIFACTS=<integration-tree>/.moai/reports/heatmap-legibility/local-sync-r5`
-with `timeout --kill-after=10s 1200s bash scripts/test-workspace.sh diagnostics sync`;
-observed process exit0. Exact library provenance is in `local-sync-r5/runtime.txt`.
-Its child commands are `R --slave -e 'languageserver::run()'` and
-`tsc --noEmit --project tsconfig.json`; the LSP receipt says `status: PASS`,
-baseline/candidate totals0, sync `release_hold: false`. Runner output is
-`TypeScript membership verified: 11 intended inputs` and
-`Actual R JSON-RPC diagnostics and invalid canary verified`.
-Fresh `sha256sum R/cluster_hmap.R R/clus_visualize_tab.R DESCRIPTION` matched
-the frozen R5 hashes in the linked documentation report. These are inspected
-independent results, not tests rerun by the documentation author. Final browser
-JSON records expected8/skipped0/unexpected0/flaky0/errors[]; terminal log says
-`8 passed`. Both desktop and narrow installed journeys passed. QA final report,
-narrow PNG visual review and hosted CI remain open; no completion is applied.
-
+Observed independent evidence is under `.moai/reports/heatmap-ci-stability/`:
+`code-review-r1.md`, `security/postfix-r1.md`, `qa/report.md`,
+`native-zoom-triage.md`, `native-zoom-local/report.md` and
+`hosted-41065823052/{current-state.json,prepare,diagnostics,browser}`.
+The prepare job invokes `python3 scripts/test-ci-harness-regressions.py --tree
+<absolute-candidate-tree> --artifacts <evidence-directory>`: its actual hosted
+summary reports tests3/failures0/errors0/skips0/passedtrue. Hosted diagnostics
+run `bash scripts/test-workspace.sh diagnostics sync`; JSON reports candidate
+all0, syncPASS and release_holdfalse. Browser command remains canonical
+`npx --no-install playwright test`; first JSON records65expected/1unexpected,
+zero skips/flaky. Actual serve−15 is teardown, not timeout124. These stored
+results were inspected by documentation, not rerun. Current application hashes
+match frozen R5; final all-seven success and exact-source retry remain required.

@@ -2,7 +2,7 @@
 
 ## Claim
 
-The R5 candidate implements the presentation changes specified in [SPEC-HEATMAP-001](../specs/SPEC-HEATMAP-001/spec.md). This report records a candidate awaiting final verification; it does not certify release or deployment.
+The R5 candidate implements the presentation changes specified in [SPEC-HEATMAP-001](../specs/SPEC-HEATMAP-001/spec.md). This report records a candidate awaiting hosted closure; it does not certify release or deployment. The separately reviewed [SPEC-HMAPCI-001](../specs/SPEC-HMAPCI-001/spec.md) repairs the CI harness while preserving the frozen application.
 
 The summary heatmap uses at least 18px per row and 14px row-axis text. Its focusable region, named **Cluster heatmap**, scrolls within the smaller of 720px and 70% of the browser height. Figure overflow stays inside that region. Use Tab to focus the region and native keyboard scrolling to explore its rows.
 
@@ -65,9 +65,46 @@ R libraries invocation of `timeout --kill-after=10s 1200s bash scripts/test-work
 
 Final `qa/candidate-r5/browser-results.json` records `expected: 8`, `skipped: 0`, `unexpected: 0`, `flaky: 0`, with `errors: []`; the terminal log says `8 passed`. Command: `npx --no-install playwright test --config=.moai/reports/heatmap-legibility/qa/candidate-r5.config.ts`. All eight Chromium cases passed at 1280×720 and 375×667, covering dense/real data, keyboard windows, camera export, complete saved-session reload, missing/hostile labels, resize and recoverable policy-plus-one rejection.
 
+The final R5 QA report verifies native downloaded PNGs at 1000×6890 and
+1000×7450 on both viewports: complete leading labels, logical rows and NA/zero
+note. Shutdown leaves no listener and a successful reuse-bind. Later
+`qa/empty-state/report.md` records 2/2 desktop/narrow empty-data controls:
+no plot allocation for Empty0, then Valid10 recovery with 20 cells/10 labels;
+104 measured files stay unchanged. Initial no-selection is also already asserted.
+
+The CI followup's independent code/security reviews approve the bounded repair.
+Local QA records 21 controlled cases (9 ownership, 10 transport, 2 watchdog),
+three groups with zero failures/errors/skips, plus six actual GUI cases passed.
+Canonical focused entry point:
+`python3 scripts/test-ci-harness-regressions.py --tree <absolute-candidate-tree> --artifacts <evidence-directory>`.
+Its prepare-job invocation exercises the same owned runner. Nonce observations
+require fresh identity; unsafe ownership fails without signaling. Transport retries
+are bounded and exclude HTTP/certificate/digest/install failures. The same
+1800-second serve path records actual terminal status; controlled normal7 and
+timeout124 cases both reap children. All 11 archive pins, strict-check90 and
+seven jobs remain unchanged; QA records 52 frozen application files unchanged.
+
+Fresh downloaded hosted run **41065823052** uses source **b7b072f**.
+`current-state.json` records prepare/diagnostics/negative/resources/scan success,
+full in progress and browser failure. Prepare's `regression-summary.json` says
+`tests: 3`, `failures: 0`, `errors: 0`, `skips: 0`, `passed: true`.
+Hosted diagnostics record candidate errors/warnings/information/hints/total0,
+sync `PASS`, `release_hold: false`; artifact source-head matches b7b072f.
+Browser JSON records expected65/unexpected1/skipped0/flaky0. Its actual
+`serve-terminal.json` records configured1800, terminal_status−15, signal15,
+reapedtrue, errornull: normal Playwright teardown, not a reached deadline.
+
+Independent `native-zoom-triage.md` attributes the sole hosted failure to the
+unchanged desktop MV3 worker wait (10000ms), before native zoom assertions.
+Narrow actual native zoom1→2→1 passes. Cause remains unknown. The triage permits
+one same-SHA failed-job retry only after run termination, retaining the first
+result. A separate single local probe exits on SIGTRAP before persistent-context
+acceptance; it proves neither native zoom success nor the hosted cause. Its
+owned cleanup is verified and 117 measured files remain unchanged.
+
 ## Baseline-attribution
 
-Documentation and fresh source hashes were measured in `/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility`, branch `WT-heatmap-legibility`. Initial documentation reads used HEAD `3904602`; the final read measured HEAD `18adda9d84ade65aa81acae677a3361e24ffe72b`.
+Documentation and fresh source hashes were measured in `/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility`, branch `WT-heatmap-legibility`. Initial documentation reads used HEAD `3904602`; the current read measured HEAD `08e947173b56160510adad1a36e4c02296fb570d`. Product/test/harness bytes match hosted source `b7b072fad907d54258b22a0e746348f652ceb665`; subsequent commits change progress metadata only.
 
 ```text
 45916b7eaba82461bcfede67bdd85bae9a05e9dfe589abf00e45288c50bb4dd1  R/cluster_hmap.R
@@ -84,17 +121,16 @@ Ignored integration artifacts are under `.moai/reports/heatmap-legibility/`:
 
 ## Gaps
 
-- QA final report, cleanup and final narrow exported-image visual review remain
-  pending at this snapshot; browser assertions passed independently of that review.
-- The full seven-job hosted CI run has not been established by this report.
-  Local full-suite, package-check and coverage success are not claimed.
-- No deployment verification was performed for this candidate. SPEC completion
-  and release status remain open.
+- Run41065823052 full-job outcome and the authorized same-SHA browser retry are
+  not terminal in this snapshot. Five successful jobs are not all-seven closure.
+- The first browser failure's worker lifecycle/cause remains unobserved. The
+  earlier run41057333122 ended four jobs passed/three failed; its unexplained−9
+  cause and old server-reset terminal exit remain historical gaps.
+- No candidate deployment verification or completed SPEC status is claimed.
 
 ## Residual-risk
 
-Font fallback, label containment, mobile hover, keyboard navigation and camera
-artifact bounds require the final installed-browser evidence. Historical R3 QA
-exposed left-edge clipping despite earlier width-only checks; source approval
-and passing numerical comparisons alone cannot establish visual acceptance.
-Any later candidate change requires renewed verification against its own hashes.
+Controlled ownership/transport tests do not exhaust OS scheduling or real network
+failures. The local SIGTRAP and hosted MV3 wait are different observed phases;
+neither warrants a speculative source or timeout change. Final same-source hosted
+success is required with every native-zoom/identity/restore assertion retained.

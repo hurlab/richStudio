@@ -2,7 +2,7 @@
 
 ## Claim
 
-The R5 candidate implements the presentation changes specified in [SPEC-HEATMAP-001](../specs/SPEC-HEATMAP-001/spec.md). This report records a candidate awaiting hosted closure; it does not certify release or deployment. The separately reviewed [SPEC-HMAPCI-001](../specs/SPEC-HMAPCI-001/spec.md) repairs the CI harness while preserving the frozen application.
+The R5 candidate implements the presentation changes specified in [SPEC-HEATMAP-001](../specs/SPEC-HEATMAP-001/spec.md). This report records a candidate awaiting hosted closure; it does not certify release or deployment. The separately reviewed [SPEC-HMAPCI-001](../specs/SPEC-HMAPCI-001/spec.md) repairs the CI harness; [SPEC-HMAPPORT-001](../specs/SPEC-HMAPPORT-001/spec.md) makes three source expressions ASCII-portable with identical output bytes.
 
 The summary heatmap uses at least 18px per row and 14px row-axis text. Its focusable region, named **Cluster heatmap**, scrolls within the smaller of 720px and 70% of the browser height. Figure overflow stays inside that region. Use Tab to focus the region and native keyboard scrolling to explore its rows.
 
@@ -57,8 +57,8 @@ errors, warnings, information, hints and total diagnostics. Status and sync are
 `TypeScript membership verified: 11 intended inputs` and
 `Actual R JSON-RPC diagnostics and invalid canary verified`.
 The measured source is `390460288ec06afab90a8d792c321fb6d54c3033`, with numerical
-baseline `73178628106d9b160831d476f80171e4f4d0bf61`; the three source hashes below
-remain unchanged at the subsequent documentation/status commit.
+baseline `73178628106d9b160831d476f80171e4f4d0bf61`. The original R5 hashes
+are superseded only by the approved portability substitutions described below.
 The orchestrator records exit0 for the environment-scrubbed, explicitly supplied
 R libraries invocation of `timeout --kill-after=10s 1200s bash scripts/test-workspace.sh diagnostics sync`;
 `local-sync-r5/runtime.txt` records library provenance.
@@ -84,53 +84,73 @@ are bounded and exclude HTTP/certificate/digest/install failures. The same
 timeout124 cases both reap children. All 11 archive pins, strict-check90 and
 seven jobs remain unchanged; QA records 52 frozen application files unchanged.
 
-Fresh downloaded hosted run **41065823052** uses source **b7b072f**.
-`current-state.json` records prepare/diagnostics/negative/resources/scan success,
-full in progress and browser failure. Prepare's `regression-summary.json` says
-`tests: 3`, `failures: 0`, `errors: 0`, `skips: 0`, `passed: true`.
-Hosted diagnostics record candidate errors/warnings/information/hints/total0,
-sync `PASS`, `release_hold: false`; artifact source-head matches b7b072f.
-Browser JSON records expected65/unexpected1/skipped0/flaky0. Its actual
-`serve-terminal.json` records configured1800, terminal_status−15, signal15,
-reapedtrue, errornull: normal Playwright teardown, not a reached deadline.
+The independently approved portability source commit `88f3857` replaces exactly
+three quoted literals in two R files with base `intToUtf8(8230L)` once and
+`intToUtf8(8211L)` twice. Inverse byte proof reconstructs the baseline exactly;
+CRLF is retained. Native ASCII RED becomes `character(0)` GREEN. Fresh installed
+QA records31tests/337assertions, zero failures/errors/warnings/skips and four
+goldens exact. All92 actual data/layout/config/choices/JSON comparisons pass,
+including identical label/title/hover bytes and real native Shiny HTML without
+ID normalization. Thirteen added title `Encoding()` diagnostics change unknown
+to UTF-8; stored input, visible text/raw bytes and serialized JSON do not change.
+Raw AST equivalence is not claimed: constructor nodes intentionally differ.
+Five harness/QA files stay unchanged. Evidence: `heatmap-portability/qa/report.md`
+and `code-review-r1.md`; approved proof is exact edits, native parse and runtime
+output identity, not the abandoned diagnostic probe's three script errors.
 
-Independent `native-zoom-triage.md` attributes the sole hosted failure to the
-unchanged desktop MV3 worker wait (10000ms), before native zoom assertions.
-Narrow actual native zoom1→2→1 passes. Cause remains unknown. The triage permits
-one same-SHA failed-job retry only after run termination, retaining the first
-result. A separate single local probe exits on SIGTRAP before persistent-context
-acceptance; it proves neither native zoom success nor the hosted cause. Its
-owned cleanup is verified and 117 measured files remain unchanged.
+Latest hosted run **41076765375**, source **4bc65b3**, records six successful jobs:
+prepare, diagnostics, scan, negative, resources and browser. **Full remains active.**
+`current-state.json` and downloaded prepare/diagnostics/scan source-head/digests
+match current two R files, DESCRIPTION and runner. Prepare controls report
+`tests: 3`, `failures: 0`, `errors: 0`, `skips: 0`, `passed: true` (21 scenarios).
+Diagnostics candidate errors/warnings/information/hints/total are0; sync `PASS`,
+`release_hold: false`. AST reports26documents/0findings/0errors/canarytrue.
+Browser JSON records **expected66/unexpected0/skipped0/flaky0/errors[]**.
+Both unchanged MV3 native-zoom cases pass with actual native proof attachments;
+no bootstrap-source or deadline change was made. Serve terminal records
+configured1800/status−15/signal15/reapedtrue/errornull: normal teardown.
+
+Historical run41065823052 at b7b072f ended five jobs successful/two failed.
+Its full artifacts record263Rtests/3125assertions, zero failures/errors/warnings/
+skips, strict profile14/14PASS and coverage91.77607% against85%. Package check
+ended0errors/1warning/5notes; the sole warning identified the three non-ASCII
+literals in our two R files. This source compatibility issue required the new
+candidate; it was not attributed to the environment. Historical browser65/1
+failed before zoom proof at the unchanged desktop10000ms MV3 worker wait;
+its cause remains unknown. Latest66/0 is fresh evidence, not a rewrite of65/1.
+The distinct one-shot local SIGTRAP occurred before persistent-context acceptance;
+owned cleanup and117unchanged files were verified, native zoom unobserved locally.
 
 ## Baseline-attribution
 
-Documentation and fresh source hashes were measured in `/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility`, branch `WT-heatmap-legibility`. Initial documentation reads used HEAD `3904602`; the current read measured HEAD `08e947173b56160510adad1a36e4c02296fb570d`. Product/test/harness bytes match hosted source `b7b072fad907d54258b22a0e746348f652ceb665`; subsequent commits change progress metadata only.
+Documentation and fresh source hashes were measured in `/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility`, branch `WT-heatmap-legibility`. Initial documentation reads used HEAD `3904602`; the current read measured HEAD `d613889e761c1717a8745f8781b599b80cd694c5`. Product/test/harness bytes match active hosted source `4bc65b3c9068f07f64e08a1b043a0f8913d469fa`; the committed tail changes documentation only.
 
 ```text
-45916b7eaba82461bcfede67bdd85bae9a05e9dfe589abf00e45288c50bb4dd1  R/cluster_hmap.R
-f480db19cc719047da55d51092ad288959dcf9ffbe2ee10ee1a07c3e0df80722  R/clus_visualize_tab.R
+2380f070b6a85421960e9ecd0af29d64e60ee0eca94d7e78852fbedd2c11cf38  R/cluster_hmap.R
+bf5dcb5e0d3eb7715ec9823c40c57fbb9686a7831dcc71be616eb2db568f50fb  R/clus_visualize_tab.R
 fadc8cda247581b65ea6015b1aac4e9d984e6afd8f42dabd6c6e23071ced714a  DESCRIPTION
 ```
 
-QA used the immutable implementation-worktree installation
+Original R5 QA used the immutable implementation-worktree installation
 `.moai/reports/heatmap-legibility/impl/library-r5/richStudio` with R 4.6.1,
 package version 0.1.6 and package RDB SHA256
 `90760e1b7138d34c6227bd97e21cb8de65ca78f3ccfd88a513fdfc530ec547e8`.
+Portability QA freshly installed `heatmap-r-portability/.moai/reports/heatmap-portability/impl/library-new/richStudio`, RDB SHA256 `5e1ca7d3b14e514fa0d33e4313c54e897965cce288fd24c9afbd3aaba8b7d99f`. Its observable equivalence attributes earlier R5 measurements to the three-expression correction; it does not pretend those earlier GUI runs used the new namespace.
 Ignored integration artifacts are under `.moai/reports/heatmap-legibility/`:
 `qa/candidate-r5/`, `code-review-r5.md` and `security/r2-review.md`.
 
 ## Gaps
 
-- Run41065823052 full-job outcome and the authorized same-SHA browser retry are
-  not terminal in this snapshot. Five successful jobs are not all-seven closure.
-- The first browser failure's worker lifecycle/cause remains unobserved. The
-  earlier run41057333122 ended four jobs passed/three failed; its unexplained−9
-  cause and old server-reset terminal exit remain historical gaps.
-- No candidate deployment verification or completed SPEC status is claimed.
+- Latest run41076765375 full R/package/coverage job remains active; six successful
+  jobs are not all-seven closure. Earlier full results are historical only.
+- Historical MV3 bootstrap and local SIGTRAP causes remain unknown. First run
+  41057333122 ended four jobs passed/three failed; original strict−9 cause and
+  old reset's terminal exit remain unobserved.
+- No candidate deployment measurement or completed SPEC status is claimed.
 
 ## Residual-risk
 
-Controlled ownership/transport tests do not exhaust OS scheduling or real network
-failures. The local SIGTRAP and hosted MV3 wait are different observed phases;
-neither warrants a speculative source or timeout change. Final same-source hosted
-success is required with every native-zoom/identity/restore assertion retained.
+Controlled tests do not exhaust OS scheduling or real network failures. The
+three-expression correction has exact installed observable identity, including
+transparent diagnostic encoding differences. Final full-job success on the latest
+source remains required; no gate, pin, native assertion or timeout is relaxed.

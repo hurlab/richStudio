@@ -133,6 +133,86 @@ change_finaldata_valueby <- function(
   new_final_data
 }
 
+# Bound 14px monospace display labels within the 240px label margin, without
+# a graphics device or changing source strings.
+hmap_axis_labels <- function(final_data) {
+  ids <- as.character(final_data$Cluster)
+  prefixes <- paste0("Cluster ", ids)
+  # Leave one extra column for a wide Unicode character at the excerpt edge.
+  # A nine-column budget retains at least eight columns before any ellipsis.
+  term_width <- nchar(paste0(final_data$Representative_Term), type = "width")
+  excerpt_width <- pmin(9L, term_width) + as.integer(term_width > 9L)
+  aliases <- nchar(prefixes, type = "width") + 3L + excerpt_width > 28L
+  prefixes[aliases] <- paste0(
+    "Display row ",
+    rev(seq_along(ids))[aliases]
+  )
+  labels <- vapply(
+    seq_along(ids),
+    function(i) {
+      separator <- if (aliases[i]) "|" else " | "
+      budget <- 28L - nchar(prefixes[i], type = "width") - nchar(separator)
+      label <- prefixes[i]
+      if (budget >= 1L) {
+        term <- paste0(final_data$Representative_Term[i])
+        if (nchar(term, type = "width") > budget) {
+          # Bound by Unicode characters before measuring display width. No
+          # graphics device is opened, including in read-only installations.
+          term <- substr(term, 1L, budget - 1L)
+          while (nchar(term, type = "width") > budget - 1L) {
+            term <- substr(term, 1L, nchar(term) - 1L)
+          }
+          term <- paste0(term, "…")
+        }
+        label <- paste0(label, separator, term)
+      }
+      as.character(htmltools::htmlEscape(label))
+    },
+    character(1)
+  )
+  list(labels = labels, aliases = aliases, prefixes = prefixes)
+}
+
+# Row positions run from the top of the existing reversed category display.
+hmap_row_view <- function(plot, rows, start = 1L) {
+  starts <- seq.int(1L, max(1L, rows), by = 400L)
+  if (length(start) != 1L || is.na(start) || !start %in% starts) {
+    start <- 1L
+  }
+  end <- min(rows, start + 399L)
+  visible <- max(1L, end - start + 1L)
+  # Plotly omits single-category ticks in a very short drawable band. Keep
+  # a compact 90px minimum band, independently of the dataset/note margins.
+  height <- max(90L, visible * 18L) + 70L + attr(plot, "hmap_bottom")
+  plot$height <- height
+  plot$x$layout$height <- height
+  plot <- plotly::layout(
+    plot,
+    yaxis = list(range = c(rows - end - 0.5, rows - start + 0.5)),
+    title = list(
+      text = paste0(
+        attr(plot, "hmap_title"),
+        "<br><sup>Rows ",
+        start,
+        "–",
+        end,
+        " of ",
+        rows,
+        "</sup>"
+      ),
+      font = list(size = 16)
+    )
+  )
+  plotly::config(
+    plot,
+    toImageButtonOptions = list(
+      height = height,
+      width = 1000,
+      scale = 1
+    )
+  )
+}
+
 # Create the cluster summary heatmap using cluster IDs, not representative
 # names.
 comprehensive_hmap <- function(
@@ -144,7 +224,12 @@ comprehensive_hmap <- function(
   if (length(value_type) != 1L || !value_type %in% c("Pvalue", "Padj")) {
     stop("Invalid value_type parameter", call. = FALSE)
   }
+  workspace_check_resources(list(render_rows = nrow(final_data)))
+  if (!nrow(final_data)) {
+    return(NULL)
+  }
   choices <- hmap_cluster_choices(final_data)
+  axis <- hmap_axis_labels(final_data)
   new_final_data <- change_finaldata_valueby(final_data, cluster_list, value_by)
   value_cols <- grep(
     paste0("^", value_type, "(_|$)"),
@@ -193,7 +278,22 @@ comprehensive_hmap <- function(
     "<br>",
     description
   )
-  plot_ly(
+  alias_index <- match(melted_data$cluster_key, unname(choices))
+  aliased <- axis$aliases[alias_index]
+  melted_data$hover[aliased] <- paste0(
+    axis$prefixes[alias_index[aliased]],
+    "<br>",
+    melted_data$hover[aliased]
+  )
+  # Rotated, fixed-size dataset ticks have a predictable vertical footprint.
+  # Reserve their full band plus the axis title before the explanation band.
+  dataset_width <- max(nchar(levels(melted_data$variable), type = "width"))
+  note_offset <- min(
+    860L,
+    max(120L, ceiling(dataset_width * 7.2 / sqrt(2)) + 70L)
+  )
+  bottom <- note_offset + 60L
+  plot <- plot_ly(
     data = melted_data,
     x = ~variable,
     y = ~cluster_key,
@@ -207,31 +307,51 @@ comprehensive_hmap <- function(
   ) %>%
     layout(
       title = paste0("-log10(", value_type, ") by Cluster"),
-      xaxis = list(title = "Geneset"),
+      xaxis = list(
+        title = list(text = "Geneset", standoff = 20),
+        tickangle = -45,
+        tickfont = list(size = 12, family = "monospace"),
+        automargin = FALSE
+      ),
       yaxis = list(
-        title = "Cluster and representative term",
+        title = "",
         categoryorder = "array",
         categoryarray = unname(choices),
         tickmode = "array",
         tickvals = unname(choices),
-        ticktext = names(choices)
+        ticktext = axis$labels,
+        tickfont = list(size = 14, family = "monospace"),
+        automargin = FALSE,
+        fixedrange = TRUE
       ),
       plot_bgcolor = "#eeeeee",
       annotations = list(list(
         text = paste0(
           "Grey cells: no available value; zero p-values ",
-          "use a display floor"
+          "use a display floor",
+          if (any(axis$aliases)) {
+            paste0(
+              "<br>Display row aliases identify long IDs; hover for full IDs."
+            )
+          } else {
+            ""
+          }
         ),
         x = 0,
-        y = -0.18,
+        y = 0,
+        yshift = -note_offset,
+        yanchor = "top",
         xref = "paper",
         yref = "paper",
         showarrow = FALSE,
         xanchor = "left",
         font = list(size = 11)
       )),
-      margin = list(b = 95)
+      margin = list(l = 240, r = 95, t = 70, b = bottom)
     )
+  attr(plot, "hmap_bottom") <- bottom
+  attr(plot, "hmap_title") <- paste0("-log10(", value_type, ") by Cluster")
+  hmap_row_view(plot, nrow(final_data))
 }
 
 # Create a term heatmap. New UI selections use IDs; legacy representative names

@@ -119,7 +119,27 @@ clus_vis_tab_ui <- function(id, tabName) {
                 h4("No cluster data loaded"),
                 p("Select a cluster result above to view the heatmap.")
               ),
-              plotlyOutput(ns("clusdf_hmap"), height = "800px")
+              uiOutput(ns("clusdf_hmap_error")),
+              uiOutput(ns("cluster_row_window_ui")),
+              tags$style(HTML(paste0(
+                ".cluster-heatmap-viewport{max-height:min(720px,70vh);",
+                "overflow:auto;max-width:100%;}",
+                ".cluster-heatmap-viewport:focus-visible{",
+                "outline:3px solid #2463a6;outline-offset:-3px;}",
+                ".cluster-heatmap-window select:focus{",
+                "outline:3px solid #2463a6;outline-offset:2px;}"
+              ))),
+              div(
+                id = ns("clusdf_hmap_region"),
+                class = "cluster-heatmap-viewport",
+                role = "region",
+                `aria-label` = "Cluster heatmap",
+                tabindex = "0",
+                div(
+                  style = "min-width:640px;max-width:8192px;",
+                  plotlyOutput(ns("clusdf_hmap"), height = "280px")
+                )
+              )
             ),
             # Term heatmap
             box(
@@ -347,10 +367,88 @@ clus_vis_tab_server <- function(
       ignoreNULL = TRUE
     )
 
+    row_window_start <- reactiveVal(1L)
+    observeEvent(
+      selected_cluster(),
+      {
+        row_window_start(1L)
+        updateSelectInput(session, "cluster_row_window", selected = "1")
+      },
+      ignoreNULL = FALSE,
+      priority = 10
+    )
+
+    observeEvent(input$cluster_row_window, {
+      row_window_start(suppressWarnings(as.integer(input$cluster_row_window)))
+    })
+
+    summary_resource_error <- reactive({
+      selected <- selected_cluster()
+      if (is.null(selected)) {
+        return(NULL)
+      }
+      tryCatch(
+        {
+          workspace_check_resources(list(render_rows = nrow(selected$df)))
+          NULL
+        },
+        error = function(error) error
+      )
+    })
+
+    output$clusdf_hmap_error <- renderUI({
+      error <- summary_resource_error()
+      if (is.null(error)) {
+        return(NULL)
+      }
+      div(
+        role = "alert",
+        class = "alert alert-warning",
+        conditionMessage(error)
+      )
+    })
+
+    output$cluster_row_window_ui <- renderUI({
+      selected <- selected_cluster()
+      if (
+        is.null(selected) ||
+          !is.null(summary_resource_error()) ||
+          nrow(selected$df) <= 400L
+      ) {
+        return(NULL)
+      }
+      rows <- nrow(selected$df)
+      starts <- seq.int(1L, rows, by = 400L)
+      div(
+        class = "cluster-heatmap-window",
+        selectInput(
+          session$ns("cluster_row_window"),
+          "Cluster row window",
+          choices = stats::setNames(
+            starts,
+            paste0(
+              "Rows ",
+              starts,
+              "–",
+              pmin(starts + 399L, rows),
+              " of ",
+              rows
+            )
+          ),
+          selected = 1L,
+          selectize = FALSE
+        )
+      )
+    })
+
     summary_heatmap <- reactive({
       selected <- selected_cluster()
       if (is.null(selected)) {
         return(NULL)
+      }
+      error <- summary_resource_error()
+      if (!is.null(error)) {
+        return(error)
       }
       comprehensive_hmap(
         final_data = selected$df,
@@ -363,15 +461,32 @@ clus_vis_tab_server <- function(
     observe({
       if (inherits(summary_heatmap(), "plotly")) {
         shinyjs::hide("clusdf_hmap_empty")
+        shinyjs::show("clusdf_hmap_region")
       } else {
-        shinyjs::show("clusdf_hmap_empty")
+        if (is.null(summary_resource_error())) {
+          shinyjs::show("clusdf_hmap_empty")
+        } else {
+          shinyjs::hide("clusdf_hmap_empty")
+        }
+        shinyjs::hide("clusdf_hmap_region")
       }
     })
 
     output$clusdf_hmap <- renderPlotly({
       hmap <- summary_heatmap()
       req(inherits(hmap, "plotly"))
-      hmap
+      selected <- selected_cluster()
+      hmap <- hmap_row_view(hmap, nrow(selected$df), row_window_start())
+      # Widget height follows the logical window, independently of the native
+      # scroll viewport. No result strings enter this client hook.
+      htmlwidgets::onRender(
+        hmap,
+        "function(el, x) {
+        el.style.height = x.layout.height + 'px';
+        el.parentElement.parentElement.scrollTop = 0;
+        Plotly.Plots.resize(el);
+      }"
+      )
     })
 
     plot_cluslist_hmap <- reactive({

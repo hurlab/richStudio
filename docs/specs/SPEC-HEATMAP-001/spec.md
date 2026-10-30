@@ -2,7 +2,7 @@
 id: SPEC-HEATMAP-001
 title: "Readable cluster summary heatmaps without changing results"
 version: "0.1.2"
-status: draft
+status: in-progress
 created: 2026-10-30
 updated: 2026-10-30
 author: manager-spec

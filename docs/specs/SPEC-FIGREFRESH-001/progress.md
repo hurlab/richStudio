@@ -89,7 +89,7 @@ independent_reviews: APPROVED-data-integrity-methods-domain-visual
 
 ```yaml
 sync_complete_at: 2026-10-30T18:23:37Z
-sync_commit_sha: pending-backfill
+sync_commit_sha: 06a20a02512b39317fabe7159ed18fd77f9ea899
 sync_status: completed-six-acceptances-three-reviews-final-package-audit-approved
 documentation: docs/quality/manuscript-figures-20261030.md
 ac_source: docs/specs/SPEC-FIGREFRESH-001/acceptance.md

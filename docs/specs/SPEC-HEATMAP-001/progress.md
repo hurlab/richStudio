@@ -565,7 +565,7 @@ m1_to_mN_commit_strategy: root-managed-recorded-R4-and-R5-source-commits-no-git-
 
 ```yaml
 sync_complete_at: 2026-10-30T18:05:05Z
-sync_commit_sha: pending-backfill
+sync_commit_sha: 8500d2d8aeee964e49c829842e4f56c378858bde
 sync_status: completed-all-seven-hosted-jobs-pass
 documentation: docs/quality/heatmap-legibility-20261030.md
 ac_source: docs/specs/SPEC-HEATMAP-001/acceptance.md

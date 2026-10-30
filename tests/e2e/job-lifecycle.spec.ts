@@ -27,34 +27,51 @@ async function identity(pid: number): Promise<Identity | undefined> {
 }
 async function same(record: Identity) {
   const now = await identity(record.pid);
-  return !!now && now.start === record.start && now.state !== 'Z';
+  return !!now && now.start === record.start && now.group === record.group && now.state !== 'Z' && now.state !== 'X';
 }
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
 // Every process in the owner's group must carry the nonce; anything else is a foreign joiner.
-async function fixtureProcesses(owner: Identity, nonce: string) {
+async function fixtureProcesses(owner: Identity, nonce: string, observations: unknown[] = []) {
   const found: Identity[] = [];
+  const deadline = Date.now() + 2000;
   for (const entry of (await fs.readdir('/proc')).filter(x => /^\d+$/.test(x))) {
     const record = await identity(Number(entry));
-    if (!record || record.group !== owner.group) continue;
-    let environment: string | undefined, readError: unknown;
-    try { environment = await fs.readFile(`/proc/${entry}/environ`, 'utf8'); }
-    catch (error) { readError = error; }
-    // An exiting process can lose its environment after the first identity read.
-    // Revalidate its identity; only confirmed absence/death can waive the nonce.
-    const current = await identity(record.pid);
-    if (!current) continue;
-    if (current.start !== record.start || current.group !== record.group) {
-      throw new Error('Fixture process identity changed during ownership check');
+    if (!record) continue;
+    if (record.pid === owner.pid && (record.start !== owner.start || record.group !== owner.group)) {
+      observations.push({ pid: record.pid, expectedStart: owner.start, current: record });
+      throw new Error('Fixture owner identity changed during ownership check');
     }
-    if (current.state === 'Z' || current.state === 'X') continue;
-    if (environment === undefined) throw readError;
-    if (!environment.split('\0').includes(`WS_JOBS_NONCE=${nonce}`)) {
-      throw new Error(`Unknown process joined owned fixture group (pid ${current.pid}, start ${current.start}, state ${current.state})`);
+    if (record.group !== owner.group) continue;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      // Fresh identity surrounds every environment read; a nonce cannot cross PID reuse.
+      const before = await identity(record.pid);
+      if (!before) { observations.push({ pid: record.pid, attempt, current: null }); break; }
+      if (before.start !== record.start || before.group !== record.group) {
+        observations.push({ pid: record.pid, attempt, expectedStart: record.start, current: before });
+        throw new Error('Fixture process identity changed during ownership check');
+      }
+      let environment: string | undefined, readError: unknown;
+      try { environment = await fs.readFile(`/proc/${entry}/environ`, 'utf8'); }
+      catch (error) { readError = error; }
+      const current = await identity(record.pid);
+      const nonceMatched = environment?.split('\0').includes(`WS_JOBS_NONCE=${nonce}`) === true;
+      observations.push({ pid: record.pid, start: record.start, group: record.group, attempt,
+        current, nonceMatched, error: readError === undefined ? undefined : String(readError) });
+      if (!current) break;
+      if (current.start !== record.start || current.group !== record.group) {
+        throw new Error('Fixture process identity changed during ownership check');
+      }
+      if (current.state === 'Z' || current.state === 'X') break;
+      if (nonceMatched) { found.push(current); break; }
+      if (attempt === 3 || Date.now() + 500 > deadline) {
+        if (readError) throw readError;
+        throw new Error(`Unknown process joined owned fixture group (pid ${current.pid}, start ${current.start}, state ${current.state})`);
+      }
+      await delay(500);
     }
-    found.push(current);
   }
   return found;
 }
@@ -145,7 +162,8 @@ const test = base.extend<{ workers: number; fixture: Fixture }>({
     if (!runs || !temporary || !path.isAbsolute(runs) || !path.isAbsolute(temporary)) throw new Error('Explicit project-local runs root/TMPDIR required');
     const canonicalRuns = await fs.realpath(runs);
     if (canonicalRuns !== runs) throw new Error('Runs root is not canonical');
-    const lifecycle: Record<string, unknown> = { nonce, port, workers, parent: canonicalRuns };
+    const proofObservations: unknown[] = [];
+    const lifecycle: Record<string, unknown> = { nonce, port, workers, parent: canonicalRuns, proofObservations };
     const merge = (more: Identity[]) => { owned = [...new Map([...owned, ...more].map(record => [record.pid, record])).values()]; };
     try {
       await portFree();
@@ -167,13 +185,19 @@ const test = base.extend<{ workers: number; fixture: Fixture }>({
       if (!child.pid) throw new Error('Fixture spawn allocated no PID');
       const attempted = await identity(child.pid);
       if (!attempted || attempted.group !== attempted.pid) { safe = false; throw new Error('Fixture process identity unavailable'); }
-      owner = attempted; lifecycle.owner = owner; merge(await fixtureProcesses(owner, nonce));
+      owner = attempted; lifecycle.owner = owner;
+      const initialOwned = await fixtureProcesses(owner, nonce, proofObservations);
+      merge(initialOwned);
+      if (!initialOwned.some(record => record.pid === owner?.pid && record.start === owner.start)) throw new Error('Fixture owner is not live and nonce-proven');
       await expect.poll(async () => {
         if (reaped || child?.exitCode !== null || child?.signalCode) throw new Error(`Fixture exited before ready: ${log}`);
         try { const response = await fetch(url, { signal: AbortSignal.timeout(1000) }); return response.ok && (await response.text()).includes(nonce); }
         catch { return false; }
       }, { timeout: 60_000 }).toBe(true);
-      merge(await fixtureProcesses(owner, nonce)); lifecycle.started = owned;
+      const readyOwned = await fixtureProcesses(owner, nonce, proofObservations);
+      merge(readyOwned);
+      if (!readyOwned.some(record => record.pid === owner?.pid && record.start === owner.start)) throw new Error('Fixture owner is not live and nonce-proven');
+      lifecycle.started = owned;
       const fixtureRoot = root;
       await use({ root: fixtureRoot, nonce, record: async (pid: number) => {
         const record = await identity(pid);
@@ -184,20 +208,20 @@ const test = base.extend<{ workers: number; fixture: Fixture }>({
     } finally {
       try {
         if (child?.pid) {
-          try { if (owner) merge(await fixtureProcesses(owner, nonce)); }
+          try { if (owner) merge(await fixtureProcesses(owner, nonce, proofObservations)); }
           catch (error) { safe = false; lifecycle.discoveryError = String(error); }
           if (safe && owner && await same(owner)) {
             lifecycle.beforeTerm = owned;
             try { process.kill(-owner.group, 'SIGTERM'); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
-          } else if (child.exitCode === null && !child.signalCode) { if (!owner) safe = false; child.kill('SIGTERM'); }
+          } else if (child.exitCode === null && !child.signalCode) { safe = false; }
           const deadline = Date.now() + 5500;
           while (!reaped && Date.now() < deadline) await delay(25);
-          try { if (owner) merge(await fixtureProcesses(owner, nonce)); }
+          let proven: Identity[] = [];
+          try { if (owner) { proven = await fixtureProcesses(owner, nonce, proofObservations); merge(proven); } }
           catch (error) { safe = false; lifecycle.discoveryError = String(error); }
-          for (const record of [...owned].reverse()) if (await same(record)) {
+          for (const record of [...owned].reverse()) if (safe && proven.some(current => current.pid === record.pid && current.start === record.start) && await same(record)) {
             try { process.kill(record.pid, 'SIGKILL'); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
           }
-          if (child.exitCode === null && !child.signalCode) child.kill('SIGKILL');
           const end = Date.now() + 2000;
           while (Date.now() < end && (!reaped || (await Promise.all(owned.map(same))).some(Boolean))) await delay(25);
           lifecycle.exit = { code: child.exitCode, signal: child.signalCode, reaped };

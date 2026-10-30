@@ -710,13 +710,55 @@ resource_measurements() {
   done
 }
 
+# Keep GNU timeout's process-group cleanup and retain its real terminal status.
+# The duration is an argument solely so a short canary can exercise this same path.
+serve_watchdog() {
+  local lifetime="$1"
+  shift
+  python3 - "$ARTIFACTS" "$lifetime" "$@" <<'PYSERVE'
+import json,os,pathlib,signal,subprocess,sys,time
+out=pathlib.Path(sys.argv[1]); lifetime=sys.argv[2]; command=sys.argv[3:]
+started=time.time(); process=None; terminal=None; error=None
+receipt={'configured_lifetime_seconds':float(lifetime),'wrapper_pid':os.getpid(),
+         'started_at':started,'command':command,'identity':None}
+def persist(name,value):
+    target=out/name
+    with target.open('w') as stream:
+        json.dump(value,stream,indent=2);stream.flush();os.fsync(stream.fileno())
+def forward(signum,frame):
+    if process is not None and process.poll() is None:
+        process.send_signal(signum)
+signal.signal(signal.SIGTERM,forward);signal.signal(signal.SIGINT,forward)
+persist('serve-start.json',receipt)
+persist('serve-terminal.json',{**receipt,'terminal_status':'unknown','reaped':False})
+try:
+    process=subprocess.Popen(['timeout','--kill-after=5s',lifetime+'s',*command],start_new_session=True)
+    stat=pathlib.Path(f'/proc/{process.pid}/stat').read_text()
+    fields=stat[stat.rfind(')')+2:].split()
+    receipt['identity']={'pid':process.pid,'parent':int(fields[1]),'group':int(fields[2]),'start':fields[19]}
+    persist('serve-start.json',receipt)
+    terminal=process.wait()
+except BaseException as failure:
+    error=repr(failure)
+finally:
+    # The unreaped child still belongs to this Popen instance. GNU timeout
+    # forwards TERM and bounds the owned process group's shutdown with KILL.
+    if process is not None:
+        if process.poll() is None:process.terminate()
+        terminal=process.wait()
+    persist('serve-terminal.json',{**receipt,'finished_at':time.time(),
+        'terminal_status':terminal if terminal is not None else 'unknown',
+        'terminal_signal':-terminal if terminal is not None and terminal<0 else None,
+        'reaped':process is not None and process.returncode is not None,'error':error})
+if error is not None:raise SystemExit(error)
+raise SystemExit(terminal if terminal is not None and terminal>=0 else 128-terminal if terminal is not None else 1)
+PYSERVE
+}
+
 case "$MODE" in
   serve)
     installed
-    timeout --kill-after=5s 900s Rscript --vanilla -e 'tryCatch(shiny::runApp(system.file("application",package="richStudio"),host="127.0.0.1",port=3871,launch.browser=FALSE),finally=future::plan(future::sequential))' &
-    server_pid=$!
-    trap 'kill -TERM "$server_pid" 2>/dev/null || true; wait "$server_pid" 2>/dev/null || true; rm -rf -- "$SCRATCH"' EXIT
-    wait "$server_pid"
+    serve_watchdog 1800 Rscript --vanilla -e 'tryCatch(shiny::runApp(system.file("application",package="richStudio"),host="127.0.0.1",port=3871,launch.browser=FALSE),finally=future::plan(future::sequential))'
     ;;
   prepare)
     receipt; policy; types; python3 "$ROOT/scripts/export-workspace-policy.py" --self-test

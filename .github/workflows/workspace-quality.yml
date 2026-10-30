@@ -67,7 +67,7 @@ jobs:
           for (name in names(pins)) remotes::install_version(name, version=pins[[name]], repos="https://cloud.r-project.org", upgrade="never", dependencies=NA)
           R
           python - <<'PY'
-          import hashlib,pathlib,urllib.request,tarfile,tempfile,json,os,subprocess
+          import errno,hashlib,http.client,pathlib,ssl,urllib.error,urllib.request,tarfile,tempfile,json,os,signal,subprocess,time
           tooling_sources=[
             ('collections','https://cran.r-project.org/src/contrib/collections_0.3.12.tar.gz','60e63ee65bc1889e54a008410f53cb5b643f2fffdb926c3ed12316094709c60d'),
             ('styler','https://cran.r-project.org/src/contrib/styler_1.11.0.tar.gz','f08760782b2ead047dd8f166a7cd5e01ace8d713087712bf61d193f610fbfe18'),
@@ -82,21 +82,61 @@ jobs:
             ('richR','https://github.com/hurlab/richR/releases/download/v0.1.5/richR_0.1.5.tar.gz','0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf'),
             ('richCluster','https://api.github.com/repos/hurlab/richCluster/tarball/a0d1f630fbe64089ab38516116b78962672e6349','6abe64c1c156368afcd9fbec942fadf80848ba64c00dadeac6b2faff27b73c00'),
             ('bioAnno','https://api.github.com/repos/guokai8/bioAnno/tarball/3c8936033b806b9f40c7028faa80e4971f6d0859','ddab5c458aee07253aedf26d137caeeb6e548538c1ef14f1d0cb27d4d1dc9da9')]
+          attempt_path=pathlib.Path(os.environ['WORKSPACE_ARTIFACTS'],'archive-download-attempts.jsonl')
+          def record_attempt(receipt):
+            with attempt_path.open('a') as stream:
+              stream.write(json.dumps(receipt)+'\n');stream.flush();os.fsync(stream.fileno())
+          def interrupted(error):
+            if isinstance(error,(urllib.error.HTTPError,ssl.SSLCertVerificationError)):return False
+            if isinstance(error,urllib.error.URLError):return interrupted(error.reason)
+            return isinstance(error,(TimeoutError,ConnectionResetError,ConnectionAbortedError,http.client.IncompleteRead,http.client.RemoteDisconnected,ssl.SSLEOFError)) or (
+              isinstance(error,OSError) and error.errno in (errno.ECONNRESET,errno.ECONNABORTED,errno.ETIMEDOUT,errno.EPIPE)) or (
+              isinstance(error,ssl.SSLError) and getattr(error,'reason',None)=='UNEXPECTED_EOF_WHILE_READING')
+          def transport_deadline(signum,frame):
+            raise TimeoutError('Archive transport exceeded 120 seconds')
+          signal.signal(signal.SIGALRM,transport_deadline)
+          def download_archive(name,url,expected):
+            for attempt in range(1,4):
+              receipt={'package':name,'url':url,'attempt':attempt,'digest_outcome':'not_checked'}
+              try:
+                signal.setitimer(signal.ITIMER_REAL,120)
+                with urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'richStudio-workspace-CI'}),timeout=120) as response:
+                  data=response.read()
+              except Exception as error:
+                retryable=interrupted(error)
+                receipt.update(transport_outcome='retryable_error' if retryable else 'hard_error',error=repr(error))
+                record_attempt(receipt)
+                if not retryable or attempt==3:raise
+              else:
+                actual=hashlib.sha256(data).hexdigest()
+                receipt.update(transport_outcome='success',sha256=actual,bytes=len(data),digest_outcome='verified' if actual==expected else 'mismatch')
+                record_attempt(receipt)
+                if actual!=expected:raise SystemExit(f'{name}: archive digest mismatch {actual}')
+                return data,actual
+              finally:
+                signal.setitimer(signal.ITIMER_REAL,0)
+              time.sleep(attempt)
           receipts=[]
+          receipt_path=pathlib.Path(os.environ['WORKSPACE_ARTIFACTS'],'verified-source-archives.json')
           with tempfile.TemporaryDirectory() as tmp:
             for name,url,expected in sources:
-              data=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'richStudio-workspace-CI'}),timeout=120).read()
-              actual=hashlib.sha256(data).hexdigest()
-              if actual!=expected:raise SystemExit(f'{name}: archive digest mismatch {actual}')
+              data,actual=download_archive(name,url,expected)
               archive=pathlib.Path(tmp)/(name+'.tar.gz');archive.write_bytes(data)
               if name not in ('richCluster','bioAnno'):target=archive
               else:
                 target=pathlib.Path(tmp)/name;target.mkdir()
                 with tarfile.open(archive) as tar:tar.extractall(target,filter='data')
                 target=next(target.glob('*/DESCRIPTION')).parent
-              subprocess.run(['R','CMD','INSTALL',str(target)],check=True)
-              receipts.append({'package':name,'url':url,'sha256':actual,'bytes':len(data)})
-          pathlib.Path(os.environ['WORKSPACE_ARTIFACTS'],'verified-source-archives.json').write_text(json.dumps(receipts,indent=2))
+              receipt={'package':name,'url':url,'sha256':actual,'bytes':len(data),'installation_outcome':'pending'}
+              receipts.append(receipt)
+              receipt_path.write_text(json.dumps(receipts,indent=2))
+              try:subprocess.run(['R','CMD','INSTALL',str(target)],check=True)
+              except Exception as error:
+                receipt.update(installation_outcome='failed',error=repr(error))
+                receipt_path.write_text(json.dumps(receipts,indent=2))
+                raise
+              receipt['installation_outcome']='installed'
+              receipt_path.write_text(json.dumps(receipts,indent=2))
           PY
           npx --no-install playwright install --with-deps chromium
           if [ '${{ matrix.mode }}' = scan ]; then
@@ -122,6 +162,9 @@ jobs:
           WORKSPACE_NEGATIVE_ASSERTION: ${{ (inputs.negative_assertion || endsWith(github.ref_name, '-negative-canary')) && '1' || '0' }}
         run: |
           set -euo pipefail
+          if [ '${{ matrix.mode }}' = prepare ]; then
+            python3 scripts/test-ci-harness-regressions.py --tree "$GITHUB_WORKSPACE" --artifacts "$WORKSPACE_ARTIFACTS/ci-harness-controls"
+          fi
           if [ '${{ matrix.mode }}' = browser ]; then
             # Capture the provisioned search order before scrubbing inherited R inputs.
             Rscript --vanilla - <<'R'

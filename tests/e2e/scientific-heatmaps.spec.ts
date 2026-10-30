@@ -143,59 +143,73 @@ async function saveEvidence(info: TestInfo, name: string, value: unknown) {
 
 async function boundaryPixels(page: Page, info: TestInfo) {
   const graph = page.locator('#clus_visualize-clusdf_hmap');
-  await graph.scrollIntoViewIfNeeded();
-  const points = await graph.evaluate(element => {
-    type Axis = { _categories: string[]; _offset: number; l2p: (value: number) => number };
-    const plot = (element.classList.contains('js-plotly-plot') ? element : element.querySelector('.js-plotly-plot')) as
-      HTMLElement & { _fullLayout: { xaxis: Axis; yaxis: Axis } };
-    const box = plot.getBoundingClientRect();
-    const axes = plot._fullLayout;
-    return [['alpha', 'cluster:10'], ['beta', 'cluster:10'], ['alpha', 'cluster:30'], ['beta', 'cluster:30']].map(([x, y]) => {
-      const xIndex = axes.xaxis._categories.indexOf(x);
-      const yIndex = axes.yaxis._categories.indexOf(y);
-      if (xIndex < 0 || yIndex < 0) throw new Error('Expected category missing from rendered axes');
-      const viewportX = box.left + axes.xaxis._offset + axes.xaxis.l2p(xIndex);
-      const viewportY = box.top + axes.yaxis._offset + axes.yaxis.l2p(yIndex);
-      return { x, y, viewportX, viewportY, documentX: viewportX + scrollX, documentY: viewportY + scrollY };
-    });
-  });
+  const region = page.locator('#clus_visualize-clusdf_hmap_region');
+  await region.scrollIntoViewIfNeeded();
+  const points = [['alpha', 'cluster:10'], ['beta', 'cluster:10'], ['alpha', 'cluster:30'], ['beta', 'cluster:30']];
   const hover = [];
-  for (const point of points) {
-    // Validate real mouse hover before full-page capture can resize the widget.
-    // Re-read live axes and target the cell interior, away from gridlines.
-    const position = await graph.evaluate((element, point) => {
+  const pixels = [];
+  for (const [x, y] of points) {
+    const target = { x, y };
+    const position = await graph.evaluate((element, target) => {
       type Axis = { _categories: string[]; _offset: number; l2p: (value: number) => number };
       const plot = (element.classList.contains('js-plotly-plot') ? element : element.querySelector('.js-plotly-plot')) as
         HTMLElement & { _fullLayout: { xaxis: Axis; yaxis: Axis } };
-      const box = plot.getBoundingClientRect();
+      const clipper = plot.closest('.cluster-heatmap-viewport') as HTMLElement;
+      if (!clipper) throw new Error('Native heatmap scroll region missing');
       const axes = plot._fullLayout;
-      return { x: box.left + axes.xaxis._offset + axes.xaxis.l2p(axes.xaxis._categories.indexOf(point.x)) + 5,
-        y: box.top + axes.yaxis._offset + axes.yaxis.l2p(axes.yaxis._categories.indexOf(point.y)) + 5 };
-    }, point);
+      const column = axes.xaxis._categories.indexOf(target.x), row = axes.yaxis._categories.indexOf(target.y);
+      if (column < 0 || row < 0) throw new Error('Expected category missing from rendered axes');
+      const cell = () => {
+        const box = plot.getBoundingClientRect();
+        const xs = [column - 0.5, column + 0.5].map(value => box.left + axes.xaxis._offset + axes.xaxis.l2p(value));
+        const ys = [row - 0.5, row + 0.5].map(value => box.top + axes.yaxis._offset + axes.yaxis.l2p(value));
+        return { left: Math.min(...xs), right: Math.max(...xs), top: Math.min(...ys), bottom: Math.max(...ys) };
+      };
+      const initial = cell(), region = clipper.getBoundingClientRect();
+      clipper.scrollBy({ left: (initial.left + initial.right) / 2 - (region.left + clipper.clientLeft + clipper.clientWidth / 2),
+        top: (initial.top + initial.bottom) / 2 - (region.top + clipper.clientTop + clipper.clientHeight / 2), behavior: 'instant' });
+      const scrolled = cell();
+      window.scrollBy({ left: (scrolled.left + scrolled.right) / 2 - innerWidth / 2,
+        top: (scrolled.top + scrolled.bottom) / 2 - innerHeight / 2, behavior: 'instant' });
+      const current = cell(), bounds = clipper.getBoundingClientRect();
+      const visible = { left: Math.max(0, current.left, bounds.left + clipper.clientLeft),
+        right: Math.min(innerWidth, current.right, bounds.left + clipper.clientLeft + clipper.clientWidth),
+        top: Math.max(0, current.top, bounds.top + clipper.clientTop),
+        bottom: Math.min(innerHeight, current.bottom, bounds.top + clipper.clientTop + clipper.clientHeight) };
+      const point = { x: (visible.left + visible.right) / 2 + 2, y: (visible.top + visible.bottom) / 2 + 2 };
+      if (point.x - 5 <= visible.left || point.x + 5 >= visible.right || point.y - 5 <= visible.top || point.y + 5 >= visible.bottom) {
+        throw new Error('Heatmap pointer/sample patch is outside the visible cell or physical viewport');
+      }
+      return { ...point, visible, scrollLeft: clipper.scrollLeft, scrollTop: clipper.scrollTop };
+    }, target);
     await page.mouse.move(0, 0);
     await page.mouse.move(position.x, position.y);
     const layer = graph.locator('.hoverlayer');
-    await expect(layer).toContainText(`Cluster ${point.y.split(':')[1]}`);
-    if (point.x === 'alpha' && point.y === 'cluster:10') await expect(layer).toContainText('Not available');
-    if (point.x === 'beta' && point.y === 'cluster:30') await expect(layer).toContainText('display floor');
-    hover.push({ x: point.x, y: point.y, text: await layer.textContent() });
+    await expect(layer).toContainText(`Cluster ${y.split(':')[1]}`);
+    if (x === 'alpha' && y === 'cluster:10') await expect(layer).toContainText('Not available');
+    if (x === 'beta' && y === 'cluster:30') await expect(layer).toContainText('display floor');
+    hover.push({ x, y, text: await layer.textContent(), position });
+    await page.mouse.move(0, 0);
+    const screenshot = await page.screenshot({ path: info.outputPath(`scientific-summary-pixels-${x}-${y.split(':')[1]}.png`), scale: 'css' });
+    pixels.push(await page.evaluate(async ({ png, target, position }) => {
+      const picture = new Image();
+      picture.src = png;
+      await picture.decode();
+      const canvas = document.createElement('canvas');
+      canvas.width = picture.naturalWidth;
+      canvas.height = picture.naturalHeight;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('Canvas pixel decoding unavailable');
+      context.drawImage(picture, 0, 0);
+      if (position.x - 5 < 0 || position.x + 5 >= canvas.width || position.y - 5 < 0 || position.y + 5 >= canvas.height) {
+        throw new Error('Fresh sample patch is outside the screenshot');
+      }
+      return { ...target, position,
+        rgba: Array.from(context.getImageData(Math.round(position.x), Math.round(position.y), 1, 1).data),
+        patch: [-5, 0, 5].flatMap(dx => [-5, 0, 5].map(dy =>
+          Array.from(context.getImageData(Math.round(position.x + dx), Math.round(position.y + dy), 1, 1).data))) };
+    }, { png: `data:image/png;base64,${screenshot.toString('base64')}`, target, position }));
   }
-  const screenshot = await page.screenshot({ path: info.outputPath('scientific-summary-pixels.png'), fullPage: true });
-  const pixels = await page.evaluate(async ({ png, points }) => {
-    const picture = new Image();
-    picture.src = png;
-    await picture.decode();
-    const canvas = document.createElement('canvas');
-    canvas.width = picture.naturalWidth;
-    canvas.height = picture.naturalHeight;
-    const context = canvas.getContext('2d');
-    if (!context) throw new Error('Canvas pixel decoding unavailable');
-    context.drawImage(picture, 0, 0);
-    return points.map(point => ({ ...point,
-      rgba: Array.from(context.getImageData(Math.round(point.documentX), Math.round(point.documentY), 1, 1).data),
-      patch: [-5, 0, 5].flatMap(dx => [-5, 0, 5].map(dy =>
-        Array.from(context.getImageData(Math.round(point.documentX + dx), Math.round(point.documentY + dy), 1, 1).data))) }));
-  }, { png: `data:image/png;base64,${screenshot.toString('base64')}`, points });
   const missing = pixels.find(point => point.x === 'alpha' && point.y === 'cluster:10');
   const pOne = pixels.find(point => point.x === 'beta' && point.y === 'cluster:10');
   if (!missing || !pOne) throw new Error('Boundary pixel points missing');

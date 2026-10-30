@@ -8,7 +8,80 @@ _Plan v0.1.2 independently APPROVED; see [the amendment review](../../../.moai/r
 
 ### Current R5 candidate — complete labels inside the canvas
 
-**Claim.** R5 is frozen for independent final review/QA. Reflection before the
+**Independent evidence backfill, as of 2026-10-30 13:57:02 UTC.** The source is
+implemented and integrated: child commit
+`47bde252f54cd1a54478e015e3e3abc84667a6c2`, integration merge
+`390460288ec06afab90a8d792c321fb6d54c3033`. Fresh `git show -s` inspection verified
+both identities. Fresh `sha256sum R/cluster_hmap.R R/clus_visualize_tab.R
+DESCRIPTION` at integration HEAD `b7b072fad907d54258b22a0e746348f652ceb665`
+matches all three frozen R5 hashes recorded below. Subsequent CI harness work is
+tracked separately by SPEC-HMAPCI-001; it does not replace this product baseline.
+
+Independent results were inspected, not rerun by the Implementer during this
+backfill:
+
+- `qa/candidate-r5/report.md`, `unit-receipt.json` and
+  `snapshot-comparison.json`: QA's installed R5 invocation reports **31 tests,
+  337 assertions passed, zero failures/errors/warnings/skips**. All four bundled
+  and real-GSE hierarchical/DAVID snapshots pass all 28 exact identity checks
+  across source tables, plot data, coordinates, values and hover. This is QA's
+  later, differently scoped measurement; the Implementer's earlier 23/208 below
+  remains its original attributed baseline.
+- The same independent QA report and browser artifacts record **8 passed** at
+  the required desktop/narrow viewports, including all row windows, both-edge
+  label containment, actual PNG review, keyboard/resize, full 2000-row session
+  save/reload, inert labels and visible 2001-row rejection with recovery.
+- `qa/empty-state/report.md`, its `browser-results.json` and both per-project
+  `empty-state-receipt.json` files add **2 independent GUI controls passed**,
+  zero unexpected/skipped/flaky results and no page errors, against the same
+  immutable R5 installed namespace. The correctly typed zero-row Empty0 result
+  is loaded and explicitly selected at 1280×720 and 375×667: the honest hint is
+  visible, viewer/window are hidden and actual canvas/SVG allocations are `[]`.
+  Valid10 then recovers 20 exact quantitative cells and 10 readable labels with
+  stable selection. Initial no-selection hint/window assertions already exist
+  at `tests/e2e/heatmap-legibility.spec.ts:385`; the earlier missing-evidence
+  wording for that initial state was too broad. The additional control closes
+  the literal empty-data branch, without adding to or relabeling QA's earlier
+  31/337 R measurement or eight main GUI cases. `source-unchanged.json` verifies
+  all 104 measured tracked files byte-identical; `port-cleanup.json` records
+  successful reuse-bind/close on 3891. No product or committed test changed.
+- `code-review-r5.md` independently **APPROVED** the exact frozen source and
+  verified odd/even Unicode excerpts and both short-term prefix/alias cases.
+- `local-sync-r5/lsp-diagnostics.json` reports baseline and candidate totals
+  **0**, `status: PASS`, sync `release_hold: false`; its inspected runner log
+  says `Actual R JSON-RPC diagnostics and invalid canary verified` and
+  `TypeScript membership verified: 11 intended inputs`.
+- `security-final-r5/ast-grep.json` records **26/26 executed rule documents,
+  0 findings, 0 errors, canary_detected: true**. These are the actual canonical
+  receipts, not source-pattern substitutes for verification.
+
+| Acceptance | Independent evidence inspected | As-of status |
+|---|---|---|
+| AC-001 | QA actual 141/366-row geometry at both viewports; 14px ticks, 18px pitch within subpixel rounding, both label edges contained, no document overflow. | PASS |
+| AC-002 | QA 400/401/2000-row native windows, complete trace membership, first/last access and exact saved-session round trip. | PASS |
+| AC-003 | QA keyboard edges, native navigation and desktop/mobile resizing retain the selected result and containment. | PASS |
+| AC-004 | QA/reviewer original-ID/term preservation, distinct aliases and minimum Unicode excerpts; real hover and individual choices. | PASS |
+| AC-005 | Four exact scientific snapshots, missing/zero tests, inert marker probes and actual note/axis/PNG nonintersection review. | PASS |
+| AC-006 | Existing no-selection, 1/2/10-row, reset/selection/formula checks plus the two actual Empty0 selection/no-allocation/Valid10-recovery controls above. | PASS |
+| AC-007 | QA actual normal/last-window camera downloads, full-height dimensions and reviewed bounds; all-row saved-session identity and reload pass. | PASS |
+| AC-008 | QA visible policy-plus-one rejection, hidden navigation, connected-session recovery; direct early-admission regression passes. | PASS |
+| AC-009 | Exact bundled/real hierarchical/DAVID tables/data/values/hover, ID/missingness behavior and full session restoration pass. | PASS |
+| AC-010 | Canonical local zero-LSP/AST and scoped quality pass; complete hosted suite/check/coverage verdict remains pending. | PENDING: hosted quality |
+
+The first hosted run `41057333122`, source `cbd3eb3`, ended with four successful
+jobs and three failed jobs (`hosted-41057333122/final-state.json`). The new heatmap
+browser cases passed; that does not certify the entire workflow. The separate
+CI SPEC records a TLS transport failure, strict-process return -9 without a
+proven cause, and older browser/lifecycle observations. The server reset's
+relationship to a 900-second deadline remains an inference; the original exit
+124 was not retained. No application full-suite verdict is inferred from these
+failures. Fresh `gh run view 41065823052 --repo hurlab/richStudio --json
+headSha,status,conclusion,jobs` reports source `b7b072f`: diagnostics, prepare,
+negative and resources are successful; full, browser and scan remain
+`in_progress`. There is no overall conclusion. **The hosted full-suite/package-check/coverage
+verdict remains PENDING; this backfill does not mark the SPEC complete.**
+
+**Historical implementer freeze claim.** R5 was frozen for independent final review/QA. Reflection before the
 last allowed retry: earlier geometry checked label width and matrix-side bounds,
 but missed Plotly's left tick padding. A236px text width was below the240px
 column limit yet extended4.82px left of the canvas. R5 changes exactly two
@@ -68,7 +141,7 @@ All R commands scrubbed profile/environment/site-library variables in the same
 compound invocation, disabled renv autoloading and loaded the installed candidate
 before supplied dependency libraries. Browser processes closed in finally blocks.
 
-**Gaps.** Independent final code/security/Shiny QA, canonical JSON-RPC zero-LSP
+**Historical freeze gaps (superseded by the attributed backfill above).** Independent final code/security/Shiny QA, canonical JSON-RPC zero-LSP
 and hosted CI verdicts remain their owners' pending measurements. The standalone
 installed-widget browser/PNG check does not claim the complete application
 acceptance matrix. Hosted integration-branch CI (`main`) owns the repository-wide
@@ -408,20 +481,24 @@ fallback and note bounds still require actual browser measurement.
 ## §E.3 Run-phase Audit-Ready Signal
 
 ```yaml
-run_complete_at: null
-run_commit_sha: pending-parent-R5-commit
-run_status: R5-pending-independent-review-and-QA
-ac_pass_count: 0
+run_complete_at: "2026-10-30T07:35:54-05:00" # Source commit timestamp; not full quality closure.
+run_commit_sha: 47bde252f54cd1a54478e015e3e3abc84667a6c2
+integration_commit_sha: 390460288ec06afab90a8d792c321fb6d54c3033
+evidence_inspected_at: "2026-10-30T13:57:02Z"
+run_status: R5-integrated-nine-local-acceptance-criteria-pass-hosted-quality-pending
+ac_pass_count: 9
 ac_fail_count: 0
+ac_pending_count: 1
 preserve_list_post_run_count: 2
-l44_pre_commit_fetch: pending-authorized-M1
-l44_post_push_fetch: pending-authorized-push
-new_warnings_or_lints_introduced: 0-scoped-tests-and-source-style-only
+l44_pre_commit_fetch: root-managed-not-measured-by-this-backfill
+l44_post_push_fetch: root-managed-not-measured-by-this-backfill
+new_warnings_or_lints_introduced: 0-QA-scoped-warnings-and-canonical-candidate-LSP
 cross_platform_build:
   local_installed_candidate: pass
-  hosted_ci: pending
-total_run_phase_files: 3
-m1_to_mN_commit_strategy: pending-parent-authorization
+  hosted_ci: pending-run-41065823052
+product_source_file_count: 3
+total_run_phase_files: null # Whole run-phase attribution is root-managed, not remeasured here.
+m1_to_mN_commit_strategy: root-managed-recorded-R4-and-R5-source-commits-no-git-policy-verdict-by-backfill
 ```
 
 ## §E.4 Sync-phase Audit-Ready Signal

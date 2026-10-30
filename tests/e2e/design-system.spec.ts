@@ -71,11 +71,22 @@ async function fixtureProcesses(owner: Identity, nonce: string) {
   for (const entry of (await fs.readdir('/proc')).filter(x => /^\d+$/.test(x))) {
     const record=await identity(Number(entry));
     if (!record || record.group !== owner.group) continue;
-    try {
-      const environment=(await fs.readFile(`/proc/${entry}/environ`,'utf8')).split('\0');
-      if (!environment.includes(`WS_COMPONENT_NONCE=${nonce}`)) throw new Error('Unknown process joined owned fixture group');
-      found.push(record);
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    let environment: string | undefined, readError: unknown;
+    try { environment = await fs.readFile(`/proc/${entry}/environ`, 'utf8'); }
+    catch (error) { readError = error; }
+    // An exiting process can lose its environment after the first identity read.
+    // Revalidate its identity; only confirmed absence/death can waive the nonce.
+    const current = await identity(record.pid);
+    if (!current) continue;
+    if (current.start !== record.start || current.group !== record.group) {
+      throw new Error('Fixture process identity changed during ownership check');
+    }
+    if (current.state === 'Z' || current.state === 'X') continue;
+    if (environment === undefined) throw readError;
+    if (!environment.split('\0').includes(`WS_COMPONENT_NONCE=${nonce}`)) {
+      throw new Error(`Unknown process joined owned fixture group (pid ${current.pid}, start ${current.start}, state ${current.state})`);
+    }
+    found.push(current);
   }
   return found;
 }

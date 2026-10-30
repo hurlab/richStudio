@@ -248,37 +248,88 @@ as_app_user "$RELEASE_DIR" bash -c 'test ! -w "$1/app.R" && test -w "$1/logs"' _
 # ---- publish: atomic symlink swap, then full shiny-server restart -----------
 [[ "$(readlink -- "$APP_PATH")" == "$PREVIOUS_TARGET" ]] || fail 'live symlink changed during the build'
 SWAPPED=0
-restore_symlink() {
-    if (( SWAPPED )); then
-        printf 'Restoring app symlink to %s (note: that release depends on R 4.5 and will not start on R 4.6).\n' "$PREVIOUS_TARGET"
-        as_app_user "$APP_PARENT" ln -sfn -- "$PREVIOUS_TARGET" "$APP_PATH.swap" && \
-            as_app_user "$APP_PARENT" mv -T -- "$APP_PATH.swap" "$APP_PATH"
-    fi
+wait_for_app() {
+    local attempt page http_code=000 errors=1
+    for attempt in $(seq 1 20); do
+        sleep 3
+        timeout --kill-after=5s 5s systemctl is-active --quiet shiny-server || continue
+        if ! page="$(curl --silent --max-time 30 --write-out '\n%{http_code}' "$SHINY_URL")"; then
+            continue
+        fi
+        http_code="${page##*$'\n'}"
+        errors="$(printf '%s' "$page" | grep -c 'An error has occurred' || true)"
+        if [[ "$http_code" == 200 && "$errors" == 0 ]]; then
+            printf 'HTTP %s, error-page matches %s\n' "$http_code" "$errors"
+            return 0
+        fi
+    done
+    printf 'HTTP %s, error-page matches %s\n' "$http_code" "$errors"
+    return 1
 }
-trap 'rc=$?; (( rc )) && restore_symlink; exit $rc' EXIT
+restore_release() {
+    local current
+    if ! current="$(readlink -- "$APP_PATH")"; then
+        printf 'ROLLBACK FAILED: ownership: cannot read live target.\n'
+        return 1
+    fi
+    [[ "$current" != "$PREVIOUS_TARGET" || "$SWAPPED" == 1 ]] || return 0
+    if [[ "$current" != "$RELEASE_DIR" && "$current" != "$PREVIOUS_TARGET" ]]; then
+        printf 'ROLLBACK FAILED: ownership: unexpected live target %s; left untouched.\n' "$current"
+        return 1
+    fi
+    if [[ "$current" == "$RELEASE_DIR" ]]; then
+        printf 'Restoring app symlink to %s.\n' "$PREVIOUS_TARGET"
+        if ! { as_app_user "$APP_PARENT" ln -sfn -- "$PREVIOUS_TARGET" "$APP_PATH.swap" &&
+               [[ "$(readlink -- "$APP_PATH")" == "$RELEASE_DIR" ]] &&
+               as_app_user "$APP_PARENT" mv -T -- "$APP_PATH.swap" "$APP_PATH"; }; then
+            printf 'ROLLBACK FAILED: restore: could not restore the previous link.\n'
+            return 1
+        fi
+    fi
+    if [[ "$(readlink -- "$APP_PATH")" != "$PREVIOUS_TARGET" ]]; then
+        printf 'ROLLBACK FAILED: ownership: previous target is not live; service left untouched.\n'
+        return 1
+    fi
+    # The reviewed server permits 90s each for stop/start; bound the combined operation.
+    if ! timeout --kill-after=5s 210s systemctl restart shiny-server; then
+        printf 'ROLLBACK FAILED: restart: previous link restored but service restart failed.\n'
+        return 1
+    fi
+    if ! wait_for_app; then
+        printf 'ROLLBACK FAILED: health: previous service could not be verified.\n'
+        return 1
+    fi
+    if [[ "$(readlink -- "$APP_PATH")" != "$PREVIOUS_TARGET" ]]; then
+        printf 'ROLLBACK FAILED: ownership: live target changed during verification.\n'
+        return 1
+    fi
+    printf 'ROLLBACK VERIFIED: %s; service active and HTTP healthy.\n' "$PREVIOUS_TARGET"
+}
+deployment_exit() {
+    local status=$1
+    trap - EXIT
+    trap '' INT TERM
+    if (( status )); then
+        restore_release || true
+    fi
+    exit "$status"
+}
+trap 'deployment_exit $?' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 as_app_user "$APP_PARENT" ln -sfn -- "$RELEASE_DIR" "$APP_PATH.swap"
 as_app_user "$APP_PARENT" mv -T -- "$APP_PATH.swap" "$APP_PATH"
 SWAPPED=1
 [[ "$(readlink -- "$APP_PATH")" == "$RELEASE_DIR" ]] || fail 'symlink swap did not land'
 
-printf 'Restarting shiny-server to replace the R 4.5 app process.\n'
-systemctl restart shiny-server
-errors=1
-http_code=000
-for attempt in $(seq 1 20); do
-    sleep 3
-    page="$(curl --silent --max-time 30 --write-out '\n%{http_code}' "$SHINY_URL" || true)"
-    http_code="${page##*$'\n'}"
-    errors="$(printf '%s' "$page" | grep -c 'An error has occurred' || true)"
-    [[ "$http_code" == 200 && "$errors" == 0 ]] && break
-done
-printf 'HTTP %s, error-page matches %s\n' "$http_code" "$errors"
-[[ "$http_code" == 200 && "$errors" == 0 ]] || fail 'app did not come up cleanly after restart'
+printf 'Restarting shiny-server for the new release.\n'
+timeout --kill-after=5s 210s systemctl restart shiny-server
+wait_for_app || fail 'app did not come up cleanly after restart'
 if pgrep -u "$APP_USER" -f 'R-4\.5' >/dev/null; then
     fail 'an R process still references the R 4.5 library'
 fi
 
-trap - EXIT
+trap - EXIT INT TERM
 printf 'DEPLOY COMPLETE\nRelease: %s\nLive path: %s -> %s\nPrevious release kept: %s\nApp logs: %s/logs\n' \
     "$RELEASE_SHA" "$APP_PATH" "$RELEASE_DIR" "$PREVIOUS_TARGET" "$RELEASE_DIR"
 rm -rf -- "$WORK_ROOT"

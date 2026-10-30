@@ -426,5 +426,58 @@ m1_to_mN_commit_strategy: pending-parent-authorization
 
 ## §E.4 Sync-phase Audit-Ready Signal
 
-_<pending sync-phase>_
+```yaml
+sync_complete_at: null
+sync_commit_sha: pending-backfill
+sync_status: local-static-and-eight-browser-gates-pass-hosted-CI-pending
+documentation: docs/quality/heatmap-legibility-20261030.md
+ac_source: docs/specs/SPEC-HEATMAP-001/acceptance.md
+tier: M
+b12_self_test_a: not-run-no-CHANGELOG-emission
+b12_self_test_b: not-run-no-CHANGELOG-emission
+b12_self_test_c: not-run-no-CHANGELOG-emission
+changelog_entry_position: none
+frontmatter_status_transitions:
+  completed: not-applied-hosted-CI-pending
+local_evidence:
+  source_sha: 390460288ec06afab90a8d792c321fb6d54c3033
+  documentation_head: 18adda9d84ade65aa81acae677a3361e24ffe72b
+  source_hashes: unchanged-at-documentation-head
+  numerical_baseline_sha: 73178628106d9b160831d476f80171e4f4d0bf61
+  scoped_R: 31-tests-337-assertions-zero-failures-errors-warnings-skips
+  golden_comparisons: four-full-fixture-comparisons-exact
+  canonical_LSP: baseline-total-0-candidate-total-0-sync-PASS-release_hold-false
+  TypeScript: exit-0-11-intended-inputs-verified
+  AST: 26-rule-documents-zero-findings-zero-errors
+  browser: eight-passed-zero-failed-skipped-flaky
+canary_compliance_check:
+  actual_R_JSON_RPC: verified
+  AST_negative_canary: detected
+gaps:
+  QA_final_report_and_narrow_PNG_visual_review: pending
+  hosted_CI: seven-job-run-pending
+  deployment: candidate-not-verified
+```
+
+Evidence inspected in this integration tree under
+`.moai/reports/heatmap-legibility/`: `qa/candidate-r5/unit-and-golden.log`,
+`qa/candidate-r5/snapshot-comparison.json`, `local-sync-r5/lsp-diagnostics.json`,
+`local-sync-r5/runner.log` and `security-final-r5/ast-grep.json`.
+The orchestrator's recorded invocation used a single compound environment scrub,
+explicit R libraries and `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE`, then
+`WORKSPACE_BASELINE_SHA=73178628106d9b160831d476f80171e4f4d0bf61`
+and `WORKSPACE_ARTIFACTS=<integration-tree>/.moai/reports/heatmap-legibility/local-sync-r5`
+with `timeout --kill-after=10s 1200s bash scripts/test-workspace.sh diagnostics sync`;
+observed process exit0. Exact library provenance is in `local-sync-r5/runtime.txt`.
+Its child commands are `R --slave -e 'languageserver::run()'` and
+`tsc --noEmit --project tsconfig.json`; the LSP receipt says `status: PASS`,
+baseline/candidate totals0, sync `release_hold: false`. Runner output is
+`TypeScript membership verified: 11 intended inputs` and
+`Actual R JSON-RPC diagnostics and invalid canary verified`.
+Fresh `sha256sum R/cluster_hmap.R R/clus_visualize_tab.R DESCRIPTION` matched
+the frozen R5 hashes in the linked documentation report. These are inspected
+independent results, not tests rerun by the documentation author. Final browser
+JSON records expected8/skipped0/unexpected0/flaky0/errors[]; terminal log says
+`8 passed`. Both desktop and narrow installed journeys passed. QA final report,
+narrow PNG visual review and hosted CI remain open; no completion is applied.
 

@@ -429,7 +429,7 @@ clus_vis_tab_server <- function(
             paste0(
               "Rows ",
               starts,
-              "–",
+              intToUtf8(8211L),
               pmin(starts + 399L, rows),
               " of ",
               rows

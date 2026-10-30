@@ -1,4 +1,4 @@
-# Acceptance — SPEC-HEATMAP-001
+# Acceptance — SPEC-HEATMAP-001 (v0.1.2)
 
 These criteria are binary future checks, not completed validation claims.
 
@@ -51,13 +51,17 @@ horizontal overflow.
 
 **AC-004 — Original label access.** Given duplicate representative terms,
 noncontiguous IDs, long Unicode terms and two already accepted 101character IDs
-that differ only in their final character, when users inspect axis text, hover
+that differ only in their final character, plus a19character ID whose prefix
+previously exhausted the term-label budget, when users inspect axis text, hover
 cells and open individual-cluster choices, then fitting IDs retain their full
 `Cluster <original ID>` prefix and overlong IDs have distinct `Display row <r>`
 aliases based on complete rendered-row positions. Aliases remain unchanged across
 windows, fit the label column, and cannot collide with normal prefixed labels.
 A visible notice explains the alias; aliased hover text maps it to the complete
 original ID. All full IDs/terms remain unchanged in hover, chooser and trace keys.
+Each nonblank term retains at least eight display columns of representative
+text (or its complete text when shorter) before any truncation indicator. An
+otherwise fitting ID switches to its alias when needed to leave that excerpt.
 No otherwise valid ID is rejected and no coordinate collision is introduced.
 
 **AC-005 — Scientific and text safety.** Given ordinary, missing, raw-zero and
@@ -68,8 +72,9 @@ injected synthetic event-handler marker does not execute, the name remains inert
 display content, and no new unsafe HTML insertion path is introduced. The
 existing NA/zero explanatory annotation retains its wording and fits wholly inside
 the actual plot bounds for 141/366/400 visible rows and a small result; its 11px text
-is allowed. Its distance below the matrix stays bounded in pixels as plot height
-grows rather than following a negative fraction of that height.
+is allowed. Its bounding box does not intersect any x-axis tick-label or title
+bounding box. Its distance below the matrix stays bounded in pixels as plot
+height grows rather than following a negative fraction of that height.
 
 **AC-006 — Empty/small/change-result.** Given no selection, empty data and 1/2/10 row
 results, when the view opens and then switches from a large last-row window to a
@@ -86,7 +91,8 @@ mask and row window, and identifies the row range and total whenever it is
 partial. Scrolling a normal result to its last row does not crop the camera
 image to the CSS viewport; its whole logical row window is included. The NA/zero
 annotation remains complete inside the exported image; artifact inspection
-confirms it is not clipped below the bottom boundary. Existing
+confirms it is not clipped below the bottom boundary or superimposed on x-axis
+labels/title. Existing
 result/session exports still contain all admitted rows and
 reload with the same identities and values.
 
@@ -94,7 +100,10 @@ reload with the same identities and values.
 render_rows+1(currently2001) rows, when rendering is requested, then a clear
 resource-limit response occurs before oversized figure construction, no height
 or canvas above the limit is allocated, no cluster subset is silently substituted,
-and the installed policy is unchanged. The policy maximum itself passes AC-002.
+and the installed policy is unchanged. The resource-limit message is visible to
+the user, the Shiny connection remains open, the oversized result is unmodified,
+and subsequently selecting a valid result renders correctly in the same session
+without a page reload. The policy maximum itself passes AC-002.
 
 **AC-009 — Existing workflows.** Given saved boundary sessions and the existing
 bundled/real hierarchical and DAVID paths, when the installed candidate is used,
@@ -107,7 +116,10 @@ only display labels, layout and viewport state may differ.
 the canonical scoped/static/sync checks and hosted workflow run, then all
 required jobs pass without skips or relaxed gates, candidate LSP diagnostics
 total zero, coverage meets the unchanged policy, and there is no unresolved
-Critical/High security finding in the changed surface.
+Critical/High security finding in the changed surface. The package dependency
+checker reports no newly undeclared direct htmltools/htmlwidgets namespace use;
+DESCRIPTION lists their existing mandatory packages directly in Imports, with no
+net-new runtime package, version-pin or lockfile change.
 
 ## Closure evidence
 

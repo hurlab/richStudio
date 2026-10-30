@@ -172,6 +172,31 @@ test_that("oversized ID displays stay distinct without changing actual keys", {
   }, logical(1))))
 })
 
+test_that("long fitting IDs leave a visible representative term excerpt", {
+  fixture <- legibility_fixture(2L)
+  ids <- c("1234567890123456789", "1234567890123456780")
+  fixture$summary$Cluster <- ids
+  fixture$details$Cluster <- ids
+  plot <- richStudio:::comprehensive_hmap(fixture$summary, fixture$details)
+  built <- plotly::plotly_build(plot)
+  labels <- legibility_unescape(as.character(built$x$layout$yaxis$ticktext))
+  expect_true(all(grepl("Shared", labels, fixed = TRUE)))
+  expect_setequal(unique(as.character(built$x$data[[1]]$y)), paste0(
+    "cluster:", ids
+  ))
+  expect_identical(
+    as.character(plotly::plotly_data(plot)$Representative_Term),
+    rep(fixture$summary$Representative_Term, each = 2L)
+  )
+  hover <- legibility_unescape(as.character(built$x$data[[1]]$text))
+  for (id in ids) {
+    expect_true(any(grepl(id, hover, fixed = TRUE)))
+  }
+  expect_true(all(grepl(
+    "Shared representative term", hover, fixed = TRUE
+  )))
+})
+
 test_that("all-missing and zero displays remain honest under layout changes", {
   fixture <- legibility_fixture(141L)
   fixture$summary$Padj_case <- NA_real_

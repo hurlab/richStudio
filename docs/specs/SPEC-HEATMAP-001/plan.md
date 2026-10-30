@@ -1,4 +1,4 @@
-# Implementation plan — SPEC-HEATMAP-001
+# Implementation plan — SPEC-HEATMAP-001 (v0.1.2)
 
 ## §A Context and baseline
 
@@ -47,7 +47,9 @@ selects TDD; interview.decision_gate is off, so no decision index is created.
    a bounded plot; do not allocate 2000×22px. Controls expose all admitted rows.
 4. Shorten only plot-axis display labels; keep the full names generated for
    individual choices unchanged. Use a `Cluster <original ID>` prefix when the
-   original ID fits. Otherwise use `Display row <r>` from its one-based position
+   original ID fits and leaves room for at least eight display columns of the
+   nonblank representative term (or the complete term when shorter), before any
+   truncation indicator. Otherwise use `Display row <r>` from its one-based position
    in the complete rendered order, computed once before windowing. This distinct
    prefix namespace cannot collide with normal "Cluster ..." labels; the row
    position supplies uniqueness without hashes, dependencies or source-ID edits.
@@ -55,6 +57,8 @@ selects TDD; interview.decision_gate is off, so no decision index is created.
    ID in each aliased cell hover so the mapping is available on demand. Full
    original ID/term remain in hover, chooser and trace keys. Do not reject
    otherwise accepted 101character IDs merely to satisfy a display-width bound.
+   An accepted19character ID that fills the current prefix budget must also fall
+   back to its display alias rather than dropping the representative term.
    Use safe Unicode-aware display-width shortening for term text, bound the
    label column at 240px, and contain narrow-screen horizontal figure overflow.
 5. State the row range/total visibly and in windowed exports; retain full
@@ -65,7 +69,11 @@ selects TDD; interview.decision_gate is off, so no decision index is created.
 6. Admit row count through the installed shared resource helper before expensive
    figure preparation. The current 2000/2001boundary is exercised without changing
    policy values. The rejection is intentional enforcement for the previously
-   unguarded summary path, not evidence it already existed.
+   unguarded summary path, not evidence it already existed. Keep resource failure
+   inside a recoverable UI validation path: observers must not propagate an
+   uncaught admission exception that disconnects the session. Show the resource
+   message, preserve the stored result, and allow selection of a valid result
+   and subsequent rendering in the same connection.
 7. The window control is native Shiny selectInput(selectize=FALSE), with the
    exact label "Cluster row window". Hide it for at most 400 rows/empty states;
    reset to the first logical window on result changes. The figure scroll wrapper
@@ -74,19 +82,28 @@ selects TDD; interview.decision_gate is off, so no decision index is created.
 8. Re-anchor the existing NA/zero explanatory annotation using a fixed pixel
    offset and adequate fixed margins rather than the current y=-0.18 paper
    offset, which grows with the drawable plot height. The whole note must remain
-   inside both live SVG/plot bounds and the actual exported image. Retain its
+   inside both live SVG/plot bounds and the actual exported image, without
+   intersecting rotated x-axis tick labels or the x-axis title. Reserve enough
+   bottom space for their measured extents; preserve the plot-size ceiling and
+   row spacing. Retain its
    existing scientific wording and 11px text; wrapping is allowed without changing
    meaning. The 14px minimum belongs to row-axis ticks only.
 9. Use scoped container styling and existing native Shiny/Plotly controls. Prefer
    local/scoped styles over touching the globally frozen design stylesheet.
-   Preserve module IDs and avoid new dependencies or native R pipes.
+   Preserve module IDs and avoid net-new runtime dependencies or native R pipes.
+10. Declare htmltools/htmlwidgets in DESCRIPTION Imports when their namespaces
+    are used directly. Both are already mandatory through existing Shiny/Plotly
+    dependencies; this corrects direct-use metadata without introducing packages,
+    new version pins or lockfile changes. The independent dependency checker must
+    no longer report these direct namespace uses as undeclared.
 
 ## §C Target files and ownership
 
 | Target | Intended minimal change |
 |---|---|
 |R/cluster_hmap.R|Presentation sizing/compact tick labels and bounded default window; preserve all source/trace values and hover semantics; enforce resource admission.|
-|R/clus_visualize_tab.R|Bounded, named, focusable figure region; reactive height/window controls and reset behavior; explicit current-view export scope.|
+|R/clus_visualize_tab.R|Bounded, named, focusable figure region; reactive height/window controls and reset behavior; explicit current-view export scope; visible recoverable resource-limit response.|
+|DESCRIPTION|Declare the already mandatory htmltools/htmlwidgets packages as direct Imports if used directly; no other dependency or pin changes.|
 |tests/testthat/test-heatmap-legibility.R|New meaningful layout, boundary, Unicode/security-display and data-preservation regressions.|
 |tests/testthat/test-cluster-heatmap-scientific.R|Only necessary assertions that existing scientific/boundary behavior is preserved; do not weaken them.|
 |tests/e2e/heatmap-legibility.spec.ts|Targeted actual installed-browser regression for 141/366 rows, policy boundary and desktop/mobile navigation/export.|
@@ -95,8 +112,9 @@ selects TDD; interview.decision_gate is off, so no decision index is created.
 
 A small dedicated scoped stylesheet/client hook may be used only when the existing
 widget cannot honor sizing/reset without it; add the exact target to the run
-evidence before editing. No change to global custom.css, dependency manifests or
-CI gates is planned. A necessary existing frozen-source change requires explicit
+evidence before editing. No change to global custom.css, CI gates, dependency
+versions or lockfiles is planned. DESCRIPTION changes are limited to the two
+already mandatory direct Imports declarations above. A necessary existing frozen-source change requires explicit
 source-equivalence review and manifest refresh; never bypass a guard.
 
 ## §D Dependency graph and dispatch
@@ -132,6 +150,10 @@ orchestrator never implements and reviews the same change.
   and last windows and keyboard access through the named native dropdown.
   Verify the NA/zero annotation bounding box stays fully inside the plot at141,
   366and400visible rows and in a small plot, and inspect its exported bounds.
+  Its bounding box must not intersect x-axis tick labels or the x-axis title.
+  Exercise the policy-plus-one result through the actual UI, observe its visible
+  rejection, then select a valid result and verify the same session recovers.
+  Run the package dependency checker against baseline and candidate metadata.
 - Test export using the actual camera/download action and inspect the artifact's
   dimension, row-range statement and data selection. Retest save/load and all-row
   result export preservation where those existing paths are exercised.

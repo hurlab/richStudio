@@ -1,7 +1,7 @@
 ---
 id: SPEC-HEATMAP-001
 title: "Readable cluster summary heatmaps without changing results"
-version: "0.1.1"
+version: "0.1.2"
 status: draft
 created: 2026-10-30
 updated: 2026-10-30
@@ -55,7 +55,10 @@ version0.1.6; a version bump is not part of this SPEC.
   state its displayed row range and total. The dropdown shall be hidden for results of at most 400 rows.
 - **REQ-005** The axis labels shall use an unambiguous cluster-ID prefix and a
   compact single-line representative name within a label column no wider than
-  240 CSS pixels, without covering the matrix. When an original ID cannot fit,
+  240 CSS pixels, without covering the matrix. The label shall retain at least
+  eight display columns of a nonblank representative term, or its whole text when
+  shorter, before any truncation indicator. When an original-ID prefix cannot fit
+  or leaves insufficient room for that excerpt,
   the view shall use the unique display-only alias `Display row <r>`, where r is
   its one-based position in the complete top-to-bottom rendered order. Normal
   labels shall use the distinct `Cluster <original ID>` prefix. Aliases shall
@@ -66,8 +69,9 @@ version0.1.6; a version bump is not part of this SPEC.
 - **REQ-006** When users hover a cell, the view shall retain the complete original
   cluster ID, representative term and the existing statistic, missing-value and
   zero-floor explanations. The existing missing/zero explanatory note shall fit
-  fully inside the rendered figure and exported image at every supported height;
-  its position shall not move farther away in proportion to plot height.
+  fully inside the rendered figure and exported image at every supported height,
+  without intersecting x-axis tick labels or the x-axis title. Its position shall
+  not move farther away in proportion to plot height.
   Untrusted labels shall remain inert display text, and shortening a display
   label shall not modify the original stored string.
 - **REQ-007** When keyboard users focus the figure or row-window control, a
@@ -89,11 +93,17 @@ version0.1.6; a version bump is not part of this SPEC.
   Existing tabular and saved-session exports shall retain all result rows.
 - **REQ-011** When a result exceeds the installed render-row policy, the view
   shall reject figure allocation with a clear resource-limit message before
-  constructing an oversized plot; it shall not silently truncate clusters,
-  report an invented successful empty result, or raise the policy limit.
+  constructing an oversized plot. The message shall be visible in the UI; the
+  Shiny session shall remain connected and shall render a subsequently selected
+  valid result without reloading the page. The rejection shall not silently
+  truncate clusters, report an invented successful empty result, mutate the
+  stored result, or raise the policy limit.
 - **REQ-012** The change shall preserve public interfaces, installed-package
   execution, current save/load compatibility and the project's unchanged
-  verification policy, including zero total candidate LSP diagnostics.
+  verification policy, including zero total candidate LSP diagnostics. Direct
+  package namespace use shall be declared in package metadata; declaring the
+  already mandatory transitive htmltools/htmlwidgets packages as direct Imports
+  is permitted without adding net-new runtime dependencies.
 
 ## §C Constraints and exclusions
 
@@ -111,8 +121,10 @@ scientific cluster IDs.
 
 - Changing clustering algorithms, thresholds, filtering, gene universes, rankings,
   significance corrections, result tables or numerical display transformations.
-- Replacing the plotting library, adding dependencies, changing public APIs or
-  raising the declared R 4.0 minimum.
+- Replacing the plotting library, adding net-new runtime dependencies, changing
+  public APIs or raising the declared R 4.0 minimum. The narrowly allowed direct
+  Imports declarations for already mandatory htmltools/htmlwidgets are metadata
+  correctness changes, not new package adoption.
 - Redesigning other application routes, repairing unrelated workspace-header state,
   altering formal release governance or silently deploying an unverified candidate.
 - Adding dataset pagination or top-N filtering that discards clusters, or promising
@@ -132,3 +144,4 @@ No acceptance scenario is marked passed by authoring this document.
 |0.1.0|2026-10-30|manager-spec|Initial Tier M draft for the user-authorized readable, bounded cluster summary view.|
 |0.1.1|2026-10-30|manager-spec|Plan review r2: top-to-bottom window numbering, long-ID display aliases, stable accessible controls and bounded explanatory-note placement.|
 
+|0.1.2|2026-10-30|manager-spec|Root-authorized R1 clarifications: existing-transitive Imports declarations, meaningful term excerpts, annotation separation and visible recoverable resource rejection.|

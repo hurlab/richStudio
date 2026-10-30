@@ -1,5 +1,7 @@
 # PROJECT_LOG.md (active) — richStudio
 
+- 2026-10-30 Hur Harness R1 -> R2: independent Reviewer and Security verified undeclared htmltools/htmlwidgets calls; QA demonstrated hidden2001 resource rejection and exported-note/x-label overlap; Reviewer reproduced a19-character ID losing its term. Scoped R27tests/300assertions and four full scientific baselines pass, while the browser gate remains blocked. Root reactivated SPEC owner for a narrow acceptance/metadata amendment and the isolated Implementer for four fixes. QA released stronger regression files and stopped its R1 server/readers. No product commit, CI dispatch or production switch for this fix yet.
+
 Historical entries and checkpoints are preserved verbatim. Newest first.
 
 ## Archives

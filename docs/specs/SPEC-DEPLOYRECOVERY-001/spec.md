@@ -2,7 +2,7 @@
 id: SPEC-DEPLOYRECOVERY-001
 title: "Verified service recovery after a failed release publication"
 version: "0.1.0"
-status: in-progress
+status: completed
 created: 2026-10-30
 updated: 2026-10-30
 author: manager-spec

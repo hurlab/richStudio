@@ -162,7 +162,7 @@ hmap_axis_labels <- function(final_data) {
           while (nchar(term, type = "width") > budget - 1L) {
             term <- substr(term, 1L, nchar(term) - 1L)
           }
-          term <- paste0(term, "…")
+          term <- paste0(term, intToUtf8(8230L))
         }
         label <- paste0(label, separator, term)
       }
@@ -194,7 +194,7 @@ hmap_row_view <- function(plot, rows, start = 1L) {
         attr(plot, "hmap_title"),
         "<br><sup>Rows ",
         start,
-        "–",
+        intToUtf8(8211L),
         end,
         " of ",
         rows,

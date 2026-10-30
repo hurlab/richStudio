@@ -2,7 +2,7 @@
 id: SPEC-HMAPPORT-001
 title: "ASCII-portable source with identical heatmap Unicode output"
 version: "0.1.0"
-status: draft
+status: in-progress
 created: 2026-10-30
 updated: 2026-10-30
 author: manager-spec

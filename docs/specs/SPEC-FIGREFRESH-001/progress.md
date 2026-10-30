@@ -71,7 +71,7 @@ deployment remain outside the figure-deliverable evidence.
 
 ```yaml
 run_complete_at: 2026-10-30T18:21:24Z
-run_commit_sha: pending-root-commit
+run_commit_sha: 96e89cfe3b9cacad2efa6a96f218c340b456892a
 run_status: all-six-acceptances-pass-independent-three-angle-review-approved
 ac_pass_count: 6
 ac_fail_count: 0
@@ -87,4 +87,59 @@ independent_reviews: APPROVED-data-integrity-methods-domain-visual
 
 ## §E.4 Sync-phase Audit-Ready Signal
 
-_<pending sync-phase>_
+```yaml
+sync_complete_at: 2026-10-30T18:23:37Z
+sync_commit_sha: pending-backfill
+sync_status: completed-six-acceptances-three-reviews-final-package-audit-approved
+documentation: docs/quality/manuscript-figures-20261030.md
+ac_source: docs/specs/SPEC-FIGREFRESH-001/acceptance.md
+tier: M
+b12_self_test_a: not-run-no-CHANGELOG-emission
+b12_self_test_b: not-run-no-CHANGELOG-emission
+b12_self_test_c: not-run-no-CHANGELOG-emission
+changelog_entry_position: none
+frontmatter_status_transitions:
+  status: in-progress-to-implemented-to-completed
+  updated: 2026-10-30
+source_attribution:
+  application: 4bc65b3c9068f07f64e08a1b043a0f8913d469fa
+  run_commit: 96e89cfe3b9cacad2efa6a96f218c340b456892a
+  existing_application_CI: seven-of-seven-run-41076765375-not-rerun
+review_evidence:
+  independent_angles: data-integrity-methods-scientific-interpretation-visual-APPROVED
+  actual_visual_inspections: seven-PNG-seven-atlas-pages-seven-SVG
+  scientific_CSV: eleven-byte-exact
+  original_files: 219-unchanged
+  frozen_assets_and_inputs: 49-and-67-unchanged
+  runtime: seven-qualified-functions-3720-display-cells-exact
+  clean_offline_reproduction: scientific-tables-and-traces-exact-all-exports-regenerated
+  final_packaging_audit: APPROVED-second-pass
+final_delivery_identity:
+  manifest_members: 342
+  bundle_and_archive_payload_files: 343
+  archive_bytes: 140982334
+  archive_sha256: b5e59be8426abc6093440dc4363cf8138cf6042a33a5e720541b8e667dd99bb3
+  SHA256SUMS_sha256: 2e25e121f8c73420110d5722119ff34ab79ac0c3a0cd700baacbc52f56ae1c8a
+  final_audit_sha256: e9f650e387dce561c66762da3251132608c291899d274fb2c0ac97437178bd8f
+canary_compliance_check:
+  no_new_inference_or_network_acquisition: verified-in-generation-entry-point-and-reviews
+  archive_payloads: exact-safe-paths-types-no-links
+  immutable_bundle: not-edited-by-documentation-sync
+remaining_gaps:
+  journal_specific_reduction_and_physical_print: not-supplied
+  current_server_deployment: not-measured
+  universal_graphics_binary_reproduction: not-promised
+```
+
+Documentation read actual generation, three independent review reports and
+`.moai/reports/manuscript-finalization/{receipt.json,final-audit.md,final-audit-checks.json}`.
+The independent packaging command was
+`python3 .moai/reports/manuscript-finalization/final-audit-check.py`; its observed
+output records manifest_exhaustive=true, archive_exact_byte_identities=true,
+archive_safe_paths_types_no_links=true and343payload files. It streams archive
+members and rehashes every payload. These are inspected independent results,
+not a new execution by documentation. Final audit SHA was freshly measured with
+`sha256sum`; final identity is recorded above. Root owns the sync commit and its
+subsequent SHA metadata update; this field does not cite a future commit.
+No immutable bundle/archive, source, inference, previous completed SPEC or
+production state was changed in this sync.

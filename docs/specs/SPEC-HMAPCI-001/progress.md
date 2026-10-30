@@ -2,7 +2,7 @@
 
 ## §E.1 Plan-phase Audit-Ready Signal
 
-_Draft v0.1.0 prepared for independent review; no implementation approval claimed._
+_Plan v0.1.0 independently APPROVED; see [the plan review](../../../.moai/reports/heatmap-legibility/hmapci-plan-review-v010.md). This approval covers the plan only._
 
 ## §E.2 Run-phase Evidence
 

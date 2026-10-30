@@ -564,9 +564,9 @@ m1_to_mN_commit_strategy: root-managed-recorded-R4-and-R5-source-commits-no-git-
 ## §E.4 Sync-phase Audit-Ready Signal
 
 ```yaml
-sync_complete_at: null
+sync_complete_at: 2026-10-30T18:05:05Z
 sync_commit_sha: pending-backfill
-sync_status: six-hosted-jobs-pass-full-pending
+sync_status: completed-all-seven-hosted-jobs-pass
 documentation: docs/quality/heatmap-legibility-20261030.md
 ac_source: docs/specs/SPEC-HEATMAP-001/acceptance.md
 tier: M
@@ -575,7 +575,8 @@ b12_self_test_b: not-run-no-CHANGELOG-emission
 b12_self_test_c: not-run-no-CHANGELOG-emission
 changelog_entry_position: none
 frontmatter_status_transitions:
-  completed: not-applied-full-hosted-job-pending
+  status: in-progress-to-implemented-to-completed
+  updated: 2026-10-30
 local_evidence:
   scoped_result: 31-tests-337-assertions-four-goldens-eight-main-GUI-two-empty-GUI-all-pass
   source_portability: exactly-three-intToUtf8-substitutions-CRLF-preserved
@@ -586,10 +587,14 @@ local_evidence:
 hosted_evidence:
   run: 41076765375
   source_sha: 4bc65b3c9068f07f64e08a1b043a0f8913d469fa
-  documentation_head: d613889e761c1717a8745f8781b599b80cd694c5
+  documentation_head: 790c45d13dc0e993f79167ae435ef7c44f08945c
   source_equivalence: committed-tail-documentation-only
-  passed_jobs: prepare-diagnostics-scan-negative-resources-browser
-  full_R_package_coverage: active
+  passed_jobs: prepare-diagnostics-scan-negative-resources-browser-full
+  full_R: 263-tests-3125-assertions-zero-failures-errors-warnings-skips
+  package_check: zero-errors-zero-warnings-five-NOTEs
+  coverage: 8737-of-9521-lines-91.76557084-percent-target85
+  strict_profile_canaries: 14-of-14-PASS
+  source_digest_audit: 64-files-match-zero-mismatches
   browser: 66-expected-zero-unexpected-skipped-flaky-errors
   both_unchanged_MV3_native_zoom_cases: passed-actual-native-proof
   prepare_controls: three-groups-zero-failures-errors-skips
@@ -601,7 +606,6 @@ canary_compliance_check:
   prepare_controlled_scenarios: 21-passed
   assertions_pins_deadlines: unchanged
 remaining_gaps:
-  latest_full_job: pending
   historical_minus9_old_reset_exit_MV3_and_local_SIGTRAP_causes: unknown
   deployment: no-current-candidate-measurement
 ```
@@ -618,5 +622,11 @@ three control groups0fail/error/skip, LSPcandidate all0/syncPASS and browser
 not rerun by documentation. Fresh prepare/diagnostics/scan artifact digests match
 both current R files, DESCRIPTION and runner. Earlier b7 full measurements and
 R5 GUI/PNG evidence retain their original source attribution; installed
-byte-equivalence supports the representation-only correction. Six jobs do not
-close all-seven acceptance; no completion transition is applied.
+byte-equivalence supports the representation-only correction. Final independent
+`final-ci-audit.md` is APPROVED: all seven jobs succeeded at source4bc65b3,
+263tests/3125assertions all-pass, package0errors/0warnings/5NOTEs,
+coverage8737/9521=91.76557084% against85%,14/14strict-profile canaries and
+64matching source digests. Historical denominator differences do not establish
+coverage non-regression. Five NOTEs and deployment/publication gaps remain
+explicit. Sync SHA is deliberately pending-backfill until the root-owned commit;
+this document does not attempt to cite its own future commit hash.

@@ -2,7 +2,7 @@
 id: SPEC-HMAPCI-001
 title: "Reliable CI harness verification for frozen scientific heatmaps"
 version: "0.1.0"
-status: in-progress
+status: completed
 created: 2026-10-30
 updated: 2026-10-30
 author: manager-spec

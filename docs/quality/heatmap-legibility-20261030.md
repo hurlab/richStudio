@@ -2,7 +2,7 @@
 
 ## Claim
 
-The R5 candidate implements the presentation changes specified in [SPEC-HEATMAP-001](../specs/SPEC-HEATMAP-001/spec.md). This report records a candidate awaiting hosted closure; it does not certify release or deployment. The separately reviewed [SPEC-HMAPCI-001](../specs/SPEC-HMAPCI-001/spec.md) repairs the CI harness; [SPEC-HMAPPORT-001](../specs/SPEC-HMAPPORT-001/spec.md) makes three source expressions ASCII-portable with identical output bytes.
+The R5 candidate implements the presentation changes specified in [SPEC-HEATMAP-001](../specs/SPEC-HEATMAP-001/spec.md). All seven required hosted jobs now pass on the verified candidate; the three implementation SPECs are completed. This does not certify deployment or external publication readiness. The separately reviewed [SPEC-HMAPCI-001](../specs/SPEC-HMAPCI-001/spec.md) repairs the CI harness; [SPEC-HMAPPORT-001](../specs/SPEC-HMAPPORT-001/spec.md) makes three source expressions ASCII-portable with identical output bytes.
 
 The summary heatmap uses at least 18px per row and 14px row-axis text. Its focusable region, named **Cluster heatmap**, scrolls within the smaller of 720px and 70% of the browser height. Figure overflow stays inside that region. Use Tab to focus the region and native keyboard scrolling to explore its rows.
 
@@ -98,9 +98,9 @@ Five harness/QA files stay unchanged. Evidence: `heatmap-portability/qa/report.m
 and `code-review-r1.md`; approved proof is exact edits, native parse and runtime
 output identity, not the abandoned diagnostic probe's three script errors.
 
-Latest hosted run **41076765375**, source **4bc65b3**, records six successful jobs:
-prepare, diagnostics, scan, negative, resources and browser. **Full remains active.**
-`current-state.json` and downloaded prepare/diagnostics/scan source-head/digests
+Latest hosted run **41076765375**, source **4bc65b3**, records all seven jobs
+successful: prepare, diagnostics, scan, negative, resources, browser and full.
+`current-state.json` records completed/success; downloaded source-head/digests
 match current two R files, DESCRIPTION and runner. Prepare controls report
 `tests: 3`, `failures: 0`, `errors: 0`, `skips: 0`, `passed: true` (21 scenarios).
 Diagnostics candidate errors/warnings/information/hints/total are0; sync `PASS`,
@@ -109,6 +109,19 @@ Browser JSON records **expected66/unexpected0/skipped0/flaky0/errors[]**.
 Both unchanged MV3 native-zoom cases pass with actual native proof attachments;
 no bootstrap-source or deadline change was made. Serve terminal records
 configured1800/status−15/signal15/reapedtrue/errornull: normal teardown.
+
+Final independent `heatmap-portability/final-ci-audit.md` is APPROVED.
+Its command `gh run view 41076765375 --json status,conclusion,headSha,jobs`
+records completed/success at the exact source SHA. Final full artifacts record
+**263tests/3125assertions, zero failures/errors/warnings/skips**. Package check
+reports **0errors/0warnings/5NOTEs**, native ASCII check OK, strict profile14/14
+proofs. Coverage XML and independent CSV sum agree: **8737/9521 =91.76557084%**,
+exceeding the unchanged85% target. Final source audit says
+`DIGEST_MATCH 64 True mismatches []`; the committed tail is documentation only.
+Five retained NOTEs concern DESCRIPTION metadata, top-level files, unused Imports,
+code-usage namespace suggestions and slow examples. The approved profile retains
+strict checks but excludes remote publication/archive eligibility and external
+URL/identifier liveness. This is application verification, not publication proof.
 
 Historical run41065823052 at b7b072f ended five jobs successful/two failed.
 Its full artifacts record263Rtests/3125assertions, zero failures/errors/warnings/
@@ -123,7 +136,7 @@ owned cleanup and117unchanged files were verified, native zoom unobserved locall
 
 ## Baseline-attribution
 
-Documentation and fresh source hashes were measured in `/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility`, branch `WT-heatmap-legibility`. Initial documentation reads used HEAD `3904602`; the current read measured HEAD `d613889e761c1717a8745f8781b599b80cd694c5`. Product/test/harness bytes match active hosted source `4bc65b3c9068f07f64e08a1b043a0f8913d469fa`; the committed tail changes documentation only.
+Documentation and fresh source hashes were measured in `/home/juhur/.moai/worktrees/projects/richStudio/heatmap-legibility`, branch `WT-heatmap-legibility`. Initial documentation reads used HEAD `3904602`; the final documentation read measured HEAD `790c45d13dc0e993f79167ae435ef7c44f08945c`. Product/test/harness bytes match verified hosted source `4bc65b3c9068f07f64e08a1b043a0f8913d469fa`; the committed tail changes documentation only.
 
 ```text
 2380f070b6a85421960e9ecd0af29d64e60ee0eca94d7e78852fbedd2c11cf38  R/cluster_hmap.R
@@ -141,16 +154,19 @@ Ignored integration artifacts are under `.moai/reports/heatmap-legibility/`:
 
 ## Gaps
 
-- Latest run41076765375 full R/package/coverage job remains active; six successful
-  jobs are not all-seven closure. Earlier full results are historical only.
+- No candidate deployment, current live-server runtime, manuscript-figure
+  regeneration, remote publication/archive eligibility or external URL liveness
+  was verified here. CI success does not establish any current server identity.
+- Fresh baseline coverage equivalence was not measured. Historical coverage uses
+  a different denominator; no unchanged-coverage or non-regression claim is made.
 - Historical MV3 bootstrap and local SIGTRAP causes remain unknown. First run
   41057333122 ended four jobs passed/three failed; original strict−9 cause and
-  old reset's terminal exit remain unobserved.
-- No candidate deployment measurement or completed SPEC status is claimed.
+  old reset's terminal exit remain unobserved. Later success does not explain them.
 
 ## Residual-risk
 
-Controlled tests do not exhaust OS scheduling or real network failures. The
-three-expression correction has exact installed observable identity, including
-transparent diagnostic encoding differences. Final full-job success on the latest
-source remains required; no gate, pin, native assertion or timeout is relaxed.
+Five package-check NOTEs remain as described above. Coverage meets the canonical
+85% target; historical denominator differences cannot prove non-regression.
+Controlled tests do not exhaust OS scheduling or network failures. Production
+validation must measure the deployed release identity. The final current-source
+all-seven pass retains every gate, pin, native assertion and approved timeout.

@@ -6,6 +6,64 @@ _Plan v0.1.2 independently APPROVED; see [the amendment review](../../../.moai/r
 
 ## §E.2 Run-phase Evidence
 
+### Final hosted evidence backfill — run 41076765375
+
+**Current closure evidence, inspected from retained hosted artifacts.** Canonical
+integration-branch run `41076765375`, source
+`4bc65b3c9068f07f64e08a1b043a0f8913d469fa`, is **completed / success, 7/7 jobs**:
+prepare, diagnostics, scan, negative, resources, browser and full. Final completion
+is `2026-10-30T15:58:22Z` (`hosted-41076765375/final-state.json`). This closes the
+current hosted acceptance requirement; earlier failed/pending snapshots below
+retain their original source/time attribution and are superseded for current status.
+
+Inspected actual artifacts under `.moai/reports/heatmap-portability/hosted-41076765375/`:
+
+- `full/workspace-quality-artifacts/testthat-totals.json`: **263 tests / 3125
+  passed assertions, failed 0, errors 0, skipped 0, warnings 0**.
+- `full/workspace-quality-artifacts/R-check/richStudio.Rcheck/00check.log`:
+  `* checking code files for non-ASCII characters ... OK`, `* DONE`,
+  `Status: 5 NOTEs`; **0 errors, 0 warnings**. The five NOTE sections are CRAN
+  incoming feasibility, top-level files, dependencies, possible code problems
+  and examples; no claim of CRAN publication readiness is made.
+- `full/workspace-quality-artifacts/check-profile/receipt.json`: `status: PASS`;
+  **14/14 strict/application canaries** completed, execution_failure false and
+  intended_diagnostic true. Existing strict gates remain effective.
+- `full/workspace-quality-artifacts/coverage-file-totals.csv` sums to
+  **8737/9521 covered lines = 91.7655708433988%**; `coverage.xml` independently
+  records line-rate `0.917655708433988`; the canonical hosted coverage gate passed. This is
+  the final run measurement, not the earlier b7 coverage value.
+- `browser/workspace-quality-artifacts/browser-results.json`: **66 expected,
+  0 unexpected, 0 skipped, 0 flaky**. Native semantic cell/pixel assertions ran
+  on the final candidate. `serve-terminal.json` records configured lifetime1800,
+  status−15/signal15, reaped true, error null.
+- `diagnostics/workspace-quality-artifacts/lsp-diagnostics.json`: candidate
+  errors/warnings/information/hints/lint_errors/total **all 0**; sync PASS,
+  release_hold false. `scan/workspace-quality-artifacts/ast-grep.json`:
+  **26 executed documents, 0 findings, 0 errors, canary_detected true**.
+
+`full/.../source-digests.json` was compared with current file SHA256 values:
+`R/cluster_hmap.R` = `2380f070b6a85421960e9ecd0af29d64e60ee0eca94d7e78852fbedd2c11cf38`;
+`R/clus_visualize_tab.R` = `bf5dcb5e0d3eb7715ec9823c40c57fbb9686a7831dcc71be616eb2db568f50fb`;
+`DESCRIPTION` = `fadc8cda247581b65ea6015b1aac4e9d984e6afd8f42dabd6c6e23071ced714a`;
+runner = `bb9f1e776f58cf5c791b5e77893091828477f25ae58fff5edca404b29a16121d`.
+All four match the hosted source receipts. The two representation changes are
+separately authorized by SPEC-HMAPPORT-001; original R5 source hashes below remain
+historical, and independent installed equivalence preserves their behavior:
+31 tests/337 assertions, 92 actual observable comparisons and four scientific
+goldens pass, native UI HTML/raw/serialized display bytes identical. Thirteen
+diagnostic title Encoding() marks change unknown→UTF-8, explicitly recorded.
+Independent `code-review-r1.md` approves the exact portability source and inverse
+byte proof; the AST diagnostic's abandoned errors are not product defects.
+
+Attribution: these hosted tests/checks/coverage were executed by GitHub Actions;
+this Implementer inspected the retained JSON/CSV/XML/check log using Python,
+`tail`, `rg`, and `sha256sum`-equivalent hash computation, and inspected prior
+owners' QA/review receipts. No local full suite/check/coverage was rerun. The
+canonical integration-branch CI run now owns a **PASS** repository-wide verdict.
+Historical −9, old reset terminal status, old MV3/bootstrap and local SIGTRAP
+causes remain unproven; final success does not establish those causes. Deployment
+is outside this measured closure. Windows/macOS execution was not observed.
+
 ### Current R5 candidate — complete labels inside the canvas
 
 **Independent evidence backfill, as of 2026-10-30 13:57:02 UTC.** The source is
@@ -66,7 +124,7 @@ backfill:
 | AC-007 | QA actual normal/last-window camera downloads, full-height dimensions and reviewed bounds; all-row saved-session identity and reload pass. | PASS |
 | AC-008 | QA visible policy-plus-one rejection, hidden navigation, connected-session recovery; direct early-admission regression passes. | PASS |
 | AC-009 | Exact bundled/real hierarchical/DAVID tables/data/values/hover, ID/missingness behavior and full session restoration pass. | PASS |
-| AC-010 | Canonical local zero-LSP/AST and scoped quality pass; complete hosted suite/check/coverage verdict remains pending. | PENDING: hosted quality |
+| AC-010 | Final hosted41076765375 completed success7/7; full263/3125, Rcheck0errors/0warnings/5NOTEs, coverage91.76557%, LSP0 and AST26/0/0. | PASS |
 
 The first hosted run `41057333122`, source `cbd3eb3`, ended with four successful
 jobs and three failed jobs (`hosted-41057333122/final-state.json`). The new heatmap
@@ -481,21 +539,23 @@ fallback and note bounds still require actual browser measurement.
 ## §E.3 Run-phase Audit-Ready Signal
 
 ```yaml
-run_complete_at: "2026-10-30T07:35:54-05:00" # Source commit timestamp; not full quality closure.
+run_complete_at: "2026-10-30T15:58:22Z" # Final hosted completion; original source commit retained below.
 run_commit_sha: 47bde252f54cd1a54478e015e3e3abc84667a6c2
 integration_commit_sha: 390460288ec06afab90a8d792c321fb6d54c3033
 evidence_inspected_at: "2026-10-30T13:57:02Z"
-run_status: R5-integrated-nine-local-acceptance-criteria-pass-hosted-quality-pending
-ac_pass_count: 9
+run_status: final-hosted-seven-jobs-success-and-acceptance-pass
+hosted_run: 41076765375
+hosted_source_sha: 4bc65b3c9068f07f64e08a1b043a0f8913d469fa
+ac_pass_count: 10
 ac_fail_count: 0
-ac_pending_count: 1
+ac_pending_count: 0
 preserve_list_post_run_count: 2
 l44_pre_commit_fetch: root-managed-not-measured-by-this-backfill
 l44_post_push_fetch: root-managed-not-measured-by-this-backfill
-new_warnings_or_lints_introduced: 0-QA-scoped-warnings-and-canonical-candidate-LSP
+new_warnings_or_lints_introduced: 0-final-hosted-test-Rcheck-and-canonical-LSP
 cross_platform_build:
   local_installed_candidate: pass
-  hosted_ci: pending-run-41065823052
+  hosted_ci: PASS-run-41076765375-seven-jobs
 product_source_file_count: 3
 total_run_phase_files: null # Whole run-phase attribution is root-managed, not remeasured here.
 m1_to_mN_commit_strategy: root-managed-recorded-R4-and-R5-source-commits-no-git-policy-verdict-by-backfill

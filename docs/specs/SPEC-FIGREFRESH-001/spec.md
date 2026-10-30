@@ -2,7 +2,7 @@
 id: SPEC-FIGREFRESH-001
 title: "Versioned manuscript figure refresh from frozen canonical results"
 version: "0.1.0"
-status: draft
+status: in-progress
 created: 2026-10-30
 updated: 2026-10-30
 author: manager-spec

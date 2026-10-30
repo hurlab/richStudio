@@ -198,24 +198,31 @@ test_that("long fitting IDs leave a visible representative term excerpt", {
 })
 
 test_that("a fitting one-column representative term remains visible", {
-  fixture <- legibility_fixture(1L)
-  id <- "1234567890123456"
-  fixture$summary$Cluster <- id
-  fixture$details$Cluster <- id
-  fixture$summary$Representative_Term <- "A"
-  fixture$details$Representative_Term <- "A"
-  plot <- richStudio:::comprehensive_hmap(fixture$summary, fixture$details)
-  built <- plotly::plotly_build(plot)
-  label <- legibility_unescape(as.character(built$x$layout$yaxis$ticktext))
-  expect_true(startsWith(label, paste0("Cluster ", id)))
-  expect_match(label, "(^|[^A-Za-z])A$")
-  expect_identical(as.character(plotly::plotly_data(plot)$Representative_Term),
-    c("A", "A"))
-  expect_identical(as.character(built$x$data[[1]]$y),
-    rep(paste0("cluster:", id), 2L))
-  hover <- legibility_unescape(as.character(built$x$data[[1]]$text))
-  expect_true(all(grepl(id, hover, fixed = TRUE)))
-  expect_true(all(grepl("<br>A<br>", hover, fixed = TRUE)))
+  for (id in c("123456789012345", "1234567890123456")) {
+    fixture <- legibility_fixture(1L)
+    fixture$summary$Cluster <- id
+    fixture$details$Cluster <- id
+    fixture$summary$Representative_Term <- "A"
+    fixture$details$Representative_Term <- "A"
+    plot <- richStudio:::comprehensive_hmap(fixture$summary, fixture$details)
+    built <- plotly::plotly_build(plot)
+    label <- legibility_unescape(as.character(built$x$layout$yaxis$ticktext))
+    if (nchar(id) == 15L) {
+      expect_true(startsWith(label, paste0("Cluster ", id)))
+    } else {
+      expect_match(label, paste0(
+        "^(Cluster ", id, "|Display row 1)([^0-9]|$)"
+      ))
+    }
+    expect_match(label, "(^|[^A-Za-z])A$")
+    expect_identical(as.character(plotly::plotly_data(plot)$Representative_Term),
+      c("A", "A"))
+    expect_identical(as.character(built$x$data[[1]]$y),
+      rep(paste0("cluster:", id), 2L))
+    hover <- legibility_unescape(as.character(built$x$data[[1]]$text))
+    expect_true(all(grepl(id, hover, fixed = TRUE)))
+    expect_true(all(grepl("<br>A<br>", hover, fixed = TRUE)))
+  }
 })
 
 test_that("four-digit row aliases keep eight display columns of CJK terms", {

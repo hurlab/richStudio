@@ -208,6 +208,7 @@ async function geometry(page: Page, expected: Expected) {
     const label = state.labels[i];
     expect(label.font).toBeGreaterThanOrEqual(14);
     expect(label.width).toBeLessThanOrEqual(240.5);
+    expect(label.left).toBeGreaterThanOrEqual(state.plot.left - .5);
     expect(label.right).toBeLessThanOrEqual(state.matrixLeft + .5);
     if (i) {
       expect(label.top).toBeGreaterThanOrEqual(state.labels[i - 1].bottom - .5);
@@ -403,6 +404,7 @@ test('small missing and oversized-ID labels stay inert and retain complete origi
       expect(state.labels.map(label => label.text.match(/^Display row [0-9]+/)?.[0]).sort()).toEqual(['Display row 1', 'Display row 2']);
       const contents = await page.getByRole('region', { name: 'Cluster heatmap', exact: true }).textContent();
       expect(contents).toMatch(/(?:full|original).*ID|ID.*(?:full|original)/i);
+      await page.getByRole('region', { name: 'Cluster heatmap', exact: true }).scrollIntoViewIfNeeded();
       const position = await page.locator('#clus_visualize-clusdf_hmap').evaluate((element, cell) => {
         const plot = (element.classList.contains('js-plotly-plot') ? element : element.querySelector('.js-plotly-plot')) as any;
         const box = plot.getBoundingClientRect();
@@ -410,6 +412,10 @@ test('small missing and oversized-ID labels stay inert and retain complete origi
         return { x: box.left + x._offset + x.l2p(x._categories.indexOf(cell.x)),
           y: box.top + y._offset + y.l2p(y._categories.indexOf(cell.y)) };
       }, { x: 'case', y: data.expected[name].ids[1] });
+      expect(position.x).toBeGreaterThanOrEqual(0);
+      expect(position.x).toBeLessThan(page.viewportSize()!.width);
+      expect(position.y).toBeGreaterThanOrEqual(0);
+      expect(position.y).toBeLessThan(page.viewportSize()!.height);
       await page.mouse.move(position.x, position.y);
       await expect.poll(async () => {
         const text = await page.locator('#clus_visualize-clusdf_hmap .hoverlayer').textContent() ?? '';

@@ -1,13 +1,12 @@
 enrich_tab_ui <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(
-    tabName = tabName,
-    # UPLOAD TAB CONTENTS
-    shinyjs::useShinyjs(),
-    fluidRow(
-      column(
-        width = 4,
-        fluidRow(
+  htmltools::tagAppendAttributes(
+    tabItem(
+      tabName = tabName,
+      shinyjs::useShinyjs(),
+      fluidRow(
+        column(
+          width = 4,
           tabBox(
             title = span(icon("upload"), "Upload DEG sets"),
             id = "upload_box",
@@ -62,90 +61,94 @@ enrich_tab_ui <- function(id, tabName) {
                 )
               )
             )
-          ),
+          )
+        ),
+        column(
+          width = 8,
           box(
             title = "Enrich",
             status = "primary",
             solidHeader = TRUE,
             width = NULL,
-            br(),
             selectInput(
               ns("degs_to_enrich"),
               "Select DEG sets to enrich",
               choices = NULL,
               multiple = TRUE
             ),
-            selectInput(
-              ns("anntype_select"),
-              "Select annotation source",
-              c("GO", "KEGG", "Reactome")
-            ),
-            selectInput(
-              ns("keytype_select"),
-              "Select keytype",
-              c(
-                "SYMBOL",
-                "ENSEMBL",
-                "ENTREZID",
-                "REFSEQ",
-                "UNIPROT",
-                "GENENAME",
-                "ACCNUM",
-                "ALIAS",
-                "ENSEMBLPROT",
-                "ENSEMBLTRANS",
-                "ENZYME",
-                "EVIDENCE",
-                "EVIDENCEALL",
-                "FLYBASE",
-                "FLYBASECG",
-                "FLYBASEPROT",
-                "GO",
-                "GOALL",
-                "MAP",
-                "ONTOLOGY",
-                "ONTOLOGYALL",
-                "PATH",
-                "PMID",
-                "UNIGENE"
+            tags$div(
+              class = "rs-compact-fields",
+              selectInput(
+                ns("anntype_select"),
+                "Select annotation source",
+                c("GO", "KEGG", "Reactome")
               ),
-              selected = "SYMBOL"
-            ),
-            selectInput(
-              ns("ont_select"),
-              "Select ontology",
-              c("BP", "MF", "CC")
-            ),
-            selectInput(
-              ns("species_select"),
-              "Select species",
-              c(
-                "human",
-                "mouse",
-                "rat",
-                "zebrafish",
-                "fly",
-                "celegans",
-                "yeast",
-                "chicken",
-                "bovine",
-                "pig",
-                "canine",
-                "xenopus",
-                "rhesus",
-                "arabidopsis",
-                "anopheles",
-                "ecoli",
-                "malaria",
-                "chipm",
-                "toxoplasma",
-                "sco"
+              selectInput(
+                ns("keytype_select"),
+                "Select keytype",
+                c(
+                  "SYMBOL",
+                  "ENSEMBL",
+                  "ENTREZID",
+                  "REFSEQ",
+                  "UNIPROT",
+                  "GENENAME",
+                  "ACCNUM",
+                  "ALIAS",
+                  "ENSEMBLPROT",
+                  "ENSEMBLTRANS",
+                  "ENZYME",
+                  "EVIDENCE",
+                  "EVIDENCEALL",
+                  "FLYBASE",
+                  "FLYBASECG",
+                  "FLYBASEPROT",
+                  "GO",
+                  "GOALL",
+                  "MAP",
+                  "ONTOLOGY",
+                  "ONTOLOGYALL",
+                  "PATH",
+                  "PMID",
+                  "UNIGENE"
+                ),
+                selected = "SYMBOL"
               ),
-              selected = "human"
+              selectInput(
+                ns("ont_select"),
+                "Select ontology",
+                c("BP", "MF", "CC")
+              ),
+              selectInput(
+                ns("species_select"),
+                "Select species",
+                c(
+                  "human",
+                  "mouse",
+                  "rat",
+                  "zebrafish",
+                  "fly",
+                  "celegans",
+                  "yeast",
+                  "chicken",
+                  "bovine",
+                  "pig",
+                  "canine",
+                  "xenopus",
+                  "rhesus",
+                  "arabidopsis",
+                  "anopheles",
+                  "ecoli",
+                  "malaria",
+                  "chipm",
+                  "toxoplasma",
+                  "sco"
+                ),
+                selected = "human"
+              )
             ),
-            br(),
             h4("Review before Run"),
-            uiOutput(ns("review_card")),
+            tags$div(class = "rs-compact-review", uiOutput(ns("review_card"))),
             uiOutput(ns("review_messages")),
             numericInput(
               ns("deg_filter_cutoff"),
@@ -162,168 +165,171 @@ enrich_tab_ui <- function(id, tabName) {
               class = "btn-action-hero btn-block"
             )
           )
-        ),
+        )
       ),
-      column(
-        width = 8,
-        shinyjs::hidden(tags$div(
-          id = ns("list_box"),
-          tabBox(
-            title = "Uploaded files",
-            width = NULL,
-            tabPanel(
-              "DEG sets",
-              tags$div(
-                id = ns("deglist_box"),
-                div(
-                  style = "display:inline-block; float:left",
-                  helpText("Double-click on any cell to change its value.")
-                ),
-                div(
-                  style = "display:inline-block; float:right",
-                  shinyWidgets::actionBttn(
-                    ns("deglist_help"),
-                    label = NULL,
-                    style = "material-circle",
-                    status = "primary",
-                    icon = icon("info"),
-                    size = "xs"
-                  )
-                ),
-                br(),
-                br(),
-                DT::DTOutput(ns("deg_list_table")),
-                actionButton(ns("remove_deg"), "Delete")
-              )
-            ),
-            tabPanel(
-              "Enrichment Results",
-              tags$div(
-                id = ns("rrlist_box"),
-                div(
-                  style = "display:inline-block; float:left",
-                  helpText("Double-click on any cell to change its value.")
-                ),
-                div(
-                  style = "display:inline-block; float:right",
-                  shinyWidgets::actionBttn(
-                    ns("rrlist_help"),
-                    label = NULL,
-                    style = "material-circle",
-                    status = "primary",
-                    icon = icon("info"),
-                    size = "xs"
-                  )
-                ),
-                br(),
-                br(),
-                DT::DTOutput(ns("rr_list_table")),
-                actionButton(ns("remove_rr"), "Delete")
+      fluidRow(
+        column(
+          width = 12,
+          shinyjs::hidden(tags$div(
+            id = ns("list_box"),
+            tabBox(
+              title = "Uploaded files",
+              width = NULL,
+              tabPanel(
+                "DEG sets",
+                tags$div(
+                  id = ns("deglist_box"),
+                  div(
+                    style = "display:inline-block; float:left",
+                    helpText("Double-click on any cell to change its value.")
+                  ),
+                  div(
+                    style = "display:inline-block; float:right",
+                    shinyWidgets::actionBttn(
+                      ns("deglist_help"),
+                      label = NULL,
+                      style = "material-circle",
+                      status = "primary",
+                      icon = icon("info"),
+                      size = "xs"
+                    )
+                  ),
+                  br(),
+                  br(),
+                  DT::DTOutput(ns("deg_list_table")),
+                  actionButton(ns("remove_deg"), "Delete")
+                )
+              ),
+              tabPanel(
+                "Enrichment Results",
+                tags$div(
+                  id = ns("rrlist_box"),
+                  div(
+                    style = "display:inline-block; float:left",
+                    helpText("Double-click on any cell to change its value.")
+                  ),
+                  div(
+                    style = "display:inline-block; float:right",
+                    shinyWidgets::actionBttn(
+                      ns("rrlist_help"),
+                      label = NULL,
+                      style = "material-circle",
+                      status = "primary",
+                      icon = icon("info"),
+                      size = "xs"
+                    )
+                  ),
+                  br(),
+                  br(),
+                  DT::DTOutput(ns("rr_list_table")),
+                  actionButton(ns("remove_rr"), "Delete")
+                )
               )
             )
-          )
-        )),
-        tabBox(
-          title = "View files",
-          width = NULL,
-          tabPanel(
-            title = "DEG sets",
-            h4("Preprocess data"),
-            selectInput(
-              ns("deg_table_select"),
-              "Select DEG set",
-              choices = NULL
-            ),
-            tags$div(
-              class = "review-preview",
-              h4("Preview \u2014 not committed"),
-              fluidRow(
-                column(
-                  6,
-                  selectInput(
-                    ns("review_gene_col"),
-                    "Gene column",
-                    choices = c("Default (GeneID header)" = "__default__")
-                  )
-                ),
-                column(
-                  6,
-                  selectInput(
-                    ns("review_p_col"),
-                    "P-value column",
-                    choices = c(
-                      "Default (current rule)" = "__default__",
-                      "None \u2014 all rows" = "__none__"
+          )),
+          tabBox(
+            title = "View files",
+            width = NULL,
+            tabPanel(
+              title = "DEG sets",
+              h4("Preprocess data"),
+              selectInput(
+                ns("deg_table_select"),
+                "Select DEG set",
+                choices = NULL
+              ),
+              tags$div(
+                class = "review-preview",
+                h4("Preview \u2014 not committed"),
+                fluidRow(
+                  column(
+                    6,
+                    selectInput(
+                      ns("review_gene_col"),
+                      "Gene column",
+                      choices = c("Default (GeneID header)" = "__default__")
+                    )
+                  ),
+                  column(
+                    6,
+                    selectInput(
+                      ns("review_p_col"),
+                      "P-value column",
+                      choices = c(
+                        "Default (current rule)" = "__default__",
+                        "None \u2014 all rows" = "__none__"
+                      )
                     )
                   )
-                )
+                ),
+                fluidRow(
+                  column(
+                    6,
+                    selectInput(
+                      ns("review_p_role"),
+                      "P-value role",
+                      choices = c("Adjusted" = "adjusted", "Raw" = "raw")
+                    )
+                  ),
+                  column(
+                    6,
+                    numericInput(
+                      ns("review_cutoff"),
+                      "Preview cutoff",
+                      value = 0.05,
+                      min = 0,
+                      max = 1,
+                      step = 0.01
+                    )
+                  )
+                ),
+                uiOutput(ns("review_preview_ui")),
+                actionButton(ns("review_commit"), "Commit input revision")
               ),
+              br(),
+              h4("Stored rows"),
+              DT::dataTableOutput(ns("deg_table")),
+              br(),
+              hr(),
+              h4("Export data"),
+              selectInput(
+                ns("deg_export_type"),
+                "Export as",
+                choices = c(".txt", ".csv", ".tsv")
+              ),
+              downloadButton(ns("download_deg"), "Download")
+            ),
+            tabPanel(
+              title = "Enrichment results",
               fluidRow(
                 column(
-                  6,
+                  4,
                   selectInput(
-                    ns("review_p_role"),
-                    "P-value role",
-                    choices = c("Adjusted" = "adjusted", "Raw" = "raw")
-                  )
+                    ns("rr_table_select"),
+                    "Select enrichment result",
+                    choices = NULL
+                  ),
                 ),
                 column(
-                  6,
-                  numericInput(
-                    ns("review_cutoff"),
-                    "Preview cutoff",
-                    value = 0.05,
-                    min = 0,
-                    max = 1,
-                    step = 0.01
+                  4,
+                  selectInput(
+                    ns("rr_export_type"),
+                    "Export as",
+                    choices = c(".txt", ".csv", ".tsv")
                   )
                 )
               ),
-              uiOutput(ns("review_preview_ui")),
-              actionButton(ns("review_commit"), "Commit input revision")
-            ),
-            br(),
-            h4("Stored rows"),
-            DT::dataTableOutput(ns("deg_table")),
-            br(),
-            hr(),
-            h4("Export data"),
-            selectInput(
-              ns("deg_export_type"),
-              "Export as",
-              choices = c(".txt", ".csv", ".tsv")
-            ),
-            downloadButton(ns("download_deg"), "Download")
-          ),
-          tabPanel(
-            title = "Enrichment results",
-            fluidRow(
-              column(
-                4,
-                selectInput(
-                  ns("rr_table_select"),
-                  "Select enrichment result",
-                  choices = NULL
-                ),
-              ),
-              column(
-                4,
-                selectInput(
-                  ns("rr_export_type"),
-                  "Export as",
-                  choices = c(".txt", ".csv", ".tsv")
-                )
-              )
-            ),
-            downloadButton(ns("download_rr"), "Download"),
-            br(),
-            br(),
-            br(),
-            DT::dataTableOutput(ns("rr_table"))
+              downloadButton(ns("download_rr"), "Download"),
+              br(),
+              br(),
+              br(),
+              DT::dataTableOutput(ns("rr_table"))
+            )
           )
         )
       )
-    )
+    ),
+    class = "rs-compact-workflow"
   )
 }
 

@@ -15,7 +15,7 @@ sample_rr_path <- function(name) {
 
 rr_vis_tab_ui <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(
+  ui <- tabItem(
     tabName = tabName,
     fluidRow(
       column(
@@ -121,7 +121,6 @@ rr_vis_tab_ui <- function(id, tabName) {
               width = NULL,
               status = "primary",
               collapsible = TRUE,
-              br(),
               selectInput(
                 ns("select_bar"),
                 "Select enrichment result to view",
@@ -190,7 +189,6 @@ rr_vis_tab_ui <- function(id, tabName) {
               width = NULL,
               status = "primary",
               collapsible = TRUE,
-              br(),
               selectInput(
                 ns("select_dot"),
                 "Select enrichment result to view",
@@ -250,7 +248,6 @@ rr_vis_tab_ui <- function(id, tabName) {
               width = NULL,
               status = "primary",
               collapsible = TRUE,
-              br(),
               selectInput(
                 ns("select_net"),
                 "Select enrichment result to view",
@@ -438,6 +435,7 @@ rr_vis_tab_ui <- function(id, tabName) {
       )
     )
   )
+  htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")
 }
 
 

@@ -13,7 +13,7 @@
 #' @export
 updateTabUI <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(
+  ui <- tabItem(
     tabName = tabName,
     h2("Manage Files"),
     p("Rename or remove uploaded files and analysis results."),
@@ -27,16 +27,19 @@ updateTabUI <- function(id, tabName) {
           width = NULL,
           solidHeader = TRUE,
           h4("Rename DEG Set"),
-          selectInput(
-            ns("rename_deg_select"),
-            "Select DEG set",
-            choices = NULL,
-            multiple = FALSE
-          ),
-          textInput(
-            ns("new_deg_name"),
-            "New name",
-            placeholder = "Enter new name"
+          tags$div(
+            class = "rs-compact-fields",
+            selectInput(
+              ns("rename_deg_select"),
+              "Select DEG set",
+              choices = NULL,
+              multiple = FALSE
+            ),
+            textInput(
+              ns("new_deg_name"),
+              "New name",
+              placeholder = "Enter new name"
+            )
           ),
           actionButton(
             ns("rename_deg_btn"),
@@ -45,16 +48,19 @@ updateTabUI <- function(id, tabName) {
           ),
           hr(),
           h4("Rename Enrichment Result"),
-          selectInput(
-            ns("rename_rr_select"),
-            "Select enrichment result",
-            choices = NULL,
-            multiple = FALSE
-          ),
-          textInput(
-            ns("new_rr_name"),
-            "New name",
-            placeholder = "Enter new name"
+          tags$div(
+            class = "rs-compact-fields",
+            selectInput(
+              ns("rename_rr_select"),
+              "Select enrichment result",
+              choices = NULL,
+              multiple = FALSE
+            ),
+            textInput(
+              ns("new_rr_name"),
+              "New name",
+              placeholder = "Enter new name"
+            )
           ),
           actionButton(
             ns("rename_rr_btn"),
@@ -63,16 +69,19 @@ updateTabUI <- function(id, tabName) {
           ),
           hr(),
           h4("Rename Cluster Result"),
-          selectInput(
-            ns("rename_clus_select"),
-            "Select cluster result",
-            choices = NULL,
-            multiple = FALSE
-          ),
-          textInput(
-            ns("new_clus_name"),
-            "New name",
-            placeholder = "Enter new name"
+          tags$div(
+            class = "rs-compact-fields",
+            selectInput(
+              ns("rename_clus_select"),
+              "Select cluster result",
+              choices = NULL,
+              multiple = FALSE
+            ),
+            textInput(
+              ns("new_clus_name"),
+              "New name",
+              placeholder = "Enter new name"
+            )
           ),
           actionButton(
             ns("rename_clus_btn"),
@@ -132,6 +141,7 @@ updateTabUI <- function(id, tabName) {
       )
     )
   )
+  htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")
 }
 
 

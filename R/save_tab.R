@@ -32,7 +32,7 @@ sanitize_filename <- function(name) {
 #' @export
 saveTabUI <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(
+  ui <- tabItem(
     tabName = tabName,
     h2("Save & Load Analysis Session"),
     p("Save your current analysis session or load a previously saved session."),
@@ -208,6 +208,7 @@ saveTabUI <- function(id, tabName) {
       )
     )
   )
+  htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")
 }
 
 

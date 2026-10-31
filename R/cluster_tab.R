@@ -27,7 +27,7 @@
 #' @export
 clusterTabUI <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(
+  ui <- tabItem(
     tabName = tabName,
     # Main clustering configuration box
     h2("Cluster Enrichment Results"),
@@ -138,6 +138,7 @@ clusterTabUI <- function(id, tabName) {
       )
     ))
   )
+  htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")
 }
 
 

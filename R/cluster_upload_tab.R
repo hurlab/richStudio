@@ -13,7 +13,7 @@ sample_rr_path <- function(name) {
 
 cluster_upload_tab_ui <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(
+  ui <- tabItem(
     tabName = tabName,
     # ENRICH TAB CONTENTS
     fluidRow(
@@ -182,6 +182,7 @@ cluster_upload_tab_ui <- function(id, tabName) {
       )
     )
   )
+  htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")
 }
 
 

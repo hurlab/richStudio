@@ -2,7 +2,7 @@
 id: SPEC-COMPACTUI-001
 title: "Compact responsive analysis forms without changing analysis behavior"
 version: "0.1.1"
-status: draft
+status: in-progress
 created: 2026-10-30
 updated: 2026-10-30
 author: manager-spec

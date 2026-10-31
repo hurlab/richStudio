@@ -190,3 +190,106 @@ test('compact reflow preserves preview versus commit bindings, keyboard access a
   await expect(card).toContainText('Committed revision 1');
   await expect(page.locator('#enrich-enrich_deg')).toBeEnabled();
 });
+
+// Exercise the actual seven workflow panes with the same populated DEG context.
+// Geometry assertions describe usable controls rather than implementation classes.
+test('compact workflow menus retain readable controls and contained responsive layouts', async ({ page }, info) => {
+  test.setTimeout(120_000);
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(String(error)));
+  page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
+  await ready(page); await demo(page);
+  for (const route of ['enrich_tab', 'rr_visualize_tab', 'cluster_upload_tab', 'cluster_tab', 'clus_visualize_tab', 'update_tab', 'save_tab']) {
+    await tab(page, route);
+    const pane = page.locator(`#shiny-tab-${route}`);
+    await expect(pane).toBeVisible();
+    let previous = '', frames = 0;
+    await expect.poll(async () => {
+      const key = await pane.evaluate(node => JSON.stringify(Array.from(node.querySelectorAll('.shiny-input-container')).map(el => {
+        const b = el.getBoundingClientRect(); return [b.x, b.y, b.width, b.height];
+      })));
+      frames = key === previous ? frames + 1 : 1; previous = key;
+      return frames >= 3;
+    }, { intervals: [100, 250, 500] }).toBe(true);
+    const snapshot = await pane.evaluate(node => {
+      const bounds = (el: Element) => {
+        const b = el.getBoundingClientRect();
+        return { x: b.x, y: b.y, right: b.right, bottom: b.bottom, width: b.width, height: b.height };
+      };
+      const shown = (el: Element) => el.getBoundingClientRect().height > 0 && getComputedStyle(el).visibility !== 'hidden';
+      const controls = Array.from(node.querySelectorAll('input:not([type="file"]):not([type="hidden"]),textarea,button,.selectize-input,select:not(.selectized)'))
+        .filter(el => shown(el) && !(el.tagName === 'INPUT' && el.closest('.selectize-input'))).map(el => ({ id: el.id, tag: el.tagName, type: el.getAttribute('type'), text: el.textContent?.trim(),
+          ...bounds(el), font: parseFloat(getComputedStyle(el).fontSize),
+          labelFont: el.closest('label') ? parseFloat(getComputedStyle(el.closest('label')!).fontSize) : null }));
+      return { route: node.id, viewport: { width: innerWidth, height: innerHeight },
+        document: { width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight },
+        pane: bounds(node), controls, text: (node as HTMLElement).innerText,
+        fields: Array.from(node.querySelectorAll('.shiny-input-container')).filter(shown).map(el => ({ id: el.querySelector('[id]')?.id, ...bounds(el) })),
+        cards: Array.from(node.querySelectorAll('.box')).filter(shown).map(el => ({ heading: el.querySelector('.box-title')?.textContent, ...bounds(el) })) };
+    });
+    fs.writeFileSync(info.outputPath(`${route}.json`), JSON.stringify(snapshot, null, 2));
+    await page.screenshot({ path: info.outputPath(`${route}.png`), fullPage: true });
+    expect(snapshot.document.width, route).toBeLessThanOrEqual(snapshot.viewport.width + 1);
+    expect(snapshot.controls.length, route).toBeGreaterThan(0);
+    for (const control of snapshot.controls) {
+      expect(control.x, `${route}: ${control.id || control.tag}`).toBeGreaterThanOrEqual(-1);
+      expect(control.right, `${route}: ${control.id || control.tag}`).toBeLessThanOrEqual(snapshot.viewport.width + 1);
+      // Existing actions are13px/36.5625px; icon help is12px/28px.
+      // Native Selectize wrappers and other data-entry controls retain14px.
+      const help = control.tag === 'BUTTON' && !control.text;
+      const indicator = ['checkbox', 'radio'].includes(control.type ?? '');
+      if (indicator) expect(control.labelFont).toBeGreaterThanOrEqual(13);
+      else expect(control.font, `${route}: ${control.id || control.tag}`).toBeGreaterThanOrEqual(help ? 12 : control.tag === 'BUTTON' ? 13 : 14);
+      if (control.tag === 'BUTTON') expect(control.height).toBeGreaterThanOrEqual(help ? 28 : 36.5);
+      // DataTables owns its separate page-size/search widgets. Shiny data-entry
+      // controls and Selectize wrappers use the measured legacy38px baseline.
+      else if (!indicator && (control.id || control.tag === 'DIV')) expect(control.height).toBeGreaterThanOrEqual(38);
+      if (['enrich-enrich_deg', 'cluster-cluster', 'save-load_session'].includes(control.id)) {
+        expect(control.font).toBeGreaterThanOrEqual(15);
+        expect(control.height).toBeGreaterThanOrEqual(44);
+      }
+    }
+    if (route === 'save_tab') {
+      await expect(pane).toContainText('Loading a session will replace your current analysis state.');
+      await expect(pane).toContainText('RDS format preserves all R objects exactly');
+    }
+    if (route === 'cluster_tab') await expect(pane).toContainText('Reset to Defaults');
+  }
+  fs.writeFileSync(info.outputPath('browser-errors.json'), JSON.stringify(errors, null, 2));
+  expect(errors).toEqual([]);
+});
+
+test('compact clustering method controls stay reachable and Reset preserves backend defaults', async ({ page }, info) => {
+  await ready(page); await tab(page, 'cluster_tab');
+  const hierarchical = page.getByRole('radio', { name: 'Hierarchical Kappa/Jaccard - richCluster', exact: true });
+  await expect(hierarchical).toBeChecked();
+  await expect(page.locator('#cluster-hier_distance_cutoff')).toHaveValue('0.5');
+  await page.locator('#cluster-hier_distance_cutoff').fill('0.3');
+  await page.locator('#cluster-reset_params').click();
+  await expect(page.locator('#cluster-hier_distance_cutoff')).toHaveValue('0.5');
+  await expect(page.locator('#cluster-hier_distance_metric')).toHaveValue('kappa');
+  await expect(page.locator('#cluster-hier_linkage_method')).toHaveValue('average');
+  await expect(page.locator('#cluster-method_params_ui')).toContainText('this is not a Padj filter.');
+  await page.getByRole('radio', { name: 'DAVID-style - richCluster', exact: true }).check();
+  await expect(page.locator('#cluster-david_similarity')).toHaveValue('0.5');
+  await page.locator('#cluster-david_similarity').fill('0.2');
+  await page.locator('#cluster-reset_params').click();
+  await expect(page.locator('#cluster-david_similarity')).toHaveValue('0.5');
+  await expect(page.locator('#cluster-david_initial_membership')).toHaveValue('3');
+  await expect(page.locator('#cluster-david_final_membership')).toHaveValue('3');
+  await page.screenshot({ path: info.outputPath('david-controls.png'), fullPage: true });
+  await page.getByRole('radio', { name: 'Legacy Kappa - richR', exact: true }).check();
+  await expect(page.locator('#cluster-richR_cutoff')).toHaveValue('0.5');
+  await page.locator('#cluster-richR_overlap').fill('0.2');
+  await page.locator('#cluster-reset_params').click();
+  await expect(page.locator('#cluster-richR_overlap')).toHaveValue('0.5');
+  await expect(page.locator('#cluster-richR_minSize')).toHaveValue('2');
+  await hierarchical.check();
+  await expect(page.locator('#cluster-hier_min_value')).toHaveValue('0.1');
+  await expect(page.locator('#cluster-hier_min_terms')).toHaveValue('2');
+  await page.locator('#cluster-hier_min_value').focus();
+  await expect(page.locator('#cluster-hier_min_value')).toBeFocused();
+  await page.keyboard.press('Tab');
+  expect(await page.locator('#cluster-hier_min_value').evaluate(node => document.activeElement !== node)).toBe(true);
+  await page.screenshot({ path: info.outputPath('hierarchical-controls.png'), fullPage: true });
+});

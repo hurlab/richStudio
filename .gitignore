@@ -386,3 +386,6 @@ docs/competitive-landscape-analysis.md
 /.worktreeinclude
 /AGENTS.md
 /CLAUDE.md
+
+# No-paste resume prompt (machine-local, per-session)
+/NEXT_SESSION.md

@@ -1,7 +1,7 @@
 ---
 id: SPEC-COMPACTUI-001
 title: "Compact responsive analysis forms without changing analysis behavior"
-version: "0.1.1"
+version: "0.1.2"
 status: in-progress
 created: 2026-10-30
 updated: 2026-10-30
@@ -82,7 +82,8 @@ a route being in scope does not require an unnecessary structural rewrite.
   resource policies and the existing Home/navigation/job/dialog behavior.
 - **REQ-010** Before completion, the correction shall have source-attributed,
   installed-candidate before/after evidence, independent review, meaningful
-  workflow/layout regression checks and unchanged canonical quality gates.
+  workflow/layout regression checks, scoped local verification and exact-source
+  server preflight. GitHub CI is not a verification or deployment prerequisite.
 
 ## §C Constraints and exclusions
 
@@ -115,7 +116,9 @@ independent candidate identity/preservation proof, not a relaxed expected hash.
 - Hiding help/review state, replacing complete labels with inaccessible truncation,
   shrinking scientific plots or changing heatmap calculations to save space.
 - Live CSS injection, unverified production replacement, real failure injection,
-  local full R suite/check/coverage or weakened tests, policies and quality gates.
+  local full R suite/check/coverage or weakened local assertions and preservation
+  or resource guards.
+- Requesting, running, reviewing or awaiting GitHub CI for this work.
 - Rewriting prior completed SPECs, deployment tools or manuscript deliverables.
 
 ## §D Traceability and completion
@@ -125,9 +128,16 @@ REQ-004→AC-003; REQ-005→AC-004; REQ-006→AC-005/AC-007;
 REQ-007→AC-002/AC-006/AC-007; REQ-008→AC-007/AC-008;
 REQ-009→AC-009; REQ-010→AC-010.
 
-Independent plan approval precedes implementation. Scoped local checks precede
-one published-source hosted quality run. Completion requires evidence for all
-criteria, not screenshots alone or a claim that production has already changed.
+The existing independent plan approval remains recorded. The user's standing
+override replaces the hosted-CI prerequisite with scoped local verification and
+exact-candidate server preflight; this policy amendment requires no additional
+plan/review/confirmation gate. The agent prepares and verifies the guarded
+deployment script, and the owner executes it on the server. No GitHub CI receipt
+or ci.ok guard is required; local/preflight/recovery/version/host guards remain.
+Completion still requires actual evidence for the criteria. Failed or unobserved
+local checks, including native-zoom execution gaps, retain their actual status;
+server preflight does not turn them into passes. Screenshots alone or script
+preparation do not establish that production has changed.
 
 ## HISTORY
 
@@ -135,3 +145,4 @@ criteria, not screenshots alone or a claim that production has already changed.
 |---|---|---|
 |0.1.0|2026-10-30|Initial measured compact-layout plan; no implementation.|
 |0.1.1|2026-10-30|Authorize the necessary single full-CSS digest literal refresh; preserve append-only CSS, original-prefix and workspace-primitive guards; density targets unchanged.|
+|0.1.2|2026-10-30|Apply the user's standing override: scoped local verification and exact-source server preflight replace GitHub CI; agent prepares the script and owner executes it; local gaps and all density/preservation targets remain honest and unchanged.|

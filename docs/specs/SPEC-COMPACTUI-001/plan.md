@@ -1,4 +1,4 @@
-# Plan — SPEC-COMPACTUI-001 v0.1.1
+# Plan — SPEC-COMPACTUI-001 v0.1.2
 
 ## §A User-facing decisions first
 
@@ -127,15 +127,20 @@ update is not authorized.
    contracts and no new unsafe handlers; QA runs paired geometry, actual rendered
    visual review and focused workflow/heatmap regressions. Verified failures
    return to the Implementer; unmet criteria are not relabeled as passed.
-5. **High — Publish one verified source and close evidence.** Root commits/pushes
-   explicit owned paths and obtains the unchanged hosted workspace quality gates.
-   Docs records the actual verdicts and remaining measured limits. Production
-   deployment is a separately observed action using a freshly guarded candidate;
-   current live4bc must not be silently modified during development.
+5. **High — Prepare the owner-run release and close observed evidence.** Root
+   commits/pushes explicit owned paths and retains scoped local verification and
+   exact-candidate server preflight receipts. The agent prepares and verifies the
+   guarded deployment script; the owner executes it on the server. No GitHub CI
+   request, execution, review or wait is part of this work. No CI receipt or
+   ci.ok guard is required; local/preflight/recovery/version/host guards remain.
+   Docs records actual verdicts and unresolved local gaps without relabeling them
+   as passes. Production deployment remains a separately observed action.
 
 Graph: measured baseline + approved plan → QA regression RED → UI/CSS candidate →
-independent source/security review + installed scoped QA → published same-source
-hosted gates → documentation closure. Existing deployment/main state and
+independent source/security review + installed scoped local QA → exact-source
+server preflight + owner-run script preparation → observed evidence closure.
+The explicit user policy does not reopen plan approval or add a confirmation gate.
+Existing deployment/main state and
 manuscript assets remain untouched by the layout implementation.
 
 ## §D Verification discipline
@@ -162,9 +167,13 @@ resize and restoration. Reuse existing relevant regression tests; do not weaken
 their assertions or rebuild backend mocks merely to make a layout test pass.
 
 Only scoped native R/UI checks, format/parse/type checks and relevant browser
-journeys run locally. Full R tests, package check and coverage belong to hosted CI.
-Use canonical policy/configuration values without duplicating or lowering them.
-No new job, threshold, pin or gate suppression is authorized.
+journeys run locally, followed by exact-candidate server preflight. Do not request,
+run, review or await GitHub CI; a full R suite, package check or coverage run is not
+added as a substitute. Preserve local assertions, source/resource guards and
+configuration values. A failed or unobserved local journey, including native zoom,
+remains explicitly unresolved rather than inheriting a pass from server preflight.
+This user-directed verification-policy exception does not change scientific,
+density, typography, preservation or functional acceptance targets.
 
 The design-sync tool surface is unavailable in this harness. Use the established
 theme plus actual browser evidence; no external design-system artifact is required.

@@ -1,4 +1,4 @@
-# Acceptance — SPEC-COMPACTUI-001 v0.1.1
+# Acceptance — SPEC-COMPACTUI-001 v0.1.2
 
 - **AC-001 — Initial desktop Enrich.** Given settled empty-selection review state,
   closed popups, matched sidebar state and bodyScrollTop0 at1440×900 and1280×720,
@@ -71,16 +71,22 @@
   unchanged. Only the reviewed custom.css full-digest literal may change in
   tests/e2e/design-system.spec.ts, with its other pins/assertions/behavior exact.
   Covers REQ-009.
-- **AC-010 — Evidence and unchanged gates.** Given baseline and freshly installed
-  candidate identities, When scoped local checks, independent review and
-  published-source hosted quality gates finish, Then actual commands/results,
+- **AC-010 — Evidence under the local verification policy.** Given baseline and
+  freshly installed candidate identities, When scoped local checks, independent
+  code review and exact-candidate server preflight finish, Then actual commands/results,
   screenshot pairs, geometry, binding/source guards and runtime/CSS identity
-  establish all criteria without relaxed assertions/policies. The authorized
+  establish the observed criteria without relaxed local assertions or preservation
+  guards. Failed or unobserved local checks, including native-zoom execution gaps,
+  retain their actual status and are not converted into passes by preflight.
+  GitHub CI is neither requested, run, reviewed nor awaited, and no CI receipt
+  or ci.ok deployment guard is required. The authorized
   one-literal CSS digest refresh follows independent preservation/identity review
   and exact installed/source/served CSS agreement, with old/new hashes retained.
-  No local full
-  R suite/check/coverage is run and no deployment claim precedes observed
-  publication. Covers REQ-010.
+  No local full R suite/check/coverage is run. The agent prepares and verifies the
+  guarded script and the owner executes it on the server; local/preflight/recovery/
+  version/host guards remain, and no deployment claim precedes observed publication.
+  This explicit policy amendment creates no new plan/review/confirmation gate.
+  Covers REQ-010.
 
 ## Definition of done and evidence
 

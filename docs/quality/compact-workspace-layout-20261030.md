@@ -6,8 +6,12 @@ The frozen candidate for [SPEC-COMPACTUI-001](../specs/SPEC-COMPACTUI-001/spec.m
 reduces primary-form spacing across seven workflow menus while retaining controls,
 review/help content, typography and scientific behavior in scoped checks.
 Independent source/security reviews approve the frozen presentation scope.
-This is a draft local-evidence report: hosted seven-job CI, final audit and
-production deployment remain pending. No SPEC completion is claimed.
+This local-evidence report is superseded on verification policy by SPECv0.1.2:
+the owner explicitly replaces GitHub CI with scoped local checks and exact-source
+server preflight. GitHub CI must not be requested, run, reviewed or awaited.
+The owner subsequently deployed sourcee8fef99; see the separate
+[post-deployment report](compact-workspace-post-deployment-20261030.md).
+Historical local native-zoom failures remain failures; no SPEC completion is claimed.
 
 Enrich places upload/configuration alongside each other on desktop, related
 annotation fields in columns, and previews/results full-width below. Narrow
@@ -98,10 +102,11 @@ separate original receipts; historical/transient failures are not overwritten.
 
 ## Gaps
 
-Same-source seven-job hosted CI and final independent audit are outstanding.
+The historical v0.1.1 hosted-CI prerequisite is superseded by owner policyv0.1.2;
+it is not a pending gate. Current server/public evidence is reported separately.
 Local native zoom remains unobserved after the pre-page crashes. No fresh local
-full R suite/package check/coverage, production deployment or new inference was
-performed. Hidden combinations and universal browser/device coverage are not
+full R suite/package check/coverage or new inference was performed by local QA.
+Owner-executed deployment is separately attributed in the post-deployment report. Hidden combinations and universal browser/device coverage are not
 exhaustively verified. Earlier implementation duplicate-subtree and QA generic
 collector mistakes were corrected with retained failed histories, not weakened
 control/primitive assertions; final evidence is attributed separately.
@@ -110,6 +115,6 @@ control/primitive assertions; final evidence is attributed separately.
 
 Scoped CSS and preserved source do not prove every future dynamic input or data
 size. Native DataTables retains its own controls/scrollers. Keep the frozen source
-and exact CSS identity through publication and hosted checks; later source changes
+and exact CSS identity through local/server verification; later source changes
 need renewed scoped verification. The candidate's local improvements and approvals
 do not establish production behavior or all-ten-criterion completion.

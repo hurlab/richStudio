@@ -73,7 +73,7 @@ repository_wide_verdict: PENDING
 ```yaml
 sync_complete_at: null
 sync_commit_sha: pending-backfill
-sync_status: draft-local-evidence-ready-hosted-CI-and-final-audit-pending
+sync_status: local-evidence-retained-owner-policy-v012-public15-pass-native-receipts-pass
 documentation: docs/quality/compact-workspace-layout-20261030.md
 ac_source: docs/specs/SPEC-COMPACTUI-001/acceptance.md
 tier: M
@@ -82,7 +82,7 @@ b12_self_test_b: not-run-no-CHANGELOG-emission
 b12_self_test_c: not-run-no-CHANGELOG-emission
 changelog_entry_position: none
 frontmatter_status_transitions:
-  completed: not-applied-hosted-CI-pending
+  completed: not-applied-no-status-transition-by-documentation
 local_evidence:
   baseline: 7beaa52b3081721689586211f2d5fe530cc810ba
   candidate_head: 7355100cffd15d2999fde130bc85dfab8f78926e-plus-eight-frozen-production-edits
@@ -104,11 +104,16 @@ local_evidence:
 canary_compliance_check:
   exact_CSS_digest_refresh: one-authorized-literal-no-assertion-relaxation
   control_help_and_science: preserved-source-and-scoped-runtime-evidence
+post_deployment_evidence:
+  public_browser: 15-PASS-zero-unexpected-skipped-flaky-console-page-errors
+  public_cleanup: 30-specific-descendant-identities-and-three-workers-gone
+  native_source: 275-tracked-274-immutable-match-one-explicit-runtime-log-exclusion
+  native_installed_UI: seven-bodies-and-formals-equal
+  independent_native_checks: PASS-bounded-machine-receipts
+  owner_deployment: observed-e8fef99-live-active-public-CSS-b3
+  production_scientific_full_suite_native_zoom: not-rerun
 remaining_gaps:
-  same_source_seven_hosted_jobs: pending
-  final_independent_audit: pending
   native_200_percent_zoom: unobserved-local-pre-page-SIGTRAP
-  production_deployment: not-performed
 ```
 
 This draft inspects actual `.moai/reports/layout-density/{impl/report.md,qa/report.md,
@@ -116,5 +121,10 @@ code-review-r1.md,security-final-r1.md}` and local tooling receipts. It records
 32authoritative compact/protected cases separately from primitive6PASS/2launch
 failures. Desktop primary-span reductions do not claim a reduced full Enrich
 page: its wide populated document grows1831→2429px because previews remain below.
-Root owns the eventual published-source hosted run and final status decision.
+SPECv0.1.2 supersedes the historical v0.1.1 GitHub-CI prerequisite: no request,
+run, review or wait is authorized. Scoped local checks and exact-candidate server
+preflight are the gates; local native-zoom failures retain their actual status.
+The owner executed deployment separately; current public/native audit evidence
+is tracked in docs/quality/compact-workspace-post-deployment-20261030.md.
+Root owns the final evidence/status decision.
 No completion transition or commit is performed by this draft documentation task.

@@ -107,7 +107,7 @@ install_bioconductor <- function(packages) {
 # ============================================================================
 
 github_packages <- list(
-  richR = "guokai8/richR",
+  richR = "hurlab/richR",
   bioAnno = "guokai8/bioAnno"
 )
 

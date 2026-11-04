@@ -835,6 +835,7 @@
         "tests/testthat/test-compact-layout.R",
         "tests/e2e/compact-layout.spec.ts",
         "tests/e2e/heatmap-legibility.spec.ts",
+        "tests/testthat/test-baseline-ui-workflows.R",
         "R/workspace_shell.R",
         "inst/application/www/workspace-ui.js",
         "tests/testthat/test-workspace-shell.R",
@@ -890,7 +891,8 @@
         "tests/testthat/test-cluster-heatmap-scientific.R",
         "tests/testthat/test-compact-layout.R",
         "tests/e2e/compact-layout.spec.ts",
-        "tests/e2e/heatmap-legibility.spec.ts"
+        "tests/e2e/heatmap-legibility.spec.ts",
+        "tests/testthat/test-baseline-ui-workflows.R"
       ],
       "new_target_files": [
         "R/workspace_shell.R",

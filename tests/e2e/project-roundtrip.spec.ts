@@ -104,8 +104,10 @@ test('REQ-001 REQ-003 REQ-004 AC-001 AC-003 a project saves, is inspected, and o
   const saved = await downloadProject(page, info, 'project.zip');
   expect(path.basename(saved)).toBe('project.zip');
   const members = zipNames(saved).sort();
-  expect(members).toEqual(['manifest.json', 'methods.md', 'tables.json']);
+  // tracking.json is the optional additive member; the loaded demo has tracking rows.
+  expect(members).toEqual(['manifest.json', 'methods.md', 'tables.json', 'tracking.json']);
   const manifest = JSON.parse(zipMember(saved, 'manifest.json').toString('utf8'));
+  expect(manifest.files.map((f: { name: string }) => f.name)).toContain('tracking.json');
   expect(manifest.schema).toBe('richstudio.project');
   expect(manifest.format_version).toMatch(/^1\.\d+$/);
   const labels = manifest.results.map((r: { label: string }) => r.label).sort();

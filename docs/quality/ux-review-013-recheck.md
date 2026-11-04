@@ -199,7 +199,7 @@ None changed or removed. New tests only (added to `test-workspace-components.R`,
 ### M1 follow-up (lead verification fixes)
 
 - `design-system.spec.ts` pins sha256 digests of `R/workspace_components.R`, `inst/application/www/custom.css` and `tests/testthat/test-workspace-components.R`; M1 intentionally changed these frozen design-system inputs, so the three digests were re-pinned (reason recorded here; no assertion weakened).
-- The disabled-control opacity rules are scoped under `.wrapper` (the application shell): the design-system fixture's effective-contrast check refuses opacity, and `design-system.spec.ts:767` passes only with the fixture keeping its frozen rendering.
+- F4 disabled style reworked without opacity (the SPEC-WS-002 contrast guard refuses opacity, and scoping the rule away from the fixture would bypass it): disabled controls use explicit tokens, background `rgb(226, 232, 240)` (`--rs-border`), text `rgb(71, 85, 105)`, border `rgb(100, 116, 139)`, opacity 1, `cursor: not-allowed`, no shadow, and no hover change. `custom.css` digest in `design-system.spec.ts` re-pinned once more for this reason. `ui-accessibility.spec.ts` asserts those disabled colours and that the disabled header action's background and text colour differ from an enabled button's (`#rr_visualize-rr_load`, attached as `enabled-vs-disabled-colours`). Before: the same controls were drawn at opacity 0.5 over their enabled colours (`.btn` default 0.65).
 - AC-004: the sidebar link's outline was read while the earlier `transition: all` rule was still animating it (width 0 px at read time under the pinned Chromium); the focus-visible rule now sets `transition: none`, so the indicator is complete at once.
 - `workspace-ui.js` no longer auto-hides notifications whose id starts with `shiny-notification-job-` (a running job's persistent progress notification); `ui-flows.spec.ts` asserts such a notification is still present after more than 6 s.
 
@@ -239,3 +239,6 @@ Not started.
 ## M8 - Results master-detail
 
 Not started.
+
+
+Open point for the SPEC owner: AC-003 literally requires a disabled control's computed opacity of at most 0.6. That clause conflicts with the SPEC-WS-002 guard (no opacity), so the implemented test asserts explicit colours instead; AC-003's wording needs a registry revision.

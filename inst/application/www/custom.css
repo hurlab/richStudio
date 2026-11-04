@@ -1607,22 +1607,26 @@ summary:focus-visible,
   outline-offset: 0;
 }
 
-/* F4: a disabled control looks disabled. Scoped to the application shell (.wrapper) so the isolated
-   design-system fixture, whose contrast check refuses opacity, keeps its frozen rendering. */
-.wrapper button:disabled,
-.wrapper .btn:disabled,
-.wrapper .btn.disabled,
-.wrapper .btn[disabled],
-.wrapper input:disabled,
-.wrapper select:disabled,
-.wrapper textarea:disabled,
-.wrapper [aria-disabled="true"],
-.wrapper .rs-workspace-action:disabled {
-  opacity: 0.5 !important;
+/* F4: a disabled control looks disabled through explicit colours, never through opacity (the
+   SPEC-WS-002 contrast guard refuses opacity): muted neutral surface and border, secondary text,
+   not-allowed cursor, and no hover or active change. */
+button:disabled,
+.btn:disabled,
+.btn.disabled,
+.btn[disabled],
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"],
+.rs-workspace-action:disabled {
+  opacity: 1 !important;
   cursor: not-allowed !important;
+  color: var(--rs-text-secondary-strong) !important;
+  background-color: var(--rs-border) !important;
+  border: 1px solid var(--rs-text-secondary) !important;
+  box-shadow: none !important;
 }
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
-  opacity: 0.5 !important;
   cursor: not-allowed !important;
 }
 .rs-workspace-actions > span {

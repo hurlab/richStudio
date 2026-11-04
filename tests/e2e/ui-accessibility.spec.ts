@@ -67,17 +67,30 @@ test.describe('AC-003 disabled controls and the unrecorded-metadata disclosure',
       return Array.from(document.querySelectorAll('button:disabled, input:disabled, select:disabled, [aria-disabled="true"]'))
         .filter(visible).map(e => {
           const s = getComputedStyle(e);
-          return { id: (e as HTMLElement).id, opacity: Number(s.opacity), cursor: s.cursor,
+          return { id: (e as HTMLElement).id, opacity: Number(s.opacity), cursor: s.cursor, color: s.color,
+            background: s.backgroundColor, border: s.borderTopColor,
             reason: !!(e.getAttribute('title') || e.getAttribute('aria-describedby')) };
         }).filter(x => !x.id.endsWith('-selectized'));
     });
     expect(found.length).toBeGreaterThanOrEqual(2);
     for (const control of found) {
-      expect(control.opacity, control.id).toBeLessThanOrEqual(0.6);
+      // Disabled is shown by explicit colours (opacity is not used: the SPEC-WS-002 guard refuses it).
       expect(control.cursor, control.id).toBe('not-allowed');
+      if (!/^DataTables_Table_/.test(control.id)) {
+        expect(control.background, control.id).toBe('rgb(226, 232, 240)');
+        expect(control.color, control.id).toBe('rgb(71, 85, 105)');
+      }
       // A disabled DataTables Previous/Next link is third-party and self-evident; it must still look disabled.
       if (!/^DataTables_Table_\d+_(previous|next)$/.test(control.id)) expect(control.reason, control.id).toBe(true);
     }
+    // Distinct from an enabled button: different computed surface and text colour.
+    const look = (selector: string) => page.locator(selector).evaluate(e => { const s = getComputedStyle(e);
+      return { color: s.color, background: s.backgroundColor, border: s.borderTopColor }; });
+    const disabledLook = await look('#workspace-create_figure');
+    const enabledLook = await look('#rr_visualize-rr_load');
+    await test.info().attach('enabled-vs-disabled-colours', { body: JSON.stringify({ enabledLook, disabledLook }), contentType: 'application/json' });
+    expect(disabledLook.background).not.toBe(enabledLook.background);
+    expect(disabledLook.color).not.toBe(enabledLook.color);
     await expect(page.locator('#workspace-create_figure')).toHaveAttribute('title', /Choose a result first/);
     // The hint is shown once, not once per button.
     await expect(page.locator('#workspace-header').getByText('Choose a result first', { exact: true })).toHaveCount(1);

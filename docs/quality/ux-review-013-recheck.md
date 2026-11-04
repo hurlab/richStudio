@@ -196,6 +196,13 @@ The plot already rendered at M0; the defect was the never-hidden static empty st
 
 None changed or removed. New tests only (added to `test-workspace-components.R`, `test-workspace-navigation.R`, `test-results-explorer.R`, new `ui-accessibility.spec.ts` and `ui-flows.spec.ts`). `results-explorer.spec.ts` is unchanged: the explorer live-region absence is asserted in `ui-accessibility.spec.ts`.
 
+### M1 follow-up (lead verification fixes)
+
+- `design-system.spec.ts` pins sha256 digests of `R/workspace_components.R`, `inst/application/www/custom.css` and `tests/testthat/test-workspace-components.R`; M1 intentionally changed these frozen design-system inputs, so the three digests were re-pinned (reason recorded here; no assertion weakened).
+- The disabled-control opacity rules are scoped under `.wrapper` (the application shell): the design-system fixture's effective-contrast check refuses opacity, and `design-system.spec.ts:767` passes only with the fixture keeping its frozen rendering.
+- AC-004: the sidebar link's outline was read while the earlier `transition: all` rule was still animating it (width 0 px at read time under the pinned Chromium); the focus-visible rule now sets `transition: none`, so the indicator is complete at once.
+- `workspace-ui.js` no longer auto-hides notifications whose id starts with `shiny-notification-job-` (a running job's persistent progress notification); `ui-flows.spec.ts` asserts such a notification is still present after more than 6 s.
+
 ### Gaps
 
 - The browser specs were written before the implementation but their first execution was against the implemented tree, so no browser RED output was captured (testthat RED was captured: the new tests failed before the change).

@@ -154,6 +154,22 @@ test.describe('AC-007 menu and notifications', () => {
     await expect(error).toHaveCount(0, { timeout: 2000 });
   });
 
+  test('a persistent job progress notification is not auto-hidden, a plain message is', async ({ page }) => {
+    // Same shape as the one workspace_jobs.R raises for a running job: id "job-<run id>", no duration.
+    await page.evaluate(() => {
+      const notifications = (window as any).Shiny.notifications;
+      notifications.show({ id: 'job-ui-test', html: 'Running job progress', action: '', deps: [], duration: null, type: 'message' });
+      notifications.show({ id: 'plain-ui-test', html: 'Plain message', action: '', deps: [], duration: 5000, type: 'message' });
+    });
+    const progress = page.locator('#shiny-notification-job-ui-test');
+    const plain = page.locator('#shiny-notification-plain-ui-test');
+    await expect(progress).toBeVisible();
+    await expect(plain).toBeVisible();
+    await expect(plain).toHaveCount(0, { timeout: 7000 });
+    await page.waitForTimeout(1000);
+    await expect(progress).toBeVisible();
+  });
+
   test('a success notification is opaque, clear of the page action and hides by itself', async ({ page }) => {
     await showTab(page, 'save_tab');
     await page.locator('#save-load_project_file').setInputFiles(baselineProject);

@@ -1594,6 +1594,8 @@ summary:focus-visible,
 .selectize-input.focus {
   outline: 3px solid var(--rs-focus) !important;
   outline-offset: 2px;
+  /* Earlier rules transition "all"; the focus indicator must be there at once. */
+  transition: none !important;
 }
 .main-sidebar a:focus-visible,
 .main-sidebar button:focus-visible,
@@ -1605,16 +1607,17 @@ summary:focus-visible,
   outline-offset: 0;
 }
 
-/* F4: a disabled control looks disabled. */
-button:disabled,
-.btn:disabled,
-.btn.disabled,
-.btn[disabled],
-input:disabled,
-select:disabled,
-textarea:disabled,
-[aria-disabled="true"],
-.rs-workspace-action:disabled {
+/* F4: a disabled control looks disabled. Scoped to the application shell (.wrapper) so the isolated
+   design-system fixture, whose contrast check refuses opacity, keeps its frozen rendering. */
+.wrapper button:disabled,
+.wrapper .btn:disabled,
+.wrapper .btn.disabled,
+.wrapper .btn[disabled],
+.wrapper input:disabled,
+.wrapper select:disabled,
+.wrapper textarea:disabled,
+.wrapper [aria-disabled="true"],
+.wrapper .rs-workspace-action:disabled {
   opacity: 0.5 !important;
   cursor: not-allowed !important;
 }

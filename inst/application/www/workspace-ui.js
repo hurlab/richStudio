@@ -49,6 +49,8 @@
   function scheduleHide(node) {
     if (!scheduled || scheduled.has(node)) return;
     if (node.classList.contains('shiny-notification-error')) return;
+    /* Persistent notifications (a running job's progress, id job-<run>) stay until the server removes them. */
+    if (/^shiny-notification-job-/.test(node.id || '')) return;
     scheduled.add(node);
     window.setTimeout(function () { removeNotification(node); }, SUCCESS_HIDE_MS);
   }

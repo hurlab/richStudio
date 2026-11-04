@@ -42,8 +42,10 @@ rr_dot <- function(x, top = 30, value_cutoff = 0.05, value_type = "Padj") {
 
   sizeref <- 2. * max(x$Significant) / (8.**2)
   value_name <- paste0("-log10(", value_type, ")")
+  plot_height <- rr_term_plot_height(nrow(x))
   p <- plot_ly(
     data = x,
+    height = plot_height,
     x = ~rich,
     y = ~Term,
     type = "scatter",
@@ -76,13 +78,8 @@ rr_dot <- function(x, top = 30, value_cutoff = 0.05, value_type = "Padj") {
         value_name
       ),
       xaxis = list(title = "Rich score (significant genes / annotated genes)"),
-      yaxis = list(
-        title = "Term",
-        categoryorder = "trace",
-        tickmode = "linear",
-        nticks = top
-      ),
-      margin = list(b = 110),
+      yaxis = rr_term_axis(levels(x$Term)),
+      margin = list(b = 110, l = 80),
       annotations = list(list(
         text = paste0(
           "Size legend: dot size = number of significant genes (",
@@ -102,5 +99,5 @@ rr_dot <- function(x, top = 30, value_cutoff = 0.05, value_type = "Padj") {
       ))
     )
 
-  p
+  rr_apply_plot_height(p, plot_height)
 }

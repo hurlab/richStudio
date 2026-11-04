@@ -361,3 +361,24 @@ test.describe('AC-029 network figure', () => {
     });
   }
 });
+
+// ---- M4 follow-up: term labels of the dot and bar plots do not overlap -------------------------
+
+test.describe('M4 y-axis term labels', () => {
+  test('adjacent term labels of the dot and bar plots do not overlap at 1440x900', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await page.locator('#home-load_demo').click();
+    await page.waitForSelector('#shiny-tab-rr_visualize_tab.active');
+    for (const [name, output] of [['Dot Plot', 'dotplot'], ['Bar Plot', 'barplot']] as const) {
+      await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name, exact: true }).click();
+      const ticks = page.locator(`#rr_visualize-${output} .yaxislayer-above .ytick text`);
+      await expect.poll(() => ticks.count(), { timeout: 20_000, message: `${name} ticks` }).toBeGreaterThan(10);
+      const boxes = await ticks.evaluateAll(nodes => nodes.map(n => { const r = n.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; })
+        .sort((a, b) => a.top - b.top));
+      for (let i = 1; i < boxes.length; i++) {
+        expect(boxes[i].top, `${name} label ${i} overlaps the previous one`).toBeGreaterThanOrEqual(boxes[i - 1].bottom - 0.5);
+      }
+    }
+  });
+});

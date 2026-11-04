@@ -48,10 +48,13 @@ rr_bar <- function(
 
   x$Term <- factor(x$Term, levels = x$Term[order(x$final_value)])
 
+  plot_height <- rr_term_plot_height(nrow(x))
+
   # view rich score
   if (view == "rich") {
     p <- plot_ly(
       data = x,
+      height = plot_height,
       x = ~rich,
       y = ~Term,
       type = "bar",
@@ -61,12 +64,13 @@ rr_bar <- function(
       layout(
         title = "Rich Score for Enriched Terms",
         xaxis = list(title = "Rich Score"),
-        yaxis = list(title = "Term", categoryorder = "trace", nticks = top)
+        yaxis = rr_term_axis(levels(x$Term))
       )
   } else if (view == "value") {
     # Display the negative base-10 logarithm of the selected value.
     p <- plot_ly(
       data = x,
+      height = plot_height,
       x = ~final_value,
       y = ~Term,
       type = "bar",
@@ -75,10 +79,10 @@ rr_bar <- function(
       layout(
         title = paste0("-log10(", value_type, ") for Enriched Terms"),
         xaxis = list(title = paste0("-log10(", value_type, ")")),
-        yaxis = list(title = "Term", categoryorder = "trace", nticks = top)
+        yaxis = rr_term_axis(levels(x$Term))
       )
   } else {
     stop("Invalid view parameter: '", view, "'. Must be 'rich' or 'value'.")
   }
-  p
+  rr_apply_plot_height(p, plot_height)
 }

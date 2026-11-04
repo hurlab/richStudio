@@ -344,6 +344,38 @@ hmap_truncate_labels <- function(x, limit = hmap_label_limit) {
   x
 }
 
+# Height of a bar or dot plot that grows with the number of displayed terms
+# (about 18 px per term plus room for the title, axis and legend), with a minimum.
+rr_term_plot_height <- function(n_terms, per_term = 18L, base = 160L, minimum = 400L) {
+  as.integer(max(minimum, base + per_term * max(0L, as.integer(n_terms))))
+}
+
+# Term axis for bar and dot plots: truncated labels (the hover text keeps the full
+# term), automatic left margin.
+rr_term_axis <- function(levels) {
+  values <- as.character(levels)
+  list(
+    title = "Term",
+    categoryorder = "trace",
+    tickmode = "array",
+    tickvals = values,
+    ticktext = htmltools::htmlEscape(hmap_truncate_labels(values)),
+    automargin = TRUE
+  )
+}
+
+# Sets the widget element to the figure's height so a tall figure is not clipped to
+# the default output height.
+rr_apply_plot_height <- function(plot, height) {
+  htmlwidgets::onRender(
+    plot,
+    sprintf(
+      "function(el, x) { el.style.height = '%dpx'; Plotly.Plots.resize(el); }",
+      as.integer(height)
+    )
+  )
+}
+
 # Term axis with truncated tick labels; the categories themselves are untouched.
 hmap_term_axis <- function(terms, nticks) {
   values <- unique(as.character(terms))

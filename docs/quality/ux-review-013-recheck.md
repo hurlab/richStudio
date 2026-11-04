@@ -324,10 +324,17 @@ The new testthat tests were written first and run with the `R/` changes stashed 
 - `heatmap-legibility.spec.ts` `select()`: for results with more than 30 clusters it now asserts the notice "30 of N shown", ticks "Show all clusters" and waits for "All N clusters shown" before the existing checks (they assert full 400-row windows, which OD-6 moved behind "Show all"); no assertion removed or weakened.
 - `test-heatmap-legibility.R`, `test-baseline-result-figures.R`, `test-cluster-heatmap-scientific.R`: only the new test was added to the first; the others are unchanged and pass.
 
+### M4 follow-up (lead verification of the screenshots)
+
+- Dot and bar plots: the height grows with the displayed terms (`rr_term_plot_height()`: 160 px plus 18 px per term, minimum 400 px, so 610 px for 25 terms and 1060 px for 50); the widget element is resized to it (`onRender`); y-axis tick labels are truncated at 40 characters (full term in the hover text) and the left margin is automatic. Tests: `test-ui-copy-and-figures.R` "AC-013 dot and bar plot heights grow with the number of displayed terms" (25 and 50 terms, both plots, truncation and hover text); `ui-flows.spec.ts` "M4 y-axis term labels" (1440x900, dot and bar: no two adjacent tick labels overlap, by bounding boxes).
+- Network: only the 15 most significant terms (by Padj, else Pvalue) are labelled, the caption says so, and every node is still drawn; node colours use a viridis scale (dark = more significant) set through the colour scale, so the node data (and the M0 golden) is unchanged. Test: `test-ui-copy-and-figures.R` "AC-013 network: only the 15 most significant terms are labelled ...".
+- Screenshots re-taken: `scratchpad/m4-shots/*-v2.png`.
+- Full browser gate after the follow-up (CI environment, pinned toolchain): `2 failed`, `126 passed (16.1m)`; the failures are `design-system.spec.ts:803` in both projects (native-zoom launch only).
+
 ### Gaps
 
 - The cluster term heatmap (`cluster_hmap`) already used heatmaply's viridis default; it now passes it explicitly. The dot plot's colour scale is plotly's default sequential scale (the SPEC asks viridis for the heatmaps).
-- Network node colours come from `richR::ggnetwork` (orange/red) and are not changed; the legend names them. Colour-blind safety of those node colours is not claimed.
+- Network node colours are now a viridis scale applied through the plot's colour scale (the node data still carries richR's original colours).
 - Row significance for the top-30 ordering is the smallest p-value across datasets of the displayed value (mean/median/min/max as chosen), not a separate statistic.
 - `scientific-heatmaps.spec.ts` and `clustering-roundtrip.spec.ts` (not in the M4 list) were not edited and pass in the full gate with the default top 30.
 - Full browser gate (CI environment, pinned toolchain): `2 failed`, `124 passed (16.6m)`; the failures are `design-system.spec.ts:803` in both projects (native-zoom launch only).

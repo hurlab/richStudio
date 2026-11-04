@@ -294,10 +294,47 @@ test_that("AC-013 and AC-029 network nodes exist for the demo results, labels ar
     layer <- Filter(function(l) inherits(l$geom, "GeomTextRepel"), net$layers)[[1]]
     px <- layer$aes_params$size * ggplot2::.pt * 96 / 72
     expect_gte(px, 10)
-    expect_true(inherits(net$guides$guides$colour, "GuideLegend") || inherits(net$guides$colour, "GuideLegend") ||
-                  !identical(net$guides$colour, "none"))
+    expect_false(identical(net$guides$guides$colour, "none"))
   }
   golden <- jsonlite::fromJSON(ui_baseline_fixture_path("figure-values.json"), simplifyVector = FALSE)
   net <- richStudio:::rr_network(m4_demo()$rr$go1)
   expect_identical(nrow(net$data), golden$network$go1$n_nodes)
+})
+
+test_that("AC-013 network: only the 15 most significant terms are labelled, every node is drawn, colours are viridis", {
+  rr <- m4_demo()$rr$go1
+  net <- richStudio:::rr_network(rr)
+  layer <- Filter(function(l) inherits(l$geom, "GeomTextRepel"), net$layers)[[1]]
+  labels <- layer$aes_params$label
+  expect_length(labels, nrow(net$data))
+  expect_identical(sum(nzchar(labels)), 15L)
+  top <- rr$Term[order(rr$Padj)][seq_len(15L)]
+  expect_setequal(labels[nzchar(labels)], intersect(top, net$data$label))
+  expect_match(net$labels$caption, "Labels shown for the 15 most significant terms", fixed = TRUE)
+  # the node data (and so the M0 golden) is untouched; only the colour scale is viridis
+  scale <- net$scales$get_scales("colour")
+  palette <- grDevices::hcl.colors(256L, "viridis")
+  values <- unname(scale$palette(length(unique(net$data$color))))
+  expect_true(all(toupper(substr(values, 1L, 7L)) %in% toupper(palette)))
+  expect_false(any(toupper(values) %in% c("#FF0000", "#FFA500")))
+})
+
+test_that("AC-013 dot and bar plot heights grow with the number of displayed terms", {
+  many <- data.frame(Annot = paste0("GO:", seq_len(60)), Term = paste("term", seq_len(60)),
+                     Annotated = 100L, Significant = 5L + seq_len(60) %% 7L,
+                     Pvalue = seq_len(60) / 1e4, Padj = seq_len(60) / 1e4, GeneID = "g1,g2")
+  height <- function(plot) plotly::plotly_build(plot)$x$layout$height
+  expect_identical(richStudio:::rr_term_plot_height(2L), 400L)
+  for (n in c(25L, 50L)) {
+    expect_identical(height(suppressWarnings(richStudio:::rr_dot(many, top = n))), richStudio:::rr_term_plot_height(n))
+    expect_identical(height(richStudio:::rr_bar(many, top = n)), richStudio:::rr_term_plot_height(n))
+  }
+  expect_gte(richStudio:::rr_term_plot_height(25L), 18L * 25L)
+  expect_gt(richStudio:::rr_term_plot_height(50L), richStudio:::rr_term_plot_height(25L))
+  # long labels are truncated on the axis and complete in the hover text
+  long <- many
+  long$Term[1] <- paste(rep("long go term", 10), collapse = " ")
+  built <- plotly::plotly_build(suppressWarnings(richStudio:::rr_dot(long, top = 25L)))
+  expect_true(all(nchar(built$x$layout$yaxis$ticktext) <= richStudio:::hmap_label_limit))
+  expect_true(any(grepl(long$Term[1], unlist(built$x$data[[1]]$text), fixed = TRUE)))
 })

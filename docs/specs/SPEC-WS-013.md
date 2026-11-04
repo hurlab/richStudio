@@ -1,7 +1,7 @@
 ---
 id: "SPEC-WS-013"
 title: "Workspace UI/UX restructure"
-version: "0.3.1"
+version: "0.3.2"
 status: draft
 created: "2026-11-03"
 updated: "2026-11-04"
@@ -137,7 +137,7 @@ Browser scenarios run in both Playwright projects (`chromium-desktop`, `chromium
 
 **AC-002 (F1, N1, M1 scope)** Given two finished jobs and none running, when each of Enrich, Results, Cluster, Cluster figures and Save loads at 390x844, then the job panel's rendered height is at most 64 px while collapsed, expanding it shows each job as one row with a textual status, run settings are inside a collapsed disclosure, and run ids are not rendered in the danger colour. From M5 the inline panel no longer exists; this scenario is superseded by AC-015, which asserts that no page renders an inline job log and that tray rows meet the same row, status and colour rules.
 
-**AC-003 (F4, OD-8, REQ-013)** Given the empty workspace, when the header actions are disabled, then each visible disabled control (`:disabled` or `aria-disabled="true"`) has computed opacity at most 0.6 and `cursor: not-allowed`, exposes its reason through `title` or `aria-describedby`, and the hint text appears once; given a result with three unrecorded metadata fields, then no "Not recorded" row is visible by default, one disclosure trigger is visible by default whose accessible name states "3 not recorded", opening it lists the three fields, and the existing assertions `ws3_count(html, "Not recorded")` (1, 3, 3 in `T:test-workspace-navigation.R`), `T:test-workspace-components.R` "Not recorded" and `E:design-system.spec.ts` first `dd` "Not recorded" pass without being lowered.
+**AC-003 (F4, OD-8, REQ-013)** Given the empty workspace, when the header actions are disabled, then each visible disabled control (`:disabled` or `aria-disabled="true"`) has computed background colour and text colour both different from an enabled button's, `cursor: not-allowed` and computed opacity 1 (no opacity below 1, following the SPEC-WS-002 design-system opacity guard in `E:design-system.spec.ts`), shows no hover change, exposes its reason through `title` or `aria-describedby`, and the hint text appears once; given a result with three unrecorded metadata fields, then no "Not recorded" row is visible by default, one disclosure trigger is visible by default whose accessible name states "3 not recorded", opening it lists the three fields, and the existing assertions `ws3_count(html, "Not recorded")` (1, 3, 3 in `T:test-workspace-navigation.R`), `T:test-workspace-components.R` "Not recorded" and `E:design-system.spec.ts` first `dd` "Not recorded" pass without being lowered.
 
 **AC-004 (F10, REQ-013)** Given keyboard navigation, when focus reaches each sidebar link (and, from M6, each stepper link), the Bookmark control (where present), a button and a text input, then the focused element's computed `outline-style` is not `none`, `outline-width` is at least 2 px, and the outline colour has a contrast ratio of at least 3:1 against the adjacent background (computed in the test from computed colours).
 
@@ -278,6 +278,7 @@ Each milestone merges separately and reverts separately; none changes stored dat
 ## HISTORY
 
 - 2026-11-03: Planning-only draft from the hands-on UX review of integration tree 081ef06 (F1-F16, proposals A-E) and code reading of the unmerged SPEC-WS-008 branch; scheduled before SPEC-WS-009/010 by owner decision.
+- 2026-11-04 (v0.3.2): AC-003 disabled state restated without opacity (explicit colour tokens, opacity 1) to follow the SPEC-WS-002 opacity guard.
 - 2026-11-04 (v0.3.1): iter-3 fixes: Cluster layout clause rebound to the form heading with fixed thresholds; context-bar default-selection clause moved to AC-018 (M6); assertion removal allowed for controls the SPEC removes; Enrich sticky edge stated.
 - 2026-11-04 (v0.3.0): iter-2 fixes: AC-016 split and rebound to the milestones that move each page (Enrich to M7, Results to M8); base-R packages allowed; inert Text-input tabs removed and AC-019 sweep scoped; `cluster_upload_tab` kept as a real Data sub-route; upload validation placed in the upload observer, `add_file_degdf` untouched; AC-004, AC-002, AC-013 clarified.
 - 2026-11-04: Revised after plan-audit iteration 1 (FAIL 0.76, defects D1-D14) and re-based on the reconciled tree (UX re-review N1-N7): owner decisions OD-1..OD-8 recorded; M0 baseline capture added; Data step (OD-3) moved into M6 so M5 needs nothing later; 008 live region handled in M1; REQ-017, AC-027..029 added; lock list extended with the reconciled-line guard tests and the baseline fixtures; `tier: L` set.

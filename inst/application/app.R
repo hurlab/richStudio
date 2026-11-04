@@ -263,6 +263,10 @@ server <- function(input, output, session) {
   session$userData$workspace_jobs <- jobs
   workspace_jobs_server("jobs", jobs)
 
+  # Session-local result selection shared by the results explorer and the cluster
+  # views (SPEC-WS-008). Display state only; it is never saved.
+  selection <- workspace_selection_state()
+
   # Generate unique session ID for debugging concurrent issues
   session_id <- paste0("rs_", format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
                        substr(digest::digest(runif(1)), 1, 8))
@@ -304,7 +308,8 @@ server <- function(input, output, session) {
   rr_vis_tab_server("rr_visualize",
     u_degnames = u_degnames, u_degdfs = u_degdfs, u_big_degdf = u_big_degdf,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
-    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists
+    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists,
+    selection = selection
   )
 
   cluster_upload_tab_server("cluster_upload",
@@ -326,7 +331,8 @@ server <- function(input, output, session) {
     u_degnames = u_degnames, u_degdfs = u_degdfs,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
     u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
-    u_big_clusdf = u_big_clusdf, u_cluslists = u_cluslists
+    u_big_clusdf = u_big_clusdf, u_cluslists = u_cluslists,
+    selection = selection
   )
 
   updateTabServer("update",

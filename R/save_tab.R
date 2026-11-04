@@ -53,7 +53,7 @@ saveTabUI <- function(id, tabName) {
           br(),
           downloadButton(ns('download_session'), "Download Session", class = "btn-primary btn-lg"),
           br(), br(),
-          helpText("Sessions are saved as JSON with full numeric precision, so values reload exactly. Older .rds session files cannot be uploaded; convert them locally first (see docs/SESSION_FILES.md)."),
+          helpText("Sessions are saved as JSON with full numeric precision, so values reload exactly. Older session files in another format cannot be uploaded; if loading is refused, the message explains how to convert the file."),
           hr(),
           h4("Reproducible project"),
           p("A project (.zip) adds a manifest with parameters, versions, statistics and a generated methods summary to the exact tables."),
@@ -468,11 +468,14 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         # uploaded RDS can execute attacker-chosen code on the server.
         if (tolower(file_ext) != "json" || session_json_looks_like_rds(file_path)) {
           showNotification(
-            paste("Only JSON session files can be uploaded. RDS session files are not",
-                  "accepted because loading them is unsafe on a shared server. To convert",
-                  "an .rds file you trust, run on your own computer:",
-                  "Rscript scripts/convert-trusted-session.R session.rds session.json",
-                  "and upload the .json file (see docs/SESSION_FILES.md)."),
+            paste("This looks like an older .rds session file. For security reasons richStudio",
+                  "can no longer open .rds session files, so nothing was loaded. Convert the",
+                  "file once on your own computer (only if you made it or fully trust it) and",
+                  "upload the .json result instead. The converter script",
+                  "convert-trusted-session.R is at",
+                  "https://github.com/hurlab/richStudio/blob/main/scripts/convert-trusted-session.R",
+                  "; with R installed, save it and run:",
+                  "Rscript convert-trusted-session.R my-session.rds my-session.json"),
             type = "error", duration = NULL
           )
           return(NULL)

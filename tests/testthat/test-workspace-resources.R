@@ -46,3 +46,18 @@ test_that("job queue limits come from the installed resource policy", {
   expect_identical(richStudio:::workspace_job_queue_limit(policy), 8L)
   expect_identical(richStudio:::workspace_session_queue_limit(changed), 2L)
 })
+
+test_that("the upload request limit follows the resource policy", {
+  old <- options(shiny.maxRequestSize = 5 * 1024^2)
+  withr::defer(options(old))
+  policy <- richStudio:::workspace_resource_policy()
+  bytes <- richStudio:::workspace_apply_upload_limit()
+  expect_identical(getOption("shiny.maxRequestSize"), policy$limits$upload_bytes)
+  expect_identical(bytes, policy$limits$upload_bytes)
+  changed <- policy
+  changed$limits$upload_bytes <- 1234567L
+  richStudio:::workspace_apply_upload_limit(function() changed)
+  expect_identical(getOption("shiny.maxRequestSize"), 1234567L)
+  expect_match(paste(readLines(system.file("application", "app.R", package = "richStudio")), collapse = "\n"),
+               "workspace_apply_upload_limit", fixed = TRUE)
+})

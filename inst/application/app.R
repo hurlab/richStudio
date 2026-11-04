@@ -41,6 +41,13 @@ if (!is.null(pkg_root) && file.exists(file.path(pkg_root, "DESCRIPTION"))) {
   richStudio_namespace <- asNamespace("richStudio")
 }
 
+# Size uploads from the installed resource policy (Shiny's default is 5 MB).
+if (!is.null(richStudio_namespace)) {
+  base::get("workspace_apply_upload_limit", envir = richStudio_namespace)()
+} else {
+  workspace_apply_upload_limit()
+}
+
 # Enable async processing for long-running operations
 future::plan(future::multisession, workers = 2)
 

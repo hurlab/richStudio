@@ -64,6 +64,14 @@ workspace_resource_policy <- function(
   ))
 }
 
+# Shiny rejects any upload over shiny.maxRequestSize (5 MB by default) before the
+# resource checks run, so the option follows the policy's upload bound.
+workspace_apply_upload_limit <- function(policy_loader = workspace_resource_policy) {
+  bytes <- workspace_validate_resources(policy_loader())$limits$upload_bytes
+  options(shiny.maxRequestSize = bytes)
+  invisible(bytes)
+}
+
 # @MX:ANCHOR: [AUTO] Shared admission boundary for workspace resource consumers.
 # @MX:REASON: Intake, archives, jobs, history and rendering share one installed
 # policy.

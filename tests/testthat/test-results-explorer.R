@@ -473,3 +473,60 @@ test_that("comparison panel reports unsupported context for unrecorded imported 
     expect_match(html, "Comparison unsupported", fixed = TRUE)
   })
 })
+
+# ---- SPEC-WS-013 M1: one job live region (AC-006) and server-driven empty states (AC-001) ----
+
+test_that("AC-006 the selected-term panel is not a live region", {
+  df <- rx_df()
+  keys <- rx_ns("workspace_row_keys")(df, "rs-p", "ns")
+  ui <- as.character(rx_ns("explorer_selection_ui")(df, 1L, keys[1], "rs-p", "ns"))
+  expect_false(grepl("aria-live", ui, fixed = TRUE))
+  expect_false(grepl("role=\"status\"|role=\"alert\"|role=\"log\"", ui))
+})
+
+test_that("AC-001 each result view hides its empty state when rows exist and shows it otherwise", {
+  state <- ws_baseline_state(populated = TRUE)
+  args <- state[intersect(names(state), names(formals(richStudio:::rr_vis_tab_server)))]
+  args$id <- "results"
+  owned <- shiny::MockShinySession$new()
+  withr::defer(owned$close())
+  sent <- new.env(parent = emptyenv())
+  sent$custom <- list()
+  original <- owned$sendCustomMessage
+  withr::defer(owned$sendCustomMessage <- original)
+  owned$sendCustomMessage <- function(type, message) {
+    sent$custom[[length(sent$custom) + 1L]] <- list(type = type, message = message)
+    original(type, message)
+  }
+  last <- function(id) {
+    hits <- Filter(function(x) x$type %in% c("shinyjs-show", "shinyjs-hide") &&
+                     identical(x$message$id, paste0("results-", id)), sent$custom)
+    if (length(hits)) hits[[length(hits)]]$type else NA_character_
+  }
+  views <- c(table = "select_table", bar = "select_bar", dot = "select_dot", net = "select_net")
+  shiny::testServer(richStudio:::rr_vis_tab_server, args = args, session = owned, {
+    session$flushReact()
+    for (view in names(views)) expect_identical(last(paste0(view, "_empty")), "shinyjs-show", info = view)
+    expect_identical(last("hmap_empty"), "shinyjs-show")
+    do.call(session$setInputs, stats::setNames(rep(list("untreated"), 4L), views))
+    session$flushReact()
+    for (view in names(views)) expect_identical(last(paste0(view, "_empty")), "shinyjs-hide", info = view)
+    session$setInputs(select_tophmap = "untreated", tophmap_valtype = "Pvalue",
+                      tophmap_cutoff = .05, tophmap_nterms = 3, edit_hmap_box = "Top terms")
+    session$flushReact()
+    expect_identical(last("hmap_empty"), "shinyjs-hide")
+    expect_identical(last("top_hmap_box"), "shinyjs-show")
+    do.call(session$setInputs, stats::setNames(rep(list(""), 4L), views))
+    session$flushReact()
+    for (view in names(views)) expect_identical(last(paste0(view, "_empty")), "shinyjs-show", info = view)
+  })
+})
+
+test_that("AC-001 empty states name a next action", {
+  ui <- as.character(richStudio:::rr_vis_tab_ui("results", "result_tab"))
+  for (id in c("table_empty", "bar_empty", "dot_empty", "net_empty", "hmap_empty")) {
+    node <- regmatches(ui, regexpr(sprintf('id="results-%s".*?</div>', id), ui))
+    expect_length(node, 1L)
+    expect_match(node, "(Load|Import|Select|Choose)", info = id)
+  }
+})

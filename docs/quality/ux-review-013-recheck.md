@@ -130,7 +130,80 @@ None. M0 adds files only and changes no file under `R/` or `inst/`.
 
 ## M1 - presentation quick wins
 
-Not started.
+Tree: `2676c53` plus the M1 working-tree changes (commit sha in the lead report). Environment as in M0 (R 4.6.2, shiny 1.14.0, Chromium 147.0.7727.15, Playwright 1.59.1 library borrowed from another project because this worktree has no `node_modules`; `axe-core` there is 4.13.0, not the 4.14.0 the specs pin). Browser specs ran through `playwright test` with the CI-equivalent environment (candidate library installed from the tree, `WORKSPACE_INSTALLED_LIBRARY`, `WORKSPACE_RUNS_ROOT`, scratch `TMPDIR`, scrubbed `R_*` variables).
+
+### Changes
+
+- F2 / N6: each Enrichment-figures view (Table, Bar, Dot, Network, Heatmap) hides its empty state while the selected result has rows (`shinyjs` show/hide from the server); the enrichment heatmap gets an empty state (`hmap_empty`) and its boxes appear only when a heatmap exists; empty-state texts name a next action.
+- F1 / N1: the job panel is a native `<details>` disclosure (summary line "Analysis jobs: N"), collapsed by `workspace-ui.js` while no job is queued or running and opened for a new run, hidden by CSS (`:not(:has(.rs-job))`) with no jobs, compact flex rows with a textual state, run settings in a closed `<details>`, run ids neutral. The four outputs are `suspendWhenHidden = FALSE`, otherwise a collapsed panel never rendered its first row. Without the script or the stylesheet the panel is open and readable (the `job-lifecycle` fixture app loads neither).
+- F4 / OD-8: disabled controls get opacity 0.5 and `cursor: not-allowed`; the two header actions share one visible hint and carry it as `title` and `aria-describedby`; unrecorded metadata sits in one closed `<details>` ("N not recorded") and each field inside keeps the text "Not recorded".
+- F10: `:focus-visible` outlines (3 px, dark blue on light surfaces, white in the sidebar), a solid ring on text inputs; one polite job-status region (`#jobs-jobs_announce`, set explicitly); the other job outputs and the explorer selection output are set to `aria-live="off"` because Shiny otherwise adds `aria-live="polite"` to every bound output; the explorer panel's own `aria-live` is removed.
+- F11: help text 13 px / `#475569`; sidebar section headers and footer 13 px / `#cbd5e1`.
+- F13 / F12: opaque notifications, error notifications removed on navigation, non-error notifications hidden after 5 s, narrow menu closes after a destination is chosen (closing is instant, opening keeps its slide, because the existing specs read the menu position right after a click).
+- All CSS is appended after the pinned SPEC-WS-002 marker; the original CSS bytes are unchanged (`test-workspace-components.R` pins their md5).
+
+### Acceptance (new automated tests; both Playwright projects pass, testthat passes)
+
+| AC | Tests |
+|---|---|
+| AC-001 | `ui-flows.spec.ts` "AC-001 server-driven empty states" (empty workspace: one empty state with a next action in each of Table, Bar Plot, Dot Plot, Network, Heatmap; populated: none; cluster figures after a clustering result and a chosen cluster); `test-results-explorer.R` "AC-001 each result view hides its empty state..." and "...empty states name a next action" |
+| AC-002 | `ui-flows.spec.ts` "AC-002 compact job panel" (390x844: collapsed height at most 64 px on Enrich, Results, Cluster, Cluster figures and Save; expanding shows 2 rows with a textual state, settings closed, run ids not danger-coloured); `test-workspace-components.R` "AC-002 ..." (disclosure, row markup) |
+| AC-003 | `ui-accessibility.spec.ts` "AC-003 ..." (disabled opacity/cursor/reason, one hint, "3 not recorded" disclosure); `test-workspace-navigation.R` "AC-003 ..." (two tests) and `test-workspace-components.R` "AC-003 a grouped disabled action..." |
+| AC-004 | `ui-accessibility.spec.ts` "AC-004 visible focus" (sidebar links, Bookmark, button, text inputs: outline style, width, contrast from computed colours) |
+| AC-005 | `ui-accessibility.spec.ts` "AC-005 text size and contrast" (all 8 routes) |
+| AC-006 | `ui-accessibility.spec.ts` "AC-006 ..." (exactly one non-off `aria-live` inside the job panel; no server-sent or app-authored `role="log"`; every other live node listed by origin) and `test-workspace-components.R` / `test-results-explorer.R` "AC-006 ..." |
+| AC-007 | `ui-flows.spec.ts` "AC-007 menu and notifications" (three tests: menu closes within 1 s, error cleared on navigation, success toast opaque, clear of "Download Project" and gone within 6 s) |
+
+Live nodes the AC-006 test lists as not app-authored job status: Shiny output/input binding polite, the Shiny notification panel, DataTables `role="status"` info and processing nodes, plotly, selectize, the selectize accessibility plugin's 50 body-level `role="log"` announcers (no id, no class, not in the served HTML), and the Home Quick Start result message (`role="status"`, app-authored, not job status).
+
+### After measurements (same method and rows as M0; CSS px; before values from M0)
+
+| Row | 1440x900 before | 1440x900 after | 390x844 before | 390x844 after |
+|---|---|---|---|---|
+| Job panel height (1 failed enrichment + 1 clustering) | 375 | 42 (collapsed) | 475 | 42 (collapsed) |
+| Page content start (below card and panel) | 832 | 374 | 1025 | 467 |
+| Active-workspace card height | 366 | 241 | 418 | 293 |
+| Home page height | 1631 | 1172 | 2761 | 2202 |
+| Data (Manage Files) page height | 1484 | 1026 | 2436 | 1878 |
+| Enrich page height | 3291 | 2835 | 4690 | 4137 |
+| Results page height (default tab) | 4270 | 3811 | 6109 | 5554 |
+| Cluster page height | 2409 | 1954 | 3695 | 3166 |
+| Cluster figures page height | 2858 | 2399 | 3749 | 3196 |
+| Save page height | 1787 | 1333 | 2842 | 2312 |
+| Cluster form heading top | 842 | 384 | 1035 | 477 |
+| Enrich Run button top | 1529 | 1073 | 2551 | 1998 |
+| DEG upload control group top | 1048 | 591 | 1241 | 684 |
+| Results term table top (Explorer tab) | 1954 | 1495 | 3592 | 3038 |
+| Results loader group top | 998 | 541 | 1191 | 634 |
+| Data page first control top | 1036 | 578 | 1229 | 671 |
+| Importer group top | 969 | 510 | 1162 | 603 |
+| Save project link top | 1420 | 965 | 1669 | 1117 |
+| Network image top (Network tab) | 1511 | 877 | 3030 | 2300 |
+| Network empty-state box (visible?) | visible, top 1336 | not visible | visible, top 2854 | not visible |
+
+`scrollWidth` equals the viewport width on every page at both sizes (no horizontal overflow). Run ids are `rgb(30, 41, 59)` / `rgb(71, 85, 105)` after, `rgb(199, 37, 78)` before. The card and the first-content offsets still exceed the M5/M6/M7/M8 targets (300/420 px); those milestones remove the card.
+
+### N6
+
+The plot already rendered at M0; the defect was the never-hidden static empty state above it. After M1 the Network tab with `go1` selected shows no empty-state box (`empty_state_visible: false`) and the 738 x 400 figure starts at 877 px instead of 1511 px at 1440x900. No engine or `rr_network` change was made.
+
+### Commands and results
+
+- Scoped testthat (load_all, dev library): `test-workspace-components.R`, `test-workspace-navigation.R`, `test-results-explorer.R`, `test-workspace-jobs.R`, `test-compact-layout.R`, `test-ui-baseline.R`, `test-baseline-result-figures.R`, `test-heatmap-legibility.R`, `test-cluster-heatmap-scientific.R`: no failure or error lines in the summary reporter output.
+- Playwright with the CI-equivalent environment, both projects: `ui-accessibility.spec.ts` + `ui-flows.spec.ts` + `job-lifecycle.spec.ts`: 26 passed, exit 0. A wider run of `results-explorer`, `compact-layout`, `workspace-entry`, `project-roundtrip`, `clustering-roundtrip`, `heatmap-legibility`, `input-review`, `landing-ui`, `scientific-heatmaps`, `baseline`: 61 passed, 9 failed; the 3 narrow-project failures (`clustering-roundtrip.spec.ts:159`, `heatmap-legibility.spec.ts:379`, `scientific-heatmaps.spec.ts:348`) were caused by the new menu auto-close racing the specs' menu handling, fixed by the instant-close CSS above and re-run green (narrow, with `ui-flows` and `project-roundtrip`: 10 passed). The remaining 6 failures are environmental: `workspace-entry.spec.ts:205` (axe-core 4.13.0 present, 4.14.0 pinned; both projects) and `baseline.spec.ts:25` / `:51` (missing `resources/render.json`, produced by the gate's resource-measurement step; both projects).
+
+### Changed existing-test assertions
+
+None changed or removed. New tests only (added to `test-workspace-components.R`, `test-workspace-navigation.R`, `test-results-explorer.R`, new `ui-accessibility.spec.ts` and `ui-flows.spec.ts`). `results-explorer.spec.ts` is unchanged: the explorer live-region absence is asserted in `ui-accessibility.spec.ts`.
+
+### Gaps
+
+- The browser specs were written before the implementation but their first execution was against the implemented tree, so no browser RED output was captured (testthat RED was captured: the new tests failed before the change).
+- `axe-core` 4.14.0 (pinned) is not installed here, so `workspace-entry` M15 and any `design-system` axe checks were not run; `baseline.spec.ts` needs the gate's resource measurements. The lead's full gate covers them.
+- Full R suite and full browser suite were not run (lead's gate). No CI run exists (hosted CI disabled).
+- AC-002 was measured with one failed enrichment and one succeeded clustering as the two finished jobs; the failed job's Retry button sits inside the collapsed panel until it is opened (job-lifecycle specs do not click Retry).
+- AC-006: the 50 selectize-plugin `role="log"` nodes are third-party; the test pins them by position (body child, no id, no class), not by plugin name.
+- Contrast and focus were measured on the routes and controls named in the tests, not on every control in the app.
 
 ## M2 - copy and validation quick wins
 

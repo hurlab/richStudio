@@ -365,19 +365,37 @@ workspace_header_server <- function(
         return(shiny::tags$p(shiny::tags$strong("No dataset selected")))
       }
       facts <- workspace_recorded_facts(u_big_rrdf[["df"]], current)
+      # Recorded facts are shown as rows; every unrecorded field sits in one
+      # closed disclosure whose trigger counts them ("Not recorded" stays the
+      # text of each field inside it).
+      fields <- list(
+        list(label = "Run", value = NA_character_),
+        list(label = "Recorded organism", value = facts$organism),
+        list(label = "Recorded identifier type", value = facts$keytype)
+      )
+      row <- function(field) {
+        list(
+          shiny::tags$dt(field$label),
+          shiny::tags$dd(workspace_text(field$value, missing = TRUE))
+        )
+      }
+      unrecorded <- Filter(function(f) is.na(f$value), fields)
+      recorded <- Filter(function(f) !is.na(f$value), fields)
       shiny::tagList(
         shiny::tags$p(
           "Active result: ",
           shiny::tags$strong(workspace_text(current, "result"))
         ),
-        shiny::tags$dl(
-          shiny::tags$dt("Run"),
-          shiny::tags$dd(workspace_text(NA_character_, missing = TRUE)),
-          shiny::tags$dt("Recorded organism"),
-          shiny::tags$dd(workspace_text(facts$organism, missing = TRUE)),
-          shiny::tags$dt("Recorded identifier type"),
-          shiny::tags$dd(workspace_text(facts$keytype, missing = TRUE))
-        ),
+        if (length(recorded)) {
+          shiny::tags$dl(unlist(lapply(recorded, row), recursive = FALSE))
+        },
+        if (length(unrecorded)) {
+          shiny::tags$details(
+            class = "rs-workspace-unrecorded",
+            shiny::tags$summary(paste(length(unrecorded), "not recorded")),
+            shiny::tags$dl(unlist(lapply(unrecorded, row), recursive = FALSE))
+          )
+        },
         if (facts$unique) {
           shiny::tags$p("From the recorded result details")
         } else {
@@ -393,22 +411,29 @@ workspace_header_server <- function(
       } else {
         "Import or load enrichment results first"
       }
+      ns_id <- session$ns(NULL)
+      hint_id <- paste0(ns_id, "-actions-reason")
       shiny::tags$div(
         class = "rs-workspace rs-workspace-actions",
         workspace_action(
-          session$ns(NULL),
+          ns_id,
           "create_figure",
           "Create figure",
           available,
-          reason
+          reason,
+          show_reason = FALSE,
+          reason_id = hint_id
         ),
         workspace_action(
-          session$ns(NULL),
+          ns_id,
           "cluster_results",
           "Cluster results",
           available,
-          reason
-        )
+          reason,
+          show_reason = FALSE,
+          reason_id = hint_id
+        ),
+        if (!available) shiny::tags$span(id = hint_id, reason)
       )
     })
 

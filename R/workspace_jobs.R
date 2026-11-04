@@ -1442,19 +1442,74 @@ workspace_jobs_retry <- function(jobs, run_id) {
 # ---- panel
 # ---------------------------------------------------------------------------
 
+# The panel is a native disclosure. Without scripts or styles it is open and
+# shows every row; custom.css hides it while the session has no job, and
+# workspace-ui.js collapses it to one summary line when no job is queued or
+# running, writes the summary text from the rows and opens it for a new run. The
+# outputs and the one polite live region are unchanged.
 workspace_jobs_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tags$section(
     role = "region",
     `aria-label` = "Analysis jobs",
     class = "rs-workspace-jobs",
-    shiny::uiOutput(ns("jobs_list")),
-    shiny::uiOutput(ns("jobs_status")),
-    shiny::tags$div(
-      `aria-live` = "polite",
-      shiny::uiOutput(ns("jobs_announce"))
+    shiny::tags$details(
+      class = "rs-jobs-disclosure",
+      open = "open",
+      shiny::tags$summary(class = "rs-jobs-summary", "Analysis jobs"),
+      # Shiny marks every bound output aria-live="polite" unless the attribute
+      # is already set, so the outputs that are not the announcement are set to
+      # "off" and jobs_announce is the one polite job-status region.
+      shiny::uiOutput(ns("jobs_list"), `aria-live` = "off"),
+      shiny::uiOutput(ns("jobs_status"), `aria-live` = "off"),
+      shiny::uiOutput(ns("jobs_announce"), `aria-live` = "polite"),
+      shiny::uiOutput(ns("jobs_time"), `aria-live` = "off")
+    )
+  )
+}
+
+# One job as a compact row: kind, short run id, textual state, inputs and the
+# offered actions; the run settings sit in a closed disclosure.
+workspace_jobs_row <- function(ns, rec, buttons = list()) {
+  labels <- vapply(
+    rec$inputs,
+    function(inp) as.character(inp$label),
+    character(1)
+  )
+  shiny::tags$li(
+    class = "rs-job",
+    `data-state` = rec$state,
+    shiny::tags$span(
+      class = "rs-job-kind",
+      workspace_jobs_kind_label(rec$kind)
     ),
-    shiny::uiOutput(ns("jobs_time"))
+    " ",
+    shiny::tags$code(
+      class = "rs-job-id",
+      substr(rec$run_id, 1L, 8L)
+    ),
+    " ",
+    shiny::tags$span(
+      class = "rs-job-state",
+      workspace_jobs_state_label(rec$state)
+    ),
+    " ",
+    shiny::tags$span(
+      class = "rs-job-inputs",
+      paste("Inputs:", paste(labels, collapse = ", "))
+    ),
+    buttons,
+    shiny::tags$details(
+      class = "rs-job-details",
+      shiny::tags$summary("Run settings"),
+      shiny::tags$ul(
+        class = "rs-job-settings",
+        lapply(
+          workspace_jobs_settings_text(rec$settings),
+          shiny::tags$li
+        )
+      )
+    )
   )
 }
 
@@ -1579,36 +1634,7 @@ workspace_jobs_server <- function(id, jobs) {
                   list(workspace_jobs_button(ns, "retry", rec$run_id, "Retry"))
                 )
               }
-              labels <- vapply(
-                rec$inputs,
-                function(inp) as.character(inp$label),
-                character(1)
-              )
-              shiny::tags$li(
-                class = "rs-job",
-                shiny::tags$span(
-                  class = "rs-job-kind",
-                  workspace_jobs_kind_label(rec$kind)
-                ),
-                " ",
-                shiny::tags$code(
-                  class = "rs-job-id",
-                  substr(rec$run_id, 1L, 8L)
-                ),
-                " ",
-                shiny::tags$span(
-                  class = "rs-job-inputs",
-                  paste("Inputs:", paste(labels, collapse = ", "))
-                ),
-                shiny::tags$ul(
-                  class = "rs-job-settings",
-                  lapply(
-                    workspace_jobs_settings_text(rec$settings),
-                    shiny::tags$li
-                  )
-                ),
-                buttons
-              )
+              workspace_jobs_row(ns, rec, buttons)
             },
             error = function(e) {
               shiny::tags$li(
@@ -1713,6 +1739,11 @@ workspace_jobs_server <- function(id, jobs) {
         )
       }))
     })
+    # The panel is hidden or collapsed while it has no jobs; its outputs must
+    # still render, or the first job could never appear.
+    for (name in c("jobs_list", "jobs_status", "jobs_announce", "jobs_time")) {
+      shiny::outputOptions(output, name, suspendWhenHidden = FALSE)
+    }
     shiny::observeEvent(input$job_action, {
       workspace_jobs_contain(
         {

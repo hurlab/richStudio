@@ -1537,3 +1537,195 @@ pre, .shiny-text-output {
     column-gap: 20px;
   }
 }
+
+
+/* --- SPEC-WS-013 M1: presentation quick wins --- */
+/* Overrides of earlier rules, placed after them (the original rules above are
+   pinned byte-for-byte by test-workspace-components.R). */
+:root {
+  --rs-text-secondary-strong: #475569;
+  --rs-focus: #0a4f8a;
+  --rs-focus-on-dark: #ffffff;
+}
+.help-block {
+  font-size: 13px !important;
+  color: var(--rs-text-secondary-strong) !important;
+}
+.main-sidebar .sidebar-menu > li.header,
+.sidebar-menu .header {
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+}
+.sidebar-footer a {
+  font-size: 13px;
+}
+.sidebar-footer .lab-dept {
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.form-control:focus {
+  outline: 3px solid var(--rs-focus) !important;
+  outline-offset: 0;
+}
+.shiny-notification {
+  opacity: 1 !important;
+  background-color: #ffffff;
+  color: var(--rs-text);
+}
+.shiny-notification-message { border-left: 4px solid var(--rs-info); }
+.shiny-notification-warning { border-left: 4px solid var(--rs-warning); background-color: #fef9ec; }
+.shiny-notification-error { border-left: 4px solid var(--rs-danger); background-color: #fdf0f1; color: #7f1d1d; }
+@media (max-width: 767px) {
+  #shiny-notification-panel { left: 8px; right: 8px; bottom: 8px; width: auto; }
+  .shiny-notification { width: 100%; }
+}
+
+
+/* F10: visible focus on every focusable control. The outline colour is chosen
+   against the surface the control sits on (dark sidebar vs light content). */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+.selectize-input.focus {
+  outline: 3px solid var(--rs-focus) !important;
+  outline-offset: 2px;
+}
+.main-sidebar a:focus-visible,
+.main-sidebar button:focus-visible,
+.main-sidebar .btn:focus-visible,
+.main-sidebar summary:focus-visible {
+  outline-color: var(--rs-focus-on-dark) !important;
+}
+.form-control:focus-visible {
+  outline-offset: 0;
+}
+
+/* F4: a disabled control looks disabled. */
+button:disabled,
+.btn:disabled,
+.btn.disabled,
+.btn[disabled],
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"],
+.rs-workspace-action:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+.rs-workspace-actions > span {
+  flex: 1 1 100%;
+  font-size: 13px;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-workspace-unrecorded {
+  margin-top: 0.8rem;
+}
+.rs-workspace-unrecorded > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--rs-text-secondary-strong);
+}
+
+/* F1/N1: the job panel is one disclosure line while collapsed, compact rows when open. */
+.rs-workspace-jobs {
+  margin: 0 0 10px;
+}
+.rs-jobs-disclosure {
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  padding: 0 12px;
+}
+.rs-jobs-disclosure:not(:has(.rs-job)) {
+  display: none;
+}
+.rs-jobs-summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 40px;
+  min-height: 40px;
+  color: var(--rs-text);
+}
+.rs-jobs-disclosure[open] > .rs-jobs-summary {
+  border-bottom: 1px solid var(--rs-border);
+  margin-bottom: 6px;
+}
+.rs-job-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rs-job {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rs-border-light);
+  font-size: 13px;
+}
+.rs-job .rs-job-id,
+.rs-workspace-jobs code {
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  font-family: var(--rs-font-mono);
+  font-size: 12px;
+}
+.rs-job-kind {
+  font-weight: 600;
+}
+.rs-job-state {
+  font-weight: 600;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-job-details {
+  flex: 1 1 100%;
+}
+.rs-job-details > summary {
+  cursor: pointer;
+  color: var(--rs-text-secondary-strong);
+  font-size: 13px;
+}
+.rs-job-settings {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.rs-workspace-jobs .btn {
+  padding: 2px 10px;
+  font-size: 13px;
+}
+.rs-job-status,
+.rs-job-time {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-job-status code {
+  color: inherit;
+}
+
+/* F12: on a narrow screen the slide-in menu closes at once (a destination was chosen) and
+   keeps its slide when it opens. */
+@media (max-width: 767px) {
+  .main-sidebar,
+  .left-side {
+    transition: none !important;
+  }
+  body.sidebar-open .main-sidebar,
+  body.sidebar-open .left-side {
+    transition: transform 0.3s ease-in-out !important;
+  }
+}

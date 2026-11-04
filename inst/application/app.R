@@ -183,6 +183,7 @@ ui <- function(request) {
       tags$head(
         tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
         tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+        tags$script(src = "workspace-ui.js", defer = NA),
         if (workspace_navigation) tags$script(HTML("
           document.addEventListener('click', function(event) {
             var link = event.target.closest('.sidebar-menu > li.treeview > a');

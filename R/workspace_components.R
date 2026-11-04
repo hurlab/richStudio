@@ -12,12 +12,18 @@ workspace_text <- function(value, name = "text", missing = FALSE) {
   paste0(value)
 }
 
+# An unavailable action states its reason through title and aria-describedby.
+# Standalone, the reason follows the button as one visible span. A group of
+# actions that share one reason passes show_reason = FALSE and the id of the one
+# visible hint (reason_id) the caller renders.
 workspace_action <- function(
   namespace,
   id,
   label,
   available = TRUE,
-  reason = NULL
+  reason = NULL,
+  show_reason = TRUE,
+  reason_id = NULL
 ) {
   id <- shiny::NS(namespace, id)
   label <- workspace_text(label, "label")
@@ -27,15 +33,19 @@ workspace_action <- function(
   if (!available && (is.null(reason) || !nzchar(workspace_text(reason)))) {
     stop("Unavailable actions require a reason", call. = FALSE)
   }
+  described <- if (!available) {
+    if (is.null(reason_id)) paste0(id, "-reason") else reason_id
+  }
   button <- shiny::tags$button(
     id = id,
     type = "button",
     class = "rs-workspace rs-workspace-action action-button",
     disabled = if (!available) "disabled",
-    `aria-describedby` = if (!available) paste0(id, "-reason"),
+    title = if (!available) workspace_text(reason),
+    `aria-describedby` = described,
     shiny::tags$span(class = "action-label", label)
   )
-  if (available) {
+  if (available || !isTRUE(show_reason)) {
     return(button)
   }
   shiny::tags$span(

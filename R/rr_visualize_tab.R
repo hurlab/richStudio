@@ -111,7 +111,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 class = "empty-state",
                 icon("table", class = "empty-icon"),
                 h4("No data to display"),
-                p("Select an enrichment result above.")
+                p("Load demo results from Home or import an enrichment result, then select it above.")
               ),
               DT::dataTableOutput(ns("rr_table"))
             )
@@ -179,7 +179,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 class = "empty-state",
                 icon("chart-bar", class = "empty-icon"),
                 h4("No data to display"),
-                p("Select an enrichment result and configure options above.")
+                p("Load demo results from Home or import an enrichment result, then select it above.")
               ),
               jqui_resizable(plotlyOutput(ns("barplot")))
             )
@@ -238,7 +238,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 class = "empty-state",
                 icon("chart-line", class = "empty-icon"),
                 h4("No data to display"),
-                p("Select an enrichment result and configure options above.")
+                p("Load demo results from Home or import an enrichment result, then select it above.")
               ),
               jqui_resizable(plotlyOutput(ns("dotplot")))
             )
@@ -297,7 +297,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 class = "empty-state",
                 icon("project-diagram", class = "empty-icon"),
                 h4("No data to display"),
-                p("Select an enrichment result and configure options above.")
+                p("Load demo results from Home or import an enrichment result, then select it above.")
               ),
               jqui_resizable(plotOutput(ns("network")))
             )
@@ -375,6 +375,14 @@ rr_vis_tab_ui <- function(id, tabName) {
                 DT::dataTableOutput(ns("cushmap_select_table")),
                 actionButton(ns("cushmap_add_rr"), "Add terms")
               )
+            ),
+            # Shown by the server while the visible heatmap has nothing to draw.
+            div(
+              id = ns("hmap_empty"),
+              class = "empty-state",
+              icon("table-cells", class = "empty-icon"),
+              h4("No data to display"),
+              p("Choose enrichment results under Top terms, or add terms under Custom terms.")
             ),
             # Delete result/terms from custom heatmap
             shinyjs::hidden(tags$div(
@@ -525,17 +533,36 @@ rr_vis_tab_server <- function(
         shinyjs::show("rrlist_box")
       }
     })
-    # Toggle which heatmap box is shown
-    observeEvent(input$edit_hmap_box, {
-      if (input$edit_hmap_box == "Top terms") {
-        shinyjs::show("top_hmap_box")
-        shinyjs::hide("custom_hmap_box")
-        shinyjs::hide("delete_custom_hmap_box")
-      } else {
-        shinyjs::hide("top_hmap_box")
-        shinyjs::show("custom_hmap_box")
-        shinyjs::show("delete_custom_hmap_box")
+    # Empty states follow the data: each view hides its message while the
+    # selected result has rows and shows it otherwise.
+    rr_has_rows <- function(label) {
+      if (is.null(label) || length(label) != 1L || is.na(label) || !nzchar(label)) {
+        return(FALSE)
       }
+      df <- u_rrdfs[[label]]
+      is.data.frame(df) && nrow(df) > 0L
+    }
+    rr_toggle_empty <- function(id, has_rows) {
+      if (has_rows) shinyjs::hide(id) else shinyjs::show(id)
+    }
+    observe(rr_toggle_empty("table_empty", rr_has_rows(input$select_table)))
+    observe(rr_toggle_empty("bar_empty", rr_has_rows(input$select_bar)))
+    observe(rr_toggle_empty("dot_empty", rr_has_rows(input$select_dot)))
+    observe(rr_toggle_empty("net_empty", rr_has_rows(input$select_net)))
+
+    # Which heatmap box is shown: only the active sub-tab's box, and only when it
+    # has a heatmap to draw; otherwise the one empty state.
+    observe({
+      top_mode <- !identical(input$edit_hmap_box, "Custom terms")
+      has_plot <- if (top_mode) {
+        inherits(plot_topterm_heatmap(), "plotly")
+      } else {
+        inherits(plot_custom_hmap(), "plotly")
+      }
+      rr_toggle_empty("hmap_empty", has_plot)
+      if (top_mode && has_plot) shinyjs::show("top_hmap_box") else shinyjs::hide("top_hmap_box")
+      if (!top_mode && has_plot) shinyjs::show("custom_hmap_box") else shinyjs::hide("custom_hmap_box")
+      if (top_mode) shinyjs::hide("delete_custom_hmap_box") else shinyjs::show("delete_custom_hmap_box")
     })
 
     # <!----- UPLOAD LOGIC -----!>

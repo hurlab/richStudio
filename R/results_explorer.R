@@ -248,7 +248,7 @@ explorer_selection_ui <- function(df, index, key, dataset_id, namespace) {
   label <- as.character(df[[cols$label]][index])
   id <- as.character(df[[cols$id]][index])
   genes <- if ("GeneID" %in% names(df)) workspace_member_genes(df$GeneID[index]) else NULL
-  shiny::tags$section(class = "rs-workspace rs-workspace-card", `aria-live` = "polite",
+  shiny::tags$section(class = "rs-workspace rs-workspace-card",
     shiny::tags$h3("Selected term"),
     shiny::tags$dl(
       shiny::tags$dt("Term"), shiny::tags$dd(workspace_text(label, "label", missing = TRUE)),
@@ -363,7 +363,7 @@ resultsExplorerUI <- function(ns) {
       shiny::downloadButton(ns("ex_download_exact"), "Download exact values (CSV)"),
       shiny::downloadButton(ns("ex_download_safe"), "Download spreadsheet-safe copy (CSV)")),
     shinydashboard::box(title = "Selected term", width = NULL, status = "info", solidHeader = TRUE,
-      shiny::uiOutput(ns("ex_selected")),
+      shiny::uiOutput(ns("ex_selected"), `aria-live` = "off"),
       shiny::actionButton(ns("ex_clear"), "Clear selection")),
     shinydashboard::box(title = "Figure", width = NULL, status = "info", solidHeader = TRUE,
       shiny::uiOutput(ns("ex_plot_note")),

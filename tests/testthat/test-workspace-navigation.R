@@ -780,3 +780,52 @@ test_that("REQ-001 REQ-002 installed app wires the release switch, menu, header 
   }
   expect_false(grepl('menuSubItem("Visualize"', text, fixed = TRUE))
 })
+
+# ---- SPEC-WS-013 M1: one "not recorded" disclosure and one disabled hint (AC-003) ----
+
+test_that("AC-003 unrecorded fields collapse into one 'N not recorded' disclosure", {
+  meta <- rbind(ws3_meta("go1", "SYMBOL", "human"), ws3_meta("kegg1", "?", "?"))
+  fixture <- ws3_header_fixture(c("go1", "kegg1"), meta, "kegg1")
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
+    session$flushReact()
+    html <- ws3_output_html(output$summary)
+    expect_identical(ws3_count(html, "<details"), 1L)
+    expect_match(html, "<summary[^>]*>3 not recorded</summary>")
+    # the rows sit inside the disclosure, and the per-field text is kept
+    inside <- sub(".*<details[^>]*>(.*)</details>.*", "\\1", html)
+    expect_identical(ws3_count(inside, "Not recorded"), 3L)
+    expect_false(grepl("<details[^>]* open", html))
+  })
+  one <- ws3_header_fixture(c("go1", "kegg1"),
+    rbind(ws3_meta("go1", "SYMBOL", "human"), ws3_meta("kegg1", "ENTREZID", "mouse")), "kegg1")
+  shiny::testServer(richStudio:::workspace_header_server, args = one$args, {
+    session$flushReact()
+    html <- ws3_output_html(output$summary)
+    expect_match(html, "<summary[^>]*>1 not recorded</summary>")
+    outside <- sub("<details.*</details>", "", html)
+    expect_match(outside, "mouse", fixed = TRUE)
+    expect_match(outside, "ENTREZID", fixed = TRUE)
+    expect_false(grepl("Not recorded", outside, fixed = TRUE))
+  })
+  none <- ws3_header_fixture(c("go1"), NULL, NULL)
+  shiny::testServer(richStudio:::workspace_header_server, args = none$args, {
+    session$flushReact()
+    expect_false(grepl("<details", ws3_output_html(output$summary), fixed = TRUE))
+  })
+})
+
+test_that("AC-003 both disabled header actions share one visible hint and expose it as title", {
+  for (case in list(list(labels = NULL, reason = "Import or load enrichment results first"),
+                    list(labels = c("go1", "kegg1"), reason = "Choose a result first"))) {
+    fixture <- ws3_header_fixture(case$labels, NULL, NULL)
+    shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
+      session$flushReact()
+      actions <- ws3_output_html(output$actions)
+      # the hint is a visible element once; the second occurrence is the title text of each button
+      expect_identical(ws3_count(actions, paste0(">", case$reason, "<")), 1L)
+      expect_identical(ws3_count(actions, paste0('title="', case$reason, '"')), 2L)
+      expect_identical(ws3_count(actions, 'aria-describedby="workspace-actions-reason"'), 2L)
+      expect_match(actions, 'id="workspace-actions-reason"', fixed = TRUE)
+    })
+  }
+})

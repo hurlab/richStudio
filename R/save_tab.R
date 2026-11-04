@@ -108,7 +108,7 @@ saveTabUI <- function(id, tabName) {
           fileInput(ns('load_session_file'), "Choose session file",
                    accept = c('.json', '.JSON')),
           br(),
-          actionButton(ns('load_session'), "Load Session", class = "btn-success btn-lg"),
+          actionButton(ns('load_session'), "Load Session", class = "btn-primary btn-lg"),
           br(), br(),
           helpText("Loading a session will replace your current analysis state."),
           hr(),

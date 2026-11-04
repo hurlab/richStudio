@@ -253,7 +253,47 @@ Full browser gate (`scripts/test-workspace.sh browser`, CI environment, pinned t
 
 ## M3 - one visual system
 
-Not started.
+Tree: `8c275a5` plus the M3 working-tree changes. Pinned toolchain.
+
+### RED (captured before the implementation, against the M2 tree)
+
+`tests/e2e/ui-layout.spec.ts` run alone: `8 failed` (all four tests in both projects). Excerpts:
+
+```
+AC-011  distinct box header styles: ["rgb(15, 111, 197)|...|rgb(255, 255, 255)","rgb(23, 162, 184)|...|rgb(255, 255, 255)","rgba(0, 0, 0, 0)|...|rgb(30, 41, 59)","rgb(240, 247, 255)|..." (6 in all)
+        Expected: 1   Received: 6
+AC-012  custom.css has no transition: all     Received: 9 x "transition: all"
+AC-012  empty Home strip                      Received: ["div#home-demo_status.shiny-text-output shiny-bound-output recalculating"]
+AC-012  reduced motion                        Received: [".main-sidebar: 0.3s, 0.3s", ".content-wrapper: 0.3s, 0.3s", ".sidebar-menu > li > a: 0.2s" (x3), ".sidebar-menu .treeview-menu > li > a: 0.2s" (x3)]
+```
+
+(Full excerpt kept in the session scratchpad as `m1/red3-excerpt.txt`.)
+
+### Changes
+
+- D / F8 / AC-011: appended CSS gives every box, whatever status or `solidHeader` it was built with (including plain boxes), the same header background (`--rs-primary-lighter`), header border, title font, size, weight and colour (`--rs-primary-dark`) and the one primary top border. The `btn-action-hero` blue-to-teal gradient is now solid primary. "Load Session" is `btn-primary` instead of the green `btn-success`; red stays on `btn-danger` (Remove/Delete) and error notifications. The inline `.box-title { font-size: 20px }` style in `R/rr_visualize_tab.R` is removed.
+- F16 / AC-012: the nine `transition: all var(--rs-transition)` rules in the pre-marker CSS are now `color, background-color, border-color, box-shadow` (the M1 focus rule's `transition: none` still wins). The empty Home result message no longer renders as a bordered strip (plain text in `.home-status`; an empty text output loses its border and padding but is not hidden: a first version used `display: none` and, because Shiny does not render hidden outputs, left them empty forever and broke the clustering, heatmap and project specs). Submenu icons share the top-level icon width and margin (appended rule). A `prefers-reduced-motion` block removes the transitions of the sidebar (including `body.sidebar-open .main-sidebar`), content, header, menu links, boxes, buttons and notifications.
+
+### Acceptance (new automated tests, both projects pass)
+
+| AC | Tests |
+|---|---|
+| AC-011 | `ui-layout.spec.ts` "AC-011 one box style and semantic colours" (all 8 routes in a populated workspace: one computed header background/border/title font, one top border; every element whose background or border equals `--rs-danger` or `--rs-success` is inside a named destructive, error or success class or role) |
+| AC-012 | `ui-layout.spec.ts` "custom.css has no transition: all", "an empty Home renders no empty bordered status strip", "with reduced motion the menu and notification transitions last at most 0.01 s" |
+
+### Lead-approved scope addition: pinned CSS digest
+
+`tests/testthat/test-workspace-components.R` pins the md5 of the CSS before the SPEC-WS-002 marker ("original CSS bytes precede additive scoped workspace rules"). F16 requires editing that region (nine `transition: all` rules), so the digest in that test was re-pinned, and nothing else in the test changed: before `3dc7da1312126fb3a028db075e1c0e60`, after `5f71dabdcf3df0ea8d7f66367f463678`. This file is outside the M3 row; the lead approved the addition and will amend the SPEC row. `design-system.spec.ts` frozen sha256 digests of `custom.css` and `test-workspace-components.R` were re-pinned for the same reason (computed from the new file contents). The pre-marker edit is limited to the nine transition values; all other M3 CSS is appended.
+
+### Changed existing-test assertions
+
+Only the two digest values above (md5 in `test-workspace-components.R`, sha256 entries in `design-system.spec.ts`). No assertion removed or weakened.
+
+### Gaps
+
+- The box-style check measures header and top-border computed styles on the routes and boxes present in the populated workspace; `tabBox`/`nav-tabs-custom` widgets are not box headers and were not unified.
+- Red and green are checked by exact equality with `--rs-danger` / `--rs-success`; tints (`--rs-danger-light`, `--rs-success-light`) and text colours are not part of the AC-011 check.
+- The submenu icon alignment has no automated assertion (AC-012 does not name it); it is an appended CSS rule.
 
 ## M4 - figure legibility
 

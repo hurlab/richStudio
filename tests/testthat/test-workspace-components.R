@@ -118,7 +118,7 @@ test_that("original CSS bytes precede additive scoped workspace rules", {
   file <- tempfile()
   on.exit(unlink(file), add = TRUE)
   writeBin(charToRaw(original), file)
-  expect_identical(unname(tools::md5sum(file)), "3dc7da1312126fb3a028db075e1c0e60")
+  expect_identical(unname(tools::md5sum(file)), "5f71dabdcf3df0ea8d7f66367f463678")
   expect_match(text, ".rs-workspace", fixed = TRUE)
   expect_match(text, "prefers-reduced-motion: reduce", fixed = TRUE)
 })

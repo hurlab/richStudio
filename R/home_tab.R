@@ -38,7 +38,7 @@ home_quick_start_ui <- function(id) {
         "analysis)."
       )
     ),
-    div(role = "status", textOutput(ns("demo_status"))),
+    div(role = "status", class = "home-status", textOutput(ns("demo_status"))),
     uiOutput(ns("context_actions"))
   )
 }

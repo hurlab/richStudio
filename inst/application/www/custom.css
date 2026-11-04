@@ -152,7 +152,7 @@ hr {
   padding: 12px 16px 12px 18px;
   font-size: 14px;
   font-weight: 500;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .skin-blue .sidebar-menu > li > a:hover {
@@ -188,7 +188,7 @@ hr {
   color: var(--rs-sidebar-text) !important;
   padding: 10px 16px 10px 46px;
   font-size: 13px;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .skin-blue .sidebar-menu .treeview-menu > li > a:hover {
@@ -442,7 +442,7 @@ hr {
   font-size: 13px;
   padding: 10px 16px;
   border: none !important;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .nav-tabs-custom > .nav-tabs > li > a:hover {
@@ -477,7 +477,7 @@ hr {
   color: var(--rs-text-secondary) !important;
   font-weight: 500;
   padding: 10px 16px;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .nav-tabs > li > a:hover {
@@ -595,7 +595,7 @@ input[type="number"].form-control {
   font-weight: 600;
   font-size: 13px;
   padding: 8px 16px;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
   border: 1px solid transparent;
   letter-spacing: 0.2px;
 }
@@ -880,7 +880,7 @@ input[type="number"].form-control {
   border: 1px solid var(--rs-border);
   padding: 20px 18px;
   position: relative;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .step-card:first-child {
@@ -971,7 +971,7 @@ input[type="number"].form-control {
   border-radius: var(--rs-radius);
   text-decoration: none;
   color: var(--rs-text);
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
   background: var(--rs-bg-card);
 }
 
@@ -1135,7 +1135,7 @@ pre, .shiny-text-output {
   font-weight: 500;
   padding: 12px 16px 12px 18px;
   text-align: left;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 #ss-bookmark-btn:hover,
@@ -1201,7 +1201,7 @@ pre, .shiny-text-output {
   color: var(--rs-text);
   font-size: 13px;
   font-weight: 500;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .link-list-compact a:hover {
@@ -1758,4 +1758,107 @@ table.rs-display-table th {
 .rs-refusal-steps > summary {
   cursor: pointer;
   font-weight: 600;
+}
+
+/* --- SPEC-WS-013 M3: one visual system --- */
+
+/* One box style: every box (whatever status or solidHeader it was built with) gets the same
+   neutral surface, the same header and the one primary accent. Red and green are reserved for
+   destructive/error and success states, which are not boxes. */
+.box,
+.box.box-primary,
+.box.box-info,
+.box.box-success,
+.box.box-danger,
+.box.box-warning,
+.box.box-default,
+.box.box-solid {
+  border-top: 3px solid var(--rs-primary) !important;
+}
+.box > .box-header,
+.box.box-primary > .box-header,
+.box.box-info > .box-header,
+.box.box-success > .box-header,
+.box.box-danger > .box-header,
+.box.box-warning > .box-header,
+.box.box-default > .box-header,
+.box.box-solid > .box-header,
+.box.box-solid.box-primary > .box-header,
+.box.box-solid.box-info > .box-header,
+.box.box-solid.box-success > .box-header,
+.box.box-solid.box-danger > .box-header {
+  background: var(--rs-primary-lighter) !important;
+  border-bottom: 1px solid var(--rs-primary-light) !important;
+}
+.box > .box-header .box-title,
+.box.box-primary > .box-header .box-title,
+.box.box-info > .box-header .box-title,
+.box.box-success > .box-header .box-title,
+.box.box-danger > .box-header .box-title,
+.box.box-warning > .box-header .box-title,
+.box.box-default > .box-header .box-title,
+.box.box-solid > .box-header .box-title,
+.box.box-solid.box-primary > .box-header .box-title,
+.box.box-solid.box-info > .box-header .box-title,
+.box.box-solid.box-success > .box-header .box-title,
+.box.box-solid.box-danger > .box-header .box-title {
+  color: var(--rs-primary-dark) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+/* One accent: the primary action carries the primary blue, not a blue-to-teal gradient. */
+.btn-action-hero {
+  background: var(--rs-primary) !important;
+  box-shadow: var(--rs-shadow-md) !important;
+}
+.btn-action-hero:hover {
+  background: var(--rs-primary-dark) !important;
+}
+
+/* Home: the result message is plain text and takes no visible space while empty. */
+.home-status .shiny-text-output {
+  font-family: inherit;
+  font-size: 14px;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+/* An empty text output shows nothing but must stay rendered (Shiny does not render hidden outputs). */
+.shiny-text-output:empty {
+  border: 0 !important;
+  padding: 0 !important;
+  min-height: 0;
+}
+
+/* Submenu icons line up with the top-level icons. */
+.skin-blue .sidebar-menu .treeview-menu > li > a > .fa,
+.skin-blue .sidebar-menu .treeview-menu > li > a > .fas,
+.skin-blue .sidebar-menu .treeview-menu > li > a > .far {
+  display: inline-block;
+  width: 22px;
+  margin-right: 8px;
+  text-align: center;
+}
+
+/* F16: reduced motion removes the menu, content and notification transitions. */
+@media (prefers-reduced-motion: reduce) {
+  body .main-sidebar,
+  body .left-side,
+  body.sidebar-open .main-sidebar,
+  body.sidebar-open .left-side,
+  .content-wrapper,
+  .main-footer,
+  .main-header,
+  .main-header .logo,
+  .main-header .navbar,
+  .sidebar-menu a,
+  .sidebar-menu > li > a,
+  .sidebar-menu .treeview-menu > li > a,
+  .shiny-notification,
+  .shiny-notification-panel,
+  .box,
+  .btn {
+    transition: none !important;
+  }
 }

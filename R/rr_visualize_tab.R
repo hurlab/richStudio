@@ -440,11 +440,6 @@ rr_vis_tab_ui <- function(id, tabName) {
           )
         )
       )
-    ),
-    tags$head(
-      tags$style(
-        HTML(".box-title { font-size: 20px; }") # Adjust the font size as needed
-      )
     )
   )
   htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")

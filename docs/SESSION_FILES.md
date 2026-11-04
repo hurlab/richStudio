@@ -25,9 +25,10 @@ Do this on your own computer, and only for a file you created or fully trust:
 Rscript scripts/convert-trusted-session.R my-session.rds my-session.json
 ```
 
-The script is in the richStudio repository
-(https://github.com/hurlab/richStudio/blob/main/scripts/convert-trusted-session.R);
-save a copy next to your file and drop the `scripts/` prefix. It reads the `.rds`, checks that it
+The script needs the rest of the repository, so download richStudio as a ZIP
+(https://github.com/hurlab/richStudio/archive/refs/heads/main.zip), unzip it, and
+run the command from inside the unzipped folder (R with the `jsonlite` package is
+required). Put your `.rds` file there or give its full path. It reads the `.rds`, checks that it
 has the richStudio session structure, and writes the JSON with the same writer
 the app uses. It never overwrites an existing output file, and it copies only
 the known session fields. Upload the resulting `.json` file on the **Load

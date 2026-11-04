@@ -496,17 +496,30 @@ project_write <- function(session, run_records, file, policy_loader = workspace_
          bytes = file.size(tables_path)),
     list(name = "methods.md", role = "methods", sha256 = project_file_digest(methods_path),
          bytes = file.size(methods_path)))
+
+  members <- c("manifest.json", "tables.json", "methods.md")
+  # Optional additive member: result tracking tables (origin, annotation, cluster
+  # method), written only when the session has any, in the session-JSON encoding.
+  tracking <- Filter(function(x) is.list(x) && is.data.frame(x$df) && nrow(x$df) > 0L,
+                     session[c("big_rrdf", "big_clusdf")])
+  if (length(tracking)) {
+    tracking_path <- file.path(stage, "tracking.json")
+    session_json_write(tracking, tracking_path)
+    manifest$files[[length(manifest$files) + 1L]] <- list(
+      name = "tracking.json", role = "tracking", sha256 = project_file_digest(tracking_path),
+      bytes = file.size(tracking_path))
+    members <- c(members, "tracking.json")
+  }
   manifest_path <- file.path(stage, "manifest.json")
   jsonlite::write_json(manifest, manifest_path, auto_unbox = TRUE, pretty = TRUE, digits = I(17),
                        na = "null", null = "null")
-
-  expanded <- sum(file.size(file.path(stage, c("manifest.json", "tables.json", "methods.md"))))
+  expanded <- sum(file.size(file.path(stage, members)))
   if (expanded > policy$limits$archive_expanded_bytes) {
     stop("Project is larger than the reviewed archive limit and cannot be saved", call. = FALSE)
   }
   out <- tempfile("richstudio_project_", fileext = ".zip")
   on.exit(unlink(out), add = TRUE)
-  zip::zipr(out, c("manifest.json", "tables.json", "methods.md"), root = stage)
+  zip::zipr(out, members, root = stage)
   if (file.size(out) > policy$limits$archive_bytes) {
     stop("Project is larger than the reviewed archive limit and cannot be saved", call. = FALSE)
   }

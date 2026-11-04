@@ -148,9 +148,9 @@ test_that("uploaded RDS files are refused before deserialization and change noth
   })
   expect_length(messages, 3L)
   expect_true(all(grepl("older .rds session file", messages, fixed = TRUE)))
-  expect_true(all(grepl("Rscript convert-trusted-session.R my-session.rds my-session.json",
+  expect_true(all(grepl("Rscript scripts/convert-trusted-session.R my-session.rds my-session.json",
                         messages, fixed = TRUE)))
-  expect_true(all(grepl("github.com/hurlab/richStudio", messages, fixed = TRUE)))
+  expect_true(all(grepl("archive/refs/heads/main.zip", messages, fixed = TRUE)))
   expect_identical(shiny::isolate(state$u_rrnames$labels), "keep")
   expect_identical(shiny::isolate(state$u_rrdfs$keep), existing)
   expect_identical(shiny::isolate(state$u_degnames$labels), character())

@@ -471,11 +471,10 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
             paste("This looks like an older .rds session file. For security reasons richStudio",
                   "can no longer open .rds session files, so nothing was loaded. Convert the",
                   "file once on your own computer (only if you made it or fully trust it) and",
-                  "upload the .json result instead. The converter script",
-                  "convert-trusted-session.R is at",
-                  "https://github.com/hurlab/richStudio/blob/main/scripts/convert-trusted-session.R",
-                  "; with R installed, save it and run:",
-                  "Rscript convert-trusted-session.R my-session.rds my-session.json"),
+                  "upload the .json result instead. Download richStudio as a ZIP from",
+                  "https://github.com/hurlab/richStudio/archive/refs/heads/main.zip, unzip it,",
+                  "and from inside the unzipped folder run (needs R with the jsonlite package):",
+                  "Rscript scripts/convert-trusted-session.R my-session.rds my-session.json"),
             type = "error", duration = NULL
           )
           return(NULL)

@@ -649,3 +649,83 @@ test_that("labels that start with a dot are saved in the JSON session and the pr
   expect_identical(after$degdfs[[".hidden_deg"]], session$degdfs[[1]])
   expect_identical(names(after$cluslists), ".hidden_clus")
 })
+
+# ---- result tracking travels with a project (optional additive member) ---------------
+
+pi_tracking_session <- function() {
+  session <- pi_session()
+  session$big_rrdf <- list(df = data.frame(
+    name = "deg_a_enriched", from_deg = "deg_a", annot = "GO", keytype = "SYMBOL",
+    ontology = "BP", species = "human", stringsAsFactors = FALSE))
+  session$big_clusdf <- list(df = data.frame(
+    name = "clus1", method = "david", n_clusters = 2L, n_terms = 3L, stringsAsFactors = FALSE))
+  session
+}
+
+# Rewrite one member of a project archive; the manifest digest is refreshed unless told not to.
+pi_edit_member <- function(path, member, edit, fix_digest = TRUE, env = parent.frame()) {
+  dir <- withr::local_tempdir(.local_envir = env)
+  zip::unzip(path, exdir = dir)
+  edit(file.path(dir, member))
+  if (fix_digest) {
+    m <- jsonlite::read_json(file.path(dir, "manifest.json"), simplifyVector = FALSE)
+    for (i in seq_along(m$files)) {
+      if (identical(m$files[[i]]$name, member)) {
+        m$files[[i]]$sha256 <- digest::digest(file.path(dir, member), algo = "sha256", file = TRUE)
+        m$files[[i]]$bytes <- file.size(file.path(dir, member))
+      }
+    }
+    jsonlite::write_json(m, file.path(dir, "manifest.json"), auto_unbox = TRUE, digits = I(17),
+                         null = "null", na = "null")
+  }
+  out <- withr::local_tempfile(fileext = ".zip", .local_envir = env)
+  zip::zipr(out, list.files(dir), root = dir)
+  out
+}
+
+test_that("a project round trip keeps result tracking, and older projects still import", {
+  session <- pi_tracking_session()
+  path <- pi_valid(session)
+  expect_true("tracking.json" %in% zip::zip_list(path)$filename)
+  candidate <- pi_read(path)
+  expect_identical(candidate$big_rrdf$df, session$big_rrdf$df)
+  expect_identical(candidate$big_clusdf$df, session$big_clusdf$df)
+  restored <- richStudio:::workspace_saved_tracking_state(candidate)
+  expect_identical(restored$big_rrdf$df$from_deg, "deg_a")
+  expect_identical(restored$big_rrdf$df$species, "human")
+  expect_identical(restored$big_clusdf$df$method, "david")
+
+  old <- pi_valid(pi_session())
+  expect_false("tracking.json" %in% zip::zip_list(old)$filename)
+  old_candidate <- pi_read(old)
+  expect_null(old_candidate$big_rrdf)
+  expect_null(old_candidate$big_clusdf)
+})
+
+test_that("a tampered tracking member is rejected and the workspace is unchanged", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  path <- pi_valid(pi_tracking_session())
+  stale_digest <- pi_edit_member(path, "tracking.json", function(f) {
+    writeLines(sub("deg_a", "deg_z", paste(readLines(f, warn = FALSE), collapse = "\n")), f)
+  }, fix_digest = FALSE)
+  expect_rejected(stale_digest, "tracking.json does not match the digest")
+  malformed <- pi_edit_member(path, "tracking.json", function(f) {
+    writeLines("{\"big_rrdf\": {\"df\": \"not a table\"}}", f)
+  })
+  expect_rejected(malformed, "tracking")
+  m_path <- pi_edit_member(path, "manifest.json", function(f) {
+    m <- jsonlite::read_json(f, simplifyVector = FALSE)
+    m$files <- Filter(function(x) !identical(x$name, "tracking.json"), m$files)
+    jsonlite::write_json(m, f, auto_unbox = TRUE, digits = I(17), null = "null", na = "null")
+  }, fix_digest = FALSE)
+  expect_rejected(m_path, "tracking.json does not match the digest")
+
+  state <- pi_populate(pi_state())
+  app <- pi_app(state)
+  before <- pi_snapshot(state)
+  for (bad in list(stale_digest, malformed)) {
+    pi_open_project(app, bad)
+    expect_identical(pi_snapshot(state), before)
+    expect_identical(app$jobs$generation, 1L)
+  }
+})

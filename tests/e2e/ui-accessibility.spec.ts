@@ -54,12 +54,21 @@ const colourTools = `
   const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
 `;
 
+// On a narrow viewport the context bar keeps its actions behind the Details toggle (SPEC-WS-013 M5).
+async function openContext(page: Page) {
+  const toggle = page.locator('.rs-context-toggle');
+  if ((page.viewportSize()?.width ?? 1280) >= 768) return;
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+}
+
 test.describe('AC-003 disabled controls and the unrecorded-metadata disclosure', () => {
   test('disabled header actions look disabled, say why once, and metadata is one disclosure', async ({ page }) => {
     await connected(page);
     // Results exist but none is the active dataset: both header actions are disabled.
     await page.locator('a[href="#shiny-tab-rr_visualize_tab"]').evaluate(l => (l as HTMLElement).click());
     await page.locator('#rr_visualize-rr_load').click();
+    await openContext(page);
     await expect(page.locator('#workspace-create_figure')).toBeDisabled();
 
     const found = await page.evaluate(() => {
@@ -261,5 +270,60 @@ test.describe('AC-006 one job-status live region', () => {
     await page.locator('#cluster-cluster').click();
     await expect(page.locator('section[aria-label="Analysis jobs"] .rs-job')).toHaveCount(1, { timeout: 30_000 });
     await verify('job present');
+  });
+});
+
+// ---- M5: the job tray (AC-015) ------------------------------------------------------------------
+
+test.describe('AC-015 job tray', () => {
+  test('the badge counts the jobs in words, the tray never opens by itself, takes focus, and Escape returns it', async ({ page }) => {
+    await connected(page);
+    await loadDemo(page);
+    await showTab(page, 'enrich_tab');
+    await page.locator('#enrich-deg_load').click();
+    const choose = async (id: string, value: string) => {
+      await expect.poll(() => page.locator(`#${id}`).evaluate((n, v) => !!(n as any).selectize?.options[v], value)).toBe(true);
+      const control = page.locator(`#${id} + .selectize-control`);
+      await control.locator('.selectize-input').click();
+      await control.locator(`.selectize-dropdown .option[data-value="${value}"]`).click();
+      await page.keyboard.press('Escape');
+    };
+    await choose('enrich-degs_to_enrich', 'deg_mouse1');
+    await page.locator('#enrich-enrich_deg').click();
+    await showTab(page, 'cluster_tab');
+    await choose('cluster-selected_rrs', 'go1');
+    await choose('cluster-selected_rrs', 'go2');
+    await page.locator('#cluster-cluster_name').fill('tray_check');
+    await page.locator('#cluster-cluster').click();
+    const rows = page.locator('section[aria-label="Analysis jobs"] .rs-job');
+    await expect(rows).toHaveCount(2, { timeout: 60_000 });
+    await expect(page.locator('.rs-job[data-state="queued"], .rs-job[data-state="running"]')).toHaveCount(0, { timeout: 120_000 });
+    const badge = page.locator('#jobs-job_badge');
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText('2 jobs finished');
+    // no page renders an expanded inline job log; the tray has not opened by itself
+    const tray = page.locator('#jobs-tray');
+    await expect(tray).not.toBeVisible();
+    await expect(rows.locator('visible=true')).toHaveCount(0);
+    for (const tab of ['enrich_tab', 'rr_visualize_tab', 'cluster_tab', 'clus_visualize_tab', 'save_tab']) {
+      await showTab(page, tab);
+      await expect(tray, `${tab} tray`).not.toBeVisible();
+    }
+    await showTab(page, 'cluster_tab');
+    await expect(badge).toHaveAttribute('aria-expanded', 'false');
+    await badge.click();
+    await expect(tray).toBeVisible();
+    await expect(badge).toHaveAttribute('aria-expanded', 'true');
+    await expect(rows.locator('visible=true')).toHaveCount(2);
+    for (let i = 0; i < 2; i++) {
+      await expect(rows.nth(i)).toContainText(/Succeeded|Failed|Cancelled|Interrupted|Detached/);
+      const colour = await rows.nth(i).locator('.rs-job-id').evaluate(e => getComputedStyle(e).color);
+      expect(colour).not.toBe('rgb(199, 37, 78)');
+      expect(colour).not.toBe('rgb(220, 53, 69)');
+    }
+    expect(await page.evaluate(() => !!document.activeElement?.closest('#jobs-tray'))).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(tray).not.toBeVisible();
+    await expect(badge).toBeFocused();
   });
 });

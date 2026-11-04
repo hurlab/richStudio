@@ -78,11 +78,78 @@
     window.setTimeout(function () { removeNotification(node); }, SUCCESS_HIDE_MS);
   }
 
-  /* F1: the job panel summarises itself in one line, stays collapsed while no job is
-   * queued or running and opens for a new run (CSS hides it while there is no job). */
-  var activeBefore = 0;
-  var userTouched = false;
+  /* The job tray (M5): a slide-over that only the user opens, with the job badge as
+   * its button. Opening moves focus into the tray; Escape or Close closes it and
+   * returns focus to the badge. The tray also writes its one-line summary. */
+  function tray() { return document.querySelector('.rs-job-tray'); }
+  function badge() { return document.querySelector('.rs-job-badge'); }
+  function trayOpen() {
+    var t = tray();
+    return !!t && t.classList.contains('rs-job-tray-open');
+  }
+  function syncBadge() {
+    var b = badge();
+    if (b) b.setAttribute('aria-expanded', trayOpen() ? 'true' : 'false');
+  }
+  function openTray() {
+    var t = tray();
+    if (!t) return;
+    t.classList.add('rs-job-tray-open');
+    syncBadge();
+    t.focus();
+  }
+  function closeTray(returnFocus) {
+    var t = tray();
+    if (!t || !trayOpen()) return;
+    t.classList.remove('rs-job-tray-open');
+    syncBadge();
+    var b = badge();
+    if (returnFocus && b) b.focus();
+  }
+
+  document.addEventListener('click', function (event) {
+    var target = event.target;
+    if (!target.closest) return;
+    if (target.closest('.rs-job-badge')) {
+      if (trayOpen()) closeTray(true); else openTray();
+    } else if (target.closest('.rs-job-tray-close')) {
+      closeTray(true);
+    } else if (target.closest('.rs-context-toggle')) {
+      var bar = target.closest('.rs-context-bar');
+      var open = !bar.classList.contains('rs-context-open');
+      contextOpen = open;
+      bar.classList.toggle('rs-context-open', open);
+      target.closest('.rs-context-toggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+  }, true);
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && trayOpen()) {
+      event.preventDefault();
+      closeTray(true);
+    }
+  });
+
+  /* The jobs stay listed while the tray is open: the disclosure cannot be closed. */
+  document.addEventListener('toggle', function (event) {
+    var d = event.target;
+    if (d && d.classList && d.classList.contains('rs-jobs-disclosure') && !d.open) d.open = true;
+  }, true);
+
+  // The context bar is rebuilt by the server; keep its narrow-viewport open state across rebuilds.
+  var contextOpen = false;
+  function syncContext() {
+    var bar = document.querySelector('.rs-context-bar');
+    var toggle = bar && bar.querySelector('.rs-context-toggle');
+    if (!bar || !toggle) return;
+    if (bar.classList.contains('rs-context-open') !== contextOpen) {
+      bar.classList.toggle('rs-context-open', contextOpen);
+      toggle.setAttribute('aria-expanded', contextOpen ? 'true' : 'false');
+    }
+  }
+
   function refreshJobs() {
+    syncContext();
     var panel = document.querySelector('section[aria-label="Analysis jobs"] .rs-jobs-disclosure');
     if (!panel) return;
     var rows = panel.querySelectorAll('.rs-job');
@@ -90,27 +157,15 @@
       '.rs-job[data-state="queued"], .rs-job[data-state="running"], .rs-job[data-state="cancel_requested"]').length;
     var summary = panel.querySelector('.rs-jobs-summary');
     if (!rows.length) {
-      if (panel.open) panel.open = false;
-      activeBefore = 0;
-      userTouched = false;
+      if (trayOpen()) closeTray(false);
       return;
     }
     var text = 'Analysis jobs: ' + rows.length;
     if (active) text += ' (' + active + ' running or queued)';
     if (summary && summary.textContent !== text) summary.textContent = text;
-    if (active > activeBefore) {
-      /* A new run opens the panel and hands it back to the automatic behaviour. */
-      userTouched = false;
-      if (!panel.open) panel.open = true;
-    } else if (!active && !userTouched && panel.open) {
-      panel.open = false;
-    }
-    activeBefore = active;
+    if (!panel.open) panel.open = true;
+    syncBadge();
   }
-
-  document.addEventListener('click', function (event) {
-    if (event.target.closest && event.target.closest('.rs-jobs-summary')) userTouched = true;
-  }, true);
 
   function observe() {
     var observer = new MutationObserver(function () {

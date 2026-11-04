@@ -132,3 +132,69 @@ test.describe('AC-012 motion and the Home strip', () => {
     expect(slow).toEqual([]);
   });
 });
+
+// ---- M5: context bar (AC-014) and layout (AC-016) -----------------------------------------------
+
+const VIEWPORTS = [{ name: 'desktop', width: 1440, height: 900, bar: 56 }, { name: 'narrow', width: 390, height: 844, bar: 64 }];
+
+async function populated(page: Page) {
+  await connected(page);
+  await page.locator('#home-load_demo').click();
+  await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
+}
+
+for (const vp of VIEWPORTS) {
+  test.describe(`AC-014 context bar at ${vp.width}x${vp.height}`, () => {
+    test('exactly one compact context bar on Enrich, Results and Cluster, none on Home and Save, and Cluster passes the active result', async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await populated(page);
+      for (const tab of ['enrich_tab', 'rr_visualize_tab', 'cluster_tab']) {
+        await showTab(page, tab);
+        const bars = page.locator('.rs-context-bar');
+        await expect(bars.locator('visible=true'), `${tab} bars`).toHaveCount(1);
+        const box = await bars.first().boundingBox();
+        expect(box!.height, `${tab} bar height`).toBeLessThanOrEqual(vp.bar);
+        await expect(page.locator('#workspace-active_result'), `${tab} dataset`).toHaveValue('go1');
+        await expect(bars.first().getByText('Not recorded', { exact: true }).locator('visible=true')).toHaveCount(0);
+        const trigger = bars.first().locator('summary').first();
+        await expect(trigger).toBeVisible();
+        await expect(trigger).toHaveAccessibleName(/\d+ not recorded/);
+        // the former active-workspace card is gone
+        await expect(page.locator('section[aria-label="Active workspace"]')).toHaveCount(0);
+      }
+      for (const tab of ['home_tab', 'save_tab']) {
+        await showTab(page, tab);
+        await expect(page.locator('.rs-context-bar').locator('visible=true'), `${tab} bar`).toHaveCount(0);
+      }
+      // Cluster from the context bar opens the Cluster step with the active result selected.
+      await showTab(page, 'rr_visualize_tab');
+      if (await page.locator('.rs-context-toggle').isVisible()) await page.locator('.rs-context-toggle').click();
+      await page.locator('#workspace-cluster_results').click();
+      await expect(page.locator('#shiny-tab-cluster_tab')).toHaveClass(/\bactive\b/);
+      await expect.poll(() => page.locator('#cluster-selected_rrs').evaluate(el =>
+        Array.from((el as HTMLSelectElement).selectedOptions).map(o => o.value))).toEqual(['go1']);
+    });
+  });
+}
+
+test.describe('AC-016 layout without the card and the inline job log', () => {
+  for (const vp of [{ width: 1440, height: 900, top: 200 }, { width: 390, height: 844, top: 260 }]) {
+    test(`Cluster form heading is within ${vp.top} px at ${vp.width}x${vp.height} and nothing overflows`, async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await populated(page);
+      await showTab(page, 'cluster_tab');
+      const heading = page.locator('#shiny-tab-cluster_tab').getByText('Cluster Enrichment Results', { exact: true }).first();
+      await expect(heading).toBeVisible();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const top = (await heading.boundingBox())!.y;
+      expect(top, 'form heading top').toBeLessThanOrEqual(vp.top);
+      if (vp.width <= 400) {
+        for (const tab of ['enrich_tab', 'rr_visualize_tab', 'cluster_tab']) {
+          await showTab(page, tab);
+          const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+          expect(widths[0], `${tab} scrollWidth`).toBeLessThanOrEqual(widths[1]);
+        }
+      }
+    });
+  }
+});

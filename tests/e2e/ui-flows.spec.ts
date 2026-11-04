@@ -90,23 +90,23 @@ test.describe('AC-001 server-driven empty states', () => {
   });
 });
 
-test.describe('AC-002 compact job panel', () => {
-  test('two finished jobs: collapsed panel is at most 64 px on every page, rows show status, settings stay closed', async ({ page }) => {
+// AC-002 (the inline job panel) is superseded from M5 by AC-015: the jobs sit in a tray that only the job badge
+// opens. The same row rules are asserted here, through the tray.
+test.describe('AC-015 job rows in the tray (supersedes AC-002)', () => {
+  test('two finished jobs: no page shows an inline log, the badge counts them, tray rows show status and keep settings closed', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await connected(page);
     await twoFinishedJobs(page);
-    const pages = ['enrich_tab', 'rr_visualize_tab', 'cluster_tab', 'clus_visualize_tab', 'save_tab'];
-    for (const tab of pages) {
+    const tray = page.locator('#jobs-tray');
+    const badge = page.locator('#jobs-job_badge');
+    for (const tab of ['enrich_tab', 'rr_visualize_tab', 'cluster_tab', 'clus_visualize_tab', 'save_tab']) {
       await showTab(page, tab);
-      const panel = page.locator('section[aria-label="Analysis jobs"]');
-      const summary = panel.locator('summary.rs-jobs-summary, .rs-jobs-disclosure > summary').first();
-      await expect(summary, tab).toBeVisible();
-      const box = await panel.boundingBox();
-      expect(box!.height, `${tab} collapsed height`).toBeLessThanOrEqual(64);
-      await expect(jobRows(page).locator('visible=true'), `${tab} collapsed rows`).toHaveCount(0);
+      await expect(tray, `${tab} tray closed`).not.toBeVisible();
+      await expect(jobRows(page).locator('visible=true'), `${tab} inline rows`).toHaveCount(0);
     }
     await showTab(page, 'cluster_tab');
-    await page.locator('section[aria-label="Analysis jobs"] summary').first().click();
+    await expect(badge).toHaveText('2 jobs finished');
+    await badge.click();
     const rows = jobRows(page);
     await expect(rows.locator('visible=true')).toHaveCount(2);
     for (let i = 0; i < 2; i++) {
@@ -293,7 +293,9 @@ test.describe('AC-010 environment failure', () => {
     await expect(jobRows(page)).toHaveCount(1, { timeout: 30_000 });
     await expect(activeRows(page)).toHaveCount(0, { timeout: 120_000 });
     const panel = page.locator('section[aria-label="Analysis jobs"]');
-    await panel.locator('summary.rs-jobs-summary').click();
+    // The tray opens only from the job badge (M5).
+    await page.locator('#jobs-job_badge').click();
+    await expect(panel).toBeVisible();
     const row = jobRows(page).first();
     await expect(row).toHaveAttribute('data-state', 'failed');
     const command = panel.locator('code.rs-job-command');

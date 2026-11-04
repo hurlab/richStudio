@@ -1862,3 +1862,250 @@ table.rs-display-table th {
     transition: none !important;
   }
 }
+
+/* --- SPEC-WS-013 M5: context bar and job tray --- */
+
+/* The context bar shows on the Enrich, Results and Cluster pages only. */
+#workspace-container {
+  display: none;
+}
+body:has(#shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shiny-tab-cluster_tab.active) #workspace-container {
+  display: block;
+}
+.rs-context-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 0;
+  margin: 0 0 12px;
+  padding: 4px 12px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow-sm);
+  position: relative;
+}
+.rs-context-bar .form-group {
+  margin: 0;
+  flex: 0 1 220px;
+  min-width: 140px;
+}
+.rs-context-bar .control-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.rs-context-bar select.form-control {
+  min-height: 36px;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+.rs-context-more {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.rs-context-more > .shiny-html-output {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.rs-context-bar p {
+  margin: 0;
+  white-space: nowrap;
+}
+.rs-context-bar dl {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+}
+.rs-context-bar dt {
+  margin: 0;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-context-bar dd {
+  margin: 0 6px 0 0;
+  font-weight: 600;
+}
+.rs-context-bar .rs-context-note {
+  font-size: 12px;
+  color: var(--rs-text-secondary-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 16em;
+}
+.rs-context-bar .rs-workspace-unrecorded {
+  margin: 0;
+  position: relative;
+}
+.rs-context-bar .rs-workspace-unrecorded[open] > dl {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  flex-direction: column;
+  padding: 8px 12px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  box-shadow: var(--rs-shadow-md);
+  white-space: nowrap;
+}
+.rs-context-bar .rs-workspace-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.rs-context-bar .rs-workspace-actions > span {
+  flex: 0 1 auto;
+  font-size: 12px;
+  max-width: 14em;
+  line-height: 1.2;
+}
+.rs-context-bar .rs-workspace-action,
+.rs-context-bar .rs-workspace button {
+  min-height: 40px;
+  padding: 4px 12px;
+}
+.rs-context-toggle {
+  display: none;
+}
+.rs-job-badge {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 4px 12px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-text-secondary);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+.rs-job-badge[data-running]:not([data-running="0"]) {
+  border-color: var(--rs-primary);
+  background: var(--rs-primary-light);
+  color: var(--rs-primary-dark);
+}
+@media (max-width: 767px) {
+  .rs-context-bar {
+    flex-wrap: wrap;
+    padding: 4px 8px;
+  }
+  .rs-context-bar .form-group {
+    flex: 1 1 140px;
+  }
+  .rs-context-toggle {
+    display: inline-block;
+    min-height: 36px;
+    min-width: 36px;
+    padding: 4px 8px;
+  }
+  /* Collapsed: the switcher, the "not recorded" trigger, the job badge and the toggle stay in
+     one row; the name, the chips, the note and the actions appear when the toggle is opened. */
+  .rs-context-more,
+  .rs-context-more > .shiny-html-output {
+    display: contents;
+  }
+  .rs-context-bar .rs-context-name,
+  .rs-context-bar dl,
+  .rs-context-bar .rs-context-note,
+  .rs-context-bar #workspace-actions {
+    display: none;
+  }
+  .rs-context-bar.rs-context-open .rs-context-name,
+  .rs-context-bar.rs-context-open > .rs-context-more dl,
+  .rs-context-bar.rs-context-open #workspace-actions {
+    display: flex;
+  }
+  .rs-context-bar.rs-context-open .rs-workspace-unrecorded dl {
+    display: flex;
+  }
+  .rs-context-bar .rs-workspace-unrecorded dl {
+    display: none;
+  }
+  .rs-context-bar .rs-workspace-unrecorded[open] dl {
+    display: flex;
+  }
+  .rs-context-bar .rs-workspace-unrecorded > summary {
+    min-height: 36px;
+    line-height: 36px;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+  .rs-context-bar .form-group {
+    flex: 1 1 90px;
+    min-width: 90px;
+  }
+  .rs-job-badge {
+    margin-left: 0;
+  }
+}
+
+/* The job tray: a slide-over below the navbar, opened by the job badge. */
+.rs-job-tray {
+  position: fixed;
+  top: 50px;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100vw);
+  margin: 0;
+  padding: 8px 16px 16px;
+  overflow-y: auto;
+  background: var(--rs-bg-card);
+  border-left: 1px solid var(--rs-border);
+  box-shadow: var(--rs-shadow-lg);
+  z-index: 1040;
+  transform: translateX(100%);
+  visibility: hidden;
+  /* Hidden only after it has slid out; visible at once on opening, so focus can move in. */
+  transition: transform var(--rs-transition), visibility 0s linear 0.2s;
+}
+.rs-job-tray.rs-job-tray-open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform var(--rs-transition), visibility 0s;
+}
+.rs-job-tray:focus {
+  outline: none;
+}
+.rs-job-tray-header {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 4px;
+}
+.rs-job-tray .rs-jobs-disclosure {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.rs-job-tray .rs-jobs-summary {
+  pointer-events: none;
+  list-style: none;
+}
+.rs-job-tray .rs-jobs-summary::-webkit-details-marker {
+  display: none;
+}
+@media (max-width: 767px) {
+  .rs-job-tray {
+    width: 100vw;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rs-job-tray {
+    transition: none !important;
+  }
+}

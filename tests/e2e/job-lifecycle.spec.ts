@@ -102,6 +102,8 @@ future::plan(future::multisession, workers=I(as.integer(Sys.getenv('WS_JOBS_WORK
 enrich_tab_ui <- getFromNamespace('enrich_tab_ui', 'richStudio')
 enrich_tab_server <- getFromNamespace('enrich_tab_server', 'richStudio')
 jobs_ui <- getFromNamespace('workspace_jobs_ui', 'richStudio')
+badge_ui <- getFromNamespace('workspace_jobs_badge_ui', 'richStudio')
+shiny::addResourcePath('rs', system.file('application/www', package='richStudio'))
 jobs_server <- getFromNamespace('workspace_jobs_server', 'richStudio')
 jobs_registry <- getFromNamespace('workspace_jobs_registry', 'richStudio')
 jobs_close <- getFromNamespace('workspace_jobs_close', 'richStudio')
@@ -130,6 +132,8 @@ ui <- dashboardPage(
     menuItem('Other tab', tabName='other_tab'))),
   dashboardBody(shinyjs::useShinyjs(),
     tags$div(id='fixture', 'data-nonce'=Sys.getenv('WS_JOBS_NONCE')),
+    tags$head(tags$link(rel='stylesheet', href='rs/custom.css'), tags$script(src='rs/workspace-ui.js')),
+    badge_ui('jobs'),
     jobs_ui('jobs'),
     tabItems(enrich_tab_ui('enrich', tabName='enrich_tab'),
       tabItem(tabName='other_tab', h2('Other tab'), p('Navigation target'))))
@@ -280,6 +284,12 @@ async function workerPid(fixture: Fixture, key: string) {
 const release = (fixture: Fixture, key: string) => fs.writeFile(path.join(fixture.root, 'release', key), '');
 const panel = (page: Page) => page.locator('section[aria-label="Analysis jobs"]');
 const status = (page: Page) => page.locator('#jobs-jobs_status');
+// The jobs sit in a tray that only the job badge opens (SPEC-WS-013 M5).
+async function openTray(page: Page) {
+  const tray = page.locator('#jobs-tray');
+  if (!(await tray.isVisible())) await page.locator('#jobs-job_badge').click();
+  await expect(tray).toBeVisible();
+}
 const stopButton = (page: Page) => page.locator('#jobs-jobs_list button', { hasText: /^\s*Stop\s*$/ });
 async function newPage(browser: Browser, info: TestInfo) {
   const context = await browser.newContext({ viewport: info.project.use.viewport ?? undefined });
@@ -298,6 +308,7 @@ test.describe('workers = 2', () => {
     await expect(status(page)).toContainText(/running/i);
     await showTab(page, 'other_tab');
     await showTab(page, 'enrich_tab');
+    await openTray(page);
     await expect(panel(page)).toBeVisible();
     await expect(status(page)).toContainText('Progress: not reported by this engine');
     const time = page.locator('#jobs-jobs_time');
@@ -322,6 +333,40 @@ test.describe('workers = 2', () => {
     expect(errors).toEqual([]);
   });
 
+  test('AC-015 REQ-003 one running and two finished jobs: the badge says so, the tray opens only on request, takes focus, and Escape returns it', async ({ page, fixture }) => {
+    await open(page, fixture);
+    const runFresh = async (label: string) => {
+      await showTab(page, 'enrich_tab');
+      await page.evaluate(() => (document.getElementById('enrich-degs_to_enrich') as any).selectize.clear());
+      await run(page, label);
+    };
+    await runFresh('deg_a'); await workerPid(fixture, 'deg_a.1'); await release(fixture, 'deg_a.1');
+    await expect(status(page)).toContainText(/succeeded/i, { timeout: 30_000 });
+    await runFresh('deg_b'); await workerPid(fixture, 'deg_b.1'); await release(fixture, 'deg_b.1');
+    await expect(page.locator('.rs-job[data-state="succeeded"]')).toHaveCount(2, { timeout: 30_000 });
+    await runFresh('deg_a');
+    await workerPid(fixture, 'deg_a.2');
+    const badge = page.locator('#jobs-job_badge');
+    const tray = page.locator('#jobs-tray');
+    // A running job is visible without opening the tray, and the tray has not opened by itself.
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText('1 job running');
+    await expect(tray).not.toBeVisible();
+    await badge.click();
+    await expect(tray).toBeVisible();
+    await expect(tray.locator('.rs-job').locator('visible=true')).toHaveCount(3);
+    for (const state of ['succeeded', 'succeeded', 'running']) {
+      expect(await tray.locator('.rs-job').evaluateAll((rows, wanted) => rows.some(r => r.getAttribute('data-state') === wanted), state)).toBe(true);
+    }
+    for (const row of await tray.locator('.rs-job').all()) await expect(row).toContainText(/Succeeded|Running|Queued/);
+    expect(await page.evaluate(() => !!document.activeElement?.closest('#jobs-tray'))).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(tray).not.toBeVisible();
+    await expect(badge).toBeFocused();
+    await release(fixture, 'deg_a.2');
+    await expect(status(page)).toContainText(/succeeded/i, { timeout: 30_000 });
+  });
+
   test('AC-002 REQ-003 Stop in one session ends only its worker, and only after the PID is gone', async ({ browser, fixture }, info) => {
     const one = await newPage(browser, info), two = await newPage(browser, info);
     try {
@@ -333,6 +378,7 @@ test.describe('workers = 2', () => {
       const pid2 = await workerPid(fixture, 'deg_b.1');
       expect(pid1.pid).not.toBe(pid2.pid);
       await expect(status(one)).toContainText(/running/i);
+      await openTray(one);
       await stopButton(one).click();
       // Panel text never leads the process: "Cancelled" may appear only once /proc shows pid1 gone.
       const observations: { cancelled: boolean; alive: boolean }[] = [];
@@ -369,6 +415,7 @@ test.describe('workers = 1', () => {
       await expect(status(one)).toContainText(/running/i);
       await run(two, 'deg_b');
       await expect(status(two)).toContainText("Queued: 0 job(s) ahead in this server's queue");
+      await openTray(two);
       const text = await panel(two).innerText();
       for (const word of ['ETA', 'remaining', '%']) expect(text).not.toContain(word);
       await release(fixture, 'deg_a.1');

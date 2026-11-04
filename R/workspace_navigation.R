@@ -285,20 +285,38 @@ workspace_header_ui <- function(id = "workspace", enabled = TRUE) {
   shiny::uiOutput(ns("container"))
 }
 
+# The context bar (SPEC-WS-013 M5): one compact bar naming the active dataset with
+# its switcher, the recorded metadata as chips, one "not recorded" disclosure, the
+# Create figure / Cluster actions and the job badge that opens the job tray. It
+# replaces the former active-workspace card. custom.css shows it on the Enrich,
+# Results and Cluster pages only; on a narrow screen everything but the switcher
+# and the badge sits behind a toggle.
 workspace_header_content_ui <- function(id = "workspace") {
   ns <- shiny::NS(id)
   shiny::tags$section(
     id = ns("header"),
-    class = "rs-workspace rs-workspace-card",
-    `aria-label` = "Active workspace",
-    shiny::uiOutput(ns("summary")),
+    class = "rs-workspace rs-context-bar",
+    `aria-label` = "Dataset and jobs",
     shiny::selectInput(
       ns("active_result"),
       "Change dataset",
       choices = c("Choose a result" = ""),
       selectize = FALSE
     ),
-    shiny::uiOutput(ns("actions"))
+    shiny::tags$div(
+      id = ns("context-more"),
+      class = "rs-context-more",
+      shiny::uiOutput(ns("summary")),
+      shiny::uiOutput(ns("actions"))
+    ),
+    workspace_jobs_badge_ui("jobs"),
+    shiny::tags$button(
+      type = "button",
+      class = "btn btn-default btn-sm rs-context-toggle",
+      `aria-expanded` = "false",
+      `aria-controls` = ns("context-more"),
+      "Details"
+    )
   )
 }
 
@@ -310,15 +328,35 @@ workspace_header_server <- function(
   active_result,
   u_rrnames,
   u_big_rrdf,
-  navigate
+  navigate,
+  jobs = NULL
 ) {
   shiny::moduleServer(id, function(input, output, session) {
     labels <- shiny::reactive(as.character(u_rrnames$labels))
 
+    # The bar exists once there is something to name or to follow: a result, or a
+    # job (a failed run can precede any result).
+    # A reactiveVal: the bar is only rebuilt when this flips, not on every job
+    # tick, so the switcher keeps its selection while jobs change state.
+    has_jobs <- shiny::reactiveVal(FALSE)
+    if (!is.null(jobs)) {
+      shiny::observe({
+        jobs$tick()
+        present <- length(jobs$records) > 0L
+        if (!identical(shiny::isolate(has_jobs()), present)) has_jobs(present)
+      })
+    }
+
+    # A rebuilt bar echoes its initial (empty) choice back as an input event; that
+    # echo must not clear the active result.
+    bar_state <- new.env(parent = emptyenv())
+    bar_state$fresh <- FALSE
+
     output$container <- shiny::renderUI({
-      if (!length(labels())) {
+      if (!length(labels()) && !has_jobs()) {
         return(NULL)
       }
+      bar_state$fresh <- TRUE
       workspace_header_content_ui(session$ns(NULL))
     })
 
@@ -327,6 +365,7 @@ workspace_header_server <- function(
     shiny::observe({
       choices <- labels()
       current <- active_result()
+      has_jobs() # the bar is rebuilt when the first job appears: re-send the selection
       if (!is.null(current) && !current %in% choices) {
         active_result(NULL)
         return()
@@ -343,9 +382,21 @@ workspace_header_server <- function(
       input$active_result,
       {
         value <- input$active_result
+        fresh <- isTRUE(bar_state$fresh)
+        bar_state$fresh <- FALSE
         if (identical(value, "")) {
           if (!is.null(active_result())) {
-            active_result(NULL)
+            if (fresh) {
+              # re-send the selection to the rebuilt bar instead of clearing it
+              shiny::updateSelectInput(
+                session,
+                "active_result",
+                choices = c("Choose a result" = "", labels()),
+                selected = active_result()
+              )
+            } else {
+              active_result(NULL)
+            }
           }
           return()
         }
@@ -383,6 +434,7 @@ workspace_header_server <- function(
       recorded <- Filter(function(f) !is.na(f$value), fields)
       shiny::tagList(
         shiny::tags$p(
+          class = "rs-context-name",
           "Active result: ",
           shiny::tags$strong(workspace_text(current, "result"))
         ),
@@ -397,9 +449,12 @@ workspace_header_server <- function(
           )
         },
         if (facts$unique) {
-          shiny::tags$p("From the recorded result details")
+          shiny::tags$p(class = "rs-context-note", "From the recorded result details")
         } else {
-          shiny::tags$p("Recorded details unavailable for this result name")
+          shiny::tags$p(
+            class = "rs-context-note",
+            "Recorded details unavailable for this result name"
+          )
         }
       )
     })
@@ -436,6 +491,9 @@ workspace_header_server <- function(
         if (!available) shiny::tags$span(id = hint_id, reason)
       )
     })
+    # The narrow bar collapses these outputs with display: contents, which Shiny reads as hidden.
+    shiny::outputOptions(output, "summary", suspendWhenHidden = FALSE)
+    shiny::outputOptions(output, "actions", suspendWhenHidden = FALSE)
 
     # Selects the active result in the Enrichment figures selectors only.
     shiny::observeEvent(input$create_figure, {
@@ -457,10 +515,17 @@ workspace_header_server <- function(
       navigate("rr_visualize_tab")
     })
 
+    # The Cluster step opens with the active result selected (SPEC-WS-013 F3).
     shiny::observeEvent(input$cluster_results, {
-      if (is.null(active_result())) {
+      current <- active_result()
+      if (is.null(current) || !current %in% labels()) {
         return()
       }
+      shiny::updateSelectizeInput(
+        session$rootScope(),
+        "cluster-selected_rrs",
+        selected = current
+      )
       navigate("cluster_tab")
     })
   })
@@ -500,7 +565,8 @@ workspace_navigation_server <- function(
     active_result = active_result,
     u_rrnames = u_rrnames,
     u_big_rrdf = u_big_rrdf,
-    navigate = navigate
+    navigate = navigate,
+    jobs = workspace_jobs_peek(session)
   )
   list(
     active_result = active_result,

@@ -14,6 +14,14 @@ const homeActions = [
   { id: 'home-load_demo', label: 'Load demo results', tab: 'rr_visualize_tab', landing: '#workspace-create_figure' },
 ] as const;
 
+// On a narrow viewport the context bar keeps its actions behind the Details toggle (SPEC-WS-013 M5).
+async function openContext(page: Page) {
+  const toggle = page.locator('.rs-context-toggle');
+  if ((page.viewportSize()?.width ?? 1280) >= 768) return;
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+}
+
 async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
@@ -122,6 +130,7 @@ for (const action of homeActions) {
     await page.keyboard.press('Enter');
     await expectTab(page, action.tab);
     await expect(page.locator('#shiny-tab-home_tab')).toBeHidden();
+    if (action.id === 'home-load_demo') await openContext(page);
     await expect(page.locator(action.landing)).toBeVisible();
     if (action.id === 'home-open_saved') {
       await expect(page.locator('#save-load_session_file-label')).toBeVisible();
@@ -177,6 +186,7 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   await expect(summary).toContainText('kegg1');
 
   // AC-002: imported-only results reach an enrichment figure without analysis.
+  await openContext(page);
   await page.locator('#workspace-create_figure').click();
   await expectTab(page, 'rr_visualize_tab');
   await expect(page.locator('#rr_visualize-select_bar')).toHaveValue('kegg1');
@@ -188,6 +198,7 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   await chooseSelectize(page, 'rr_visualize-select_bar', 'go2');
   await chooseSelectize(page, 'rr_visualize-bar_type', 'value');
   await chooseSelectize(page, 'rr_visualize-bar_valtype', 'Pvalue');
+  await openContext(page);
   await page.locator('#workspace-cluster_results').click();
   await expectTab(page, 'cluster_tab');
   await openRoute(page, 'rr_visualize_tab', /Enrichment figures/);
@@ -208,6 +219,7 @@ test('REQ-001 REQ-003 M15 axe reports no violations on Home and on the populated
   await page.locator('#home-load_demo').click();
   await expectTab(page, 'rr_visualize_tab');
   await expect(page.locator('#workspace-summary')).toContainText('go1');
+  await openContext(page);
   await expect(page.locator('#workspace-create_figure')).toBeEnabled();
   await axeScan(page, info, 'axe-header', ['#workspace-header']);
 });

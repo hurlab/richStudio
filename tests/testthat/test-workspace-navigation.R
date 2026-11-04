@@ -291,7 +291,7 @@ test_that("REQ-003 header container appears and disappears with result labels", 
     result_names$labels <- "go1"
     session$flushReact()
     html <- ws3_output_html(output$container)
-    for (value in c('id="workspace-header"', 'aria-label="Active workspace"',
+    for (value in c('id="workspace-header"', 'class="rs-workspace rs-context-bar"',
                     '<select class="shiny-input-select form-control" id="workspace-active_result">',
                     "Change dataset", '<option value="" selected>Choose a result</option>',
                     'id="workspace-summary"', 'id="workspace-actions"')) {
@@ -562,9 +562,13 @@ test_that("REQ-002 AC-002 M14 Create figure selects the active result in both fi
     }
     expect_identical(fixture$log$tabs, "rr_visualize_tab")
 
+    # The Cluster step opens with the active result selected (SPEC-WS-013 F3): one input message
+    # for the Cluster result selector, and the route change.
     before <- length(inputs$calls)
     session$setInputs(cluster_results = 1L)
-    expect_length(ws3_since(inputs, before), 0L)
+    sent <- ws3_since(inputs, before)
+    expect_identical(ws3_ids(sent), "cluster-selected_rrs")
+    expect_identical(sent[[1]]$message$value, "kegg1")
     expect_identical(fixture$log$tabs, c("rr_visualize_tab", "cluster_tab"))
   })
 })
@@ -579,7 +583,7 @@ test_that("REQ-001 REQ-002 M14 session wiring routes every action through the si
       do.call(session$setInputs, stats::setNames(list(value), input))
       sent <- ws3_since(inputs, before)
       ids <- ws3_ids(sent)
-      expect_true(all(ids == "workspace_sidebar" | ws3_is_own_select(ids)), info = input)
+      expect_true(all(ids == "workspace_sidebar" | ws3_is_own_select(ids) | ids == "cluster-selected_rrs"), info = input)
       ws3_sidebar_tabs(sent)
     }
     expect_identical(act("home-upload_gene_lists"), "enrich_tab")
@@ -828,4 +832,40 @@ test_that("AC-003 both disabled header actions share one visible hint and expose
       expect_match(actions, 'id="workspace-actions-reason"', fixed = TRUE)
     })
   }
+})
+
+
+# ---- SPEC-WS-013 M5: the context bar also exists for a session that only has jobs (AC-014) ----
+
+test_that("AC-014 the context bar appears for a job without any result and not for an empty session", {
+  fixture <- ws3_header_fixture()
+  jobs <- new.env(parent = emptyenv())
+  jobs$tick <- shiny::withReactiveDomain(NULL, shiny::reactiveVal(0L))
+  jobs$records <- list()
+  fixture$args$jobs <- jobs
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
+    session$flushReact()
+    expect_identical(ws3_output_html(output$container), "")
+    jobs$records <- list(list(run_id = "0123456789ab", state = "failed"))
+    jobs$tick(jobs$tick() + 1L)
+    session$flushReact()
+    html <- ws3_output_html(output$container)
+    expect_match(html, 'id="workspace-header"', fixed = TRUE)
+    expect_match(html, 'id="jobs-badge"', fixed = TRUE)
+    expect_match(ws3_output_html(output$summary), "No dataset selected", fixed = TRUE)
+  })
+})
+
+test_that("AC-014 Cluster from the context bar selects the active result in the Cluster selector", {
+  fixture <- ws3_header_fixture(c("go1", "go2"), NULL, "go1")
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
+    inputs <- ws3_record_inputs(session)
+    session$flushReact()
+    before <- length(inputs$calls)
+    session$setInputs(cluster_results = 1L)
+    sent <- ws3_since(inputs, before)
+    expect_identical(ws3_ids(sent), "cluster-selected_rrs")
+    expect_identical(sent[[1]]$message$value, "go1")
+    expect_identical(fixture$log$tabs, "cluster_tab")
+  })
 })

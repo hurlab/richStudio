@@ -1526,17 +1526,28 @@ workspace_jobs_retry <- function(jobs, run_id) {
 # ---- panel
 # ---------------------------------------------------------------------------
 
-# The panel is a native disclosure. Without scripts or styles it is open and
-# shows every row; custom.css hides it while the session has no job, and
-# workspace-ui.js collapses it to one summary line when no job is queued or
-# running, writes the summary text from the rows and opens it for a new run. The
-# outputs and the one polite live region are unchanged.
+# The job tray (SPEC-WS-013 M5): a slide-over region that the job badge in the
+# context bar opens; it never opens by itself. The jobs sit in a native
+# disclosure that stays open: without scripts or styles the region is an ordinary
+# open list, custom.css makes it a slide-over and hides the list while the
+# session has no job, and workspace-ui.js opens and closes the tray and writes
+# the summary text. The outputs and the one polite live region are unchanged.
 workspace_jobs_ui <- function(id) {
   ns <- shiny::NS(id)
   shiny::tags$section(
+    id = ns("tray"),
     role = "region",
     `aria-label` = "Analysis jobs",
-    class = "rs-workspace-jobs",
+    class = "rs-workspace-jobs rs-job-tray",
+    tabindex = "-1",
+    shiny::tags$div(
+      class = "rs-job-tray-header",
+      shiny::tags$button(
+        type = "button",
+        class = "btn btn-default btn-sm rs-job-tray-close",
+        "Close"
+      )
+    ),
     shiny::tags$details(
       class = "rs-jobs-disclosure",
       open = "open",
@@ -1847,6 +1858,11 @@ workspace_jobs_server <- function(id, jobs) {
     for (name in c("jobs_list", "jobs_status", "jobs_announce", "jobs_time")) {
       shiny::outputOptions(output, name, suspendWhenHidden = FALSE)
     }
+    output$badge <- shiny::renderUI({
+      jobs$tick()
+      workspace_job_badge(jobs$records, tray_id = session$ns("tray"), id = session$ns("job_badge"))
+    })
+    shiny::outputOptions(output, "badge", suspendWhenHidden = FALSE)
     shiny::observeEvent(input$job_action, {
       workspace_jobs_contain(
         {

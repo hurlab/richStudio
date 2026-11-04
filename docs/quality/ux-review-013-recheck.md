@@ -342,7 +342,30 @@ The new testthat tests were written first and run with the `R/` changes stashed 
 
 ## M5 - context bar and job tray
 
-Not started.
+Decisions
+- One context bar (dataset switcher, recorded-metadata chips, one "N not recorded" disclosure, job badge, Cluster/Create-figure actions) replaces the active-workspace card on Enrich, Enrichment figures and Cluster. Home and Save get none: the card previously shown on Home is removed. The bar renders only when results or jobs exist.
+- Jobs live in a slide-over tray (`#jobs-tray`) opened only from the job badge; Escape or the close button returns focus to the badge. The M1 auto-open/auto-collapse script is removed. The job markup and ids are unchanged inside the tray; the one polite job-status live region (AC-006) and the persistent `job-*` notification rule are kept.
+- A running job stays visible without opening the tray: the badge reads "1 job running" / "2 jobs finished" (lead condition).
+- The context-bar Cluster action selects the active result in the Cluster result selector before routing (AC-014).
+- On narrow viewports the bar keeps switcher, "not recorded" trigger, badge and a Details toggle in one row; name, chips and actions open with Details. The open state survives server rebuilds of the bar (`workspace-ui.js`), and `summary`/`actions` use `suspendWhenHidden = FALSE` because `display: contents` reads as hidden to Shiny.
+- "Dismiss" for the bar was not implemented.
+- Unused after this change, left in place: the card-specific rules in `custom.css` and `workspace_jobs_ui`'s old inline-disclosure behaviour (summary text writer in `workspace-ui.js` still maintains the tray summary).
+
+Changed or removed assertions (reason)
+- `test-workspace-navigation.R`: the header markup assertion `aria-label="Active workspace"` became `class="rs-workspace rs-context-bar"` (card replaced by the bar). The Cluster action previously sent no input message; it now sends exactly one (`cluster-selected_rrs`), so `expect_length(..., 0L)` became an identical-ids assertion and the "own select" allow-list gained `cluster-selected_rrs` (AC-014).
+- `ui-flows.spec.ts`: the AC-002 inline-panel test (collapsed height <= 64 px on every page) is replaced by AC-015 tray assertions (no inline log, badge text, per-row textual state, run settings closed, run ids not red); the AC-010 test only opens the tray through the badge before reading the install command (lead-approved scope addition).
+- `job-lifecycle.spec.ts`: the fixture UI now carries the badge and styles; jobs are read after `openTray`; AC-015 test added (badge text, tray closed by itself, focus, Escape).
+- `workspace-entry.spec.ts`, `ui-accessibility.spec.ts`: on a narrow viewport the header actions sit behind the Details toggle, so the specs call `openContext` before touching `#workspace-create_figure` / `#workspace-cluster_results` (no assertion changed otherwise).
+- `design-system.spec.ts` (frozen digests): `inst/application/www/custom.css` re-pinned `d4ffa69a...` -> `df2f13a6...` because M5 appended the context-bar/tray block after the SPEC-WS-002 marker; the pre-marker region md5 `5f71dabdcf3df0ea8d7f66367f463678` is unchanged.
+
+RED
+- `scratchpad/m5-red-testthat.txt` (test-workspace-shell.R and navigation failures) and `scratchpad/m5-red-e2e.txt` (7 desktop failures: job-lifecycle, ui-accessibility, ui-flows AC-015, ui-layout AC-014 x2 and AC-016 x2) were captured before any implementation.
+
+
+Verification
+- Full testthat (installed candidate, CI library): `RESULT files 35 tests 4224 failed 0 errors 0 skipped 0` (the two `test-dependency-integration.R` environment errors did not occur in this run).
+- Full browser gate (fresh scratch, pinned toolchain): `6 failed`, `134 passed (19.1m)`. `design-system.spec.ts:803` fails in both projects (native-zoom launch only). `baseline.spec.ts:25` and `:51` failed in both projects only because this scratch had no `resources/render.json` (the CI `resource_measurements render` pre-step was not run); after running that step they pass (`8 passed`).
+- Screenshots (1440x900 and 390x844, tray closed and open): `scratchpad/m5-shots/`.
 
 ## M6 - task stepper, Data step and information architecture
 

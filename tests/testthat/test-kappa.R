@@ -106,9 +106,9 @@ test_that("perform_clustering works with richR method", {
   expect_equal(result$method, "richR")
 })
 
-test_that("is_richCluster_available returns logical",
+test_that("is_rich_cluster_available returns logical",
 {
-  result <- richStudio:::is_richCluster_available()
+  result <- richStudio:::is_rich_cluster_available()
   expect_true(is.logical(result))
   expect_length(result, 1)
 })

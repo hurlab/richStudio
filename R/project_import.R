@@ -11,7 +11,7 @@
 # Nothing here sources, evaluates, deserializes R objects or runs a bundled recipe: the
 # only readers are jsonlite parsers and the zip central-directory/extraction routines.
 
-project_member_names <- c("manifest.json", "tables.json", "methods.md")
+project_member_names <- c("manifest.json", "tables.json", "methods.md", "tracking.json")
 
 # Hard bounds that the resource policy does not name.
 project_max_compression_ratio <- 200
@@ -168,7 +168,7 @@ project_decode_table <- function(entry, store, policy) {
 #' @return A candidate list (session fields plus `manifest`, `methods`, `source`).
 #' @noRd
 project_import_read <- function(path, policy_loader = workspace_resource_policy) {
-  policy <- tryCatch(workspace_validate_resource_policy(policy_loader()), error = function(e) {
+  policy <- tryCatch(workspace_validate_resources(policy_loader()), error = function(e) {
     project_invalid("Project import unavailable: resource policy missing or invalid")
   })
   if (length(path) != 1L || !is.character(path) || !file.exists(path)) {
@@ -210,6 +210,16 @@ project_import_read <- function(path, policy_loader = workspace_resource_policy)
     }
     methods <- paste(readLines(methods_path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
   }
+  tracking <- NULL
+  if ("tracking.json" %in% entries$filename) {
+    tracking_path <- project_extract_member(path, "tracking.json", declared[["tracking.json"]], stage)
+    tracking_meta <- file_digest("tracking.json")
+    if (is.null(tracking_meta) || !identical(tracking_meta$sha256, project_file_digest(tracking_path))) {
+      project_invalid("tracking.json does not match the digest in the manifest")
+    }
+    tracking <- tryCatch(session_json_read(tracking_path),
+                         error = function(e) project_invalid("tracking.json is not a valid tracking table store"))
+  }
   payload <- tryCatch(jsonlite::read_json(tables_path, simplifyVector = TRUE),
                       error = function(e) project_invalid("tables.json is not valid JSON"))
   if (!is.list(payload) || !identical(payload$schema, project_tables_schema_name) ||
@@ -218,7 +228,17 @@ project_import_read <- function(path, policy_loader = workspace_resource_policy)
   }
   project_check_version(payload$format_version)
 
-  project_build_candidate(manifest, payload$tables, methods, policy)
+  candidate <- project_build_candidate(manifest, payload$tables, methods, policy)
+  if (!is.null(tracking)) {
+    for (field in c("big_rrdf", "big_clusdf")) {
+      if (length(tracking[[field]])) candidate[[field]] <- tracking[[field]]
+    }
+    # The same validation the restore path applies, so a malformed member fails here,
+    # before anything reaches the workspace.
+    tryCatch(workspace_saved_tracking_state(candidate),
+             error = function(e) project_invalid("tracking.json has invalid result tracking metadata"))
+  }
+  candidate
 }
 
 project_build_candidate <- function(manifest, stores, methods, policy) {
@@ -362,7 +382,7 @@ project_legacy_candidate <- function(session_data) {
 #' @param jobs The WS-006 registry, or NULL.
 #' @noRd
 project_commit_candidate <- function(candidate, stores, jobs = NULL) {
-  if (!is.null(jobs)) workspace_jobs_commit_workspace_swap(jobs)
+  if (!is.null(jobs)) workspace_jobs_commit_swap(jobs)
   clear <- function(rv) for (nm in shiny::isolate(names(rv))) rv[[nm]] <- NULL
   fill <- function(rv, items) for (nm in names(items)) rv[[nm]] <- items[[nm]]
   clear(stores$u_degdfs)

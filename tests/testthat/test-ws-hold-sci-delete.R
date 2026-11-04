@@ -27,8 +27,8 @@ test_that("delete_rr observer removes the result's rows and resets its term vect
   state$u_rrnames$labels <- c("control", "case")
   state$u_rrdfs$control <- raw$untreated
   state$u_rrdfs$case <- raw$treated
-  args <- state[intersect(names(state), names(formals(richStudio:::rrVisTabServer)))]
-  shiny::testServer(richStudio:::rrVisTabServer, args = args, {
+  args <- state[intersect(names(state), names(formals(richStudio:::rr_vis_tab_server)))]
+  shiny::testServer(richStudio:::rr_vis_tab_server, args = args, {
     session$flushReact()
     session$setInputs(select_cushmap = "control", cushmap_select_table_rows_selected = 1:2,
       cushmap_valtype = "Padj", rr_delete_select = "control", cushmap_add_rr = 1L)

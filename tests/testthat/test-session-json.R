@@ -147,7 +147,10 @@ test_that("uploaded RDS files are refused before deserialization and change noth
     session$setInputs(load_session = 3L)
   })
   expect_length(messages, 3L)
-  expect_true(all(grepl("convert-trusted-session.R", messages, fixed = TRUE)))
+  expect_true(all(grepl("older .rds session file", messages, fixed = TRUE)))
+  expect_true(all(grepl("Rscript scripts/convert-trusted-session.R my-session.rds my-session.json",
+                        messages, fixed = TRUE)))
+  expect_true(all(grepl("archive/refs/heads/main.zip", messages, fixed = TRUE)))
   expect_identical(shiny::isolate(state$u_rrnames$labels), "keep")
   expect_identical(shiny::isolate(state$u_rrdfs$keep), existing)
   expect_identical(shiny::isolate(state$u_degnames$labels), character())
@@ -168,6 +171,7 @@ test_that("save UI offers JSON only and the load input accepts only JSON", {
   html <- as.character(richStudio::saveTabUI("persist", "saved-analysis"))
   expect_false(grepl("save_format", html, fixed = TRUE))
   expect_false(grepl("RDS (Recommended)", html, fixed = TRUE))
+  expect_false(grepl("rds", html, ignore.case = TRUE))
   expect_match(html, 'accept=".json,.JSON"', fixed = TRUE)
 })
 

@@ -270,7 +270,7 @@ eb_tab_state <- function(fx) {
 
 eb_tab_args <- function(fx, runner) {
   args <- eb_tab_state(fx)
-  args <- args[intersect(names(formals(richStudio:::enrichTabServer)), names(args))]
+  args <- args[intersect(names(formals(richStudio:::enrich_tab_server)), names(args))]
   args$enrichment_runner <- runner
   args$annotation_builder <- eb_app_builder(fx)
   args
@@ -291,7 +291,7 @@ test_that("the tab offers the labelled default and gates a custom background beh
     seen$calls[[length(seen$calls) + 1L]] <- list(...)
     list()
   }
-  shiny::testServer(richStudio:::enrichTabServer, args = eb_tab_args(fx, runner), {
+  shiny::testServer(richStudio:::enrich_tab_server, args = eb_tab_args(fx, runner), {
     session$flushReact()
     ui <- paste(as.character(output$background_ui$html), collapse = "")
     expect_match(ui, "Annotation universe", fixed = TRUE)
@@ -333,7 +333,7 @@ test_that("an unavailable capability hides the control and a default run omits t
   seen <- new.env()
   seen$calls <- list()
   runner <- function(...) { seen$calls[[length(seen$calls) + 1L]] <- list(...); list() }
-  shiny::testServer(richStudio:::enrichTabServer, args = eb_tab_args(fx, runner), {
+  shiny::testServer(richStudio:::enrich_tab_server, args = eb_tab_args(fx, runner), {
     session$flushReact()
     ui <- paste(as.character(output$background_ui$html), collapse = "")
     expect_match(ui, "0.0.1", fixed = TRUE)
@@ -358,7 +358,7 @@ test_that("REQ-001 a published result carries its background identity", {
       keytype = keytype, ontology = ontology, annotation_builder = eb_app_builder(fx),
       background = background)
   }
-  shiny::testServer(richStudio:::enrichTabServer, args = eb_tab_args(fx, runner), {
+  shiny::testServer(richStudio:::enrich_tab_server, args = eb_tab_args(fx, runner), {
     session$flushReact()
     session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
                       ont_select = "BP", deg_filter_cutoff = 0.05, degs_to_enrich = "set1",
@@ -385,7 +385,7 @@ test_that("the background check runs in a future and publishes its review", {
   withr::defer(future::plan(previous))
   future::plan(future::sequential)
   fx <- eb_app_fixture()
-  shiny::testServer(richStudio:::enrichTabServer, args = eb_tab_args(fx, function(...) list()), {
+  shiny::testServer(richStudio:::enrich_tab_server, args = eb_tab_args(fx, function(...) list()), {
     session$flushReact()
     session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
                       ont_select = "BP", deg_filter_cutoff = 0.05, degs_to_enrich = "set1",
@@ -411,7 +411,7 @@ test_that("a superseded or input-stale background check result is ignored", {
   annotation <- unique(fx$long$GeneID)
   bad <- list(richStudio:::enrichment_background_review(paste0("h", 2:25), fx$query, annotation))
   good <- list(richStudio:::enrichment_background_review(paste0("h", 1:25), fx$query, annotation))
-  shiny::testServer(richStudio:::enrichTabServer, args = eb_tab_args(fx, function(...) list()), {
+  shiny::testServer(richStudio:::enrich_tab_server, args = eb_tab_args(fx, function(...) list()), {
     session$flushReact()
     session$setInputs(species_select = "human", anntype_select = "Reactome", keytype_select = "SYMBOL",
                       ont_select = "BP", deg_filter_cutoff = 0.05, degs_to_enrich = "set1",

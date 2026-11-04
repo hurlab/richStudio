@@ -26,6 +26,7 @@
 ^scripts$
 ^\.moai$
 ^tests/e2e$
+^e2e$
 ^workspace-quality-artifacts$
 ^logs$
 ^app\.R$

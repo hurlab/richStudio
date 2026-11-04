@@ -2,21 +2,26 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' richCluster
-#' 
-#' This function clusters terms within an enrichment result with based on gene 
-#' similarity using specified distance metrics and merging strategies. It 
+#'
+#' This function clusters terms within an enrichment result with based on gene
+#' similarity using specified distance metrics and merging strategies. It
 #' integrates the following steps:
 #' \enumerate{
 #'   \item{Initializes a ClusterManager with input gene data.}
-#'   \item{Calculates distance scores using the specified distance metric and cutoff.}
-#'   \item{Filters seeds based on the provided merging strategy and membership cutoff.}
+#'   \item{Calculates distance scores using the specified distance metric and
+#' cutoff.}
+#'   \item{Filters seeds based on the provided merging strategy and membership
+#' cutoff.}
 #'   \item{Merges seeds based on the merging strategy.}
 #' }
 #'
-#' @param distanceMetric A string specifying the distance metric to use (e.g., "kappa").
+#' @param distanceMetric A string specifying the distance metric to use (e.g.,
+#' "kappa").
 #' @param distanceCutoff A double specifying the distance cutoff value.
-#' @param mergeStrategy A string specifying the merge strategy to use (e.g., "DAVID").
-#' @param membershipCutoff A double specifying the membership cutoff value (between 0 and 1).
+#' @param mergeStrategy A string specifying the merge strategy to use (e.g.,
+#' "DAVID").
+#' @param membershipCutoff A double specifying the membership cutoff value
+#' (between 0 and 1).
 #' @param termNameColumn A CharacterVector containing term names.
 #' @param geneIDColumn A CharacterVector containing gene IDs.
 #' @param PvalueColumn A NumericVector containing p-values.
@@ -25,7 +30,8 @@
 #' \itemize{
 #'   \item{DistanceMatrix: The distance matrix used in clustering.}
 #'   \item{SeedMap: The initial seed map of clusters.}
-#'   \item{FilteredSeeds: The filtered seed map after applying the merge strategy.}
+#'   \item{FilteredSeeds: The filtered seed map after applying the merge
+#' strategy.}
 #'   \item{MergedSeeds: The final cluster list after merging seeds.}
 #' }
 #'
@@ -34,14 +40,32 @@
 #' termNames <- c("A", "B", "C", "D")
 #' geneIDs <- c("g1,g2,g3", "g1,g2,g4", "g5,g6,g7", "g5,g6,g8")
 #' pValues <- c(1e-8, 1e-7, 1e-6, 0.05)
-#' result <- richCluster("kappa", 0.5, "DAVID", 0.7, termNames, geneIDs, pValues)
+#' result <- richCluster("kappa", 0.5, "DAVID", 0.7, termNames, geneIDs,
+#' pValues)
 #' distanceMatrix <- result$DistanceMatrix
 #' seedMap <- result$SeedMap
 #' filteredSeeds <- result$FilteredSeeds
 #' mergedSeeds <- result$MergedSeeds
 #'
 #' @export
-richCluster <- function(distanceMetric, distanceCutoff, mergeStrategy, membershipCutoff, termNameColumn, geneIDColumn, PvalueColumn) {
-    .Call('_richStudio_richCluster', PACKAGE = 'richStudio', distanceMetric, distanceCutoff, mergeStrategy, membershipCutoff, termNameColumn, geneIDColumn, PvalueColumn)
+richCluster <- function(
+  distanceMetric,
+  distanceCutoff,
+  mergeStrategy,
+  membershipCutoff,
+  termNameColumn,
+  geneIDColumn,
+  PvalueColumn
+) {
+  .Call(
+    "_richStudio_richCluster",
+    PACKAGE = "richStudio",
+    distanceMetric,
+    distanceCutoff,
+    mergeStrategy,
+    membershipCutoff,
+    termNameColumn,
+    geneIDColumn,
+    PvalueColumn
+  )
 }
-

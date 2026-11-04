@@ -1,0 +1,86 @@
+{
+  "version": "1.0",
+  "created": "2026-10-29",
+  "degnames": [],
+  "rrnames": [],
+  "clusnames": "Scientific_fixture",
+  "degdfs": [],
+  "rrdfs": [],
+  "clusdfs": {
+    "Scientific_fixture": {
+      "Cluster": [10, 30],
+      "Representative_Term": ["Same representative", "Same representative"],
+      "Pvalue_alpha": [null, 0.001],
+      "Padj_alpha": [null, 0.01],
+      "Pvalue_beta": [1, 0],
+      "Padj_beta": [1, 0]
+    }
+  },
+  "cluslists": {
+    "Scientific_fixture": {
+      "Cluster": [10, 10, 30, 30],
+      "Term": ["Ten first", "Ten second", "Thirty first", "Thirty second"],
+      "Representative_Term": ["Same representative", "Same representative", "Same representative", "Same representative"],
+      "GeneID": ["g1,g2", "g1,g3", "g4,g5", "g4,g6"],
+      "Annot": ["GO:SYNTH10A", "GO:SYNTH10B", "GO:SYNTH30A", "GO:SYNTH30B"],
+      "Pvalue_alpha": [null, null, 0.001, 0.001],
+      "Padj_alpha": [null, null, 0.01, 0.01],
+      "Pvalue_beta": [1, 1, 0, 0],
+      "Padj_beta": [1, 1, 0, 0]
+    }
+  },
+  "big_rrdf": {
+    "df": {
+      "name": [],
+      "from_deg": [],
+      "annot": [],
+      "keytype": [],
+      "ontology": [],
+      "species": []
+    }
+  },
+  "big_clusdf": {
+    "df": {
+      "name": "Scientific_fixture",
+      "method": "hierarchical",
+      "n_clusters": 2,
+      "n_terms": 4
+    }
+  },
+  "df_schema": {
+    "degdfs": [],
+    "rrdfs": [],
+    "clusdfs": {
+      "Scientific_fixture": {
+        "nrow": 2,
+        "names": ["Cluster", "Representative_Term", "Pvalue_alpha", "Padj_alpha", "Pvalue_beta", "Padj_beta"],
+        "classes": ["integer", "character", "double", "double", "double", "double"],
+        "levels": []
+      }
+    },
+    "cluslists": {
+      "Scientific_fixture": {
+        "nrow": 4,
+        "names": ["Cluster", "Term", "Representative_Term", "GeneID", "Annot", "Pvalue_alpha", "Padj_alpha", "Pvalue_beta", "Padj_beta"],
+        "classes": ["integer", "character", "character", "character", "character", "double", "double", "double", "double"],
+        "levels": []
+      }
+    },
+    "big_rrdf": {
+      "df": {
+        "nrow": 0,
+        "names": ["name", "from_deg", "annot", "keytype", "ontology", "species"],
+        "classes": ["character", "character", "character", "character", "character", "character"],
+        "levels": []
+      }
+    },
+    "big_clusdf": {
+      "df": {
+        "nrow": 1,
+        "names": ["name", "method", "n_clusters", "n_terms"],
+        "classes": ["character", "character", "integer", "integer"],
+        "levels": []
+      }
+    }
+  }
+}

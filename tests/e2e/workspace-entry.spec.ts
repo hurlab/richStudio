@@ -130,8 +130,7 @@ for (const action of homeActions) {
       await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
     } else {
       // Demo data load only after the demo action.
-      await expect(page.locator('#workspace-summary')).toContainText('No dataset selected');
-      await expect(page.locator('#workspace-active_result option')).toHaveCount(1);
+      await expect(page.locator('#workspace-header')).toHaveCount(0);
     }
   });
 }
@@ -157,12 +156,8 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   const select = page.locator('#workspace-active_result');
   const summary = page.locator('#workspace-summary');
 
-  // S8r: nothing is selected before the demo action.
-  await expect(summary).toContainText('No dataset selected');
-  await expect(select).toHaveValue('');
-  await expect(page.locator('#workspace-active_result option:checked')).toHaveText('Choose a result');
-  await expect(page.locator('#workspace-create_figure')).toBeDisabled();
-  await expect(page.locator('#workspace-cluster_results')).toBeDisabled();
+  // No dataset controls render before results exist.
+  await expect(page.locator('#workspace-header')).toHaveCount(0);
 
   await page.locator('#home-load_demo').click();
   await expectTab(page, 'rr_visualize_tab');
@@ -208,8 +203,8 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
 });
 
 test('REQ-001 REQ-003 M15 axe reports no violations on Home and on the populated header', async ({ page }, info) => {
-  await expect(page.locator('#workspace-summary')).toContainText('No dataset selected');
-  await axeScan(page, info, 'axe-home', ['#shiny-tab-home_tab', '#workspace-header']);
+  await expect(page.locator('#workspace-header')).toHaveCount(0);
+  await axeScan(page, info, 'axe-home', ['#shiny-tab-home_tab']);
   await page.locator('#home-load_demo').click();
   await expectTab(page, 'rr_visualize_tab');
   await expect(page.locator('#workspace-summary')).toContainText('go1');

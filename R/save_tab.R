@@ -30,7 +30,7 @@ sanitize_filename <- function(name) {
 #' @export
 saveTabUI <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(tabName = tabName,
+  ui <- tabItem(tabName = tabName,
     h2("Save & Load Analysis Session"),
     p("Save your current analysis session or load a previously saved session."),
 
@@ -137,6 +137,177 @@ saveTabUI <- function(id, tabName) {
       )
     )
   )
+  htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")
+}
+
+# Rebuild only facts available from legacy result objects. Missing scientific
+# provenance stays unknown; matching successful run records may provide method.
+workspace_saved_cluster_method <- function(name, records_json) {
+  records <- tryCatch(
+    workspace_run_records_parse(records_json),
+    error = function(e) list()
+  )
+  methods <- vapply(
+    Filter(
+      function(record) {
+        if (
+          !workspace_run_record_validate(record) ||
+            !identical(record$kind, "clustering") ||
+            !identical(record$state, "succeeded")
+        ) {
+          return(FALSE)
+        }
+        outputs <- record$outputs
+        settings <- record$settings
+        is.list(settings) &&
+          is.character(settings$method) &&
+          length(settings$method) == 1L &&
+          !is.na(settings$method) &&
+          nzchar(settings$method) &&
+          (identical(outputs, name) ||
+             (is.character(outputs) && name %in% outputs))
+      },
+      records
+    ),
+    function(record) record$settings$method,
+    character(1)
+  )
+  methods <- unique(methods)
+  if (length(methods) == 1L) methods else "?"
+}
+
+workspace_legacy_rr_tracking <- function(labels) {
+  if (!length(labels)) {
+    return(NULL)
+  }
+  rows <- lapply(labels, function(name) {
+    row <- add_file_rrdf(NULL, name, file = TRUE)
+    row$from_deg <- "?"
+    row
+  })
+  do.call(rbind, rows)
+}
+
+workspace_legacy_clus_tracking <- function(session_data) {
+  labels <- session_data$clusnames
+  if (!length(labels)) {
+    return(NULL)
+  }
+  rows <- lapply(labels, function(name) {
+    details <- session_data$cluslists[[name]]
+    summary <- session_data$clusdfs[[name]]
+    cluster_values <- if (
+      is.data.frame(details) && "Cluster" %in% names(details)
+    ) {
+      details$Cluster
+    } else if (is.data.frame(summary) && "Cluster" %in% names(summary)) {
+      summary$Cluster
+    } else {
+      integer()
+    }
+    data.frame(
+      name = name,
+      method = workspace_saved_cluster_method(
+        name,
+        session_data$run_records_json
+      ),
+      n_clusters = as.integer(length(unique(cluster_values[
+        !is.na(cluster_values)
+      ]))),
+      n_terms = if (is.data.frame(details)) {
+        as.integer(nrow(details))
+      } else {
+        NA_integer_
+      },
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, rows)
+}
+
+workspace_saved_tracking_state <- function(session_data) {
+  restore <- function(field, legacy_value, labels, columns) {
+    if (!field %in% names(session_data)) {
+      return(list(df = legacy_value))
+    }
+    value <- session_data[[field]]
+    if (
+      !is.list(value) ||
+        (length(value) && is.null(names(value))) ||
+        anyDuplicated(names(value)) ||
+        any(
+          !vapply(value, function(x) is.null(x) || is.data.frame(x), logical(1))
+        )
+    ) {
+      stop("Invalid ", field, " tracking metadata", call. = FALSE)
+    }
+    if (!length(value)) {
+      return(list(df = legacy_value))
+    }
+    if (!"df" %in% names(value)) {
+      stop("Invalid ", field, " tracking metadata", call. = FALSE)
+    }
+    if (is.null(value$df)) {
+      return(list(df = legacy_value))
+    }
+    df <- value$df
+    if (
+      !identical(names(df), columns) ||
+        !"name" %in% names(df) ||
+        anyNA(df$name) ||
+        any(!nzchar(as.character(df$name))) ||
+        anyDuplicated(as.character(df$name)) ||
+        !is.character(df$name)
+    ) {
+      stop("Invalid ", field, " tracking metadata", call. = FALSE)
+    }
+    if (field == "big_clusdf") {
+      valid_counts <- function(counts) {
+        if (!is.numeric(counts) || any(is.nan(counts))) {
+          return(FALSE)
+        }
+        known <- counts[!is.na(counts)]
+        all(is.finite(known) & known >= 0 & known == floor(known))
+      }
+      if (
+        !is.character(df$method) ||
+          anyNA(df$method) ||
+          any(!nzchar(df$method)) ||
+          !valid_counts(df$n_clusters) ||
+          !valid_counts(df$n_terms)
+      ) {
+        stop("Invalid ", field, " tracking metadata", call. = FALSE)
+      }
+    }
+    # Result labels can be renamed or removed without changing the metadata
+    # table. Keep facts only for exact surviving names and rebuild missing
+    # labels from the saved result objects, never transferring old facts.
+    keep <- df[df$name %in% labels, , drop = FALSE]
+    missing <- setdiff(labels, keep$name)
+    if (length(missing)) {
+      fallback <- legacy_value[legacy_value$name %in% missing, , drop = FALSE]
+      keep <- rbind(keep, fallback)
+    }
+    keep <- keep[match(labels, keep$name), , drop = FALSE]
+    value$df <- keep
+    value
+  }
+  rr_legacy <- workspace_legacy_rr_tracking(session_data$rrnames)
+  clus_legacy <- workspace_legacy_clus_tracking(session_data)
+  list(
+    big_rrdf = restore(
+      "big_rrdf",
+      rr_legacy,
+      session_data$rrnames,
+      c("name", "from_deg", "annot", "keytype", "ontology", "species")
+    ),
+    big_clusdf = restore(
+      "big_clusdf",
+      clus_legacy,
+      session_data$clusnames,
+      c("name", "method", "n_clusters", "n_terms")
+    )
+  )
 }
 
 
@@ -151,10 +322,13 @@ saveTabUI <- function(id, tabName) {
 #' @param u_clusdfs Reactive values for cluster result dataframes
 #' @param u_cluslists Reactive values for cluster list details
 #' @param download_handler Download handler factory; defaults to Shiny's handler
+#' @param u_big_rrdf Reactive values for enrichment result tracking metadata
+#' @param u_big_clusdf Reactive values for cluster result tracking metadata
 #' @export
 saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
                           u_clusnames, u_clusdfs, u_cluslists,
-                          download_handler = downloadHandler) {
+                          download_handler = downloadHandler, u_big_rrdf = NULL,
+                          u_big_clusdf = NULL) {
 
   moduleServer(id, function(input, output, session) {
     jobs <- workspace_jobs_peek(session)
@@ -199,7 +373,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
 
     # The session as a plain list: what both the JSON session and the project save.
     session_snapshot <- function() {
-      list(
+      snap <- list(
         version = "1.0",
         created = Sys.time(),
         degnames = u_degnames$labels,
@@ -210,11 +384,33 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         clusdfs = live_values(u_clusdfs),
         cluslists = live_values(u_cluslists)
       )
+      # Result tracking metadata travels with the session.
+      if (!is.null(u_big_rrdf)) snap$big_rrdf <- live_values(u_big_rrdf)
+      if (!is.null(u_big_clusdf)) snap$big_clusdf <- live_values(u_big_clusdf)
+      snap
     }
 
     stores <- list(u_degnames = u_degnames, u_degdfs = u_degdfs, u_rrnames = u_rrnames,
                    u_rrdfs = u_rrdfs, u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
                    u_cluslists = u_cluslists)
+
+    # Tracking metadata (u_big_rrdf / u_big_clusdf) is rebuilt from the saved or
+    # imported results; it is validated before any store is touched.
+    restore_tracking_state <- function(source) {
+      if (is.null(u_big_rrdf) && is.null(u_big_clusdf)) return(NULL)
+      workspace_saved_tracking_state(source)
+    }
+    apply_tracking_state <- function(restored) {
+      if (is.null(restored)) return(invisible(NULL))
+      replace_store <- function(rv, items) {
+        if (is.null(rv)) return(invisible(NULL))
+        for (name in shiny::isolate(names(rv))) rv[[name]] <- NULL
+        for (name in names(items)) rv[[name]] <- items[[name]]
+      }
+      replace_store(u_big_rrdf, restored$big_rrdf)
+      replace_store(u_big_clusdf, restored$big_clusdf)
+      invisible(NULL)
+    }
 
     # Download session handler
     output$download_session <- download_handler(
@@ -337,7 +533,9 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         # Validate the whole candidate, then apply it in one swap (job generation
         # invalidated first); a malformed file never reaches the stores.
         candidate <- project_legacy_candidate(session_data)
+        restored_tracking <- restore_tracking_state(session_data)
         project_commit_candidate(candidate, stores, jobs)
+        apply_tracking_state(restored_tracking)
 
         showNotification(
           paste("Session loaded successfully! Created:", session_data$created),
@@ -365,7 +563,14 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
                          type = "error", duration = NULL)
         return(NULL)
       }
+      restored_tracking <- tryCatch(restore_tracking_state(candidate), error = function(e) e)
+      if (inherits(restored_tracking, "error")) {
+        showNotification("Project could not be opened: invalid result tracking metadata",
+                         type = "error", duration = NULL)
+        return(NULL)
+      }
       project_commit_candidate(candidate, stores, jobs)
+      apply_tracking_state(restored_tracking)
       showNotification("Project opened successfully!", type = "message", duration = 5)
     })
 

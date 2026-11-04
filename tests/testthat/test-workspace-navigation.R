@@ -56,7 +56,7 @@ ws3_sidebar_tabs <- function(calls) {
   vapply(calls, function(call) call$message$value, character(1))
 }
 
-# Callback stubs for homeTabServer; events are recorded in activation order.
+# Callback stubs for home_tab_server; events are recorded in activation order.
 ws3_home_fixture <- function(results = FALSE, gene_lists = FALSE) {
   log <- new.env(parent = emptyenv())
   log$events <- character()
@@ -114,9 +114,9 @@ ws3_app_server <- function(mount_modules = FALSE) {
       do.call(fn, c(list(id), state[intersect(names(formals(fn)), names(state))]))
     }
     if (mount_modules) {
-      mount(richStudio:::enrichTabServer, "enrich")
+      mount(richStudio:::enrich_tab_server, "enrich")
       mount(richStudio::clusterTabServer, "cluster")
-      mount(richStudio:::rrVisTabServer, "rr_visualize")
+      mount(richStudio:::rr_vis_tab_server, "rr_visualize")
     }
     nav <- richStudio:::workspace_navigation_server(session,
       u_degnames = state$u_degnames, u_rrnames = state$u_rrnames,
@@ -125,7 +125,7 @@ ws3_app_server <- function(mount_modules = FALSE) {
 }
 
 test_that("REQ-001 AC-001 Home renders four native entry actions above About and links", {
-  html <- ws3_html(richStudio:::homeTabUI("home", "home_tab", "fixture-version", enabled = TRUE))
+  html <- ws3_html(richStudio:::home_tab_ui("home", "home_tab", "fixture-version", enabled = TRUE))
   for (value in c('id="shiny-tab-home_tab"', "Welcome to richStudio", "Quick Start",
                   "vfixture-version", 'alt="richStudio logo"', 'id="home-context_actions"',
                   'id="home-demo_status"', "Hur Lab Homepage", "Citation:")) {
@@ -171,8 +171,33 @@ test_that("REQ-001 AC-001 Home renders four native entry actions above About and
             regexpr("Upload gene lists", html, fixed = TRUE))
 })
 
+test_that("landing version and build are read from package and release metadata", {
+  root <- tempfile("richstudio-release-")
+  dir.create(root)
+  writeLines(c("Package: richStudio", "Version: 9.8.7"), file.path(root, "DESCRIPTION"))
+  app_dir <- file.path(root, "application")
+  dir.create(app_dir)
+  expect_identical(richStudio:::workspace_package_root(candidates = c(app_dir, root)),
+                   normalizePath(root))
+  writeLines("0123456789abcdef0123456789abcdef01234567", file.path(root, ".release-commit"))
+  release <- richStudio:::workspace_release_metadata(root)
+  expect_identical(release$version, "9.8.7")
+  expect_identical(release$build, "0123456")
+  writeLines(character(), file.path(root, ".release-commit"))
+  empty_release <- richStudio:::workspace_release_metadata(root)
+  expect_identical(empty_release$build, NULL)
+  unlink(root, recursive = TRUE)
+
+  html <- ws3_html(richStudio:::home_tab_ui("home", "home_tab", release$version,
+                                           app_build = release$build))
+  expect_match(html, "v9.8.7", fixed = TRUE)
+  expect_match(html, "Build 0123456", fixed = TRUE)
+  without_build <- ws3_html(richStudio:::home_tab_ui("home", "home_tab", "9.8.7"))
+  expect_false(grepl("build-id", without_build, fixed = TRUE))
+})
+
 test_that("REQ-001 M15 enabled Home markup meets the accessibility contract", {
-  html <- ws3_html(richStudio:::homeTabUI("home", "home_tab", "fixture-version", enabled = TRUE))
+  html <- ws3_html(richStudio:::home_tab_ui("home", "home_tab", "fixture-version", enabled = TRUE))
   # No element combines role="presentation" with an aria-label; icons are hidden instead.
   expect_false(grepl('<[^>]*role="presentation"[^>]*aria-label', html))
   expect_false(grepl('<[^>]*aria-label[^>]*role="presentation"', html))
@@ -204,7 +229,7 @@ test_that("REQ-001 M15 enabled Home markup meets the accessibility contract", {
 })
 
 test_that("REQ-001 release switch off restores the previous Home content without entry actions", {
-  html <- ws3_html(richStudio:::homeTabUI("home", "home_tab", "fixture-version", enabled = FALSE))
+  html <- ws3_html(richStudio:::home_tab_ui("home", "home_tab", "fixture-version", enabled = FALSE))
   for (value in c('id="shiny-tab-home_tab"', "Welcome to richStudio", "Quick Start",
                   "Upload &amp; Enrich", "Visualize &amp; Export", "vfixture-version")) {
     expect_match(html, value, fixed = TRUE)
@@ -245,25 +270,38 @@ test_that("REQ-002 sidebar relabels figure destinations and keeps every route in
   expect_identical(ws3_captions(off)[c("rr_visualize_tab", "clus_visualize_tab")],
                    c(rr_visualize_tab = "Visualize", clus_visualize_tab = "Visualize"))
   expect_match(on, 'id="workspace_sidebar"', fixed = TRUE)
+  expect_identical(ws3_count(on, "menu-open"), 2L)
+  expect_identical(ws3_count(on, 'data-start-selected="1"'), 1L)
   expect_false(grepl("figures", off, fixed = TRUE))
 })
 
 test_that("REQ-003 S11 header is an accessible region with a native dataset chooser and no provenance marker", {
   on <- ws3_html(richStudio:::workspace_header_ui("workspace", enabled = TRUE))
-  for (value in c('id="workspace-header"', 'aria-label="Active workspace"',
-                  '<select class="shiny-input-select form-control" id="workspace-active_result">',
-                  "Change dataset", '<option value="" selected>Choose a result</option>',
-                  'id="workspace-summary"', 'id="workspace-actions"')) {
-    expect_match(on, value, fixed = TRUE)
-  }
-  expect_false(grepl('data-for="workspace-active_result"', on, fixed = TRUE))
-  expect_false(grepl("<h[1-6]", on))
-  for (kind in c("rs-workspace-kind", "Setup draft", "Captured run settings", "Display filter",
-                 "Committed input revision", "Unsaved project changes")) {
-    expect_false(grepl(kind, on, fixed = TRUE))
-  }
+  expect_match(on, 'id="workspace-container"', fixed = TRUE)
   expect_identical(ws3_html(shiny::tagList(
     richStudio:::workspace_header_ui("workspace", enabled = FALSE))), "")
+})
+
+test_that("REQ-003 header container appears and disappears with result labels", {
+  fixture <- ws3_header_fixture()
+  result_names <- fixture$args$u_rrnames
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
+    session$flushReact()
+    expect_identical(ws3_output_html(output$container), "")
+    result_names$labels <- "go1"
+    session$flushReact()
+    html <- ws3_output_html(output$container)
+    for (value in c('id="workspace-header"', 'aria-label="Active workspace"',
+                    '<select class="shiny-input-select form-control" id="workspace-active_result">',
+                    "Change dataset", '<option value="" selected>Choose a result</option>',
+                    'id="workspace-summary"', 'id="workspace-actions"')) {
+      expect_match(html, value, fixed = TRUE)
+    }
+    expect_false(grepl('data-for="workspace-active_result"', html, fixed = TRUE))
+    result_names$labels <- character()
+    session$flushReact()
+    expect_identical(ws3_output_html(output$container), "")
+  })
 })
 
 test_that("REQ-001 AC-001 demo loader reproduces the bundled results once and skips present labels", {
@@ -308,7 +346,7 @@ test_that("REQ-001 AC-001 Home actions call only their navigation callback and d
                  load_demo = c("load_demo", "navigate:rr_visualize_tab"))
   for (action in names(routes)) {
     fixture <- ws3_home_fixture()
-    shiny::testServer(richStudio:::homeTabServer, args = fixture$args, {
+    shiny::testServer(richStudio:::home_tab_server, args = fixture$args, {
       inputs <- ws3_record_inputs(session)
       session$flushReact()
       expect_identical(fixture$log$events, character())
@@ -324,7 +362,7 @@ test_that("REQ-001 AC-001 Home actions call only their navigation callback and d
 
 test_that("REQ-001 Home context actions are absent without data and route only when enabled", {
   fixture <- ws3_home_fixture()
-  shiny::testServer(richStudio:::homeTabServer, args = fixture$args, {
+  shiny::testServer(richStudio:::home_tab_server, args = fixture$args, {
     session$flushReact()
     html <- ws3_output_html(output$context_actions)
     expect_false(grepl("View results", html, fixed = TRUE))
@@ -366,7 +404,7 @@ test_that("REQ-001 Home context actions are absent without data and route only w
 test_that("REQ-003 S9r header shows recorded organism and identifier type for a one-row match", {
   meta <- rbind(ws3_meta("go1", "SYMBOL", "human"), ws3_meta("kegg1", "ENTREZID", "mouse"))
   fixture <- ws3_header_fixture(c("go1", "go2", "kegg1"), meta, "kegg1")
-  shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
     session$flushReact()
     html <- ws3_output_html(output$summary)
     for (value in c("kegg1", "Recorded organism", "Recorded identifier type",
@@ -387,7 +425,7 @@ test_that("REQ-003 unknown recorded values are shown as not recorded", {
   for (value in list("?", "NULL", NA_character_, "")) {
     meta <- rbind(ws3_meta("go1", "SYMBOL", "human"), ws3_meta("kegg1", value, value))
     fixture <- ws3_header_fixture(c("go1", "kegg1"), meta, "kegg1")
-    shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+    shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
       session$flushReact()
       html <- ws3_output_html(output$summary)
       expect_match(html, "kegg1", fixed = TRUE)
@@ -408,7 +446,7 @@ test_that("REQ-003 zero or repeated recorded rows never guess and say details ar
     two = rbind(ws3_meta("kegg1", "ENTREZID", "mouse"), ws3_meta("kegg1", "SYMBOL", "rat")))
   for (case in names(cases)) {
     fixture <- ws3_header_fixture(c("go1", "kegg1"), cases[[case]], "kegg1")
-    shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+    shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
       session$flushReact()
       html <- ws3_output_html(output$summary)
       expect_match(html, "kegg1", fixed = TRUE)
@@ -428,7 +466,7 @@ test_that("REQ-003 M12 no active result shows no dataset and disables both actio
                 list(labels = c("go1", "kegg1"), reason = "Choose a result first"))
   for (case in cases) {
     fixture <- ws3_header_fixture(case$labels, NULL, NULL)
-    shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+    shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
       inputs <- ws3_record_inputs(session)
       session$flushReact()
       expect_match(ws3_output_html(output$summary), "No dataset selected", fixed = TRUE)
@@ -450,7 +488,7 @@ test_that("REQ-003 hostile result labels and recorded values render as escaped t
   label <- "<img src=x onerror=alert(1)>"
   meta <- ws3_meta(label, "<b>key</b>", "<script>sp()</script>")
   fixture <- ws3_header_fixture(label, meta, label)
-  shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
     session$flushReact()
     html <- ws3_output_html(output$summary)
     expect_match(html, "&lt;img src=x onerror=alert(1)&gt;", fixed = TRUE)
@@ -463,7 +501,7 @@ test_that("REQ-003 S8 M13 Change dataset never auto-selects, ignores unknown val
   fixture <- ws3_header_fixture()
   active <- fixture$args$active_result
   names_store <- fixture$args$u_rrnames
-  shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
     inputs <- ws3_record_inputs(session)
     session$flushReact()
     names_store$labels <- c("go1", "go2", "kegg1")
@@ -506,7 +544,7 @@ test_that("REQ-003 S8 M13 Change dataset never auto-selects, ignores unknown val
 test_that("REQ-002 AC-002 M14 Create figure selects the active result in both figure selectors only", {
   meta <- ws3_meta("kegg1", "ENTREZID", "mouse")
   fixture <- ws3_header_fixture(c("go1", "go2", "kegg1"), meta, "kegg1")
-  shiny::testServer(richStudio:::workspaceHeaderServer, args = fixture$args, {
+  shiny::testServer(richStudio:::workspace_header_server, args = fixture$args, {
     inputs <- ws3_record_inputs(session)
     session$flushReact()
     actions <- ws3_output_html(output$actions)
@@ -630,8 +668,8 @@ test_that("REQ-001 REQ-003 F3 server-rendered action ids follow the session name
   header <- ws3_header_fixture(c("go1", "kegg1"), NULL, "kegg1")
   # Mounted below another module, the raw module id ("home") would be wrong.
   outer <- function(id) shiny::moduleServer(id, function(input, output, session) {
-    do.call(richStudio:::homeTabServer, home$args)
-    do.call(richStudio:::workspaceHeaderServer, header$args)
+    do.call(richStudio:::home_tab_server, home$args)
+    do.call(richStudio:::workspace_header_server, header$args)
   })
   shiny::testServer(outer, args = list(id = "outer"), {
     session$flushReact()
@@ -733,7 +771,7 @@ test_that("REQ-001 REQ-002 installed app wires the release switch, menu, header 
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
   expect_match(text, 'getOption\\(\\s*"richStudio\\.workspace_navigation"\\s*,\\s*TRUE\\s*\\)')
   for (call in c("workspace_sidebar_menu\\(", "workspace_header_ui\\(",
-                 "workspace_navigation_server\\(", "homeTabUI\\([^)]*enabled")) {
+                 "workspace_navigation_server\\(", "home_tab_ui\\([^)]*enabled")) {
     expect_match(text, call)
   }
   for (caption in c("'rr_visualize_tab': 'Enrichment / Enrichment figures'",

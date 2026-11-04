@@ -1,0 +1,15 @@
+# Keep published R/Rcpp names and named arguments compatible with existing users.
+# Internal objects continue to follow the default snake_case naming rule.
+linters: linters_with_defaults(
+    object_name_linter = object_name_linter(
+      styles = c("snake_case", "symbols"),
+      regexes = paste0(
+        "^(richCluster|distanceMetric|distanceCutoff|mergeStrategy|",
+        "membershipCutoff|termNameColumn|geneIDColumn|PvalueColumn|",
+        "clusterTabUI|clusterTabServer|saveTabUI|saveTabServer|",
+        "updateTabUI|updateTabServer|launch_richStudio|tabName)$"
+      )
+    ),
+    pipe_consistency_linter = pipe_consistency_linter("%>%")
+  )
+# The package supports R 4.0; native pipes require R 4.1.

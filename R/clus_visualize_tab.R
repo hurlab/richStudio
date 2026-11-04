@@ -1,91 +1,218 @@
-clusVisTabUI <- function(id, tabName) {
+clus_vis_tab_ui <- function(id, tabName) {
   ns <- NS(id)
-  tabItem(tabName = tabName,
+  ui <- tabItem(
+    tabName = tabName,
     # ENRICH TAB CONTENTS
     fluidRow(
-      column(width = 4,
-        tabBox(title="Load cluster result", width=NULL,
-          tabPanel("File upload",
-            helpText("File upload for cluster results is not yet supported. Use the Clustering tab to generate results."),
-            fileInput(ns('clus_files'), 'Select files', multiple=TRUE, accept=c('.csv', '.tsv', '.xls', '.txt'))
+      column(
+        width = 4,
+        tabBox(
+          title = "Load cluster result",
+          width = NULL,
+          tabPanel(
+            "File upload",
+            helpText(
+              paste0(
+                "File upload for cluster results is not yet ",
+                "supported. Use the Clustering tab to generate ",
+                "results."
+              )
+            ),
+            fileInput(
+              ns("clus_files"),
+              "Select files",
+              multiple = TRUE,
+              accept = c(".csv", ".tsv", ".xls", ".txt")
+            )
           ),
-          tabPanel("Text input",
-            helpText("This functionality is currently not available, but will be supported in the future."),
-            textAreaInput(ns('rr_text'), "Text Input", placeholder="Paste dataframe-like object"),
-            textInput(ns('clustext_name'), "Name", placeholder="Set name for pasted enrichment result"),
-            actionButton(ns('upload_clustext'), "Upload")
+          tabPanel(
+            "Text input",
+            helpText(
+              paste0(
+                "This functionality is currently not available, ",
+                "but will be supported in the future."
+              )
+            ),
+            textAreaInput(
+              ns("rr_text"),
+              "Text Input",
+              placeholder = "Paste dataframe-like object"
+            ),
+            textInput(
+              ns("clustext_name"),
+              "Name",
+              placeholder = "Set name for pasted enrichment result"
+            ),
+            actionButton(ns("upload_clustext"), "Upload")
           )
         ),
         shinyjs::hidden(tags$div(
-          id=ns("cluslist_box"),
-          box(title="Available cluster results", width=NULL,
-            helpText("You can rename any cluster result by double-clicking on the relevant cell."),
-            DT::DTOutput(ns('clus_list_table')),
-            actionButton(ns('remove_clus'), "Delete")
+          id = ns("cluslist_box"),
+          box(
+            title = "Available cluster results",
+            width = NULL,
+            helpText(
+              paste0(
+                "You can rename any cluster result by ",
+                "double-clicking on the relevant cell."
+              )
+            ),
+            DT::DTOutput(ns("clus_list_table")),
+            actionButton(ns("remove_clus"), "Delete")
           )
         ))
       ),
-      column(width = 8,
+      column(
+        width = 8,
         h2("Cluster Result Visualization"),
         tabsetPanel(
           # HEATMAP
-          tabPanel("Heatmap",
-                   
+          tabPanel(
+            "Heatmap",
+
             # Cluster heatmap
-            box(title = "Options", status = "primary", width = NULL, collapsible = TRUE,
-              p("Select cluster result to view comprehensive heatmap displaying values for each cluster"),
-              selectInput(ns("clusdf_select"), "Select cluster result", choices=NULL, multiple=FALSE),
+            box(
+              title = "Options",
+              status = "primary",
+              width = NULL,
+              collapsible = TRUE,
+              p(
+                paste0(
+                  "Select cluster result to view comprehensive ",
+                  "heatmap displaying values for each cluster"
+                )
+              ),
+              selectInput(
+                ns("clusdf_select"),
+                "Select cluster result",
+                choices = NULL,
+                multiple = FALSE
+              ),
               fluidRow(
-                column(4,
-                  selectInput(ns('big_value_type'), "Select value to show", choices=c("Padj", "Pvalue"))
+                column(
+                  4,
+                  selectInput(
+                    ns("big_value_type"),
+                    "Select value to show",
+                    choices = c("Padj", "Pvalue")
+                  )
                 ),
-                column(4,
-                  selectInput(ns('value_by'), "Calculate value by", choices=c("mean", "median", "min", "max"))
+                column(
+                  4,
+                  selectInput(
+                    ns("value_by"),
+                    "Calculate value by",
+                    choices = c("mean", "median", "min", "max")
+                  )
                 )
               )
             ),
-            box(title = "Cluster Heatmap", status = "info", width = NULL, solidHeader = TRUE,
-              div(id = ns("clusdf_hmap_empty"), class = "empty-state",
+            box(
+              title = "Cluster Heatmap",
+              status = "info",
+              width = NULL,
+              solidHeader = TRUE,
+              div(
+                id = ns("clusdf_hmap_empty"),
+                class = "empty-state",
                 icon("chart-bar", class = "empty-icon"),
                 h4("No cluster data loaded"),
                 p("Select a cluster result above to view the heatmap.")
               ),
-              plotlyOutput(ns('clusdf_hmap'), height="800px")
+              uiOutput(ns("clusdf_hmap_error")),
+              uiOutput(ns("cluster_row_window_ui")),
+              tags$style(HTML(paste0(
+                ".cluster-heatmap-viewport{max-height:min(720px,70vh);",
+                "overflow:auto;max-width:100%;}",
+                ".cluster-heatmap-viewport:focus-visible{",
+                "outline:3px solid #2463a6;outline-offset:-3px;}",
+                ".cluster-heatmap-window select:focus{",
+                "outline:3px solid #2463a6;outline-offset:2px;}"
+              ))),
+              div(
+                id = ns("clusdf_hmap_region"),
+                class = "cluster-heatmap-viewport",
+                role = "region",
+                `aria-label` = "Cluster heatmap",
+                tabindex = "0",
+                div(
+                  style = "min-width:640px;max-width:8192px;",
+                  plotlyOutput(ns("clusdf_hmap"), height = "280px")
+                )
+              )
             ),
             # Term heatmap
-            box(title = "Options", status = "primary", width = NULL, collapsible = TRUE,
-              p("Select individual clusters to view heatmap of values for each term in cluster"),
-              selectInput(ns("indiv_clus_select"), "Select individual clusters", choices=NULL, multiple=TRUE),
-              selectInput(ns('small_value_type'), "Select value to show", choices=c("Padj", "Pvalue"))
+            box(
+              title = "Options",
+              status = "primary",
+              width = NULL,
+              collapsible = TRUE,
+              p(
+                paste0(
+                  "Select individual clusters to view heatmap of ",
+                  "values for each term in cluster"
+                )
+              ),
+              selectInput(
+                ns("indiv_clus_select"),
+                "Select individual clusters",
+                choices = NULL,
+                multiple = TRUE
+              ),
+              selectInput(
+                ns("small_value_type"),
+                "Select value to show",
+                choices = c("Padj", "Pvalue")
+              )
             ),
-            box(title = "Term Heatmap", status = "info", width = NULL,
+            box(
+              title = "Term Heatmap",
+              status = "info",
+              width = NULL,
               solidHeader = TRUE,
-              div(id = ns("indiv_hmap_empty"), class = "empty-state",
+              div(
+                id = ns("indiv_hmap_empty"),
+                class = "empty-state",
                 icon("chart-bar", class = "empty-icon"),
                 h4("No clusters selected"),
                 p("Select individual clusters above to view the term heatmap.")
               ),
-              plotlyOutput(ns('indiv_clus_hmap'))
+              plotlyOutput(ns("indiv_clus_hmap"))
             )
           ),
-          tabPanel("Cluster info",
+          tabPanel(
+            "Cluster info",
             br(),
-            box(title = "Detailed Cluster Info", status = "info", width = NULL,
+            box(
+              title = "Detailed Cluster Info",
+              status = "info",
+              width = NULL,
               solidHeader = TRUE,
               p("View and export individual term data for cluster results"),
               fluidRow(
-                column(4,
-                  selectInput(ns("cluslist_select"), "Select cluster result", choices=NULL, multiple=FALSE),
+                column(
+                  4,
+                  selectInput(
+                    ns("cluslist_select"),
+                    "Select cluster result",
+                    choices = NULL,
+                    multiple = FALSE
+                  ),
                 ),
-                column(4,
-                  selectInput(ns('cluslist_export_type'), "Export as", choices=c(".txt", ".csv", ".tsv"))
+                column(
+                  4,
+                  selectInput(
+                    ns("cluslist_export_type"),
+                    "Export as",
+                    choices = c(".txt", ".csv", ".tsv")
+                  )
                 )
               ),
               downloadButton(ns("download_cluslist"), "Download"),
               br(),
               br(),
               br(),
-              DT::dataTableOutput(ns('cluslist_table')),
+              DT::dataTableOutput(ns("cluslist_table")),
               br(),
             )
           )
@@ -93,64 +220,86 @@ clusVisTabUI <- function(id, tabName) {
       )
     ),
   )
+  htmltools::tagAppendAttributes(ui, class = "rs-compact-workflow")
 }
 
 
-clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big_rrdf, u_clusnames, u_clusdfs, u_big_clusdf, u_cluslists) {
-  
+clus_vis_tab_server <- function(
+  id,
+  u_degnames,
+  u_degdfs,
+  u_rrnames,
+  u_rrdfs,
+  u_big_rrdf,
+  u_clusnames,
+  u_clusdfs,
+  u_big_clusdf,
+  u_cluslists
+) {
   moduleServer(id, function(input, output, session) {
-    
     # create reactive objs to make accessible in other modules
-    u_degnames_reactive <- reactive(u_degnames$labels) 
-    u_degdfs_reactive <- reactive(u_degdfs) 
-    
-    u_rrnames_reactive <- reactive(u_rrnames$labels) 
-    u_rrdfs_reactive <- reactive(u_rrdfs)
-    u_big_rrdf_reactive <- reactive(u_big_rrdf)
-    
+
+    u_rrnames_reactive <- reactive(u_rrnames$labels)
+
     u_clusnames_reactive <- reactive(u_clusnames$labels)
-    u_clusdfs_reactive <- reactive(u_clusdfs)
-    u_big_clusdf_reactive <- reactive(u_big_clusdf)
-    u_cluslists_reactive <- reactive(u_cluslists)
-    
+
     term_vec_reactive <- reactiveVal(NULL)
-    
+
     # update select inputs based on # cluster results
     observe({
-      updateSelectInput(session=getDefaultReactiveDomain(), 'selected_rrs', choices=u_rrnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'clusdf_select', choices=u_clusnames_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'indiv_clus_select', choices=term_vec_reactive())
-      updateSelectInput(session=getDefaultReactiveDomain(), 'cluslist_select', choices=u_clusnames_reactive())
+      updateSelectInput(
+        session = getDefaultReactiveDomain(),
+        "selected_rrs",
+        choices = u_rrnames_reactive()
+      )
+      updateSelectInput(
+        session = getDefaultReactiveDomain(),
+        "clusdf_select",
+        choices = u_clusnames_reactive()
+      )
+      updateSelectInput(
+        session = getDefaultReactiveDomain(),
+        "cluslist_select",
+        choices = u_clusnames_reactive()
+      )
     })
-    
-    observe ({
-      if (is.null(u_big_clusdf[['df']])) {
-        shinyjs::hide('cluslist_box')
+    # Changing the individual choices must not reset the selected result.
+    observe({
+      updateSelectInput(
+        session = getDefaultReactiveDomain(),
+        "indiv_clus_select",
+        choices = term_vec_reactive()
+      )
+    })
+
+    observe({
+      if (is.null(u_big_clusdf[["df"]])) {
+        shinyjs::hide("cluslist_box")
       } else {
         shinyjs::show("cluslist_box")
       }
     })
-    
-  
+
     # Reactively update created cluster result dataframe
     big_clusdf_to_table <- reactive({
-      u_big_clusdf[['df']]
+      u_big_clusdf[["df"]]
     })
     # Output uploaded file table
-    output$clus_list_table = DT::renderDT(
-      big_clusdf_to_table(), editable='cell'
+    output$clus_list_table <- DT::renderDT(
+      big_clusdf_to_table(),
+      editable = "cell"
     )
     # Cluslist table editing code
     observeEvent(input$clus_list_table_cell_edit, {
-      info = input$clus_list_table_cell_edit
-      i = info$row
-      j = info$col
-      v = info$value
+      info <- input$clus_list_table_cell_edit
+      i <- info$row
+      j <- info$col
+      v <- info$value
 
       # Rename clus if changing a value in column 1 (name col)
       if (info$col == 1) {
         new_name <- v
-        old_name <- u_big_clusdf[['df']][i, j]
+        old_name <- u_big_clusdf[["df"]][i, j]
         if (nchar(new_name) > 0 && nchar(old_name) > 0) {
           # Copy data to new name
           u_clusdfs[[new_name]] <- u_clusdfs[[old_name]]
@@ -163,10 +312,11 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
           u_clusnames$labels <- c(u_clusnames$labels, new_name)
         }
       }
-      # Update u_big_clusdf - Fix anti-pattern: Modify data frame locally, then assign once
-      updated_df <- u_big_clusdf[['df']]
+      # Update u_big_clusdf - Fix anti-pattern: Modify data frame locally, then
+      # assign once
+      updated_df <- u_big_clusdf[["df"]]
       updated_df[i, j] <- DT::coerceValue(v, updated_df[i, j])
-      u_big_clusdf[['df']] <- updated_df
+      u_big_clusdf[["df"]] <- updated_df
     })
 
     # Remove clus from list of created cluster results
@@ -175,7 +325,7 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
 
       # Also remove from clusdfs, cluslists, and clusnames
       for (clus in input$clus_list_table_rows_selected) {
-        clus_to_rm <- u_big_clusdf[['df']][clus, ]
+        clus_to_rm <- u_big_clusdf[["df"]][clus, ]
         clus_to_rm <- clus_to_rm$name
 
         # Properly remove from reactive values using NULL assignment
@@ -185,77 +335,245 @@ clusVisTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs, u_big
       }
 
       # Remove selection from u_big_clusdf
-      rm_vec <- u_big_clusdf[['df']][input$clus_list_table_rows_selected, ]
-      u_big_clusdf[['df']] <- rm_file_clusdf(u_big_clusdf[['df']], rm_vec)
+      rm_vec <- u_big_clusdf[["df"]][input$clus_list_table_rows_selected, ]
+      u_big_clusdf[["df"]] <- rm_file_clusdf(u_big_clusdf[["df"]], rm_vec)
     })
-    
-      
-    
-    # Update heatmap when cluster result selection changes
-    observeEvent(input$clusdf_select, {
-      req(input$clusdf_select)
 
-      df <- u_clusdfs[[input$clusdf_select]]
-      req(df, nrow(df) > 0)
-      term_vec_reactive(unique(df$Representative_Term))
-
-      cluslist_df <- u_cluslists[[input$clusdf_select]]
-      req(cluslist_df, nrow(cluslist_df) > 0)
-
-      hmap <- comprehensive_hmap(final_data=df, cluster_list=cluslist_df,
-                                 value_type=input$big_value_type, value_by=input$value_by)
-      
-      output$clusdf_hmap <- renderPlotly({
-        hmap
-      })
+    selected_cluster <- reactive({
+      name <- input$clusdf_select
+      if (is.null(name) || length(name) != 1L || !nzchar(name)) {
+        return(NULL)
+      }
+      df <- u_clusdfs[[name]]
+      cluslist_df <- u_cluslists[[name]]
+      if (
+        !is.data.frame(df) ||
+          !nrow(df) ||
+          !is.data.frame(cluslist_df) ||
+          !nrow(cluslist_df)
+      ) {
+        return(NULL)
+      }
+      list(df = df, cluster_list = cluslist_df)
     })
-    
-    # plot indiv cluster hmap
+
+    observeEvent(
+      selected_cluster(),
+      {
+        selected <- selected_cluster()
+        if (!is.null(selected)) {
+          term_vec_reactive(hmap_cluster_choices(selected$df))
+        }
+      },
+      ignoreNULL = TRUE
+    )
+
+    row_window_start <- reactiveVal(1L)
+    observeEvent(
+      selected_cluster(),
+      {
+        row_window_start(1L)
+        updateSelectInput(session, "cluster_row_window", selected = "1")
+      },
+      ignoreNULL = FALSE,
+      priority = 10
+    )
+
+    observeEvent(input$cluster_row_window, {
+      row_window_start(suppressWarnings(as.integer(input$cluster_row_window)))
+    })
+
+    summary_resource_error <- reactive({
+      selected <- selected_cluster()
+      if (is.null(selected)) {
+        return(NULL)
+      }
+      tryCatch(
+        {
+          workspace_check_resources(list(render_rows = nrow(selected$df)))
+          NULL
+        },
+        error = function(error) error
+      )
+    })
+
+    output$clusdf_hmap_error <- renderUI({
+      error <- summary_resource_error()
+      if (is.null(error)) {
+        return(NULL)
+      }
+      div(
+        role = "alert",
+        class = "alert alert-warning",
+        conditionMessage(error)
+      )
+    })
+
+    output$cluster_row_window_ui <- renderUI({
+      selected <- selected_cluster()
+      if (
+        is.null(selected) ||
+          !is.null(summary_resource_error()) ||
+          nrow(selected$df) <= 400L
+      ) {
+        return(NULL)
+      }
+      rows <- nrow(selected$df)
+      starts <- seq.int(1L, rows, by = 400L)
+      div(
+        class = "cluster-heatmap-window",
+        selectInput(
+          session$ns("cluster_row_window"),
+          "Cluster row window",
+          choices = stats::setNames(
+            starts,
+            paste0(
+              "Rows ",
+              starts,
+              intToUtf8(8211L),
+              pmin(starts + 399L, rows),
+              " of ",
+              rows
+            )
+          ),
+          selected = 1L,
+          selectize = FALSE
+        )
+      )
+    })
+
+    summary_heatmap <- reactive({
+      selected <- selected_cluster()
+      if (is.null(selected)) {
+        return(NULL)
+      }
+      error <- summary_resource_error()
+      if (!is.null(error)) {
+        return(error)
+      }
+      comprehensive_hmap(
+        final_data = selected$df,
+        cluster_list = selected$cluster_list,
+        value_type = input$big_value_type,
+        value_by = input$value_by
+      )
+    })
+
+    observe({
+      if (inherits(summary_heatmap(), "plotly")) {
+        shinyjs::hide("clusdf_hmap_empty")
+        shinyjs::show("clusdf_hmap_region")
+      } else {
+        if (is.null(summary_resource_error())) {
+          shinyjs::show("clusdf_hmap_empty")
+        } else {
+          shinyjs::hide("clusdf_hmap_empty")
+        }
+        shinyjs::hide("clusdf_hmap_region")
+      }
+    })
+
+    output$clusdf_hmap <- renderPlotly({
+      hmap <- summary_heatmap()
+      req(inherits(hmap, "plotly"))
+      selected <- selected_cluster()
+      hmap <- hmap_row_view(hmap, nrow(selected$df), row_window_start())
+      # Widget height follows the logical window, independently of the native
+      # scroll viewport. No result strings enter this client hook.
+      htmlwidgets::onRender(
+        hmap,
+        "function(el, x) {
+        el.style.height = x.layout.height + 'px';
+        el.parentElement.parentElement.scrollTop = 0;
+        Plotly.Plots.resize(el);
+      }"
+      )
+    })
+
     plot_cluslist_hmap <- reactive({
-      req(input$indiv_clus_select, input$clusdf_select)
+      selected <- selected_cluster()
+      terms <- input$indiv_clus_select
+      if (
+        is.null(selected) ||
+          is.null(terms) ||
+          !length(terms) ||
+          !all(
+            terms %in%
+              c(
+                unname(hmap_cluster_choices(selected$df)),
+                selected$df$Representative_Term
+              )
+          )
+      ) {
+        return(NULL)
+      }
+      cluster_hmap(
+        cluster_list = selected$cluster_list,
+        term_vec = terms,
+        final_data = selected$df,
+        value_type = input$small_value_type
+      )
+    })
 
-      df <- u_clusdfs[[input$clusdf_select]]
-      cluslist_df <- u_cluslists[[input$clusdf_select]]
-      req(df, cluslist_df)
-      
-      hmap <- cluster_hmap(cluster_list=cluslist_df, term_vec=input$indiv_clus_select, 
-                           final_data=df, value_type=input$small_value_type)
-      return(hmap)
+    observe({
+      if (inherits(plot_cluslist_hmap(), "plotly")) {
+        shinyjs::hide("indiv_hmap_empty")
+      } else {
+        shinyjs::show("indiv_hmap_empty")
+      }
     })
-    
+
     output$indiv_clus_hmap <- renderPlotly({
-      plot_cluslist_hmap()
+      hmap <- plot_cluslist_hmap()
+      req(inherits(hmap, "plotly"))
+      hmap
     })
-    
+
     # Reactively update which cluster list table is read based on selection
-    cluslist_to_table <- reactive ({
+    cluslist_to_table <- reactive({
       req(input$cluslist_select)
       df <- u_cluslists[[input$cluslist_select]]
       req(df)
       return(df)
     })
     # Output cluslist table
-    output$cluslist_table = DT::renderDataTable({
+    output$cluslist_table <- DT::renderDataTable({
       cluslist_to_table()
     })
-    
+
     # download cluslist table
     output$download_cluslist <- downloadHandler(
       filename = function() {
         req(input$cluslist_select)
-        paste0(sanitize_filename(input$cluslist_select), input$cluslist_export_type)
+        paste0(
+          sanitize_filename(input$cluslist_select),
+          input$cluslist_export_type
+        )
       },
       content = function(file) {
         ext_type <- input$cluslist_export_type
         if (ext_type == ".txt") {
-          write.table(u_cluslists[[input$cluslist_select]], file, sep='\t', row.names=FALSE)
+          write.table(
+            u_cluslists[[input$cluslist_select]],
+            file,
+            sep = "\t",
+            row.names = FALSE
+          )
         } else if (ext_type == ".csv") {
-          write.csv(u_cluslists[[input$cluslist_select]], file, row.names=FALSE)
+          write.csv(
+            u_cluslists[[input$cluslist_select]],
+            file,
+            row.names = FALSE
+          )
         } else if (ext_type == ".tsv") {
-          write.table(u_cluslists[[input$cluslist_select]], file, sep='\t', row.names=FALSE)
+          write.table(
+            u_cluslists[[input$cluslist_select]],
+            file,
+            sep = "\t",
+            row.names = FALSE
+          )
         }
       }
     )
-    
   })
 }

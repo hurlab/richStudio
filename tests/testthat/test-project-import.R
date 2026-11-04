@@ -323,7 +323,7 @@ pi_app <- function(state, modules = "save", runner = NULL, env = parent.frame())
                    u_big_degdf = state$u_big_degdf, u_rrnames = state$u_rrnames,
                    u_rrdfs = state$u_rrdfs, u_big_rrdf = state$u_big_rrdf)
       if (!is.null(runner)) args$enrichment_runner <- runner
-      do.call(richStudio:::enrichTabServer, args)
+      do.call(richStudio:::enrich_tab_server, args)
     }
     richStudio::saveTabServer("save", u_degnames = state$u_degnames, u_degdfs = state$u_degdfs,
       u_rrnames = state$u_rrnames, u_rrdfs = state$u_rrdfs, u_clusnames = state$u_clusnames,

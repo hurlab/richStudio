@@ -346,16 +346,16 @@ test_that("standalone hierarchical clustering uses public paths and strict raw-P
 })
 
 test_that("standalone richCluster availability requires the supported API version", {
-  expect_true(is_richCluster_available())
-  expect_false(is_richCluster_available(
+  expect_true(is_rich_cluster_available())
+  expect_false(is_rich_cluster_available(
     require_package = function(package, quietly) TRUE,
     package_version = function(package) package_version("1.0.2")
   ))
-  expect_true(is_richCluster_available(
+  expect_true(is_rich_cluster_available(
     require_package = function(package, quietly) TRUE,
     package_version = function(package) package_version("2.0.1")
   ))
-  expect_false(is_richCluster_available(
+  expect_false(is_rich_cluster_available(
     require_package = function(package, quietly) FALSE,
     package_version = function(package) stop("version should not be read")
   ))
@@ -590,7 +590,7 @@ test_that("enrichment observer publishes valid-empty results and rejects batches
     while (!predicate() && Sys.time() < deadline) later::run_now(timeoutSecs = 0.1)
     predicate()
   }
-  shiny::testServer(enrichTabServer, args = list(
+  shiny::testServer(enrich_tab_server, args = list(
     id = "enrich", u_degnames = deg_names, u_degdfs = deg_dfs, u_big_degdf = big_deg,
     u_rrnames = rr_names, u_rrdfs = rr_dfs, u_big_rrdf = big_rr,
     enrichment_runner = empty_runner
@@ -621,7 +621,7 @@ test_that("enrichment observer publishes valid-empty results and rejects batches
     }
     results
   }
-  shiny::testServer(enrichTabServer, args = list(
+  shiny::testServer(enrich_tab_server, args = list(
     id = "enrich", u_degnames = deg_names, u_degdfs = deg_dfs, u_big_degdf = big_deg,
     u_rrnames = rr_names, u_rrdfs = rr_dfs, u_big_rrdf = big_rr,
     enrichment_runner = failing_runner

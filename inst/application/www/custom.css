@@ -1492,3 +1492,48 @@ pre, .shiny-text-output {
     transform: none !important;
   }
 }
+
+
+/* Compact workflow layout (SPEC-COMPACTUI-001): structural spacing only. */
+.rs-compact-workflow .box,
+.rs-compact-workflow .nav-tabs-custom {
+  margin-bottom: 12px;
+}
+.rs-compact-workflow .box > .box-header {
+  padding: 10px 12px !important;
+}
+.rs-compact-workflow .box > .box-body,
+.rs-compact-workflow .nav-tabs-custom > .tab-content {
+  padding: 12px !important;
+}
+.rs-compact-workflow .form-group {
+  margin-bottom: 10px;
+}
+.rs-compact-workflow hr {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.rs-compact-workflow .shiny-input-container:not(.shiny-input-container-inline) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.rs-compact-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 16px;
+}
+.rs-compact-fields > * {
+  min-width: 0;
+}
+.rs-compact-review li {
+  overflow-wrap: anywhere;
+}
+@media (min-width: 992px) {
+  .rs-compact-fields,
+  .rs-compact-review .review-card-entry > ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+  }
+}

@@ -466,7 +466,7 @@ project_check_table_limits <- function(tables, policy) {
 #' @noRd
 project_write <- function(session, run_records, file, policy_loader = workspace_resource_policy,
                           created = Sys.time()) {
-  policy <- tryCatch(workspace_validate_resource_policy(policy_loader()), error = function(e) {
+  policy <- tryCatch(workspace_validate_resources(policy_loader()), error = function(e) {
     stop("Project save unavailable: resource policy missing or invalid", call. = FALSE)
   })
   built <- project_manifest_build(session, run_records, created = created)

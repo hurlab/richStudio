@@ -168,7 +168,7 @@ project_decode_table <- function(entry, store, policy) {
 #' @return A candidate list (session fields plus `manifest`, `methods`, `source`).
 #' @noRd
 project_import_read <- function(path, policy_loader = workspace_resource_policy) {
-  policy <- tryCatch(workspace_validate_resource_policy(policy_loader()), error = function(e) {
+  policy <- tryCatch(workspace_validate_resources(policy_loader()), error = function(e) {
     project_invalid("Project import unavailable: resource policy missing or invalid")
   })
   if (length(path) != 1L || !is.character(path) || !file.exists(path)) {
@@ -362,7 +362,7 @@ project_legacy_candidate <- function(session_data) {
 #' @param jobs The WS-006 registry, or NULL.
 #' @noRd
 project_commit_candidate <- function(candidate, stores, jobs = NULL) {
-  if (!is.null(jobs)) workspace_jobs_commit_workspace_swap(jobs)
+  if (!is.null(jobs)) workspace_jobs_commit_swap(jobs)
   clear <- function(rv) for (nm in shiny::isolate(names(rv))) rv[[nm]] <- NULL
   fill <- function(rv, items) for (nm in names(items)) rv[[nm]] <- items[[nm]]
   clear(stores$u_degdfs)

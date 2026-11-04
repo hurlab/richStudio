@@ -12,6 +12,9 @@
 
 session_json_sections <- c("degdfs", "rrdfs", "clusdfs", "cluslists")
 
+# Result tracking metadata (one data frame under `df`); written and read only when present.
+session_json_optional_sections <- c("big_rrdf", "big_clusdf")
+
 session_json_columns <- c("degnames", "rrnames", "clusnames")
 
 # Doubles carrying NaN/Inf cannot be plain JSON numbers; such a column is written
@@ -63,7 +66,7 @@ session_json_encode_df <- function(df) {
 session_json_write <- function(session_data, file) {
   json_data <- session_data
   schema <- list()
-  for (section in session_json_sections) {
+  for (section in c(session_json_sections, session_json_optional_sections)) {
     items <- session_data[[section]]
     if (is.null(items)) next
     encoded <- lapply(items, session_json_encode_df)
@@ -107,8 +110,12 @@ session_json_decode_df <- function(raw, schema) {
     stop("Invalid session file format", call. = FALSE)
   }
   columns <- lapply(seq_along(col_names), function(i) {
+    # A one-row column holding only NA is written as a bare null; jsonlite reads
+    # it back as NULL, which is the all-NA column it was.
+    values <- raw[[i]]
+    if (is.null(values)) values <- rep(NA, n)
     col <- session_json_decode_column(
-      raw[[i]], classes[[i]], as.character(unlist(schema$levels[[as.character(i)]]))
+      values, classes[[i]], as.character(unlist(schema$levels[[as.character(i)]]))
     )
     if (length(col) != n) stop("Invalid session file format", call. = FALSE)
     col
@@ -129,6 +136,14 @@ session_json_read <- function(path) {
   schema <- session_data$df_schema
   for (section in session_json_sections) {
     items <- session_data[[section]]
+    session_data[[section]] <- structure(
+      lapply(names(items), function(nm) session_json_decode_df(items[[nm]], schema[[section]][[nm]])),
+      names = names(items)
+    )
+  }
+  for (section in session_json_optional_sections) {
+    items <- session_data[[section]]
+    if (is.null(items)) next
     session_data[[section]] <- structure(
       lapply(names(items), function(nm) session_json_decode_df(items[[nm]], schema[[section]][[nm]])),
       names = names(items)

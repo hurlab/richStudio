@@ -5,3 +5,5 @@ No biological or patient data. `annotation.tsv` has twenty annotated genes, ten 
 `imported-results.tsv` deliberately disagrees between raw and adjusted statistics. Hierarchical selection uses strict raw `Pvalue < 0.05`, dropping D at the boundary; DAVID applies no added significance filter; richR uses the union of supplied comma-separated term genes. Engine-specific memberships are checked without requiring historical numerical equivalence. ProviderExtra must survive unchanged.
 
 `legacy-session-v1.json` is data only. Tests generate a trusted disposable RDS from it; no opaque R object is checked in. This fixture does not establish that arbitrary RDS deserialization is safe.
+
+`scientific-cluster-session-v1.json`, `scientific-all-missing-session-v1.json` and `legacy-clustering-session-v1.json` are session files in the app's JSON format (converted once from the earlier RDS fixtures with `scripts/convert-trusted-session.R`). The app refuses RDS uploads, so the browser suites load these files through the Load Session control; the legacy one carries no tracking metadata.

@@ -39,7 +39,7 @@ for (field in label_fields) {
   value <- session[[field]]
   if (!is.null(value) && !is.character(value)) fail("'", field, "' is not a character vector")
 }
-for (field in session_json_sections) {
+for (field in c(session_json_sections, session_json_optional_sections)) {
   items <- session[[field]]
   if (is.null(items)) next
   if (!is.list(items) || is.data.frame(items) || (length(items) && is.null(names(items)))) {
@@ -51,7 +51,9 @@ for (field in session_json_sections) {
 clean <- list(version = as.character(session$version)[1L], created = session$created)
 if (!inherits(clean$created, "POSIXct") && !is.character(clean$created)) clean$created <- NULL
 for (field in label_fields) clean[[field]] <- as.character(session[[field]])
-for (field in session_json_sections) clean[[field]] <- session[[field]]
+for (field in c(session_json_sections, session_json_optional_sections)) {
+  if (!is.null(session[[field]])) clean[[field]] <- session[[field]]
+}
 if (is.character(session$run_records_json) && length(session$run_records_json) == 1L) {
   clean$run_records_json <- session$run_records_json
 }

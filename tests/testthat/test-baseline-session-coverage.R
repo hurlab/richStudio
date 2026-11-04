@@ -3,11 +3,15 @@
 
 test_that("JSON session download restores populated tables and missing values", {
   state <- ws_baseline_state(populated = TRUE)
+  state$u_big_clusdf$df <- data.frame(name = "fixture", method = "hierarchical",
+                                      n_clusters = 2L, n_terms = 4L)
+  expected_big_rrdf <- shiny::isolate(state$u_big_rrdf$df)
+  expected_big_clusdf <- shiny::isolate(state$u_big_clusdf$df)
   saved <- withr::local_tempfile(pattern = "B5-owned-session-", fileext = ".json")
   withr::defer(unlink(paste0(saved, ".lock")))
   callbacks <- new.env(parent = emptyenv())
   args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
-                  "u_clusnames", "u_clusdfs", "u_cluslists")]
+                  "u_clusnames", "u_clusdfs", "u_cluslists", "u_big_rrdf", "u_big_clusdf")]
   args$download_handler <- function(filename, content, ...) {
     callbacks$filename <- filename
     callbacks$content <- content
@@ -21,6 +25,8 @@ test_that("JSON session download restores populated tables and missing values", 
   })
   serialized <- jsonlite::read_json(saved, simplifyVector = TRUE)
   expect_identical(serialized$rrnames, c("untreated", "treated"))
+  expect_identical(as.data.frame(serialized$big_rrdf$df), expected_big_rrdf)
+  expect_identical(as.data.frame(serialized$big_clusdf$df), expected_big_clusdf)
   expect_equal(serialized$rrdfs$treated$Padj, c(0.04, NA_real_, 0.3))
   restored <- ws_baseline_state()
   args <- restored[names(args)[names(args) != "download_handler"]]
@@ -35,8 +41,112 @@ test_that("JSON session download restores populated tables and missing values", 
     expect_equal(u_degdfs$query, expected$degdfs$query)
     expect_equal(u_clusdfs$fixture, expected$clusdfs$fixture, tolerance = 1e-12)
     expect_equal(u_cluslists$fixture, expected$cluslists$fixture, tolerance = 1e-12)
+    expect_identical(u_big_rrdf$df, expected_big_rrdf)
+    expect_identical(u_big_clusdf$df, expected_big_clusdf)
     expect_true(is.na(u_rrdfs$treated$Padj[2L]))
     expect_false("B" %in% u_rrdfs$treated$Term)
+  })
+})
+
+test_that("legacy sessions rebuild unknown tracking facts and rejects malformed metadata before mutation", {
+  legacy <- ws_baseline_session()
+  saved <- withr::local_tempfile(pattern = "legacy-tracking-", fileext = ".json")
+  richStudio:::session_json_write(legacy, saved)
+
+  state <- ws_baseline_state(populated = TRUE)
+  args <- state[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                  "u_clusnames", "u_clusdfs", "u_cluslists", "u_big_rrdf", "u_big_clusdf")]
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    session$setInputs(load_session_file = list(name = "legacy.json", datapath = saved))
+    session$setInputs(load_session = 1L)
+    expect_identical(u_big_rrdf$df$name, legacy$rrnames)
+    expect_true(all(u_big_rrdf$df$from_deg == "?"))
+    expect_true(all(u_big_rrdf$df$annot == "?" & u_big_rrdf$df$keytype == "?" &
+                    u_big_rrdf$df$ontology == "?" & u_big_rrdf$df$species == "?"))
+    expect_identical(u_big_clusdf$df$name, legacy$clusnames)
+    expect_identical(u_big_clusdf$df$method, "?")
+    expect_identical(as.integer(u_big_clusdf$df$n_clusters), 2L)
+    expect_identical(as.integer(u_big_clusdf$df$n_terms), 4L)
+  })
+
+  run_record <- list(schema = "richstudio.run_record", version = 1L,
+    run_id = "cluster-run-0001", kind = "clustering", state = "succeeded",
+    created = "2026-10-20T00:00:00Z", queued_at = NULL, started = NULL, ended = NULL,
+    settings = list(method = "david"), inputs = list(), outputs = "fixture",
+    retry_of = NULL, imported_from = NULL, note = NULL, error_summary = NULL)
+  run_records <- as.character(jsonlite::toJSON(list(run_record), auto_unbox = TRUE, null = "null"))
+  expect_identical(richStudio:::workspace_saved_cluster_method("fixture", run_records), "david")
+  expect_identical(richStudio:::workspace_saved_cluster_method("other", run_records), "?")
+  legacy$run_records_json <- run_records
+  expect_identical(richStudio:::workspace_legacy_clus_tracking(legacy)$method, "david")
+
+  malformed <- withr::local_tempfile(pattern = "invalid-tracking-", fileext = ".json")
+  richStudio:::session_json_write(legacy, malformed)
+  invalid <- jsonlite::read_json(malformed)
+  invalid$big_rrdf <- list(df = "not a tracking table")
+  invalid$big_clusdf <- list(df = list(foo = list(1L)))
+  jsonlite::write_json(invalid, malformed, auto_unbox = TRUE)
+  populated <- ws_baseline_state(populated = TRUE)
+  before <- shiny::isolate(list(rrnames = populated$u_rrnames$labels,
+                 rrdfs = shiny::reactiveValuesToList(populated$u_rrdfs),
+                 clusnames = populated$u_clusnames$labels,
+                 clusdfs = shiny::reactiveValuesToList(populated$u_clusdfs),
+                 big_rrdf = shiny::isolate(populated$u_big_rrdf$df),
+                 big_clusdf = shiny::isolate(populated$u_big_clusdf$df)))
+  args <- populated[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                      "u_clusnames", "u_clusdfs", "u_cluslists", "u_big_rrdf", "u_big_clusdf")]
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    session$setInputs(load_session_file = list(name = "invalid-tracking.json", datapath = malformed))
+    session$setInputs(load_session = 1L)
+    expect_identical(u_rrnames$labels, before$rrnames)
+    expect_identical(shiny::reactiveValuesToList(u_rrdfs), before$rrdfs)
+    expect_identical(u_clusnames$labels, before$clusnames)
+    expect_identical(shiny::reactiveValuesToList(u_clusdfs), before$clusdfs)
+    expect_identical(u_big_rrdf$df, before$big_rrdf)
+    expect_identical(u_big_clusdf$df, before$big_clusdf)
+  })
+})
+
+test_that("summary-only legacy clustering preserves unknown term count across save and reload", {
+  legacy <- ws_baseline_session()
+  legacy$cluslists <- list()
+  source <- withr::local_tempfile(pattern = "legacy-summary-only-", fileext = ".json")
+  roundtrip <- withr::local_tempfile(pattern = "legacy-summary-roundtrip-", fileext = ".json")
+  richStudio:::session_json_write(legacy, source)
+
+  callbacks <- new.env(parent = emptyenv())
+  initial <- ws_baseline_state()
+  args <- initial[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                    "u_clusnames", "u_clusdfs", "u_cluslists", "u_big_rrdf", "u_big_clusdf")]
+  args$download_handler <- function(filename, content, ...) {
+    callbacks$content <- content
+    shiny::downloadHandler(filename, content, ...)
+  }
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    session$setInputs(load_session_file = list(name = "legacy-summary.json", datapath = source))
+    session$setInputs(load_session = 1L)
+    expect_true(is.na(u_big_clusdf$df$n_terms))
+    expect_identical(u_big_clusdf$df$n_clusters, 2L)
+    session$setInputs(session_name = "roundtrip")
+    callbacks$content(roundtrip)
+  })
+
+  saved <- richStudio:::session_json_read(roundtrip)
+  expect_identical(saved$clusdfs, legacy$clusdfs)
+  expect_length(saved$cluslists, 0L)
+  expect_true(is.na(saved$big_clusdf$df$n_terms))
+  expect_identical(saved$big_clusdf$df$n_clusters, 2L)
+
+  restored <- ws_baseline_state()
+  args <- restored[c("u_degnames", "u_degdfs", "u_rrnames", "u_rrdfs",
+                     "u_clusnames", "u_clusdfs", "u_cluslists", "u_big_rrdf", "u_big_clusdf")]
+  shiny::testServer(richStudio::saveTabServer, args = args, {
+    session$setInputs(load_session_file = list(name = "roundtrip.json", datapath = roundtrip))
+    session$setInputs(load_session = 1L)
+    expect_true(is.na(u_big_clusdf$df$n_terms))
+    expect_identical(u_big_clusdf$df$n_clusters, 2L)
+    expect_identical(u_clusdfs$fixture, legacy$clusdfs$fixture)
+    expect_length(shiny::reactiveValuesToList(u_cluslists), 0L)
   })
 })
 

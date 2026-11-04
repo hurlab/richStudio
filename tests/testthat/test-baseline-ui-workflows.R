@@ -344,8 +344,9 @@ test_that("cluster button publishes hierarchical singleton statistics and datase
     expect_match(output$method_info, "Method: hierarchical", fixed = TRUE)
     expect_match(output$method_info, "distance_metric: jaccard", fixed = TRUE)
     expect_match(output$method_info, "min_value: 0.05", fixed = TRUE)
+    # display label of Representative_Term (SPEC-WS-013 AC-008)
     expect_match(jsonlite::fromJSON(output$cluster_summary_table)$x$container,
-                 "Representative_Term", fixed = TRUE)
+                 "Representative term", fixed = TRUE)
     expect_match(jsonlite::fromJSON(output$cluster_details_table)$x$container,
                  "GeneID_treated", fixed = TRUE)
     expect_true(jsonlite::fromJSON(output$distanceMatrix_table)$x$options$serverSide)

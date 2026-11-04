@@ -115,3 +115,52 @@ test_that("AC-028 the .rds refusal is short, says nothing was loaded, and keeps 
   }
   expect_match(details, "data-copy=\"Rscript scripts/convert-trusted-session.R my-session.rds my-session.json\"", fixed = TRUE)
 })
+
+test_that("AC-008 the Cluster page summary table and details table show labels, not raw names", {
+  state <- ws_baseline_state()
+  tables <- ws_baseline_cluster_tables()
+  state$clus_intermed <- shiny::reactiveValues(
+    cluster_summary = data.frame(Cluster = 1:2, Representative_Term = c("A", "D"), n_terms = c(2L, 2L),
+                                 min_pvalue = c(0.9, 1e-5)),
+    cluster_df = tables$cluster_list)
+  args <- state[intersect(names(state), names(formals(richStudio:::clusterTabServer)))]
+  shiny::testServer(richStudio:::clusterTabServer, args = args, {
+    session$flushReact()
+    html <- jsonlite::fromJSON(output$cluster_summary_table)$x$container
+    for (raw in c("Representative_Term", "n_terms", "min_pvalue")) expect_false(grepl(raw, html, fixed = TRUE), info = raw)
+    for (label in c("Representative term", "Terms", "Smallest p-value")) expect_match(html, label, fixed = TRUE)
+    details <- jsonlite::fromJSON(output$cluster_details_table)$x$container
+    expect_false(grepl("Representative_Term", details, fixed = TRUE))
+  })
+  # the stored summary is unchanged
+  expect_identical(shiny::isolate(state$clus_intermed$cluster_summary$n_terms), c(2L, 2L))
+})
+
+test_that("AC-008 the importer-page tables show labels, not raw names", {
+  state <- ws_baseline_state(populated = TRUE)
+  args <- state[intersect(names(state), names(formals(richStudio:::cluster_upload_tab_server)))]
+  shiny::testServer(richStudio:::cluster_upload_tab_server, args = args, {
+    session$flushReact()
+    expect_false(grepl("from_deg", jsonlite::fromJSON(output$rr_list_table)$x$container, fixed = TRUE))
+    expect_false(grepl("n_clusters", jsonlite::fromJSON(output$clus_list_table)$x$container, fixed = TRUE))
+    session$setInputs(clus_table_select = "fixture")
+    expect_false(grepl("Representative_Term", jsonlite::fromJSON(output$clus_table)$x$container, fixed = TRUE))
+    expect_match(jsonlite::fromJSON(output$clus_table)$x$container, "Representative term", fixed = TRUE)
+  })
+})
+
+test_that("AC-008 the Explorer table renders unknown cells as an em-dash and numbers to three significant figures (formatSignif)", {
+  state <- ws_baseline_state(populated = TRUE)
+  args <- state[intersect(names(state), names(formals(richStudio:::rr_vis_tab_server)))]
+  shiny::testServer(richStudio:::rr_vis_tab_server, args = args, {
+    session$flushReact()
+    session$setInputs(ex_result = "untreated")
+    session$flushReact()
+    widget <- jsonlite::fromJSON(output$ex_table, simplifyVector = FALSE)$x
+    renders <- vapply(widget$options$columnDefs, function(d) paste(unlist(d$render), collapse = ""), character(1))
+    expect_true(any(grepl("2014", renders, fixed = TRUE)))
+    expect_true(any(grepl("3", vapply(widget$options$columnDefs, function(d) paste(unlist(d$render), collapse = ""), character(1)))))
+    expect_false(grepl("Representative_Term|from_deg", paste(unlist(widget$container), collapse = ""), fixed = FALSE))
+  })
+  expect_identical(shiny::isolate(state$u_rrdfs$untreated), ws_baseline_results()$untreated)
+})

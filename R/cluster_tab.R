@@ -670,9 +670,11 @@ clusterTabServer <- function(
     output$cluster_summary_table <- DT::renderDT(
       {
         req(clus_intermed[["cluster_summary"]])
-        clus_intermed[["cluster_summary"]]
-      },
-      options = list(pageLength = 10, scrollX = TRUE)
+        workspace_display_dt(
+          clus_intermed[["cluster_summary"]],
+          options = list(pageLength = 10, scrollX = TRUE)
+        )
+      }
     )
 
     # Method info output
@@ -724,9 +726,11 @@ clusterTabServer <- function(
     output$cluster_details_table <- DT::renderDT(
       {
         req(clus_intermed[["cluster_df"]])
-        clus_intermed[["cluster_df"]]
-      },
-      options = list(pageLength = 15, scrollX = TRUE)
+        workspace_display_dt(
+          clus_intermed[["cluster_df"]],
+          options = list(pageLength = 15, scrollX = TRUE)
+        )
+      }
     )
   })
 }

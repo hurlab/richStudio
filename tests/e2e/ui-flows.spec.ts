@@ -211,7 +211,7 @@ test.describe('AC-008 table display', () => {
       .filter(w => (w as HTMLElement).offsetParent !== null)
       .map(w => Array.from(w.querySelectorAll('.dataTables_scrollHead thead tr:first-child th, table.dataTable:not(.dataTables_scrollBody table) thead tr:first-child th'))
         .map(th => (th.textContent || '').trim())), tab);
-    for (const tab of ['enrich_tab', 'rr_visualize_tab', 'clus_visualize_tab']) {
+    for (const tab of ['enrich_tab', 'rr_visualize_tab', 'cluster_upload_tab', 'cluster_tab', 'clus_visualize_tab']) {
       await showTab(page, tab);
       await expect.poll(async () => (await headers(tab)).length, { message: `${tab} tables`, timeout: 15_000 }).toBeGreaterThan(0);
       const tables = await headers(tab);
@@ -220,6 +220,10 @@ test.describe('AC-008 table display', () => {
         expect(table.filter(h => h === ''), `${tab} empty (row-name) header`).toEqual([]);
       }
     }
+    // The Cluster page summary table uses the labels, not n_terms / min_pvalue / Representative_Term.
+    await showTab(page, 'cluster_tab');
+    await expect.poll(async () => (await headers('cluster_tab')).flat(), { timeout: 15_000 }).toContain('Smallest p-value');
+    expect((await headers('cluster_tab')).flat()).toEqual(expect.arrayContaining(['Representative term', 'Terms']));
     // Unknown tracking values are an em-dash, not "?".
     await showTab(page, 'rr_visualize_tab');
     const listCells = await page.locator('#rr_visualize-rr_list_table tbody td').allInnerTexts();

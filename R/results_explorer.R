@@ -475,9 +475,19 @@ results_explorer_server <- function(input, output, session, u_rrnames, u_rrdfs, 
     if (length(initial)) mode$selected <- initial
     table <- DT::datatable(st$df, rownames = FALSE, filter = "top", escape = TRUE,
       colnames = unname(explorer_display_labels(names(st$df))),
+      class = "display compact rs-display-table",
       selection = mode, options = list(pageLength = 10, scrollX = TRUE))
+    # Numbers show three significant figures and unknown text cells an em-dash
+    # (display only; the stored values and the exact-value export are untouched).
     doubles <- names(st$df)[vapply(st$df, is.double, logical(1))]
     if (length(doubles)) table <- DT::formatSignif(table, doubles, digits = 3)
+    text_columns <- which(!vapply(st$df, is.double, logical(1))) - 1L
+    if (length(text_columns)) {
+      table$x$options$columnDefs <- c(
+        table$x$options$columnDefs,
+        list(list(targets = text_columns, render = DT::JS(workspace_display_js_unknown)))
+      )
+    }
     table
   }, server = TRUE)
   table_proxy <- DT::dataTableProxy("ex_table", session = session)

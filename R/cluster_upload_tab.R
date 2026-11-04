@@ -308,8 +308,7 @@ cluster_upload_tab_server <- function(
     })
     # Output uploaded file table
     output$rr_list_table <- DT::renderDT(
-      big_rrdf_to_table(),
-      editable = "cell"
+      workspace_display_dt(big_rrdf_to_table(), editable = "cell")
     )
     # Table editing code
     observeEvent(input$rr_list_table_cell_edit, {
@@ -368,8 +367,8 @@ cluster_upload_tab_server <- function(
     })
 
     # output rr table
-    output$rr_table <- DT::renderDataTable({
-      rr_to_table()
+    output$rr_table <- DT::renderDT({
+      workspace_display_dt(rr_to_table())
     })
 
     # download rr
@@ -410,8 +409,7 @@ cluster_upload_tab_server <- function(
     })
     # Output uploaded file table
     output$clus_list_table <- DT::renderDT(
-      big_clusdf_to_table(),
-      editable = "cell"
+      workspace_display_dt(big_clusdf_to_table(), editable = "cell")
     )
     # Cluslist table editing code
     observeEvent(input$clus_list_table_cell_edit, {
@@ -470,8 +468,8 @@ cluster_upload_tab_server <- function(
       return(df)
     })
     # Output cluster result table
-    output$clus_table <- DT::renderDataTable({
-      clusdf_to_table()
+    output$clus_table <- DT::renderDT({
+      workspace_display_dt(clusdf_to_table())
     })
 
     # Download cluster result

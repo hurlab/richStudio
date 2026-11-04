@@ -247,7 +247,7 @@ Full browser gate (`scripts/test-workspace.sh browser`, CI environment, pinned t
 ### Gaps
 
 - The implementation was written before its tests this time, so no RED output was captured for M2 (the tests were then run against the finished code).
-- Deviation from the M2 file list: none of `R/cluster_tab.R`, `R/cluster_upload_tab.R` or `R/results_explorer.R` was changed, so the Cluster-page summary table (`n_terms`, `min_pvalue`), the importer page tables and the Explorer table still show their raw column names; AC-008's raw-name list is met on the tables of the files in the M2 list. Covering those tables needs those files in a milestone's list.
+- AC-008 was finished on the files outside the original M2 list at the lead's direction (`R/cluster_tab.R`, `R/cluster_upload_tab.R`, `R/results_explorer.R`): the Cluster-page summary and details tables and the importer-page tables use `workspace_display_dt`; the Explorer table keeps its labels and `formatSignif` and gains an em-dash for unknown text cells. Changed existing assertion: `test-baseline-ui-workflows.R` expected the raw header `Representative_Term` on the Cluster summary table and now expects the label "Representative term".
 - Missing-package classification matches on the message text ("is required", "no package called", "is not installed", "not available"), not on a condition class.
 - The AC-010 browser test relies on the annotation package being absent in the test environment (it asserts a failed run with an install command).
 

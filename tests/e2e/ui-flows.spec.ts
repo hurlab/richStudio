@@ -332,3 +332,32 @@ test.describe('AC-028 old session file', () => {
     await expect(page.locator('.shiny-notification-error')).toHaveCount(0, { timeout: 2000 });
   });
 });
+
+// ---- M4: figure legibility (AC-029) ----------------------------------------------------------
+
+test.describe('AC-029 network figure', () => {
+  for (const viewport of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {
+    test(`the demo network is visible at ${viewport.width}x${viewport.height} and no empty state covers it`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await connected(page);
+      await page.locator('#home-load_demo').click();
+      await page.waitForSelector('#shiny-tab-rr_visualize_tab.active');
+      await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name: 'Network', exact: true }).click();
+      const image = page.locator('#rr_visualize-network img');
+      await expect(image).toBeVisible({ timeout: 10_000 });
+      await expect.poll(async () => { const b = await image.boundingBox(); return !!b && b.width >= 200 && b.height >= 200; },
+        { timeout: 10_000 }).toBe(true);
+      await expect(page.locator('#rr_visualize-net_empty')).not.toBeVisible();
+      await image.scrollIntoViewIfNeeded();
+      const covered = await image.evaluate((img) => {
+        const b = img.getBoundingClientRect();
+        const top = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+        return !(top === img || img.contains(top) || (top && (top as HTMLElement).closest('#rr_visualize-network')));
+      });
+      expect(covered).toBe(false);
+      const natural = await image.evaluate((img) => [(img as HTMLImageElement).naturalWidth, (img as HTMLImageElement).naturalHeight]);
+      expect(natural[0]).toBeGreaterThanOrEqual(200);
+      expect(natural[1]).toBeGreaterThanOrEqual(200);
+    });
+  }
+});

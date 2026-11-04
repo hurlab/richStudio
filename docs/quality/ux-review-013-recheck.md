@@ -297,7 +297,41 @@ Only the two digest values above (md5 in `test-workspace-components.R`, sha256 e
 
 ## M4 - figure legibility
 
-Not started.
+Tree: `8fd0085` plus the M4 working-tree changes. Pinned toolchain.
+
+### RED (captured before the implementation)
+
+The new testthat tests were written first and run with the `R/` changes stashed (`test-ui-copy-and-figures.R` and `test-heatmap-legibility.R`): 11 failures or errors, one per missing behaviour, for example `object 'hmap_colors' not found`, `unused argument (top_n = 30)`, the heatmap colour stops not viridis, tick labels not truncated, network label size `7.6 < 10` px, and `object 'hmap_label_limit' not found`. Excerpt kept in the session scratchpad as `m4-red-excerpt.txt`. Two of the RED errors (title read from the unbuilt plot, `layout$title$text` on a string) were defects in my first test code and were corrected afterwards; the other failures are the intended ones.
+
+### Changes (display only; no plotted value is recomputed)
+
+- Heatmap scale: enrichment (`custom_hmap`, `topterm_hmap`) and cluster summary heatmaps use `hmap_colors` (`grDevices::hcl.colors(9, "viridis")`); the cluster term heatmap (`cluster_hmap`, heatmaply) passes viridis explicitly. The red-to-green `hmap_color_low/high` constants are gone.
+- OD-6: `comprehensive_hmap(..., top_n = NULL)`; with `top_n = 30` the clusters are ordered by significance (smallest p in any dataset; the display counts from the top of the reversed axis, so the most significant cluster is the last category) and `hmap_row_view(limit = )` shows the first 30 with the title "30 of N shown, most significant first". The built figure keeps every row (all N clusters x datasets). Default `top_n` is NULL, so the existing 400-row windows are unchanged. In the app, Cluster figures shows the top 30 by default, a "Show all clusters" checkbox and the notice "30 of N shown (most significant first)" / "All N clusters shown"; "Show all" restores the 400-row windows (the window selector appears only then); the checkbox resets on a new selection. No control appears for 30 or fewer clusters.
+- Dot plot: title "Enriched terms: rich score, dot size = gene number, colour = -log10(Padj)", x axis "Rich score (significant genes / annotated genes)", colour bar "Colour: -log10(Padj)", and a size legend annotation "Size legend: dot size = number of significant genes (min to max genes)". Trace data, marker sizes and `sizeref` are unchanged (the `test-baseline-result-figures.R` pins pass unchanged). Bars are unchanged (already ordered by the plotted value).
+- Enrichment-heatmap tick labels are cut at 40 characters with an ellipsis (hover text keeps the full term; the categories themselves are untouched).
+- Network: label size 3.2 mm (about 12 px, was 2 mm about 7.6 px), a "Node colour" legend (More / Less significant term, taken from the result's p-value column) and a caption (node size grows with the number of genes in the term); the default size legend is hidden. Nodes, edges and data are those of the unchanged `richR::ggnetwork` output.
+- N6 / AC-029: no engine change. The M0 reproduction named the root cause (a never-hidden static empty state above a figure that renders); M1's server-driven empty state fixed it. The browser test now verifies it at both sizes.
+
+### Acceptance (new automated tests)
+
+| AC | Tests |
+|---|---|
+| AC-013 | `test-ui-copy-and-figures.R` "AC-013 ..." (viridis scale on all heatmaps, top 30 with every row kept, bars ordered and equal to the M0 golden order, dot plot title/axes/size legend, truncated heatmap labels with full hover text, network label size and colour legend); `test-heatmap-legibility.R` "SPEC-WS-013 OD-6 a display limit ..." (401 clusters: top 30 shown, all 401 rows kept, unlimited figure still "Rows 1-400 of 401"); `test-ui-baseline.R` (M0 figure goldens, keyed by term, unchanged); `heatmap-legibility.spec.ts` (the existing 400-row window checks now run after "Show all clusters", with the "30 of N shown" notice asserted first) |
+| AC-029 | `test-ui-copy-and-figures.R` "AC-013 and AC-029 network nodes exist ..." (each demo result builds at least one node, equal to the golden node count); `ui-flows.spec.ts` "AC-029 network figure" (1440x900 and 390x844: image at least 200 x 200 px within 10 s, empty state not visible, the figure is the element at its own centre) |
+
+### Changed existing-test assertions
+
+- `heatmap-legibility.spec.ts` `select()`: for results with more than 30 clusters it now asserts the notice "30 of N shown", ticks "Show all clusters" and waits for "All N clusters shown" before the existing checks (they assert full 400-row windows, which OD-6 moved behind "Show all"); no assertion removed or weakened.
+- `test-heatmap-legibility.R`, `test-baseline-result-figures.R`, `test-cluster-heatmap-scientific.R`: only the new test was added to the first; the others are unchanged and pass.
+
+### Gaps
+
+- The cluster term heatmap (`cluster_hmap`) already used heatmaply's viridis default; it now passes it explicitly. The dot plot's colour scale is plotly's default sequential scale (the SPEC asks viridis for the heatmaps).
+- Network node colours come from `richR::ggnetwork` (orange/red) and are not changed; the legend names them. Colour-blind safety of those node colours is not claimed.
+- Row significance for the top-30 ordering is the smallest p-value across datasets of the displayed value (mean/median/min/max as chosen), not a separate statistic.
+- `scientific-heatmaps.spec.ts` and `clustering-roundtrip.spec.ts` (not in the M4 list) were not edited and pass in the full gate with the default top 30.
+- Full browser gate (CI environment, pinned toolchain): `2 failed`, `124 passed (16.6m)`; the failures are `design-system.spec.ts:803` in both projects (native-zoom launch only).
+- Screenshots (1440x900): `scratchpad/m4-shots/` (`1-enrichment-heatmap.png`, `2-cluster-heatmap-top30.png`, `3-cluster-heatmap-show-all.png`, `4-dot-plot.png`, `5-network.png`), taken from a 39-cluster session built from go1, go2 and kegg1.
 
 ## M5 - context bar and job tray
 

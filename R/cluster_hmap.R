@@ -3,8 +3,11 @@
 
 # Named constants for heatmap configuration
 hmap_round_digits <- 4L
-hmap_color_low <- "green"
-hmap_color_high <- "red"
+# Sequential, colour-blind-safe scale (viridis, base grDevices): low significance
+# is dark, high significance is bright. No red-to-green scale.
+hmap_colors <- grDevices::hcl.colors(9L, "viridis")
+# The cluster summary heatmap shows this many clusters by default (display only).
+hmap_top_default <- 30L
 
 
 # Prepare cluster result for heatmap
@@ -174,12 +177,19 @@ hmap_axis_labels <- function(final_data) {
 }
 
 # Row positions run from the top of the existing reversed category display.
-hmap_row_view <- function(plot, rows, start = 1L) {
+hmap_row_view <- function(plot, rows, start = 1L, limit = NULL) {
   starts <- seq.int(1L, max(1L, rows), by = 400L)
   if (length(start) != 1L || is.na(start) || !start %in% starts) {
     start <- 1L
   }
   end <- min(rows, start + 399L)
+  # A display limit shows only the first rows (the most significant clusters);
+  # the figure still holds every row.
+  limited <- !is.null(limit) && rows > limit
+  if (limited) {
+    start <- 1L
+    end <- as.integer(limit)
+  }
   visible <- max(1L, end - start + 1L)
   # Plotly omits single-category ticks in a very short drawable band. Keep
   # a compact 90px minimum band, independently of the dataset/note margins.
@@ -192,12 +202,12 @@ hmap_row_view <- function(plot, rows, start = 1L) {
     title = list(
       text = paste0(
         attr(plot, "hmap_title"),
-        "<br><sup>Rows ",
-        start,
-        intToUtf8(8211L),
-        end,
-        " of ",
-        rows,
+        "<br><sup>",
+        if (limited) {
+          paste0(end, " of ", rows, " shown, most significant first")
+        } else {
+          paste0("Rows ", start, intToUtf8(8211L), end, " of ", rows)
+        },
         "</sup>"
       ),
       font = list(size = 16)
@@ -219,7 +229,8 @@ comprehensive_hmap <- function(
   final_data,
   cluster_list,
   value_type = "Padj",
-  value_by = "mean"
+  value_by = "mean",
+  top_n = NULL
 ) {
   if (length(value_type) != 1L || !value_type %in% c("Pvalue", "Padj")) {
     stop("Invalid value_type parameter", call. = FALSE)
@@ -231,6 +242,34 @@ comprehensive_hmap <- function(
   choices <- hmap_cluster_choices(final_data)
   axis <- hmap_axis_labels(final_data)
   new_final_data <- change_finaldata_valueby(final_data, cluster_list, value_by)
+  # With a display limit the rows are ordered by significance (smallest p in any
+  # dataset); every row stays in the figure.
+  limited <- !is.null(top_n) && nrow(final_data) > top_n
+  if (limited) {
+    value_columns <- grep(
+      paste0("^", value_type, "(_|$)"),
+      names(new_final_data),
+      value = TRUE
+    )
+    p <- suppressWarnings(vapply(
+      seq_len(nrow(new_final_data)),
+      function(i) {
+        v <- suppressWarnings(as.numeric(unlist(new_final_data[i, value_columns])))
+        v <- v[!is.na(v)]
+        if (length(v)) min(v) else Inf
+      },
+      numeric(1)
+    ))
+    # The display counts rows from the top of the reversed category axis, so the
+    # most significant cluster is the last category.
+    rank_order <- rev(order(p, seq_along(p)))
+    ids_ranked <- paste0("cluster:", new_final_data$Cluster[rank_order])
+    position <- match(ids_ranked, unname(choices))
+    choices <- choices[position]
+    axis$labels <- axis$labels[position]
+    axis$aliases <- axis$aliases[position]
+    axis$prefixes <- axis$prefixes[position]
+  }
   value_cols <- grep(
     paste0("^", value_type, "(_|$)"),
     names(new_final_data),
@@ -299,7 +338,7 @@ comprehensive_hmap <- function(
     y = ~cluster_key,
     z = ~value,
     type = "heatmap",
-    colors = c(hmap_color_low, hmap_color_high),
+    colors = hmap_colors,
     text = ~hover,
     hoverinfo = "text",
     hoverongaps = TRUE,
@@ -351,7 +390,9 @@ comprehensive_hmap <- function(
     )
   attr(plot, "hmap_bottom") <- bottom
   attr(plot, "hmap_title") <- paste0("-log10(", value_type, ") by Cluster")
-  hmap_row_view(plot, nrow(final_data))
+  plot <- hmap_row_view(plot, nrow(final_data), limit = if (limited) top_n)
+  attr(plot, "hmap_limited") <- limited
+  plot
 }
 
 # Create a term heatmap. New UI selections use IDs; legacy representative names
@@ -462,6 +503,7 @@ cluster_hmap <- function(
     Rowv = FALSE,
     Colv = FALSE,
     main = paste0("-log10(", value_type, ") by Term"),
+    colors = grDevices::hcl.colors(256L, "viridis"),
     key.title = paste0("-log10(", value_type, ")"),
     na.value = "#eeeeee"
   )

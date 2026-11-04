@@ -308,3 +308,18 @@ test_that("all-missing and zero displays remain honest under layout changes", {
   )))
   expect_true(any(as.numeric(built$x$data[[1]]$z) == 0, na.rm = TRUE))
 })
+
+test_that("SPEC-WS-013 OD-6 a display limit shows the top clusters while the figure keeps every row", {
+  fixture <- legibility_fixture(401L)
+  full <- richStudio:::comprehensive_hmap(fixture$summary, fixture$details, "Padj", "mean")
+  limited <- richStudio:::comprehensive_hmap(fixture$summary, fixture$details, "Padj", "mean", top_n = 30L)
+  title <- function(plot) {
+    t <- plotly::plotly_build(plot)$x$layout$title
+    if (is.list(t)) t$text else t
+  }
+  expect_match(title(full), "Rows 1–400 of 401", fixed = TRUE)
+  expect_match(title(limited), "30 of 401 shown", fixed = TRUE)
+  trace <- plotly::plotly_build(limited)$x$data[[1]]
+  expect_length(unique(as.character(trace$y)), 401L)
+  expect_length(trace$z, 401L * 2L)
+})

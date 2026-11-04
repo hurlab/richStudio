@@ -318,7 +318,7 @@ custom_hmap <- function(custom_data, value_type) {
     y = ~Term,
     z = ~value,
     type = "heatmap",
-    colors = c("green", "red"),
+    colors = hmap_colors,
     # Customize hover text
     text = ~ paste0(Term, "<br>", "-log10(", value_type, "): ", value, "<br>"),
     colorbar = list(title = paste0("-log10(", value_type, ")")),
@@ -327,11 +327,35 @@ custom_hmap <- function(custom_data, value_type) {
     layout(
       title = paste0("-log10(", value_type, ") by Term"),
       xaxis = list(title = "Geneset"),
-      yaxis = list(title = "Term", categoryorder = "trace", nticks = my_nticks)
+      yaxis = hmap_term_axis(melted_custom_data$Term, my_nticks)
     )
   p
 }
 
+
+# Longest term label drawn on the y axis; longer labels end in an ellipsis and the
+# full term stays in the hover text.
+hmap_label_limit <- 40L
+
+hmap_truncate_labels <- function(x, limit = hmap_label_limit) {
+  x <- as.character(x)
+  long <- !is.na(x) & nchar(x, type = "width") > limit
+  x[long] <- paste0(substr(x[long], 1L, limit - 1L), intToUtf8(8230L))
+  x
+}
+
+# Term axis with truncated tick labels; the categories themselves are untouched.
+hmap_term_axis <- function(terms, nticks) {
+  values <- unique(as.character(terms))
+  list(
+    title = "Term",
+    categoryorder = "trace",
+    nticks = nticks,
+    tickmode = "array",
+    tickvals = values,
+    ticktext = htmltools::htmlEscape(hmap_truncate_labels(values))
+  )
+}
 
 #' Create an integrative heatmap from top-ranked terms
 #'
@@ -383,7 +407,7 @@ topterm_hmap <- function(custom_data, value_type = "Padj") {
     y = ~Term,
     z = ~value,
     type = "heatmap",
-    colors = c("green", "red"),
+    colors = hmap_colors,
     # Customize hover text
     text = ~ paste0(Term, "<br>", "-log10(", value_type, "): ", value, "<br>"),
     colorbar = list(title = paste0("-log10(", value_type, ")")),
@@ -392,7 +416,7 @@ topterm_hmap <- function(custom_data, value_type = "Padj") {
     layout(
       title = paste0("-log10(", value_type, ") by Term"),
       xaxis = list(title = "Geneset"),
-      yaxis = list(title = "Term", categoryorder = "trace", nticks = my_nticks)
+      yaxis = hmap_term_axis(melted_custom_data$Term, my_nticks)
     )
   p
 }

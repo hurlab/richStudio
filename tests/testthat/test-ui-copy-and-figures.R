@@ -164,3 +164,140 @@ test_that("AC-008 the Explorer table renders unknown cells as an em-dash and num
   })
   expect_identical(shiny::isolate(state$u_rrdfs$untreated), ws_baseline_results()$untreated)
 })
+
+# ---- SPEC-WS-013 M4 (AC-013, AC-029): figure legibility, display only -----------------------
+
+m4_demo <- local({
+  cache <- NULL
+  function() {
+    if (is.null(cache)) cache <<- ui_baseline_demo()
+    cache
+  }
+})
+
+m4_colour_stops <- function(plot) {
+  attrs <- plotly::plotly_build(plot)$x$attrs
+  unlist(lapply(attrs, function(a) a$colors))
+}
+
+m4_is_viridis <- function(colours) {
+  length(colours) >= 2L && identical(tolower(colours[[1]]), tolower(grDevices::hcl.colors(9L, "viridis")[[1]])) &&
+    !any(tolower(colours) %in% c("green", "red"))
+}
+
+m4_summary <- function(n) {
+  ids <- seq_len(n) * 3L
+  p <- seq_len(n) / (n * 10)
+  list(
+    summary = data.frame(Cluster = ids, Representative_Term = paste("term", ids),
+                         Padj_a = p, Padj_b = rev(p), Pvalue_a = p / 2, Pvalue_b = rev(p) / 2),
+    details = data.frame(Cluster = ids, Term = paste("term", ids), Representative_Term = paste("term", ids),
+                         Padj_a = p, Padj_b = rev(p), Pvalue_a = p / 2, Pvalue_b = rev(p) / 2))
+}
+
+test_that("AC-013 enrichment and cluster heatmaps use a sequential viridis scale, not red-to-green", {
+  demo <- m4_demo()
+  custom <- data.frame()
+  for (lab in c("go1", "go2")) custom <- richStudio:::add_topterm_gs(custom, demo$rr[[lab]], lab, "Padj", 0.05, 10)
+  expect_true(m4_is_viridis(m4_colour_stops(richStudio:::topterm_hmap(custom, "Padj"))))
+  expect_true(m4_is_viridis(m4_colour_stops(richStudio:::custom_hmap(custom, "Padj"))))
+  summary_df <- demo$cluster$summary_df
+  expect_true(m4_is_viridis(m4_colour_stops(
+    richStudio:::comprehensive_hmap(summary_df, demo$cluster$cluster_df, "Padj", "mean"))))
+  expect_identical(richStudio:::hmap_colors, grDevices::hcl.colors(9L, "viridis"))
+  built <- plotly::plotly_build(richStudio:::cluster_hmap(demo$cluster$cluster_df,
+    paste0("cluster:", summary_df$Cluster), summary_df, "Padj"))
+  scales <- Filter(Negate(is.null), lapply(built$x$data, function(t) t$colorscale))
+  expect_gt(length(scales), 0L)
+  first <- scales[[1]][1L, 2L]
+  channels <- as.numeric(strsplit(gsub("[^0-9,.]", "", first), ",")[[1]])
+  # viridis starts at a dark purple (about 68, 1, 84); red-to-green scales do not
+  expect_true(channels[[1]] < 100 && channels[[2]] < 30 && channels[[3]] > 60)
+})
+
+test_that("AC-013 the cluster heatmap shows the 30 most significant clusters by default and keeps every row", {
+  f <- m4_summary(45L)
+  all <- richStudio:::comprehensive_hmap(f$summary, f$details, "Padj", "mean")
+  expect_false(isTRUE(attr(all, "hmap_limited")))
+  m4_title <- function(plot) {
+    t <- plotly::plotly_build(plot)$x$layout$title
+    if (is.list(t)) t$text else t
+  }
+  expect_match(m4_title(all), "Rows 1–45 of 45", fixed = TRUE)
+  top <- richStudio:::comprehensive_hmap(f$summary, f$details, "Padj", "mean", top_n = richStudio:::hmap_top_default)
+  expect_identical(richStudio:::hmap_top_default, 30L)
+  expect_true(isTRUE(attr(top, "hmap_limited")))
+  expect_match(m4_title(top), "30 of 45 shown", fixed = TRUE)
+  built <- plotly::plotly_build(top)
+  trace <- built$x$data[[1]]
+  # the built object keeps all 45 clusters x 2 datasets
+  expect_length(unique(as.character(trace$y)), 45L)
+  expect_length(trace$z, 90L)
+  # the visible window is the first 30 categories, ordered most significant first
+  array <- built$x$layout$yaxis$categoryarray
+  expect_length(array, 45L)
+  # the display counts from the top of the reversed axis: the most significant cluster is last
+  expect_identical(array[[45]], "cluster:3")
+  expect_equal(abs(diff(unlist(built$x$layout$yaxis$range))), 30, tolerance = 1)
+  # same values as the unlimited figure, keyed by cluster and dataset
+  key <- function(t) stats::setNames(unlist(t$z), paste(t$y, t$x))
+  expect_equal(key(trace)[order(names(key(trace)))], key(plotly::plotly_build(all)$x$data[[1]])[order(names(key(plotly::plotly_build(all)$x$data[[1]])))])
+  # at or below the limit nothing is hidden
+  small <- m4_summary(30L)
+  expect_false(isTRUE(attr(richStudio:::comprehensive_hmap(small$summary, small$details, "Padj", "mean", top_n = 30L), "hmap_limited")))
+})
+
+test_that("AC-013 bars are ordered by the plotted value and keep the golden values", {
+  golden <- jsonlite::fromJSON(ui_baseline_fixture_path("figure-values.json"), simplifyVector = FALSE)
+  rr <- m4_demo()$rr$go1
+  data <- plotly::plotly_data(richStudio:::rr_bar(rr, top = 25, pvalue = 0.05, value_type = "Padj", view = "rich"))
+  expect_identical(as.character(data$Term), unlist(golden$bar[["go1:Padj:rich"]]$order))
+  expect_false(is.unsorted(rev(data$final_value)))
+})
+
+test_that("AC-013 dot plots carry a size legend and a title and axis labels that name the plotted variables", {
+  rr <- m4_demo()$rr$go1
+  built <- suppressWarnings(plotly::plotly_build(richStudio:::rr_dot(rr)))
+  layout <- built$x$layout
+  title <- if (is.list(layout$title)) layout$title$text else layout$title
+  expect_match(title, "rich score", ignore.case = TRUE)
+  expect_match(title, "-log10(Padj)", fixed = TRUE)
+  expect_match(title, "size", ignore.case = TRUE)
+  expect_false(identical(title, "-log10(Padj) for Enriched Terms"))
+  axis_title <- if (is.list(layout$xaxis$title)) layout$xaxis$title$text else layout$xaxis$title
+  expect_match(axis_title, "Rich score", fixed = TRUE)
+  notes <- vapply(layout$annotations, function(a) a$text, character(1))
+  expect_true(any(grepl("Size legend", notes, fixed = TRUE)))
+  expect_true(any(grepl("significant genes", notes, fixed = TRUE)))
+  bar_title <- built$x$data[[1]]$marker$colorbar$title
+  expect_match(if (is.list(bar_title)) bar_title$text else bar_title, "-log10(Padj)", fixed = TRUE)
+})
+
+test_that("AC-013 enrichment-heatmap labels over the limit are truncated with the full label in the hover text", {
+  long <- paste(rep("long term name", 8), collapse = " ")
+  custom <- data.frame(Annot = c("a", "b"), Term = c(long, "short"), Annotated_x = 10, Significant_x = 3,
+                       Pvalue_x = c(0.01, 0.02), Padj_x = c(0.02, 0.03), GeneID_x = "g1")
+  custom$GeneID <- "g1"
+  plot <- richStudio:::topterm_hmap(custom, "Padj")
+  built <- plotly::plotly_build(plot)
+  ticks <- built$x$layout$yaxis$ticktext
+  expect_true(any(ticks == paste0(substr(long, 1L, 39L), intToUtf8(8230L))))
+  expect_true(all(nchar(ticks) <= richStudio:::hmap_label_limit))
+  expect_true(any(grepl(long, unlist(built$x$data[[1]]$text), fixed = TRUE)))
+  expect_identical(richStudio:::hmap_truncate_labels("short"), "short")
+})
+
+test_that("AC-013 and AC-029 network nodes exist for the demo results, labels are legible and the colour legend is shown", {
+  for (lab in names(m4_demo()$rr)) {
+    net <- richStudio:::rr_network(m4_demo()$rr[[lab]])
+    expect_gte(nrow(net$data), 1L)
+    layer <- Filter(function(l) inherits(l$geom, "GeomTextRepel"), net$layers)[[1]]
+    px <- layer$aes_params$size * ggplot2::.pt * 96 / 72
+    expect_gte(px, 10)
+    expect_true(inherits(net$guides$guides$colour, "GuideLegend") || inherits(net$guides$colour, "GuideLegend") ||
+                  !identical(net$guides$colour, "none"))
+  }
+  golden <- jsonlite::fromJSON(ui_baseline_fixture_path("figure-values.json"), simplifyVector = FALSE)
+  net <- richStudio:::rr_network(m4_demo()$rr$go1)
+  expect_identical(nrow(net$data), golden$network$go1$n_nodes)
+})

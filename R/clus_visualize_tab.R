@@ -120,6 +120,8 @@ clus_vis_tab_ui <- function(id, tabName) {
                 p("Select a cluster result above to view the heatmap.")
               ),
               uiOutput(ns("clusdf_hmap_error")),
+              uiOutput(ns("cluster_top_ui")),
+              uiOutput(ns("cluster_top_notice")),
               uiOutput(ns("cluster_row_window_ui")),
               tags$style(HTML(paste0(
                 ".cluster-heatmap-viewport{max-height:min(720px,70vh);",
@@ -374,6 +376,7 @@ clus_vis_tab_server <- function(
       selected_cluster(),
       {
         row_window_start(1L)
+        updateCheckboxInput(session, "hmap_show_all", value = FALSE)
         updateSelectInput(session, "cluster_row_window", selected = "1")
       },
       ignoreNULL = FALSE,
@@ -410,12 +413,59 @@ clus_vis_tab_server <- function(
       )
     })
 
+    # The summary heatmap shows the most significant clusters by default
+    # (display only: the figure holds every cluster); "Show all" restores every
+    # cluster in the existing 400-row windows.
+    show_all <- reactive(isTRUE(input$hmap_show_all))
+    top_limit <- reactive(if (show_all()) NULL else hmap_top_default)
+    top_applies <- reactive({
+      selected <- selected_cluster()
+      !is.null(selected) &&
+        is.null(summary_resource_error()) &&
+        nrow(selected$df) > hmap_top_default
+    })
+
+    output$cluster_top_ui <- renderUI({
+      if (!top_applies()) {
+        return(NULL)
+      }
+      div(
+        class = "cluster-heatmap-top",
+        checkboxInput(
+          session$ns("hmap_show_all"),
+          "Show all clusters",
+          value = shiny::isolate(isTRUE(input$hmap_show_all))
+        )
+      )
+    })
+
+    output$cluster_top_notice <- renderUI({
+      if (!top_applies()) {
+        return(NULL)
+      }
+      rows <- nrow(selected_cluster()$df)
+      p(
+        class = "cluster-heatmap-notice",
+        if (show_all()) {
+          paste0("All ", rows, " clusters shown")
+        } else {
+          paste0(
+            hmap_top_default,
+            " of ",
+            rows,
+            " shown (most significant first)"
+          )
+        }
+      )
+    })
+
     output$cluster_row_window_ui <- renderUI({
       selected <- selected_cluster()
       if (
         is.null(selected) ||
           !is.null(summary_resource_error()) ||
-          nrow(selected$df) <= 400L
+          nrow(selected$df) <= 400L ||
+          (top_applies() && !show_all())
       ) {
         return(NULL)
       }
@@ -456,7 +506,8 @@ clus_vis_tab_server <- function(
         final_data = selected$df,
         cluster_list = selected$cluster_list,
         value_type = input$big_value_type,
-        value_by = input$value_by
+        value_by = input$value_by,
+        top_n = top_limit()
       )
     })
 
@@ -478,7 +529,9 @@ clus_vis_tab_server <- function(
       hmap <- summary_heatmap()
       req(inherits(hmap, "plotly"))
       selected <- selected_cluster()
-      hmap <- hmap_row_view(hmap, nrow(selected$df), row_window_start())
+      if (!isTRUE(attr(hmap, "hmap_limited"))) {
+        hmap <- hmap_row_view(hmap, nrow(selected$df), row_window_start())
+      }
       # Widget height follows the logical window, independently of the native
       # scroll viewport. No result strings enter this client hook.
       htmlwidgets::onRender(

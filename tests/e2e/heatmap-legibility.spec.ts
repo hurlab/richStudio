@@ -107,7 +107,9 @@ async function load(page: Page, file: string, firstName?: string) {
   if (firstName) await expect(page.locator('#save-clus_summary')).toContainText(firstName);
 }
 
-async function select(page: Page, name: string) {
+// Clusters beyond the default top 30 are shown through "Show all clusters" (SPEC-WS-013 OD-6); the figure
+// holds every row either way, so these checks switch to the full view when the result has more than 30.
+async function select(page: Page, name: string, rows = 0) {
   await tab(page, 'clus_visualize_tab');
   const original = page.locator('#clus_visualize-clusdf_select');
   await expect.poll(() => original.evaluate((element, wanted) =>
@@ -117,6 +119,13 @@ async function select(page: Page, name: string) {
   await control.locator(`.selectize-dropdown .option[data-value="${name}"]`).click();
   await expect(original).toHaveValue(name);
   await expect(page.getByRole('region', { name: 'Cluster heatmap', exact: true })).toBeVisible();
+  if (rows > 30) {
+    const showAll = page.getByLabel('Show all clusters', { exact: true });
+    await expect(showAll).toBeVisible();
+    await expect(page.locator('#clus_visualize-cluster_top_notice')).toContainText(`30 of ${rows} shown`);
+    await showAll.check();
+    await expect(page.locator('#clus_visualize-cluster_top_notice')).toContainText(`All ${rows} clusters shown`);
+  }
 }
 
 async function plotState(page: Page) {
@@ -284,7 +293,7 @@ test('dense bundled-size and real GSE heatmaps expose readable rows and preserve
   await load(page, data.file, 'Dense141');
   const measurements = [];
   for (const name of ['Dense141', 'GSE366']) {
-    await select(page, name);
+    await select(page, name, data.expected[name].ids.length);
     const state = await geometry(page, data.expected[name]); measurements.push({ name, state });
     await keyboardFigureEdges(page);
     await page.screenshot({ path: info.outputPath(name + '.png') });
@@ -305,9 +314,9 @@ test('all admitted rows remain reachable through bounded keyboard windows and ho
   const data = sessionFixture(info, [{ name: 'Normal400', rows: 400 }, { name: 'Window401', rows: 401 },
     { name: 'Maximum2000', rows: 2000 }, { name: 'Small10', rows: 10 }]);
   await load(page, data.file, 'Normal400');
-  await select(page, 'Normal400'); await geometry(page, data.expected.Normal400);
+  await select(page, 'Normal400', 400); await geometry(page, data.expected.Normal400);
   for (const name of ['Window401', 'Maximum2000']) {
-    await select(page, name);
+    await select(page, name, data.expected[name].ids.length);
     const control = page.getByLabel('Cluster row window', { exact: true });
     await expect(control).toBeVisible(); await expect(control).toBeEnabled();
     // Shiny updates the figure and native choices independently. Await this
@@ -372,7 +381,7 @@ cat("COMPLETE_SESSION_EXPORT_PASS\\n")`,
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Welcome to richStudio' })).toBeVisible();
   await load(page, saved, 'Maximum2000');
-  await select(page, 'Maximum2000');
+  await select(page, 'Maximum2000', 2000);
   await geometry(page, data.expected.Maximum2000);
 });
 
@@ -386,7 +395,7 @@ test('small missing and oversized-ID labels stay inert and retain complete origi
   await expect(page.getByLabel('Cluster row window', { exact: true })).not.toBeVisible();
   await load(page, data.file, 'Single');
   for (const name of ['Single', 'AllMissing', 'LongIDs']) {
-    await select(page, name); const state = await geometry(page, data.expected[name]);
+    await select(page, name, data.expected[name].ids.length); const state = await geometry(page, data.expected[name]);
     expect(state.plot.height).toBeLessThan(800);
     // Selectize keeps unselected choices in its store rather than native option
     // nodes; this is the same existing library boundary as result selection.

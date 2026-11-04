@@ -40,18 +40,21 @@ rr_dot <- function(x, top = 30, value_cutoff = 0.05, value_type = "Padj") {
 
   x$Term <- factor(x$Term, levels = x$Term[order(x$final_value)])
 
+  sizeref <- 2. * max(x$Significant) / (8.**2)
+  value_name <- paste0("-log10(", value_type, ")")
   p <- plot_ly(
     data = x,
     x = ~rich,
     y = ~Term,
     type = "scatter",
     mode = "markers",
+    showlegend = FALSE,
     marker = list(
       size = ~Significant,
-      sizeref = 2. * max(x$Significant) / (8.**2),
+      sizeref = sizeref,
       sizemin = 4,
       color = ~final_value,
-      colorbar = list(title = paste0("-log10(", value_type, ")"))
+      colorbar = list(title = paste0("Colour: ", value_name))
     ),
     text = ~ paste0(
       Term,
@@ -65,16 +68,38 @@ rr_dot <- function(x, top = 30, value_cutoff = 0.05, value_type = "Padj") {
       Significant
     ), # Customize hover text
     hoverinfo = "text"
-  ) %>%
+  )
+  p <- p %>%
     layout(
-      title = paste0("-log10(", value_type, ") for Enriched Terms"),
-      xaxis = list(title = "Rich Score"),
+      title = paste0(
+        "Enriched terms: rich score, dot size = gene number, colour = ",
+        value_name
+      ),
+      xaxis = list(title = "Rich score (significant genes / annotated genes)"),
       yaxis = list(
         title = "Term",
         categoryorder = "trace",
         tickmode = "linear",
         nticks = top
-      )
+      ),
+      margin = list(b = 110),
+      annotations = list(list(
+        text = paste0(
+          "Size legend: dot size = number of significant genes (",
+          min(x$Significant, na.rm = TRUE),
+          " to ",
+          max(x$Significant, na.rm = TRUE),
+          " genes)"
+        ),
+        x = 0,
+        y = -0.24,
+        xref = "paper",
+        yref = "paper",
+        xanchor = "left",
+        yanchor = "top",
+        showarrow = FALSE,
+        font = list(size = 12)
+      ))
     )
 
   p

@@ -23,7 +23,57 @@ rr_network <- function(rr, deg = NULL) {
     deg <- trimws(unlist(strsplit(as.character(rr$GeneID), ",", fixed = TRUE)))
     deg <- unique(deg[!is.na(deg) & nzchar(deg)])
   }
-  ggnetwork(object = rr, gene = deg)
+  net <- ggnetwork(object = rr, gene = deg)
+  rr_network_legible(net, rr)
+}
+
+# Label size of the network figure in ggplot2 millimetres: 3.2 mm is about 12 px.
+network_label_size_mm <- 3.2
+
+# Legibility changes only: larger labels, a colour legend and a caption. The nodes,
+# edges and their data are those of the unchanged network.
+rr_network_legible <- function(net, rr = NULL) {
+  if (!inherits(net, "ggplot")) {
+    return(net)
+  }
+  for (i in seq_along(net$layers)) {
+    if (inherits(net$layers[[i]]$geom, "GeomTextRepel")) {
+      net$layers[[i]]$aes_params$size <- network_label_size_mm
+    }
+  }
+  nodes <- net$data
+  p_column <- if (is.data.frame(rr)) intersect(c("Padj", "Pvalue"), names(rr))[1L] else NA_character_
+  if (
+    is.data.frame(nodes) && all(c("color", "label") %in% names(nodes)) && nrow(nodes) &&
+      !is.na(p_column)
+  ) {
+    p <- suppressWarnings(as.numeric(rr[[p_column]][match(nodes$label, rr$Term)]))
+    colours <- as.character(nodes$color)
+    if (any(!is.na(p))) {
+      most <- colours[[which.min(p)]]
+      least <- colours[[which.max(p)]]
+      values <- stats::setNames(unique(colours), unique(colours))
+      net <- net +
+        suppressMessages(ggplot2::scale_colour_manual(
+          name = "Node colour",
+          values = values,
+          breaks = unique(c(most, least)),
+          labels = if (identical(most, least)) {
+            "Term"
+          } else {
+            c("More significant term", "Less significant term")
+          },
+          guide = ggplot2::guide_legend(override.aes = list(size = 4))
+        )) +
+        ggplot2::guides(
+          colour = ggplot2::guide_legend(title = "Node colour", override.aes = list(size = 4)),
+          size = "none"
+        )
+    }
+  }
+  net + ggplot2::labs(
+    caption = "Each node is a term; node size grows with the number of genes in the term."
+  ) + ggplot2::theme(legend.position = "right")
 }
 
 #' Compute a weighted term-term similarity network (WIP)

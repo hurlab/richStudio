@@ -4,7 +4,7 @@ title: "Integrated usability, accessibility and release verification"
 version: "0.1.0"
 status: draft
 created: 2026-10-20
-updated: 2026-10-20
+updated: 2026-11-03
 author: workspace planning team
 priority: P1
 phase: "v0.1.7 target"
@@ -23,7 +23,7 @@ Feature-level tests do not establish that users can finish the connected workflo
 
 ## Dependencies and ownership
 
-- Logical prerequisites: SPEC-WS-001, SPEC-WS-002, SPEC-WS-003, SPEC-WS-004, SPEC-WS-005, SPEC-WS-006, SPEC-WS-007, SPEC-WS-008, SPEC-WS-009, SPEC-WS-010, SPEC-WS-012.
+- Logical prerequisites: SPEC-WS-001, SPEC-WS-002, SPEC-WS-003, SPEC-WS-004, SPEC-WS-005, SPEC-WS-006, SPEC-WS-007, SPEC-WS-008, SPEC-WS-009, SPEC-WS-010, SPEC-WS-012, SPEC-WS-013.
 - One implementer owns this leaf in a fresh worktree; independent reviewer, persistent QA and security roles gate integration. Existing production fixes discovered here require an explicit target-registry update and corrective leaf before dispatch.
 - Locks include prerequisite-created workflow/config files; no parallel writer may update them.
 
@@ -111,3 +111,4 @@ Release the coherent reviewed workspace only after gates. A disabled optional cu
 ## HISTORY
 
 - 2026-10-20: Planning-only integrated release contract.
+- 2026-11-03: Added SPEC-WS-013 (workspace UI/UX restructure) as a logical prerequisite by owner decision; this leaf builds on the restructured layout. No REQ or AC text changed. See [amendment 013](SPEC-WORKSPACE-001/amendments/013-registration.md).

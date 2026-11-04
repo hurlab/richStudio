@@ -4,7 +4,7 @@ title: "Connected scientific workspace evolution"
 version: "0.1.0"
 status: draft
 created: 2026-10-20
-updated: 2026-10-20
+updated: 2026-11-03
 author: workspace planning team
 priority: P1
 phase: "v0.1.7 target"
@@ -48,7 +48,7 @@ Baseline source: deployed application commit `06206d050dcae02a2e773a709c5c6119d2
 
 ## §C Completion contract
 
-Umbrella acceptance.md and twelve leaf SPECs define the executable verification. All enabled capabilities need evidence; a source signature or design screenshot is not runtime proof. A disabled optional feature is explicitly unavailable, not passed functionality. Background support and safe legacy-format rollout each have scientific/security holds. No plan-phase test result is claimed.
+Umbrella acceptance.md and the leaf SPECs (twelve initial, plus SPEC-WS-013 registered 2026-11-03) define the executable verification. All enabled capabilities need evidence; a source signature or design screenshot is not runtime proof. A disabled optional feature is explicitly unavailable, not passed functionality. Background support and safe legacy-format rollout each have scientific/security holds. No plan-phase test result is claimed.
 
 ## §D Constraints
 
@@ -81,3 +81,5 @@ The plan maps REQ-001..019 to leaves and acceptance.md. Machine-readable dispatc
 - 2026-10-20: Planning-only Tier L umbrella and eleven initial leaf drafts created using Hur Harness hybrid team/dependency dispatch, with independent UX, QA and security consultation.
 
 - 2026-10-20: Independent audit D1–D6 led to explicit direct-plot validation, complete gate-asset transport, early resource policy, typed browser configuration, GEARS corrections and a twelfth atomic legacy bridge contract that does not block additive exploration.
+
+- 2026-11-03: Registered SPEC-WS-013 (workspace UI/UX restructure) from the UX review of 081ef06; scheduled before 009/010 by owner decision. See amendments/013-registration.md.

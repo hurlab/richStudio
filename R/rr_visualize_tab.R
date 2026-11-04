@@ -82,6 +82,10 @@ rr_vis_tab_ui <- function(id, tabName) {
         width = 8,
         h2("Enrichment Result Visualization"),
         tabsetPanel(
+          id = ns("view_tabs"),
+          selected = "Explorer",
+          # Result-first explorer above the existing views (SPEC-WS-008)
+          resultsExplorerUI(ns),
           # Table
           tabPanel(
             "Table",
@@ -449,7 +453,8 @@ rr_vis_tab_server <- function(
   u_big_rrdf,
   u_clusnames,
   u_clusdfs,
-  u_cluslists
+  u_cluslists,
+  selection = NULL
 ) {
   moduleServer(id, function(input, output, session) {
     # Global reactive objects
@@ -543,6 +548,24 @@ rr_vis_tab_server <- function(
       u_rrdfs,
       u_big_rrdf
     )
+
+    # Unified result explorer (SPEC-WS-008). The selection is session-local display
+    # state shared with the cluster views; the stored results are only read.
+    if (is.null(selection)) {
+      selection <- workspace_selection_state()
+    }
+    explorer <- results_explorer_server(
+      input,
+      output,
+      session,
+      u_rrnames = u_rrnames,
+      u_rrdfs = u_rrdfs,
+      u_clusnames = u_clusnames,
+      u_cluslists = u_cluslists,
+      selection = selection
+    )
+    explorer_state <- explorer$state
+    explorer_comparison <- explorer$comparison
 
     observeEvent(input$rr_load, {
       # go1 and go2

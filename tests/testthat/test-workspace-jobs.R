@@ -2799,3 +2799,52 @@ test_that("R47 REQ-001 the queue bounds come from the injected policy loader", {
   expect_identical(ws6_shown(x[[1]]$sess, ws6_msg$session_queue), 1L)
   expect_length(x[[1]]$jobs$records, 2L)
 })
+
+# ---- SPEC-WS-013 M2 (AC-010): a missing package is an environment failure (N4) ----
+
+test_that("AC-010 a missing annotation package is classified and carries the complete command", {
+  classify <- richStudio:::workspace_jobs_environment_failure
+  env <- classify("Package 'org.Hs.eg.db' is required. Install it with: BiocManager::install('org.Hs.eg.db')")
+  expect_identical(env$package, "org.Hs.eg.db")
+  expect_identical(env$command, "BiocManager::install('org.Hs.eg.db')")
+  # no command in the message: one is built from the package name
+  expect_identical(classify("Package 'org.Mm.eg.db' is required.")$command,
+                   "BiocManager::install(\"org.Mm.eg.db\")")
+  expect_identical(classify("there is no package called 'foo'")$command, "install.packages(\"foo\")")
+  expect_null(classify("engine failed"))
+  expect_null(classify(NA_character_))
+  expect_null(classify(NULL))
+})
+
+test_that("AC-010 the error summary keeps the install line of a missing-package error", {
+  cond <- simpleError("Package 'org.Hs.eg.db' is required. Install it with:\n  BiocManager::install('org.Hs.eg.db')")
+  summary <- richStudio:::workspace_jobs_error_summary(cond)
+  expect_match(summary, "BiocManager::install('org.Hs.eg.db')", fixed = TRUE)
+  # other errors still keep only their first line
+  expect_identical(richStudio:::workspace_jobs_error_summary(simpleError("first\nsecond")), "first")
+})
+
+test_that("AC-010 Retry is not offered for an environment failure and is unchanged for others", {
+  jobs <- list(handles = list(abc = list(sources = list(1), launch = function() NULL)),
+               imported = character())
+  failed <- function(summary) list(run_id = "abc", state = "failed", error_summary = summary)
+  offered <- richStudio:::workspace_jobs_retry_offered
+  expect_false(offered(jobs, failed("Package 'org.Hs.eg.db' is required. Install it with: BiocManager::install('org.Hs.eg.db')")))
+  expect_true(offered(jobs, failed("engine failed")))
+  expect_true(offered(jobs, failed(NA_character_)))
+  expect_false(richStudio:::workspace_jobs_action_offered(jobs,
+    failed("Package 'x' is required."), "retry"))
+})
+
+test_that("AC-010 the failure message does not tell the user to use Retry and shows the command", {
+  text <- richStudio:::workspace_jobs_failure_text("Enrichment", "0123456789ab",
+    "Package 'org.Hs.eg.db' is required. Install it with: BiocManager::install('org.Hs.eg.db')")
+  expect_false(grepl("Retry", text, fixed = TRUE))
+  expect_match(text, "BiocManager::install('org.Hs.eg.db')", fixed = TRUE)
+  other <- richStudio:::workspace_jobs_failure_text("Enrichment", "0123456789ab", "engine failed")
+  expect_match(other, "use Retry in the job panel.", fixed = TRUE)
+  block <- as.character(richStudio:::workspace_jobs_environment_block(
+    richStudio:::workspace_jobs_environment_failure("Package 'org.Hs.eg.db' is required.")))
+  expect_match(block, "<code class=\"rs-job-command\">BiocManager::install(\"org.Hs.eg.db\")</code>", fixed = TRUE)
+  expect_match(block, "rs-copy", fixed = TRUE)
+})

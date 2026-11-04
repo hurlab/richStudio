@@ -349,3 +349,25 @@ add_rr_tophmap <- function(df, name, value_type, value_cutoff, top_nterms) {
     df
   }
 }
+
+# Gene-identifier column detection for an uploaded gene list (SPEC-WS-013 F5).
+# "Recognized" means a column name matches the name pattern add_file_degdf uses,
+# without that function's first-column fallback. Returns the recognized column
+# (first match) or NA, with every column name for the report.
+deg_detect_gene_column <- function(df) {
+  columns <- colnames(df)
+  possible <- c("GeneID", "gene_id", "gene", "gene list", "symbol")
+  hits <- grep(paste(possible, collapse = "|"), columns, ignore.case = TRUE)
+  list(
+    column = if (length(hits)) columns[[hits[[1L]]]] else NA_character_,
+    columns = columns,
+    rows = nrow(df)
+  )
+}
+
+# The same table with the chosen column named GeneID, for add_file_degdf.
+deg_with_gene_column <- function(df, column) {
+  stopifnot(column %in% colnames(df))
+  names(df)[names(df) == column][[1L]] <- "GeneID"
+  df
+}

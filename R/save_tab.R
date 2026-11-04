@@ -22,6 +22,45 @@ sanitize_filename <- function(name) {
   return(name)
 }
 
+# Refusal shown for an old .rds session file (SPEC-WS-013 N3): three short
+# sentences, a next step that needs no script, and the conversion steps inside an
+# expandable block with a copy control for the command.
+workspace_rds_refusal_ui <- function() {
+  command <- "Rscript scripts/convert-trusted-session.R my-session.rds my-session.json"
+  shiny::tagList(
+    shiny::tags$p(paste(
+      "This looks like an older .rds session file, which richStudio can no longer open, so nothing was loaded.",
+      "Open a session saved as .json or a project (.zip) instead.",
+      "To reuse this file, convert it once on your own computer."
+    )),
+    shiny::tags$details(
+      class = "rs-refusal-steps",
+      shiny::tags$summary("How to convert an .rds session"),
+      shiny::tags$ol(
+        shiny::tags$li(
+          "Only if you made the file or fully trust it: download richStudio as a ZIP from ",
+          shiny::tags$a(
+            href = "https://github.com/hurlab/richStudio/archive/refs/heads/main.zip",
+            "https://github.com/hurlab/richStudio/archive/refs/heads/main.zip"
+          ),
+          " and unzip it."
+        ),
+        shiny::tags$li("From inside the unzipped folder run this command (needs R with the jsonlite package):"),
+        shiny::tags$li(
+          shiny::tags$code(class = "rs-job-command", command),
+          shiny::tags$button(
+            type = "button",
+            class = "btn btn-default btn-sm rs-copy",
+            `data-copy` = command,
+            "Copy command"
+          )
+        ),
+        shiny::tags$li("Upload the resulting my-session.json here.")
+      )
+    )
+  )
+}
+
 #' Save Tab UI
 #'
 #' @param id Module namespace ID
@@ -468,13 +507,7 @@ saveTabServer <- function(id, u_degnames, u_degdfs, u_rrnames, u_rrdfs,
         # uploaded RDS can execute attacker-chosen code on the server.
         if (tolower(file_ext) != "json" || session_json_looks_like_rds(file_path)) {
           showNotification(
-            paste("This looks like an older .rds session file. For security reasons richStudio",
-                  "can no longer open .rds session files, so nothing was loaded. Convert the",
-                  "file once on your own computer (only if you made it or fully trust it) and",
-                  "upload the .json result instead. Download richStudio as a ZIP from",
-                  "https://github.com/hurlab/richStudio/archive/refs/heads/main.zip, unzip it,",
-                  "and from inside the unzipped folder run (needs R with the jsonlite package):",
-                  "Rscript scripts/convert-trusted-session.R my-session.rds my-session.json"),
+            workspace_rds_refusal_ui(),
             type = "error", duration = NULL
           )
           return(NULL)

@@ -288,8 +288,7 @@ clus_vis_tab_server <- function(
     })
     # Output uploaded file table
     output$clus_list_table <- DT::renderDT(
-      big_clusdf_to_table(),
-      editable = "cell"
+      workspace_display_dt(big_clusdf_to_table(), editable = "cell")
     )
     # Cluslist table editing code
     observeEvent(input$clus_list_table_cell_edit, {
@@ -575,8 +574,8 @@ clus_vis_tab_server <- function(
       return(df)
     })
     # Output cluslist table
-    output$cluslist_table <- DT::renderDataTable({
-      cluslist_to_table()
+    output$cluslist_table <- DT::renderDT({
+      workspace_display_dt(cluslist_to_table())
     })
 
     # download cluslist table

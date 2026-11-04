@@ -136,7 +136,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                   4,
                   selectInput(
                     ns("bar_type"),
-                    "View rich score or p-value?",
+                    "Show rich score or p-value",
                     choices = c("Rich score" = "rich", "P-value" = "value"),
                     multiple = FALSE
                   )
@@ -145,7 +145,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                   4,
                   selectInput(
                     ns("bar_valtype"),
-                    "View Padj or Pvalue?",
+                    "P-value type",
                     choices = c("Padj", "Pvalue"),
                     multiple = FALSE
                   )
@@ -165,7 +165,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 ns("bar_nterms"),
                 "Number of terms to display",
                 value = 25,
-                min = 0,
+                min = 1,
                 max = 100
               )
             ),
@@ -204,7 +204,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                   4,
                   selectInput(
                     ns("dot_valtype"),
-                    "View Padj or Pvalue?",
+                    "P-value type",
                     choices = c("Padj", "Pvalue"),
                     multiple = FALSE
                   )
@@ -224,7 +224,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 ns("dot_nterms"),
                 "Number of terms to display",
                 value = 25,
-                min = 0,
+                min = 1,
                 max = 100
               )
             ),
@@ -263,7 +263,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                   4,
                   selectInput(
                     ns("net_valtype"),
-                    "View Padj or Pvalue?",
+                    "P-value type",
                     choices = c("Padj", "Pvalue"),
                     multiple = FALSE
                   )
@@ -283,7 +283,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 ns("net_nterms"),
                 "Number of terms to display",
                 value = 25,
-                min = 0,
+                min = 1,
                 max = 100
               )
             ),
@@ -337,7 +337,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                       ns("tophmap_nterms"),
                       "Number of terms per result to display",
                       value = 10,
-                      min = 0,
+                      min = 1,
                       max = 100
                     )
                   ),
@@ -629,8 +629,7 @@ rr_vis_tab_server <- function(
     })
     # Output uploaded file table
     output$rr_list_table <- DT::renderDT(
-      big_rrdf_to_table(),
-      editable = "cell"
+      workspace_display_dt(big_rrdf_to_table(), editable = "cell")
     )
     # Table editing code
     observeEvent(input$rr_list_table_cell_edit, {
@@ -689,8 +688,7 @@ rr_vis_tab_server <- function(
       return(df)
     })
     output$rr_table <- DT::renderDT(
-      get_rr_table(),
-      filter = "top"
+      workspace_display_dt(get_rr_table(), filter = "top")
     )
 
     get_rr_barplot <- reactive({

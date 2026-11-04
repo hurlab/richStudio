@@ -196,3 +196,135 @@ test.describe('AC-007 menu and notifications', () => {
     await expect(toast).toHaveCount(0, { timeout: 6000 });
   });
 });
+
+// ---- M2: copy and validation (AC-008, AC-009, AC-010, AC-028) -----------------------------------
+
+const sampleDeg = path.resolve(__dirname, '../../inst/extdata/deg_mouse1.txt');
+
+test.describe('AC-008 table display', () => {
+  test('tables show labels, em-dash, three significant figures, no row-name column, and fit the width', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await twoFinishedJobs(page);
+    const raw = ['GeneID_header', 'num_genes', 'has_expr_data', 'from_deg', 'Representative_Term', 'n_terms', 'min_pvalue'];
+    const headers = (tab: string) => page.evaluate((t) => Array.from(document.querySelectorAll(`#shiny-tab-${t} .dataTables_wrapper`))
+      .filter(w => (w as HTMLElement).offsetParent !== null)
+      .map(w => Array.from(w.querySelectorAll('.dataTables_scrollHead thead tr:first-child th, table.dataTable:not(.dataTables_scrollBody table) thead tr:first-child th'))
+        .map(th => (th.textContent || '').trim())), tab);
+    for (const tab of ['enrich_tab', 'rr_visualize_tab', 'clus_visualize_tab']) {
+      await showTab(page, tab);
+      await expect.poll(async () => (await headers(tab)).length, { message: `${tab} tables`, timeout: 15_000 }).toBeGreaterThan(0);
+      const tables = await headers(tab);
+      for (const table of tables) {
+        for (const name of raw) expect(table, `${tab} ${name}`).not.toContain(name);
+        expect(table.filter(h => h === ''), `${tab} empty (row-name) header`).toEqual([]);
+      }
+    }
+    // Unknown tracking values are an em-dash, not "?".
+    await showTab(page, 'rr_visualize_tab');
+    const listCells = await page.locator('#rr_visualize-rr_list_table tbody td').allInnerTexts();
+    expect(listCells).not.toContain('?');
+    expect(listCells).toContain('—');
+    // Results Table tab: p-values to three significant figures, adjusted p-value inside the table width.
+    await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name: 'Table', exact: true }).click();
+    const table = page.locator('#rr_visualize-rr_table');
+    await expect(table.locator('tbody tr').first()).toBeVisible();
+    const info = await table.evaluate((el) => {
+      const heads = Array.from(el.querySelectorAll('thead tr:first-child th')) as HTMLElement[];
+      const idx = heads.findIndex(h => (h.textContent || '').trim() === 'Adjusted p-value');
+      const p = heads.findIndex(h => (h.textContent || '').trim() === 'P-value');
+      const rows = Array.from(el.querySelectorAll('tbody tr')).slice(0, 10);
+      const wrapper = el.getBoundingClientRect();
+      const adj = heads[idx].getBoundingClientRect();
+      return { idx, p, adjRight: adj.right, wrapperRight: wrapper.right,
+        values: rows.map(r => (r.children[p] as HTMLElement).innerText.trim()) };
+    });
+    expect(info.idx).toBeGreaterThanOrEqual(0);
+    expect(info.adjRight).toBeLessThanOrEqual(info.wrapperRight + 1);
+    const significant = (text: string) => (text.replace(/e[+-]?\d+$/i, '').replace(/^0\.0*/, '').replace('.', '').replace(/^0+/, '')).length;
+    for (const value of info.values) expect(significant(value), value).toBeLessThanOrEqual(3);
+  });
+});
+
+test.describe('AC-009 gene-column validation', () => {
+  test('a file without a gene column is not added until a column is picked; cancel changes nothing', async ({ page }) => {
+    await connected(page);
+    await showTab(page, 'enrich_tab');
+    const upload = (name: string, body: string | Buffer) =>
+      page.locator('#enrich-deg_files').setInputFiles({ name, mimeType: 'text/plain', buffer: Buffer.from(body) });
+    const rows = () => page.locator('#enrich-deg_list_table tbody tr').filter({ hasNotText: 'No data available' });
+    await upload('this.is.not.txt', 'this.is.not\tscore\ng1\t0.5\n');
+    await expect(page.locator('#shiny-modal')).toBeVisible();
+    await expect(page.locator('#shiny-modal')).toContainText('this.is.not, score');
+    await expect(page.locator('#enrich-deg_upload_status')).toContainText('not added');
+    await expect(page.locator('#enrich-deg_upload_status')).toContainText('1 rows');
+    await expect(rows()).toHaveCount(0);
+    // Cancel: nothing added, the Save summary still lists no gene list.
+    await page.locator('#enrich-deg_pick_cancel').click();
+    await expect(page.locator('#shiny-modal')).toHaveCount(0);
+    await expect(page.locator('#enrich-deg_upload_status')).toContainText('this.is.not.txt was not added.');
+    await showTab(page, 'save_tab');
+    await expect(page.locator('#save-deg_summary')).toContainText('No DEG sets loaded');
+    // Pick: exactly one dataset with the chosen gene column.
+    await showTab(page, 'enrich_tab');
+    await upload('picked.txt', 'this.is.not\tscore\ng1\t0.5\ng2\t0.7\n');
+    await expect(page.locator('#shiny-modal')).toBeVisible();
+    await page.locator('#enrich-deg_pick_ok').click();
+    await expect(page.locator('#enrich-deg_upload_status')).toContainText('Added picked.txt: gene column GeneID, 2 rows.');
+    await expect(rows()).toHaveCount(1);
+    // A valid list is confirmed with its detected column and row count.
+    await page.locator('#enrich-deg_files').setInputFiles(sampleDeg);
+    await expect(page.locator('#enrich-deg_upload_status')).toContainText('Added deg_mouse1.txt: gene column geneID, 79 rows.');
+    await expect(rows()).toHaveCount(2);
+  });
+});
+
+test.describe('AC-010 environment failure', () => {
+  test('a missing annotation package shows the full command, no Retry and no Retry advice', async ({ page }) => {
+    await connected(page);
+    await showTab(page, 'enrich_tab');
+    await page.locator('#enrich-deg_load').click();
+    await choose(page, 'enrich-degs_to_enrich', 'deg_mouse1');
+    await page.locator('#enrich-enrich_deg').click();
+    await expect(jobRows(page)).toHaveCount(1, { timeout: 30_000 });
+    await expect(activeRows(page)).toHaveCount(0, { timeout: 120_000 });
+    const panel = page.locator('section[aria-label="Analysis jobs"]');
+    await panel.locator('summary.rs-jobs-summary').click();
+    const row = jobRows(page).first();
+    await expect(row).toHaveAttribute('data-state', 'failed');
+    const command = panel.locator('code.rs-job-command');
+    await expect(command).toBeVisible();
+    await expect(command).toHaveText(/^BiocManager::install\(['"]org\.[A-Za-z]+\.eg\.db['"]\)$/);
+    await expect(panel.locator('.rs-copy')).toBeVisible();
+    await expect(row.getByRole('button', { name: 'Retry' })).toHaveCount(0);
+    await expect(panel).not.toContainText('use Retry');
+    // The notification does not advise Retry either.
+    const notices = await page.locator('.shiny-notification').allInnerTexts();
+    for (const text of notices) expect(text).not.toContain('use Retry');
+  });
+});
+
+test.describe('AC-028 old session file', () => {
+  test('an .rds file is refused with a short message and the steps in an expandable block, gone after navigating', async ({ page }) => {
+    await connected(page);
+    await showTab(page, 'save_tab');
+    await page.locator('#save-load_session_file').setInputFiles({ name: 'old.rds', mimeType: 'application/octet-stream', buffer: Buffer.from([0x58, 0x0a, 0x00, 0x00, 0x00]) });
+    await expect.poll(async () => page.locator('#save-load_session_file_progress .progress-bar').textContent())
+      .toContain('Upload complete');
+    await page.locator('#save-load_session').click();
+    const note = page.locator('.shiny-notification-error');
+    await expect(note).toBeVisible();
+    const visible = (await note.locator('.shiny-notification-content').innerText()).replace(/\s+/g, ' ').trim();
+    expect(visible).toContain('nothing was loaded');
+    // Sentences end in . ! or ? followed by a space or the end; the closed block shows only its title.
+    expect((visible.match(/[.!?](\s|$)/g) || []).length).toBeLessThanOrEqual(3);
+    const steps = note.locator('details.rs-refusal-steps');
+    await expect(steps).toHaveCount(1);
+    await expect(note.locator('code.rs-job-command')).not.toBeVisible();
+    await steps.locator('summary').click();
+    await expect(note.locator('code.rs-job-command')).toHaveText('Rscript scripts/convert-trusted-session.R my-session.rds my-session.json');
+    await expect(note.locator('.rs-copy')).toBeVisible();
+    await showTab(page, 'home_tab');
+    await expect(page.locator('.shiny-notification-error')).toHaveCount(0, { timeout: 2000 });
+  });
+});

@@ -1736,3 +1736,26 @@ textarea:disabled,
     transition: transform 0.3s ease-in-out !important;
   }
 }
+
+/* --- SPEC-WS-013 M2: data tables fit their container --- */
+table.rs-display-table td,
+table.rs-display-table th {
+  max-width: 28em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.rs-job-command {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  user-select: all;
+  background: var(--rs-bg);
+  color: var(--rs-text);
+  padding: 2px 6px;
+}
+.rs-refusal-steps > summary {
+  cursor: pointer;
+  font-weight: 600;
+}

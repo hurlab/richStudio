@@ -134,13 +134,104 @@ workspace_jobs_contain <- function(expr, where) {
   })
 }
 
+# ---- environment failures (a package the run needs is not installed) --------------
+
+workspace_jobs_is_missing_package <- function(text) {
+  length(text) == 1L &&
+    !is.na(text) &&
+    grepl("package", text, ignore.case = TRUE) &&
+    grepl(
+      "is required|no package called|is not installed|not available",
+      text,
+      ignore.case = TRUE
+    )
+}
+
+# NULL for any other failure; otherwise the package and the complete command that
+# installs it. The command is shown and copied as text; the app never runs it.
+workspace_jobs_environment_failure <- function(summary) {
+  if (
+    is.null(summary) ||
+      length(summary) != 1L ||
+      is.na(summary) ||
+      !workspace_jobs_is_missing_package(summary)
+  ) {
+    return(NULL)
+  }
+  quoted <- regmatches(
+    summary,
+    regexpr("['\"\u2018][A-Za-z][A-Za-z0-9._]*['\"\u2019]", summary)
+  )
+  package <- if (length(quoted)) gsub("['\"\u2018\u2019]", "", quoted) else NA_character_
+  command <- regmatches(
+    summary,
+    regexpr(
+      "(BiocManager::install|install[.]packages|remotes::install_github)\\([^)]*\\)",
+      summary
+    )
+  )
+  if (!length(command)) {
+    if (is.na(package)) {
+      return(NULL)
+    }
+    command <- if (grepl("^org[.]|[.]db$|^bioAnno$", package)) {
+      sprintf("BiocManager::install(\"%s\")", package)
+    } else {
+      sprintf("install.packages(\"%s\")", package)
+    }
+  }
+  list(
+    package = package,
+    command = command,
+    message = if (is.na(package)) {
+      "A package this run needs is not installed."
+    } else {
+      sprintf("Package '%s' is not installed.", package)
+    }
+  )
+}
+
+# Text of the notification raised when a run fails.
+workspace_jobs_failure_text <- function(kind_label, run_id, summary) {
+  env <- workspace_jobs_environment_failure(summary)
+  if (is.null(env)) {
+    return(sprintf(
+      paste0(
+        "%s failed (run %s): %s. Previous results are ",
+        "unchanged; use Retry in the job panel."
+      ),
+      kind_label,
+      substr(run_id, 1L, 8L),
+      summary
+    ))
+  }
+  sprintf(
+    paste0(
+      "%s failed (run %s): %s Previous results are unchanged. ",
+      "Install the package in R with %s, then start the run again."
+    ),
+    kind_label,
+    substr(run_id, 1L, 8L),
+    env$message,
+    env$command
+  )
+}
+
 workspace_jobs_error_summary <- function(cond) {
   msg <- tryCatch(
     paste(conditionMessage(cond), collapse = "\n"),
     error = function(e) "Unknown error"
   )
   msg <- strsplit(msg, "\n", fixed = TRUE)[[1]]
-  msg <- if (length(msg)) msg[[1]] else ""
+  # A missing-package failure keeps the line that says how to install it, so the
+  # panel can show the complete command; other errors keep their first line.
+  msg <- if (!length(msg)) {
+    ""
+  } else if (workspace_jobs_is_missing_package(paste(msg, collapse = " "))) {
+    trimws(paste(trimws(msg), collapse = " "))
+  } else {
+    msg[[1]]
+  }
   msg <- iconv(enc2utf8(msg), "UTF-8", "UTF-8", sub = "?")
   if (is.na(msg)) {
     msg <- ""
@@ -1048,13 +1139,9 @@ workspace_jobs_publish_failed <- function(jobs, run_id, handle, err) {
     note,
     list(error_summary = summary)
   )
-  text <- sprintf(
-    paste0(
-      "%s failed (run %s): %s. Previous results are ",
-      "unchanged; use Retry in the job panel."
-    ),
+  text <- workspace_jobs_failure_text(
     workspace_jobs_kind_label(handle$kind),
-    substr(run_id, 1L, 8L),
+    run_id,
     summary
   )
   if (!is.na(note)) {
@@ -1109,13 +1196,9 @@ workspace_jobs_on_rejected <- function(jobs, run_id, err) {
     )
     workspace_jobs_notify(
       handle,
-      sprintf(
-        paste0(
-          "%s failed (run %s): %s. Previous results are ",
-          "unchanged; use Retry in the job panel."
-        ),
+      workspace_jobs_failure_text(
         workspace_jobs_kind_label(handle$kind),
-        substr(run_id, 1L, 8L),
+        run_id,
         summary
       ),
       type = "error",
@@ -1338,7 +1421,8 @@ workspace_jobs_retry_offered <- function(jobs, rec) {
     !is.null(handle) &&
     !is.null(handle$sources) &&
     !is.null(handle$launch) &&
-    !isTRUE(handle$retry_dropped)
+    !isTRUE(handle$retry_dropped) &&
+    is.null(workspace_jobs_environment_failure(rec$error_summary))
 }
 
 workspace_jobs_action_offered <- function(jobs, rec, action) {
@@ -1513,6 +1597,20 @@ workspace_jobs_row <- function(ns, rec, buttons = list()) {
   )
 }
 
+# The failure message and the complete install command in a copyable code element.
+workspace_jobs_environment_block <- function(env) {
+  shiny::tagList(
+    paste0(" ", env$message, " Install it in R with:"),
+    shiny::tags$code(class = "rs-job-command", env$command),
+    shiny::tags$button(
+      type = "button",
+      class = "btn btn-default btn-sm rs-copy",
+      `data-copy` = env$command,
+      "Copy command"
+    )
+  )
+}
+
 workspace_jobs_settings_text <- function(settings) {
   out <- character()
   for (key in names(settings)) {
@@ -1677,7 +1775,12 @@ workspace_jobs_server <- function(id, jobs) {
                 paste0(" \u2014 ", note)
               },
               if (!is.null(summary) && !is.na(summary) && nzchar(summary)) {
-                paste0(" Error: ", summary)
+                env <- workspace_jobs_environment_failure(summary)
+                if (is.null(env)) {
+                  paste0(" Error: ", summary)
+                } else {
+                  workspace_jobs_environment_block(env)
+                }
               }
             )
           },

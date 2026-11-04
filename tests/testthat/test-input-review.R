@@ -434,7 +434,7 @@ test_that("case 3 hostile labels and column names render as text in every review
   hostile <- "<img src=x onerror=alert(1)>.csv"
   deg_text <- ir_write("gene,padj\ng1,0.01\ng2,0.02\n", ".csv")
   deg_xlsx <- tempfile(fileext = ".xlsx")
-  writexl::write_xlsx(data.frame(check.names = FALSE, `<b>x</b>` = c("g1", "g2"), Term = c("A", "B")), deg_xlsx)
+  writexl::write_xlsx(data.frame(check.names = FALSE, `<b>x</b> gene` = c("g1", "g2"), Term = c("A", "B")), deg_xlsx)
   escaped <- function(html) {
     expect_false(grepl("<img", html, fixed = TRUE))
     expect_false(grepl("<b>", html, fixed = TRUE))
@@ -1267,4 +1267,95 @@ test_that("case 19 F6 a missing resource policy blocks Run and paste", {
     done$ok <- TRUE
   })
   expect_true(isTRUE(done$ok))
+})
+
+# ---- SPEC-WS-013 M2 (AC-009): gene-column validation at upload (F5, N7, OD-4) -------
+
+ir_deg_upload_state <- function() {
+  state <- ws_baseline_state()
+  state[intersect(names(state), names(formals(richStudio:::enrich_tab_server)))]
+}
+
+ir_upload_file <- function(lines, name) {
+  path <- withr::local_tempfile(fileext = ".txt", .local_envir = parent.frame())
+  writeLines(lines, path)
+  data.frame(name = name, size = file.size(path), type = "text/plain", datapath = path)
+}
+
+test_that("AC-009 a file without a recognized gene column adds nothing and reports its columns", {
+  args <- ir_deg_upload_state()
+  file <- ir_upload_file(c("this.is.not\tscore", "g1\t0.5"), "this.is.not.txt")
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
+    session$flushReact()
+    session$setInputs(deg_files = file)
+    session$flushReact()
+    expect_identical(shiny::isolate(args$u_degnames$labels), NULL)
+    expect_length(shiny::isolate(shiny::reactiveValuesToList(args$u_degdfs)), 0L)
+    status <- output$deg_upload_status
+    expect_match(status, "not added", fixed = TRUE)
+    expect_match(status, "this.is.not, score", fixed = TRUE)
+    expect_match(status, "1 rows", fixed = TRUE)
+  })
+})
+
+test_that("AC-009 picking a column adds exactly one dataset with that gene column", {
+  args <- ir_deg_upload_state()
+  file <- ir_upload_file(c("this.is.not\tscore", "g1\t0.5", "g2\t0.7"), "picked.txt")
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
+    session$flushReact()
+    session$setInputs(deg_files = file)
+    session$setInputs(deg_pick_col = "this.is.not", deg_pick_ok = 1L)
+    session$flushReact()
+    expect_identical(shiny::isolate(args$u_degnames$labels), "picked.txt")
+    expect_identical(names(shiny::isolate(args$u_degdfs[["picked.txt"]])), c("GeneID", "score"))
+    expect_identical(shiny::isolate(args$u_degdfs[["picked.txt"]]$GeneID), c("g1", "g2"))
+    meta <- shiny::isolate(args$u_big_degdf$df)
+    expect_identical(nrow(meta), 1L)
+    expect_identical(as.character(meta$GeneID_header), "GeneID")
+    expect_match(output$deg_upload_status, "Added picked.txt: gene column GeneID, 2 rows.", fixed = TRUE)
+  })
+})
+
+test_that("AC-009 cancelling leaves the gene lists and the Save summary unchanged", {
+  args <- ir_deg_upload_state()
+  file <- ir_upload_file(c("this.is.not\tscore", "g1\t0.5"), "cancelled.txt")
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
+    session$flushReact()
+    session$setInputs(deg_files = file)
+    session$setInputs(deg_pick_cancel = 1L)
+    session$flushReact()
+    expect_null(shiny::isolate(args$u_degnames$labels))
+    expect_null(shiny::isolate(args$u_big_degdf$df))
+    expect_match(output$deg_upload_status, "cancelled.txt was not added.", fixed = TRUE)
+  })
+  save_state <- ws_baseline_state()
+  shiny::testServer(richStudio::saveTabServer,
+    args = save_state[intersect(names(formals(richStudio::saveTabServer)), names(save_state))], {
+      session$flushReact()
+      expect_identical(output$deg_summary, "No DEG sets loaded")
+    })
+})
+
+test_that("AC-009 a valid gene list is added and the confirmation names the column and rows", {
+  args <- ir_deg_upload_state()
+  file <- data.frame(name = "deg_mouse1.txt", size = 1, type = "text/plain",
+                     datapath = system.file("extdata", "deg_mouse1.txt", package = "richStudio"))
+  if (!nzchar(file$datapath)) file$datapath <- file.path("inst", "extdata", "deg_mouse1.txt")
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
+    session$flushReact()
+    session$setInputs(deg_files = file)
+    session$flushReact()
+    expect_identical(shiny::isolate(args$u_degnames$labels), "deg_mouse1.txt")
+    expect_match(output$deg_upload_status, "Added deg_mouse1.txt: gene column geneID, 79 rows.", fixed = TRUE)
+  })
+})
+
+test_that("AC-009 detection names a recognized column and never falls back to the first column", {
+  detect <- richStudio:::deg_detect_gene_column
+  expect_identical(detect(data.frame(geneID = "a", x = 1))$column, "geneID")
+  expect_identical(detect(data.frame(Symbol = "a"))$column, "Symbol")
+  none <- detect(data.frame(this.is.not = "a", other = 1))
+  expect_true(is.na(none$column))
+  expect_identical(none$columns, c("this.is.not", "other"))
+  expect_identical(none$rows, 1L)
 })

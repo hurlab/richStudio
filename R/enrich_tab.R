@@ -22,6 +22,7 @@ enrich_tab_ui <- function(id, tabName) {
                 multiple = TRUE,
                 accept = c(".csv", ".tsv", ".xls", ".xlsx", ".txt")
               ),
+              textOutput(ns("deg_upload_status")),
               hr(),
               h4("Load demo"),
               p(
@@ -85,7 +86,7 @@ enrich_tab_ui <- function(id, tabName) {
               ),
               selectInput(
                 ns("keytype_select"),
-                "Select keytype",
+                "Select gene ID type",
                 c(
                   "SYMBOL",
                   "ENSEMBL",
@@ -462,11 +463,8 @@ enrich_tab_server <- function(
       shiny::showModal(shiny::modalDialog(
         title = "Help",
         paste0(
-          "'GeneID_header' value indicates the column na",
-          "me containing relevant geneID\n        informa",
-          "tion, and 'has_expr_data' value indicates whe",
-          "ther relevant gene expression\n        data is",
-          " included."
+          "'Gene ID column' shows the column that holds the gene identifiers, ",
+          "and 'Has expression data' shows whether expression values are included."
         )
       ))
     })
@@ -474,21 +472,71 @@ enrich_tab_server <- function(
       shiny::showModal(shiny::modalDialog(
         title = "Help",
         paste0(
-          "If annotation, ontology, keytype, or species ",
-          "data is marked with '?', you\n        can upda",
-          "te it by double-clicking on the relevant cell",
-          ". If you started from\n        an enrichment o",
-          "utput but wish to link corresponding differen",
-          "tial expression data\n        to it, you can u",
-          "pdate the 'from_deg' value to the name of a D",
-          "EG set uploaded to\n        richStudio."
+          "If annotation, ontology, gene ID type or species is shown as a dash, ",
+          "you can update it by double-clicking the cell. If you started from an ",
+          "enrichment output but want to link the matching differential expression ",
+          "data to it, set 'Source gene list' to the name of a gene list uploaded ",
+          "to richStudio."
         )
       ))
     })
 
+    # Gene lists admitted but without a recognized gene-identifier column wait
+    # here (file name and table) until the user picks the column or cancels;
+    # nothing is stored for them meanwhile.
+    deg_pending <- shiny::reactiveVal(list())
+    deg_upload_status <- shiny::reactiveVal("")
+    output$deg_upload_status <- shiny::renderText(deg_upload_status())
+
+    deg_add_list <- function(lab, df) {
+      meta <- add_file_degdf(u_big_degdf[["df"]], lab, df)
+      u_degdfs[[lab]] <- df # set u_degdfs
+      # set u_degnames
+      u_degnames$labels <- c(u_degnames$labels, lab)
+      u_big_degdf[["df"]] <- meta
+      review_revisions[[lab]] <- NULL
+      column <- as.character(meta[meta$name %in% lab, "GeneID_header"][[1L]])
+      sprintf("Added %s: gene column %s, %d rows.", lab, column, nrow(df))
+    }
+
+    deg_prompt_next <- function() {
+      pending <- deg_pending()
+      if (!length(pending)) {
+        return(invisible(NULL))
+      }
+      item <- pending[[1L]]
+      shiny::showModal(shiny::modalDialog(
+        title = "Choose the gene column",
+        shiny::p(sprintf(
+          paste0(
+            "No gene identifier column was recognized in %s (%d rows). ",
+            "Columns found: %s."
+          ),
+          item$lab,
+          item$rows,
+          paste(item$columns, collapse = ", ")
+        )),
+        shiny::selectInput(
+          session$ns("deg_pick_col"),
+          "Which column holds the gene identifiers?",
+          choices = item$columns
+        ),
+        footer = shiny::tagList(
+          shiny::actionButton(session$ns("deg_pick_cancel"), "Cancel"),
+          shiny::actionButton(
+            session$ns("deg_pick_ok"),
+            "Use this column",
+            class = "btn-primary"
+          )
+        ),
+        easyClose = FALSE
+      ))
+    }
+
     # When deg upload button clicked
     observeEvent(input$deg_files, {
       problems <- character()
+      confirmations <- character()
       for (i in seq_along(input$deg_files$name)) {
         lab <- input$deg_files$name[i]
         # An unexpected error becomes a message for this file; stores stay
@@ -511,12 +559,31 @@ enrich_tab_server <- function(
                   paste0(lab, ": ", admitted$message)
                 } else {
                   df <- admitted$df
-                  meta <- add_file_degdf(u_big_degdf[["df"]], lab, df)
-                  u_degdfs[[lab]] <- df # set u_degdfs
-                  # set u_degnames
-                  u_degnames$labels <- c(u_degnames$labels, lab)
-                  u_big_degdf[["df"]] <- meta
-                  review_revisions[[lab]] <- NULL
+                  detected <- deg_detect_gene_column(df)
+                  if (is.na(detected$column)) {
+                    pending <- deg_pending()
+                    pending[[length(pending) + 1L]] <- list(
+                      lab = lab,
+                      df = df,
+                      columns = detected$columns,
+                      rows = detected$rows
+                    )
+                    deg_pending(pending)
+                    confirmations <- c(
+                      confirmations,
+                      sprintf(
+                        paste0(
+                          "%s was not added yet: no gene identifier column ",
+                          "was recognized among its columns (%s; %d rows)."
+                        ),
+                        lab,
+                        paste(detected$columns, collapse = ", "),
+                        detected$rows
+                      )
+                    )
+                  } else {
+                    confirmations <- c(confirmations, deg_add_list(lab, df))
+                  }
                   NULL
                 }
               }
@@ -525,11 +592,49 @@ enrich_tab_server <- function(
           )
         )
       }
+      deg_upload_status(paste(confirmations, collapse = "\n"))
       if (length(problems)) {
         review_report(problems)
       } else {
         review_messages(character())
       }
+      deg_prompt_next()
+    })
+
+    observeEvent(input$deg_pick_ok, {
+      pending <- deg_pending()
+      shiny::removeModal()
+      if (!length(pending)) {
+        return()
+      }
+      item <- pending[[1L]]
+      column <- input$deg_pick_col
+      deg_pending(pending[-1L])
+      if (is.null(column) || !column %in% item$columns) {
+        deg_upload_status(paste0(item$lab, " was not added: no column chosen."))
+      } else {
+        review_contain(
+          deg_upload_status(deg_add_list(
+            item$lab,
+            deg_with_gene_column(item$df, column)
+          )),
+          function() {
+            review_report(paste0(item$lab, ": the file could not be processed"))
+          }
+        )
+      }
+      deg_prompt_next()
+    })
+
+    observeEvent(input$deg_pick_cancel, {
+      pending <- deg_pending()
+      shiny::removeModal()
+      if (!length(pending)) {
+        return()
+      }
+      deg_upload_status(paste0(pending[[1L]]$lab, " was not added."))
+      deg_pending(pending[-1L])
+      deg_prompt_next()
     })
 
     # Load demo DEG data
@@ -585,8 +690,10 @@ enrich_tab_server <- function(
     })
     # Output uploaded file table
     output$deg_list_table <- DT::renderDT(
-      big_degdf_to_table(),
-      editable = list(target = "cell", disable = list(columns = c(3)))
+      workspace_display_dt(
+        big_degdf_to_table(),
+        editable = list(target = "cell", disable = list(columns = c(3)))
+      )
     )
     # Table editing code (ref: https://github.com/rstudio/DT/pull/480)
     observeEvent(input$deg_list_table_cell_edit, {
@@ -651,8 +758,8 @@ enrich_tab_server <- function(
     })
     # Historical inactive example: see the enrich_tab.R section in
     # The reference is in `docs/development/historical-r-examples.md`.
-    output$deg_table <- DT::renderDataTable({
-      deg_to_table()
+    output$deg_table <- DT::renderDT({
+      workspace_display_dt(deg_to_table(), labels = FALSE)
     })
 
     # Update column names when DEG table selection changes
@@ -1164,8 +1271,7 @@ enrich_tab_server <- function(
     })
     # Output uploaded file table
     output$rr_list_table <- DT::renderDT(
-      big_rrdf_to_table(),
-      editable = "cell"
+      workspace_display_dt(big_rrdf_to_table(), editable = "cell")
     )
     # Table editing code
     observeEvent(input$rr_list_table_cell_edit, {
@@ -1225,8 +1331,8 @@ enrich_tab_server <- function(
     })
 
     # output rr table
-    output$rr_table <- DT::renderDataTable({
-      rr_to_table()
+    output$rr_table <- DT::renderDT({
+      workspace_display_dt(rr_to_table(), labels = FALSE)
     })
 
     # download rr

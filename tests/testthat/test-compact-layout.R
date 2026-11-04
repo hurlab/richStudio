@@ -209,7 +209,7 @@ test_that("compact form rendering retains review, scientific and session caution
     enrich_tab_ui = c(
       "Select DEG sets to enrich",
       "Select annotation source",
-      "Select keytype",
+      "Select gene ID type",
       "Select ontology",
       "Select species",
       "Review before Run",

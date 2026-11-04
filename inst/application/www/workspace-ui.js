@@ -30,6 +30,29 @@
     });
   }
 
+  /* Copy buttons: the text to copy is in data-copy; nothing is written as HTML. */
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest && event.target.closest('.rs-copy');
+    if (!button) return;
+    var text = button.getAttribute('data-copy') || '';
+    var done = function () {
+      var label = button.getAttribute('data-label') || button.textContent;
+      button.setAttribute('data-label', label);
+      button.textContent = 'Copied';
+      window.setTimeout(function () { button.textContent = label; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () {});
+    } else {
+      var area = document.createElement('textarea');
+      area.value = text;
+      document.body.appendChild(area);
+      area.select();
+      try { document.execCommand('copy'); done(); } catch (e) { /* the command stays selectable */ }
+      document.body.removeChild(area);
+    }
+  });
+
   /* F13: an error notification does not follow the user to another step. */
   function removeNotification(node) {
     var id = node.id ? node.id.replace(/^shiny-notification-/, '') : '';

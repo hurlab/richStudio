@@ -214,7 +214,42 @@ None changed or removed. New tests only (added to `test-workspace-components.R`,
 
 ## M2 - copy and validation quick wins
 
-Not started.
+Tree: `cbb46e3` plus the M2 working-tree changes. Pinned toolchain (`node_modules` of the reconcile worktree: @playwright/test 1.56.1, axe-core 4.14.0).
+
+### Changes
+
+- F9 / AC-008: `workspace_display_dt()` (`R/round_table.R`) shows data frames with display labels (for example `from_deg` as "Source gene list", `GeneID_header` as "Gene ID column", `Representative_Term` as "Representative term", `Padj` as "Adjusted p-value"), an em-dash for unknown cells (`?`, `NA`, `NULL`, empty), p-value columns to three significant figures and the row-name column hidden (hidden, not dropped, so the editable tables' cell-edit column indexes are unchanged). Formatting is done by DT column renderers, so numeric columns still sort as numbers and the stored data frames, downloads and projects are untouched (the M0 download golden is re-checked in `test-ui-copy-and-figures.R`). Applied to the Enrichment-figures result list and Table tab, the Cluster figures list and details table, and the Enrich gene-list, result-list and preview tables (the two Enrich preview tables keep the file's own column names, `labels = FALSE`). CSS keeps long cells inside the table width.
+- F5 / N7 / OD-4 / AC-009: `deg_detect_gene_column()` (`R/file_handling.R`) recognises a column by the existing `possible_gene_id` name pattern without the first-column fallback; `add_file_degdf` is unchanged. The upload observer in `R/enrich_tab.R` adds a recognised list and confirms "Added <file>: gene column <col>, <n> rows."; for an unrecognised list it adds nothing, reports the detected columns and row count, and opens a prompt (pick the column, or Cancel). Pick adds exactly one dataset with the chosen column renamed `GeneID`; Cancel adds nothing.
+- N4 / AC-010: a missing-package error keeps the install line in the run record's `error_summary`; `workspace_jobs_environment_failure()` classifies it and yields the complete command (built from the package name when the message has none); the job status shows the message plus the command in a copyable `code.rs-job-command` with a Copy button (`workspace-ui.js`, text copied from `data-copy`, never written as HTML); `workspace_jobs_retry_offered()` returns FALSE for it and is unchanged otherwise; the notification no longer advises Retry for it.
+- N3 / AC-028: the `.rds` refusal is three short sentences (nothing was loaded; open a `.json` session or a project `.zip` instead; convert once on your own computer) with the conversion steps (download the repository ZIP, unzip, run `Rscript scripts/convert-trusted-session.R my-session.rds my-session.json` from inside the folder, needs R and jsonlite, upload the `.json`) in a closed `<details>` with a Copy button. It is an error notification, so it clears on navigation (M1).
+- F15: "View rich score or p-value?" is "Show rich score or p-value", "View Padj or Pvalue?" is "P-value type", the term-count sliders start at 1, "Select keytype" is "Select gene ID type", and the two help dialogs use the display labels.
+
+### Acceptance (new automated tests)
+
+| AC | Tests |
+|---|---|
+| AC-008 | `test-ui-copy-and-figures.R` "AC-008 ..." (5 tests: labels and untouched data, p-value formatting, hidden row-name column and renderers, module tables, M0 download golden); `ui-flows.spec.ts` "AC-008 table display" (1440x900: no raw header names, no empty row-name header, no "?" cell, p-values with at most 3 significant figures, "Adjusted p-value" header inside the table width) |
+| AC-009 | `test-input-review.R` "AC-009 ..." (5 tests: report, pick, cancel with the Save summary, valid list, detection); `ui-flows.spec.ts` "AC-009 gene-column validation" |
+| AC-010 | `test-workspace-jobs.R` "AC-010 ..." (4 tests: classification, summary, Retry offered, message and command block); `ui-flows.spec.ts` "AC-010 environment failure" |
+| AC-028 | `test-ui-copy-and-figures.R` "AC-028 ..."; `ui-flows.spec.ts` "AC-028 old session file" (at most 3 sentences, steps closed then open, command and Copy, gone after navigation) |
+
+### Changed existing-test assertions
+
+- `test-compact-layout.R`: the pinned Enrich label "Select keytype" is now "Select gene ID type" (F15 keytype wording; this file is outside the M2 list but the label change requires it).
+- `test-input-review.R` case 3: the hostile-name `.xlsx` fixture's gene column is renamed from `<b>x</b>` to `<b>x</b> gene` so it is still a recognised gene column under OD-4; every assertion is unchanged.
+- `design-system.spec.ts`: the frozen digest of `inst/application/www/custom.css` is re-pinned (M2 appends table and command styles; the file is a frozen design-system input).
+- No assertion was removed or weakened.
+
+### Verification
+
+Full browser gate (`scripts/test-workspace.sh browser`, CI environment, pinned toolchain): `4 failed`, `110 passed (15.9m)`; the failures were `design-system.spec.ts:803` in both projects (native-zoom launch only) and `ui-flows.spec.ts:205` AC-008 in both projects. The AC-008 failure was a race in the new test (it read the Results tables before they rendered); the test now polls for them, and `ui-flows.spec.ts -g AC-008` then passed in both projects. No product file changed after that gate run.
+
+### Gaps
+
+- The implementation was written before its tests this time, so no RED output was captured for M2 (the tests were then run against the finished code).
+- Deviation from the M2 file list: none of `R/cluster_tab.R`, `R/cluster_upload_tab.R` or `R/results_explorer.R` was changed, so the Cluster-page summary table (`n_terms`, `min_pvalue`), the importer page tables and the Explorer table still show their raw column names; AC-008's raw-name list is met on the tables of the files in the M2 list. Covering those tables needs those files in a milestone's list.
+- Missing-package classification matches on the message text ("is required", "no package called", "is not installed", "not available"), not on a condition class.
+- The AC-010 browser test relies on the annotation package being absent in the test environment (it asserts a failed run with an install command).
 
 ## M3 - one visual system
 

@@ -853,7 +853,11 @@
         "R/results_explorer.R",
         "R/workspace_selection.R",
         "tests/testthat/test-results-explorer.R",
-        "tests/e2e/results-explorer.spec.ts"
+        "tests/e2e/results-explorer.spec.ts",
+        "tests/e2e/scientific-heatmaps.spec.ts",
+        "tests/e2e/clustering-roundtrip.spec.ts",
+        "tests/e2e/landing-ui.spec.ts",
+        "tests/testthat/test-baseline-session-coverage.R"
       ],
       "existing_target_files": [
         "inst/application/app.R",
@@ -892,7 +896,11 @@
         "tests/testthat/test-compact-layout.R",
         "tests/e2e/compact-layout.spec.ts",
         "tests/e2e/heatmap-legibility.spec.ts",
-        "tests/testthat/test-baseline-ui-workflows.R"
+        "tests/testthat/test-baseline-ui-workflows.R",
+        "tests/e2e/scientific-heatmaps.spec.ts",
+        "tests/e2e/clustering-roundtrip.spec.ts",
+        "tests/e2e/landing-ui.spec.ts",
+        "tests/testthat/test-baseline-session-coverage.R"
       ],
       "new_target_files": [
         "R/workspace_shell.R",

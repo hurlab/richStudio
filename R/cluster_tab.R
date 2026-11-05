@@ -613,15 +613,22 @@ clusterTabServer <- function(
             clus_intermed[[key]] <- new_intermed[[key]]
           }
 
+          # One notice for a finished clustering: counts, result name and the figures action.
           showNotification(
-            paste(
-              "Clustering complete!",
-              result$new_row$n_clusters,
-              "clusters found with",
-              result$new_row$n_terms,
-              "terms"
+            tagList(
+              paste(
+                "Clustering complete!",
+                result$new_row$n_clusters,
+                "clusters found with",
+                result$new_row$n_terms,
+                "terms"
+              ),
+              tags$span(paste0(" (", name, ")")),
+              tags$br(),
+              actionLink("workspace_view_cluster_figures", "View cluster figures")
             ),
-            type = "message"
+            type = "message",
+            id = "workspace-cluster-done"
           )
 
           shinyjs::show(id = "cluster_results_box", anim = TRUE)

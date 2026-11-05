@@ -433,6 +433,12 @@ Verification
 - Layout measured with a populated workspace and a finished job: DEG upload control top 292 px at 1440x900 (limit 300) and 329 px at 390x844 (limit 420) after a final tightening of the stepper button height and the Data heading margins, no horizontal overflow.
 - Screenshots in `scratchpad/m6-shots/` (1440x900 and 390x844): Home empty, Data empty and populated, Enrich, Results, Cluster, Cluster figures, Save, and the narrow stepper open.
 
+M6 fixes (lead review of the first M6 commit)
+- RED (`scratchpad/m6f/red-e2e.txt`, three tests under "M6 fixes" in `ui-flows.spec.ts`): Save project background `rgb(226, 232, 240)` instead of the primary colour `rgb(15, 111, 197)`; the Advanced summary `::before` content was `none`; one clustering job did not give exactly one clustering notification.
+- Fixes: `.btn.btn-default.btn-primary` now wins over the global `.btn-default` !important rule (Save project and Rename DEG are primary); the Advanced summary shows a chevron (closed `\25B8`, open `\25BE`, 36 px hit area kept); the cluster step raises the single finished-clustering notice (counts, result name, "View cluster figures"), and the navigation handoff no longer raises a second one (it only remembers the result to open).
+- `custom.css` digest re-pinned again: `673316b6...` -> `91e8527e...`.
+- Verification: full testthat `RESULT files 35 tests 4368 failed 0 errors 0 skipped 0`; full browser gate via `scripts/test-workspace.sh browser`: `2 failed`, `164 passed (18.9m)` (only `design-system.spec.ts:803` in both projects). AC-019 upload top with a finished job: 292 px at 1440x900, 329 px at 390x844. Screenshots regenerated in `scratchpad/m6-shots/`.
+
 ## M7 - Enrich progressive disclosure
 
 Not started.

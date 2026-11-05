@@ -515,3 +515,61 @@ test.describe('AC-018 handoffs', () => {
     await expect(page.locator('#clus_visualize-clusdf_select')).toHaveValue('clus1');
   });
 });
+
+// ---- M6 fixes: primary button colour, Advanced affordance, one clustering notification -----------
+
+test.describe('M6 fixes', () => {
+  test('btn-primary wins over btn-default: Save project and the Data-step rename button are visually primary', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    const primary = await page.evaluate(() => {
+      const probe = document.createElement('div');
+      probe.style.background = 'var(--rs-primary)';
+      document.body.appendChild(probe);
+      const colour = getComputedStyle(probe).backgroundColor;
+      probe.remove();
+      return colour;
+    });
+    await showTab(page, 'save_tab');
+    const save = await page.locator('#save-download_project').evaluate(e => { const s = getComputedStyle(e); return { bg: s.backgroundColor, text: s.color }; });
+    expect(save.bg, 'Save project background').toBe(primary);
+    expect(save.text, 'Save project text').toBe('rgb(255, 255, 255)');
+    await showTab(page, 'update_tab');
+    const rename = await page.locator('#update-rename_deg_btn').evaluate(e => getComputedStyle(e).backgroundColor);
+    expect(rename, 'Rename DEG background').toBe(primary);
+  });
+
+  test('the Advanced disclosure shows a marker that differs between closed and open', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await showTab(page, 'save_tab');
+    const summary = page.locator('#shiny-tab-save_tab details.rs-advanced > summary');
+    const marker = () => summary.evaluate(e => { const s = getComputedStyle(e, '::before'); return { content: s.content, height: e.getBoundingClientRect().height }; });
+    const closed = await marker();
+    expect(closed.content, 'closed marker').not.toMatch(/^(none|normal)$/);
+    expect(closed.height).toBeGreaterThanOrEqual(36);
+    await summary.click();
+    const open = await marker();
+    expect(open.content, 'open marker').not.toMatch(/^(none|normal)$/);
+    expect(open.content).not.toBe(closed.content);
+  });
+
+  test('one clustering job raises exactly one clustering notification, carrying the counts, the name and the figures action', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await page.locator('#home-load_demo').click();
+    await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
+    await showTab(page, 'cluster_tab');
+    await choose(page, 'cluster-selected_rrs', 'go1');
+    await choose(page, 'cluster-selected_rrs', 'go2');
+    await page.locator('#cluster-cluster_name').fill('clus1');
+    await page.locator('#cluster-cluster').click();
+    const done = page.locator('.shiny-notification').filter({ hasText: /Clustering (complete|finished)/ });
+    await expect(done.first()).toBeVisible({ timeout: 120_000 });
+    await page.waitForTimeout(1500);
+    await expect(done).toHaveCount(1);
+    await expect(done).toContainText(/\d+ clusters found with \d+ terms/);
+    await expect(done).toContainText('clus1');
+    await expect(done.getByText('View cluster figures', { exact: true })).toBeVisible();
+  });
+});

@@ -725,13 +725,9 @@ workspace_handoffs <- function(
           if (!length(outputs)) {
             next
           }
+          # The finished-clustering notice itself (counts, name, "View cluster figures")
+          # is raised once, by the cluster step; this only remembers which result to open.
           seen$figures <- outputs[[1L]]
-          notice(
-            paste0("Clustering finished: ", outputs[[1L]], "."),
-            "workspace_view_cluster_figures",
-            "View cluster figures",
-            "workspace-cluster-done"
-          )
         }
       })
     })

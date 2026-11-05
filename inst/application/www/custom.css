@@ -2312,3 +2312,32 @@ body:has(#shiny-tab-update_tab.active, #shiny-tab-enrich_tab.active, #shiny-tab-
 #shiny-tab-update_tab .nav-tabs-custom {
   margin-bottom: 10px;
 }
+
+/* btn-primary wins over the global btn-default rule wherever both classes are present. */
+.btn.btn-default.btn-primary {
+  background: var(--rs-primary) !important;
+  border-color: var(--rs-primary-dark) !important;
+  color: #ffffff !important;
+}
+.btn.btn-default.btn-primary:hover,
+.btn.btn-default.btn-primary:focus {
+  background: var(--rs-primary-dark) !important;
+}
+
+/* The Advanced disclosure shows an open/closed marker. */
+.rs-advanced > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+}
+.rs-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+.rs-advanced > summary::before {
+  content: "\25B8";
+  font-size: 14px;
+}
+.rs-advanced[open] > summary::before {
+  content: "\25BE";
+}

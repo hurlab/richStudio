@@ -13,7 +13,7 @@ const requireLocal = createRequire(__filename);
 const url = 'http://127.0.0.1:3872';
 const frozen = {
   'R/workspace_components.R': '9af4994ffa7abc1ad70ff1f8bc57c7b6b8826163197db22b3fccd4fd20180b39',
-  'inst/application/www/custom.css': '673316b613d94476d93dbbddf9e8f5fe27083f8703889f836afcb949734f41bf',
+  'inst/application/www/custom.css': '91e8527eeff1cad0db5b71dbf988e2bd55b6421d48f12649104d72c418b5c3c1',
   'tests/testthat/test-workspace-components.R': '7f1c2c41fa784b0f514027d614f5ec73aa62ee51c23f1a5febc6ca47ca68f908',
   'docs/design/workspace-design-system.md': '808b54610ab346c3037aaff2a9309baf24ab3a7d53862d9febea4a8f396d0ef0',
   'docs/design/workspace-screens.md': '448758fb68c9d005f6e69f18fc179a76d7ce35e705d8fcec3944705d4f9a527d',

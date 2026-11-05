@@ -121,6 +121,32 @@ test.describe('AC-015 job rows in the tray (supersedes AC-002)', () => {
       expect(colour).not.toBe('rgb(199, 37, 78)');
       expect(colour).not.toBe('rgb(220, 53, 69)');
     }
+
+    // Each job's status is named once in the visible tray text; the live region and the status paragraphs are
+    // present for assistive technology but not a second visible copy.
+    const visibleStatusWords = () => tray.evaluate(root => {
+      const word = /\b(Succeeded|Failed|Cancelled|Interrupted|Detached|Running|Queued)\b/;
+      const seen = (e: Element) => { const r = e.getBoundingClientRect(); const c = getComputedStyle(e);
+        return r.width > 2 && r.height > 2 && c.visibility !== 'hidden' && c.display !== 'none' && !e.closest('.rs-sr-only'); };
+      return Array.from(root.querySelectorAll('*')).filter(e => seen(e) &&
+        Array.from(e.childNodes).some(n => n.nodeType === 3 && word.test(n.textContent ?? ''))).map(e => e.textContent!.trim());
+    });
+    expect(await visibleStatusWords(), 'visible status words, one per job').toHaveLength(2);
+    const announce = page.locator('#jobs-jobs_announce');
+    await expect(announce).toHaveAttribute('aria-live', 'polite');
+    expect((await page.locator('.rs-sr-only:has(#jobs-jobs_announce)').boundingBox())!.width, 'announce is visually hidden').toBeLessThanOrEqual(2);
+    expect(await page.locator('#jobs-jobs_status').innerText()).not.toMatch(/Succeeded Succeeded/);
+
+    // Dismiss hides a finished row for this session only; the live registry and the other row stay.
+    const dismiss = tray.getByRole('button', { name: 'Dismiss' });
+    await expect(dismiss).toHaveCount(2);
+    await dismiss.first().click();
+    await expect(rows.locator('visible=true')).toHaveCount(1);
+    await expect(badge).toHaveText('1 job finished');
+    await expect(tray.getByRole('button', { name: 'Dismiss' })).toHaveCount(1);
+    await page.reload();
+    await connected(page);
+    await expect(page.locator('#jobs-job_badge')).toHaveCount(0);
   });
 });
 

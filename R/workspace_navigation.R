@@ -312,7 +312,7 @@ workspace_header_content_ui <- function(id = "workspace") {
     workspace_jobs_badge_ui("jobs"),
     shiny::tags$button(
       type = "button",
-      class = "btn btn-default btn-sm rs-context-toggle",
+      class = "rs-context-toggle",
       `aria-expanded` = "false",
       `aria-controls` = ns("context-more"),
       "Details"

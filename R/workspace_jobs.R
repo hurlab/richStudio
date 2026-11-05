@@ -1557,7 +1557,12 @@ workspace_jobs_ui <- function(id) {
       # "off" and jobs_announce is the one polite job-status region.
       shiny::uiOutput(ns("jobs_list"), `aria-live` = "off"),
       shiny::uiOutput(ns("jobs_status"), `aria-live` = "off"),
-      shiny::uiOutput(ns("jobs_announce"), `aria-live` = "polite"),
+      # Visually hidden, not display:none: the live region keeps announcing while
+      # the visible row names each status once.
+      shiny::tags$div(
+        class = "rs-sr-only",
+        shiny::uiOutput(ns("jobs_announce"), `aria-live` = "polite")
+      ),
       shiny::uiOutput(ns("jobs_time"), `aria-live` = "off")
     )
   )
@@ -1703,12 +1708,26 @@ workspace_jobs_time_value <- function(x) {
   x
 }
 
+# Finished rows of this session's own runs can be dismissed from the tray; the
+# registry is untouched, the row is only hidden for this session. Rows imported
+# from a saved analysis keep their action-free form.
+workspace_jobs_dismissable <- function(jobs, rec) {
+  rec$state %in%
+    c("succeeded", "failed", "cancelled", "interrupted") &&
+    !(rec$run_id %in% jobs$in_flight) &&
+    !(rec$run_id %in% jobs$imported)
+}
+
 workspace_jobs_server <- function(id, jobs) {
   shiny::moduleServer(id, function(input, output, session) {
     ns <- session$ns
+    dismissed <- shiny::reactiveVal(character())
+    shown_records <- function() {
+      Filter(function(r) !(r$run_id %in% dismissed()), jobs$records)
+    }
     output$jobs_list <- shiny::renderUI({
       jobs$tick()
-      records <- jobs$records
+      records <- shown_records()
       if (!length(records)) {
         return(NULL)
       }
@@ -1743,6 +1762,17 @@ workspace_jobs_server <- function(id, jobs) {
                   list(workspace_jobs_button(ns, "retry", rec$run_id, "Retry"))
                 )
               }
+              if (workspace_jobs_dismissable(jobs, rec)) {
+                buttons <- c(
+                  buttons,
+                  list(workspace_jobs_button(
+                    ns,
+                    "dismiss",
+                    rec$run_id,
+                    "Dismiss"
+                  ))
+                )
+              }
               workspace_jobs_row(ns, rec, buttons)
             },
             error = function(e) {
@@ -1757,7 +1787,7 @@ workspace_jobs_server <- function(id, jobs) {
     })
     output$jobs_status <- shiny::renderUI({
       jobs$tick()
-      records <- jobs$records
+      records <- shown_records()
       if (
         any(vapply(
           records,
@@ -1777,11 +1807,24 @@ workspace_jobs_server <- function(id, jobs) {
           {
             note <- rec$note
             summary <- rec$error_summary
+            has_note <- !is.null(note) && !is.na(note) && nzchar(note)
+            has_summary <- !is.null(summary) &&
+              !is.na(summary) &&
+              nzchar(summary)
+            # The row already names the state: this paragraph stays for assistive
+            # technology, and is visible only when it adds a note or an error.
             shiny::tags$p(
-              class = "rs-job-status",
+              class = if (has_note || has_summary) {
+                "rs-job-status"
+              } else {
+                "rs-job-status rs-sr-only"
+              },
               shiny::tags$code(substr(rec$run_id, 1L, 8L)),
               " ",
-              workspace_jobs_status_line(jobs, rec),
+              shiny::tags$span(
+                class = "rs-sr-only",
+                workspace_jobs_status_line(jobs, rec)
+              ),
               if (!is.null(note) && !is.na(note) && nzchar(note)) {
                 paste0(" \u2014 ", note)
               },
@@ -1860,10 +1903,20 @@ workspace_jobs_server <- function(id, jobs) {
     }
     output$badge <- shiny::renderUI({
       jobs$tick()
-      workspace_job_badge(jobs$records, tray_id = session$ns("tray"), id = session$ns("job_badge"))
+      workspace_job_badge(shown_records(), tray_id = session$ns("tray"), id = session$ns("job_badge"))
     })
     shiny::outputOptions(output, "badge", suspendWhenHidden = FALSE)
     shiny::observeEvent(input$job_action, {
+      value <- input$job_action
+      if (is.list(value) && identical(value$action, "dismiss")) {
+        rec <- if (is.character(value$run) && length(value$run) == 1L) {
+          workspace_jobs_record(jobs, value$run)
+        }
+        if (!is.null(rec) && workspace_jobs_dismissable(jobs, rec)) {
+          dismissed(unique(c(dismissed(), rec$run_id)))
+        }
+        return()
+      }
       workspace_jobs_contain(
         {
           valid <- workspace_jobs_action_valid(jobs, input$job_action)

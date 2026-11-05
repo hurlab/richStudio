@@ -177,6 +177,55 @@ for (const vp of VIEWPORTS) {
   });
 }
 
+// A finished clustering job puts the job badge into the bar; the collapsed bar must still fit its limit.
+for (const vp of VIEWPORTS) {
+  test.describe(`AC-014 context bar with a job at ${vp.width}x${vp.height}`, () => {
+    test('the collapsed bar stays within its height limit with the job badge showing, and the badge keeps a 36 px hit area', async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await populated(page);
+      await showTab(page, 'cluster_tab');
+      await choose(page, 'cluster-selected_rrs', 'go1');
+      await choose(page, 'cluster-selected_rrs', 'go2');
+      await page.locator('#cluster-cluster_name').fill('clus1');
+      await page.locator('#cluster-cluster').click();
+      const badge = page.locator('#jobs-job_badge');
+      await expect(badge).toHaveText(/1 job (running|finished)/, { timeout: 30_000 });
+      await expect(badge).toHaveText('1 job finished', { timeout: 120_000 });
+      for (const tab of ['enrich_tab', 'rr_visualize_tab', 'cluster_tab']) {
+        await showTab(page, tab);
+        const bar = page.locator('.rs-context-bar').locator('visible=true');
+        await expect(bar, `${tab} bar`).toHaveCount(1);
+        const box = await bar.first().boundingBox();
+        expect(box!.height, `${tab} bar height with a job`).toBeLessThanOrEqual(vp.bar);
+        const hit = await badge.boundingBox();
+        expect(hit!.height, `${tab} badge height`).toBeGreaterThanOrEqual(36);
+        expect(hit!.width, `${tab} badge width`).toBeGreaterThanOrEqual(36);
+        const toggle = page.locator('.rs-context-toggle');
+        if (vp.width < 768) {
+          // The collapsed narrow bar keeps switcher, trigger, badge and toggle in one row.
+          const toggleBox = await toggle.boundingBox();
+          expect(toggleBox!.y, `${tab} toggle on the first row`).toBeLessThan(box!.y + 50);
+          const style = await toggle.evaluate(e => { const c = getComputedStyle(e); return { colour: c.color, border: c.borderTopColor }; });
+          // The toggle is a secondary button like the others, not a greyed-out control.
+          expect(style.colour, `${tab} toggle text colour`).toBe('rgb(30, 41, 59)');
+          expect(style.border, `${tab} toggle border colour`).toBe('rgb(100, 116, 139)');
+        }
+      }
+      // The badge words the server writes for other job mixes (AC-015: one running and two finished jobs says
+      // "1 job running"; two running jobs say "2 jobs running"; a queue is worded compactly as "2 running, 1 queued"). The layout is measured
+      // with each text in place of the finished one, on every page that carries the bar.
+      for (const tab of ['enrich_tab', 'rr_visualize_tab', 'cluster_tab']) {
+        await showTab(page, tab);
+        for (const words of ['1 job running', '2 jobs running', '2 running, 1 queued']) {
+          await badge.evaluate((e, w) => { e.textContent = w; }, words);
+          const box = await page.locator('.rs-context-bar').locator('visible=true').first().boundingBox();
+          expect(box!.height, `${tab} bar height with "${words}"`).toBeLessThanOrEqual(vp.bar);
+        }
+      }
+    });
+  });
+}
+
 test.describe('AC-016 layout without the card and the inline job log', () => {
   for (const vp of [{ width: 1440, height: 900, top: 200 }, { width: 390, height: 844, top: 260 }]) {
     test(`Cluster form heading is within ${vp.top} px at ${vp.width}x${vp.height} and nothing overflows`, async ({ page }) => {

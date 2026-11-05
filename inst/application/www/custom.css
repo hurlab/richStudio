@@ -2003,6 +2003,7 @@ body:has(#shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shin
 @media (max-width: 767px) {
   .rs-context-bar {
     flex-wrap: wrap;
+    gap: 4px;
     padding: 4px 8px;
   }
   .rs-context-bar .form-group {
@@ -2012,7 +2013,12 @@ body:has(#shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shin
     display: inline-block;
     min-height: 36px;
     min-width: 36px;
-    padding: 4px 8px;
+    padding: 4px 6px;
+    font-size: 12px;
+    color: var(--rs-text);
+    background: var(--rs-bg-card);
+    border: 1px solid var(--rs-text-secondary);
+    border-radius: var(--rs-radius-sm);
   }
   /* Collapsed: the switcher, the "not recorded" trigger, the job badge and the toggle stay in
      one row; the name, the chips, the note and the actions appear when the toggle is opened. */
@@ -2044,11 +2050,23 @@ body:has(#shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shin
     min-height: 36px;
     line-height: 36px;
     white-space: nowrap;
-    font-size: 13px;
+    font-size: 12px;
   }
   .rs-context-bar .form-group {
-    flex: 1 1 90px;
-    min-width: 90px;
+    flex: 1 1 64px;
+    min-width: 64px;
+  }
+  /* These two carry the bar's own button rule (min-height 40, 12 px side padding), so they repeat the bar scope. */
+  .rs-context-bar .rs-job-badge,
+  .rs-context-bar .rs-context-toggle {
+    min-height: 36px;
+    padding: 4px 5px;
+    font-size: 12px;
+  }
+  .rs-context-bar .rs-context-toggle {
+    color: var(--rs-text);
+    background: var(--rs-bg-card);
+    border-color: var(--rs-text-secondary);
   }
   .rs-job-badge {
     margin-left: 0;
@@ -2108,4 +2126,17 @@ body:has(#shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shin
   .rs-job-tray {
     transition: none !important;
   }
+}
+
+/* Visually hidden, still read by assistive technology (not display: none). */
+.rs-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }

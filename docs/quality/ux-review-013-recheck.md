@@ -362,10 +362,24 @@ RED
 - `scratchpad/m5-red-testthat.txt` (test-workspace-shell.R and navigation failures) and `scratchpad/m5-red-e2e.txt` (7 desktop failures: job-lifecycle, ui-accessibility, ui-flows AC-015, ui-layout AC-014 x2 and AC-016 x2) were captured before any implementation.
 
 
+M5 follow-up (lead verification of 505773e)
+
+- Defect: the 390x844 context bar was 102 px tall once a job existed (limit 64); the AC-014 test never measured the bar with the badge showing. RED: the new test `AC-014 context bar with a job at 390x844` failed on 505773e with `Expected: <= 64 / Received: 102` (`scratchpad/m5b/red-e2e.txt`, both projects); the desktop twin (54 px) passed.
+- Fix: on narrow viewports the bar tightens its gaps (6 px), the switcher shrinks to a 64 px minimum, the badge and the Details toggle use 4x6 px padding at 12 px text and keep a 36 px hit area. Measured at 390x844 with "1 job finished": switcher 96, trigger 85, badge 93, toggle 56 px, one row, bar 54 px. The badge text is unchanged ("1 job finished"/"1 job running"). The test also measures the bar with the badge words of other mixes (lead addition): "1 job running" (what one running plus two finished jobs says), "2 jobs running" and the queue mix. The queue mix initially wrapped (86 px, RED), so with running plus queued jobs the badge now reads "2 running, 1 queued" with `aria-label="2 running, 1 queued jobs"` (the name starts with the visible words); gaps went to 4 px and badge/toggle padding to 4x5 px. The mixes were measured by writing each text into the badge, not by running real jobs.
+- Toggle looked disabled: the `btn btn-default` classes pull in `.btn-default { color/border !important }`; the toggle no longer carries them and is styled by its own rule (text `--rs-text`, border `--rs-text-secondary`, no opacity). Asserted in the same test (`rgb(30, 41, 59)` / `rgb(100, 116, 139)`).
+- Tray status duplication: RED `ui-flows.spec.ts` AC-015 test found 5 visible status words for 2 jobs (`scratchpad/m5b/red-e2e.txt`). `jobs_announce` is now visually hidden with the `rs-sr-only` pattern (kept as the one polite live region, not display:none); each `jobs_status` paragraph is visually hidden unless it carries a note or an error, and then only its status word is hidden. The tray names each job's status once (asserted: 2 visible status words for 2 jobs; announce box width <= 2 px).
+- Dismiss: finished rows (succeeded, failed, cancelled, interrupted) of the session's own runs get a Dismiss button; it hides the row, its status paragraph and its share of the badge count for the session. It is a view setting in `workspace_jobs_server` (a reactiveVal), so the registry is untouched and a page reload shows nothing dismissed. Not offered for queued/running/stop-requested/detached rows, for imported rows, or for superseded rows (existing assertions R13e and R28 require those rows to carry no buttons, so they were not changed). Tests: three `test_that` blocks in `test-workspace-shell.R` (finished-only offer, hidden row and count, last row removes the badge) and the Dismiss steps in the `ui-flows.spec.ts` AC-015 test.
+- Changed assertions: none removed; added assertions only. `design-system.spec.ts` custom.css digest re-pinned a second time, `df2f13a6...` -> `8f1f9883...`, because the narrow bar rules, the toggle styling and `.rs-sr-only` were added after the marker; the pre-marker md5 stays `5f71dabdcf3df0ea8d7f66367f463678`.
+
 Verification
 - Full testthat (installed candidate, CI library): `RESULT files 35 tests 4224 failed 0 errors 0 skipped 0` (the two `test-dependency-integration.R` environment errors did not occur in this run).
 - Full browser gate (fresh scratch, pinned toolchain): `6 failed`, `134 passed (19.1m)`. `design-system.spec.ts:803` fails in both projects (native-zoom launch only). `baseline.spec.ts:25` and `:51` failed in both projects only because this scratch had no `resources/render.json` (the CI `resource_measurements render` pre-step was not run); after running that step they pass (`8 passed`).
 - Screenshots (1440x900 and 390x844, tray closed and open): `scratchpad/m5-shots/`.
+
+Follow-up verification
+- Full testthat (final build, CI library): `RESULT files 35 tests 4245 failed 0 errors 0 skipped 0`.
+- Full browser gate via `scripts/test-workspace.sh browser` in a fresh scratch (render pre-step included): `2 failed`, `142 passed (18.2m)`; the failures are `design-system.spec.ts:803` in both projects (native-zoom launch only).
+- Screenshots regenerated in `scratchpad/m5-shots/` (1440x900 and 390x844: Enrich, Enrichment figures and Cluster with the tray closed and open; 390x844 Cluster with Details open).
 
 ## M6 - task stepper, Data step and information architecture
 

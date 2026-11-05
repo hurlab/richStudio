@@ -26,13 +26,18 @@ workspace_job_plural <- function(n, noun = "job") {
 
 # The badge text states the live work first: "1 job running", "2 jobs running, 1
 # queued", "1 job queued"; with no live work it counts the finished jobs.
-workspace_job_badge_text <- function(counts) {
+workspace_job_badge_text <- function(counts, full = TRUE) {
   if (counts$running > 0L) {
-    text <- paste(workspace_job_plural(counts$running), "running")
     if (counts$queued > 0L) {
-      text <- paste0(text, ", ", counts$queued, " queued")
+      # Compact when both are shown, so the narrow context bar keeps one row.
+      return(paste0(
+        if (full) workspace_job_plural(counts$running) else counts$running,
+        " running, ",
+        counts$queued,
+        " queued"
+      ))
     }
-    return(text)
+    return(paste(workspace_job_plural(counts$running), "running"))
   }
   if (counts$queued > 0L) {
     return(paste(workspace_job_plural(counts$queued), "queued"))
@@ -50,10 +55,15 @@ workspace_job_badge <- function(records, tray_id = "jobs-tray", id = "jobs-job_b
     id = id,
     type = "button",
     class = "rs-job-badge",
+    # The accessible name starts with the visible words and adds the noun the
+    # compact wording leaves out.
+    `aria-label` = if (counts$running > 0L && counts$queued > 0L) {
+      paste(workspace_job_badge_text(counts, full = FALSE), "jobs")
+    },
     `aria-controls` = tray_id,
     `aria-expanded` = "false",
     `data-running` = counts$running + counts$queued,
-    workspace_job_badge_text(counts)
+    workspace_job_badge_text(counts, full = FALSE)
   )
 }
 

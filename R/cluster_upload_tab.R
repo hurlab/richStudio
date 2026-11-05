@@ -38,26 +38,6 @@ cluster_upload_tab_ui <- function(id, tabName) {
             h4("Load demo"),
             p("Loads sample enrichment results: 'go1', 'go2', 'kegg1'"),
             actionButton(ns("rr_load"), "Load data")
-          ),
-          tabPanel(
-            "Text input",
-            helpText(
-              paste0(
-                "This functionality is currently not available, ",
-                "but will be supported in the future."
-              )
-            ),
-            textAreaInput(
-              ns("rr_text"),
-              "Text Input",
-              placeholder = "Paste dataframe-like object"
-            ),
-            textInput(
-              ns("rrtext_name"),
-              "Name",
-              placeholder = "Set name for pasted enrichment result"
-            ),
-            actionButton(ns("upload_rrtext"), "Upload")
           )
         ),
         review_result_intake_ui(ns),

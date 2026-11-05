@@ -132,6 +132,7 @@ async function uploadComplete(page: Page, id: string) {
 
 async function loadSessionFile(page: Page, file: string) {
   await goToTab(page, 'save_tab');
+  await page.locator('#shiny-tab-save_tab details.rs-advanced').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   await page.locator('#save-load_session_file').setInputFiles(file);
   await uploadComplete(page, 'save-load_session_file');
   await page.locator('#save-load_session').click();
@@ -194,6 +195,7 @@ test('clustering plot controls refresh, session restore rebuilds tracking lists,
 
   await goToTab(page, 'save_tab');
   await page.locator('#save-session_name').fill('clustering-roundtrip');
+  await page.locator('#shiny-tab-save_tab details.rs-advanced').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.locator('#save-download_session').click(),

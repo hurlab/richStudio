@@ -1,71 +1,74 @@
-enrich_tab_ui <- function(id, tabName) {
+# The "Upload DEG sets" box. It sits on the Data step (SPEC-WS-013 M6) under this
+# module's namespace, so every id is unchanged.
+enrich_upload_box_ui <- function(ns) {
+  tabBox(
+    title = span(icon("upload"), "Upload DEG sets"),
+    id = "upload_box",
+    width = NULL,
+    tabPanel(
+      "File upload",
+      fileInput(
+        ns("deg_files"),
+        "Select files",
+        multiple = TRUE,
+        accept = c(".csv", ".tsv", ".xls", ".xlsx", ".txt")
+      ),
+      helpText("Accepted formats: .txt, .csv, .tsv, .xls, .xlsx"),
+      textOutput(ns("deg_upload_status")),
+      hr(),
+      h4("Load demo"),
+      p(
+        paste0(
+          "Loads sample DEG sets: 'deg_mouse1', ",
+          "'deg_mouse2', 'deg_mouse3'"
+        )
+      ),
+      actionButton(ns("deg_load"), "Load data")
+    ),
+    tabPanel(
+      "Text input",
+      helpText(
+        "Separate genes with spaces, new lines, commas or semicolons"
+      ),
+      textAreaInput(
+        ns("deg_text"),
+        "Text Input",
+        placeholder = paste0(
+          "Paste list of significant genes or ",
+          "dataframe-like object"
+        )
+      ),
+      textInput(
+        ns("degtext_name"),
+        "Name",
+        placeholder = "Set name for pasted DEG set"
+      ),
+      fluidRow(
+        div(
+          style = "display:inline-block; float:left",
+          column(3, actionButton(ns("upload_degtext"), "Upload"))
+        ),
+        div(
+          style = "display:inline-block; float:left",
+          column(3, actionButton(ns("degtext_load"), "Load demo"))
+        )
+      )
+    )
+  )
+}
+
+enrich_tab_ui <- function(id, tabName, upload = TRUE) {
   ns <- NS(id)
   htmltools::tagAppendAttributes(
     tabItem(
       tabName = tabName,
       shinyjs::useShinyjs(),
       fluidRow(
+        if (upload) {
+          column(width = 4, enrich_upload_box_ui(ns))
+        },
         column(
-          width = 4,
-          tabBox(
-            title = span(icon("upload"), "Upload DEG sets"),
-            id = "upload_box",
-            width = NULL,
-            tabPanel(
-              "File upload",
-              h4("Upload files"),
-              p("Upload gene differential expression data from local computer"),
-              helpText("Accepted formats: .txt, .csv, .tsv, .xls, .xlsx"),
-              fileInput(
-                ns("deg_files"),
-                "Select files",
-                multiple = TRUE,
-                accept = c(".csv", ".tsv", ".xls", ".xlsx", ".txt")
-              ),
-              textOutput(ns("deg_upload_status")),
-              hr(),
-              h4("Load demo"),
-              p(
-                paste0(
-                  "Loads sample DEG sets: 'deg_mouse1', ",
-                  "'deg_mouse2', 'deg_mouse3'"
-                )
-              ),
-              actionButton(ns("deg_load"), "Load data")
-            ),
-            tabPanel(
-              "Text input",
-              helpText(
-                "Separate genes with spaces, new lines, commas or semicolons"
-              ),
-              textAreaInput(
-                ns("deg_text"),
-                "Text Input",
-                placeholder = paste0(
-                  "Paste list of significant genes or ",
-                  "dataframe-like object"
-                )
-              ),
-              textInput(
-                ns("degtext_name"),
-                "Name",
-                placeholder = "Set name for pasted DEG set"
-              ),
-              fluidRow(
-                div(
-                  style = "display:inline-block; float:left",
-                  column(3, actionButton(ns("upload_degtext"), "Upload"))
-                ),
-                div(
-                  style = "display:inline-block; float:left",
-                  column(3, actionButton(ns("degtext_load"), "Load demo"))
-                )
-              )
-            )
-          )
-        ),
-        column(
-          width = 8,
+          width = if (upload) 8 else 12,
           box(
             title = "Enrich",
             status = "primary",

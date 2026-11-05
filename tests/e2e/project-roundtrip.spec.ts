@@ -84,7 +84,17 @@ async function downloadProject(page: Page, info: TestInfo, name: string): Promis
   return target;
 }
 
+// Opening a project is a Data-step control (SPEC-WS-013 M6); the Save step keeps saving.
+async function openDataTab(page: Page) {
+  await openSidebar(page);
+  const link = page.locator('.sidebar-menu a[href="#shiny-tab-update_tab"]');
+  await link.click();
+  await closeNavigation(page);
+  await expect(page.locator('#shiny-tab-update_tab')).toHaveClass(/\bactive\b/);
+}
+
 async function openProject(page: Page, file: string) {
+  await openDataTab(page);
   await page.locator('#save-load_project_file').setInputFiles(file);
   // The upload must finish before Open is pressed.
   await expect.poll(async () => page.locator('#save-load_project_file_progress .progress-bar').textContent())
@@ -136,11 +146,13 @@ test('REQ-001 REQ-003 REQ-004 AC-001 AC-003 a project saves, is inspected, and o
   await fs.writeFile(bad, 'this is not a zip archive');
   await openProject(page, bad);
   await expect(page.locator('.shiny-notification-error')).toContainText('Project could not be opened');
+  await openSaveTab(page);
   await expect(page.locator('#save-rr_summary')).toContainText('No enrichment results');
 
   // 4. The saved project opens and restores exactly the saved results.
   await openProject(page, saved);
-  await expect(page.locator('.shiny-notification-message')).toContainText('Project opened successfully');
+  await expect(page.locator('.shiny-notification-message').filter({ hasText: 'Project opened successfully' })).toBeVisible();
+  await openSaveTab(page);
   await expect(page.locator('#save-rr_summary')).toContainText('go1');
   await expect(page.locator('#save-rr_summary')).toContainText('go2');
   await expect(page.locator('#save-rr_summary')).toContainText('kegg1');

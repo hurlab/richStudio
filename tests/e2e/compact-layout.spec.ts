@@ -63,7 +63,10 @@ async function choose(page: Page, id: string, value: string) {
 }
 
 async function demo(page: Page) {
+  // The DEG upload sits on the Data step (SPEC-WS-013 M6).
+  await tab(page, 'update_tab');
   await page.locator('#enrich-deg_load').click();
+  await tab(page, 'enrich_tab');
   await expect(page.locator('#enrich-deg_list_table')).toContainText('deg_mouse1');
   await choose(page, 'enrich-deg_table_select', 'deg_mouse1');
   await choose(page, 'enrich-degs_to_enrich', 'deg_mouse1');

@@ -383,7 +383,55 @@ Follow-up verification
 
 ## M6 - task stepper, Data step and information architecture
 
-Not started.
+Decisions
+- The stepper (`workspace_stepper_ui`/`workspace_stepper_content`) sits above the context bar on every page. Five steps in order (Data, Enrich, Results, Cluster, Save), each a native button with a textual status (`workspace_step_status`, derived from the counts of gene lists, imported results, results made by enrichment and cluster results), the next action in its `title` and in text read by assistive technology, and `aria-current="step"` on the current one. Every step opens whatever the status says; a click calls the sidebar anchor of its route. At 390x844 one "Step N of 5: Name" disclosure replaces the list (custom.css shows one of the two).
+- Navigation is one flat list in task order: Home, Data (`update_tab`), Upload files (`cluster_upload_tab`, the importer sub-route, kept as a sidebar anchor and with its caption because `baseline.spec.ts` clicks a link named "Upload files"), Enrich, Enrichment figures, Cluster, Cluster figures, Save. No collapsible groups, no section headers. Route `tabName` strings are unchanged.
+- Data (`update_tab`, `updateTabUI(data_step = TRUE)`) hosts the DEG upload (`enrich_upload_box_ui`), the "Load enrichment result" box with its input review (`rr_load_box_ui`) and "Open project" (`save_open_project_ui`), each under its own module namespace so every id is unchanged, above the existing rename/remove boxes. The module UI functions keep their default output (`enrich_tab_ui(upload = TRUE)`, `saveTabUI(open_project = TRUE)`, `updateTabUI(data_step = FALSE)`) so the per-module control contract in `test-compact-layout.R` is unchanged; `app.R` composes the Data step by passing `upload = FALSE`, `open_project = FALSE`, `data_step = TRUE`. `rr_vis_tab_ui` loses the loader outright (REQ-015 moves it).
+- The context bar also shows on Data. Home "Upload gene lists" now opens Data and "Open saved analysis" became "Open project" and opens Data, because both controls live there.
+- Removed (REQ-015): the three inert "Text input" tabs (`rr_text`, `rrtext_name`, `upload_rrtext` in the Results page and the importer; `rr_text`, `clustext_name`, `upload_clustext` in Cluster figures) and the whole "Load cluster result" panel (`clus_files`) from Cluster figures. The importer keeps its file upload. The working DEG "Text input" tab stays (it has observers) and now sits on Data.
+- Save: one primary "Save project" (the project download), project name field (default `richstudio_project_<time>_<id>`, so the download name matches `^richstudio_project_.*\.zip$`), and the JSON session (download and load) under an "Advanced: JSON session" disclosure. "Bookmark" left the sidebar; a "Share link" bookmark button sits in the page footer.
+- Handoffs (REQ-009): a "Loaded N results" / "Loaded N gene lists" notification with a next action (Cluster these results / Go to Enrich) whenever data are added; a dataset switch in the context bar sets the Cluster and Results selectors to it (a dataset made active by the demo load does not, so the existing flows that pick results by hand are unchanged); opening Enrich with an empty selection selects the gene list the active result came from; a "Clustering finished" notification with "View cluster figures", which opens Cluster figures with the new result selected; the enrichment heatmap result selector defaults to the first result when nothing is selected.
+
+RED (run on b08dbad)
+- testthat: `scratchpad/m6/red-testthat-shell.txt` (10+ failures/errors: step status, stepper content, flat sidebar, Data step composition, no inert tabs, Save step) and `scratchpad/m6/red-testthat.txt` (compact-layout and navigation assertions edited first).
+- Browser: `scratchpad/m6/red-e2e.txt`: 8 desktop failures for AC-017 (2), AC-018 (2), AC-019 (4).
+
+Changed or removed existing assertions (reason)
+- `test-compact-layout.R`: removed `rr_files`, `rr_load`, `rr_text`, `rrtext_name`, `upload_rrtext` from the Results contract, `rr_text`, `rrtext_name`, `upload_rrtext` from the importer contract and `clus_files`, `rr_text`, `clustext_name`, `upload_clustext` from the Cluster figures contract (the controls the SPEC removes or moves, REQ-015/M6). `rr_files` and `rr_load` stay in the importer contract.
+- `test-workspace-navigation.R`: Home action label "Open saved analysis" -> "Open project", and the Home actions "Upload gene lists" and "Open project" now navigate to `update_tab` (their controls live on Data); the sidebar caption test lost the two group tabNames and now expects the flat captions (Data, Save) and no `menu-open`; the "routes every action through the sidebar" test also allows the Results selectors that a dataset switch now sets (AC-018).
+- `ui-flows.spec.ts`: the loaders are clicked on Data (`#enrich-deg_load`, `#rr_visualize-rr_load`, project open), the AC-009 list-of-sets checks visit Enrich for the list (the list box stays on Enrich), the AC-028 test opens the Advanced disclosure, the success-toast overlap check measures the Data step's primary action (`#save-load_project`) instead of the former Save-page button, and the AC-001 populated test now expects the heatmap selector to default to `go1` instead of choosing it.
+- `ui-layout.spec.ts`: the AC-011 test loads the demo gene lists from Data.
+- `workspace-entry.spec.ts`: Home entries and labels follow the table above (the open-project landing is the Data step's project file control); the Save route caption regexp is `/Save/`.
+- `compact-layout.spec.ts`: `demo()` loads the demo gene lists from Data, then returns to Enrich. `input-review.spec.ts`: the Home "Upload gene lists" entry lands on Data, and the two results-loader checks run on Data. `project-roundtrip.spec.ts`: opening a project happens on Data, the Save summaries are read on Save.
+- `design-system.spec.ts`: custom.css digest re-pinned (before `8f1f9883...`, after `e8345029`)... because M6 appended the stepper, flat-navigation, footer and Data-step rules after the SPEC-WS-002 marker.
+
+Removed ids (REQ-015) and the contract line adjusted for each
+| Removed id | Module namespace | REQ-015 item | `test-compact-layout.R` contract line |
+|---|---|---|---|
+| `rr_text`, `rrtext_name`, `upload_rrtext` | `rr_visualize` | inert "Text input" tab in `rr_vis_tab_ui` | removed from the `rr_visualize` ids |
+| `rr_text`, `rrtext_name`, `upload_rrtext` | `cluster_upload` | inert "Text input" tab in `cluster_upload_tab_ui` | removed from the `cluster_upload` ids |
+| `clus_files`, `rr_text`, `clustext_name`, `upload_clustext` | `clus_visualize` | the dead "Load cluster result" panel (file upload and Text input tab) | removed from the `clus_visualize` ids |
+| `rr_files`, `rr_load` | `rr_visualize` | not removed: the moved Results loader; now rendered on Data with the same ids | removed from the `rr_visualize` ids only because `rr_vis_tab_ui` no longer renders them; the composed-UI test asserts each appears exactly once |
+
+`cluster_upload-rr_files` and `cluster_upload-rr_load` stay in `cluster_upload_tab_ui` (importer). A testthat test (`each moved control appears exactly once in the composed app UI`) asserts the moved ids once and the removed ids zero times.
+
+Out-of-list edits (lead-approved), navigation step only before the same click on the same id
+| File:line | Old path | New path | Reason |
+|---|---|---|---|
+| `ui-accessibility.spec.ts` AC-003 test | Results route, click `#rr_visualize-rr_load` | Data route, same click | the Results loader moved to Data |
+| `ui-accessibility.spec.ts` AC-015 test | Enrich route, click `#enrich-deg_load` | Data route, same click, then the Enrich route for the unchanged selection steps | the DEG upload moved to Data |
+| `scientific-heatmaps.spec.ts` `loadSession` | Save route, `#save-load_session_file` | same, Advanced `<details>` opened first | JSON session is under Advanced |
+| `scientific-heatmaps.spec.ts` `downloadSession`, `heatmap-legibility.spec.ts` (second edit), `clustering-roundtrip.spec.ts` (download step) | Save route, click `#save-download_session` | same, Advanced `<details>` opened first | the JSON session download is under Advanced |
+| `heatmap-legibility.spec.ts` `load` | same | same | same |
+| `clustering-roundtrip.spec.ts` `loadSessionFile` | same | same | same |
+| `landing-ui.spec.ts` | test "analysis menus start expanded and toggle independently": expected two treeview groups, each toggling independently, then a click on the Enrich link | replaced by "the navigation is one flat list in task order with no collapsible group": no `li.treeview` or `.treeview-menu` or collapse toggle, every route link visible, links in task order | AC-019/F14 removes collapsible groups |
+| `test-baseline-session-coverage.R:276` | `"Save &amp; Load Analysis Session"` | `"<h2>Save project</h2>"` (fixed) plus `expect_no_match` of the old string | REQ-015 one name "project" |
+
+Verification
+- Full testthat (CI library): `RESULT files 35 tests 4368 failed 0 errors 0 skipped 0`.
+- Full browser gate via `scripts/test-workspace.sh browser` in a fresh scratch (render pre-step included): `2 failed`, `158 passed (18.7m)`; the failures are `design-system.spec.ts:803` in both projects (native-zoom launch only).
+- Layout measured with a populated workspace and a finished job: DEG upload control top 292 px at 1440x900 (limit 300) and 329 px at 390x844 (limit 420) after a final tightening of the stepper button height and the Data heading margins, no horizontal overflow.
+- Screenshots in `scratchpad/m6-shots/` (1440x900 and 390x844): Home empty, Data empty and populated, Enrich, Results, Cluster, Cluster figures, Save, and the narrow stepper open.
 
 ## M7 - Enrich progressive disclosure
 

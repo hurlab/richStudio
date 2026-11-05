@@ -65,11 +65,6 @@ compact_ui_contracts <- list(
   rr_visualize = list(
     fun = "rr_vis_tab_ui",
     ids = c(
-      "rr_files",
-      "rr_load",
-      "rr_text",
-      "rrtext_name",
-      "upload_rrtext",
       "remove_rr",
       "ex_result",
       "ex_clear",
@@ -107,9 +102,6 @@ compact_ui_contracts <- list(
     ids = c(
       "rr_files",
       "rr_load",
-      "rr_text",
-      "rrtext_name",
-      "upload_rrtext",
       "rrlist_help",
       "remove_rr",
       "cluslist_help",
@@ -127,10 +119,6 @@ compact_ui_contracts <- list(
   clus_visualize = list(
     fun = "clus_vis_tab_ui",
     ids = c(
-      "clus_files",
-      "rr_text",
-      "clustext_name",
-      "upload_clustext",
       "remove_clus",
       "clusdf_select",
       "big_value_type",

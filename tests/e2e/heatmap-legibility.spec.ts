@@ -97,6 +97,7 @@ async function tab(page: Page, name: string) {
 
 async function load(page: Page, file: string, firstName?: string) {
   await tab(page, 'save_tab');
+  await page.locator('#shiny-tab-save_tab details.rs-advanced').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   // Existing Shiny file/Selectize bindings use stable module IDs, as in the
   // established scientific workflow suite. New viewer controls use their names.
   await page.locator('#save-load_session_file').setInputFiles(file);
@@ -358,6 +359,7 @@ test('all admitted rows remain reachable through bounded keyboard windows and ho
   await expect(page.locator('#clus_visualize-clusdf_select')).toHaveValue('Small10');
   await tab(page, 'save_tab');
   await page.locator('#save-session_name').fill('complete-legibility-session');
+  await page.locator('#shiny-tab-save_tab details.rs-advanced').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   const [download] = await Promise.all([
     page.waitForEvent('download'), page.locator('#save-download_session').click(),
   ]);

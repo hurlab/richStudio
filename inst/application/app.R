@@ -164,6 +164,8 @@ ui <- function(request) {
       # Enable shinyjs
       shinyjs::useShinyjs(),
 
+      workspace_stepper_ui("stepper", enabled = workspace_navigation),
+
       workspace_header_ui("workspace", enabled = workspace_navigation),
 
       # Analysis job panel (SPEC-WS-006), shown above every tab.
@@ -172,13 +174,19 @@ ui <- function(request) {
       tabItems(
         home_tab_ui("home", tabName = "home_tab", app_version = app_version,
                   app_build = app_build, enabled = workspace_navigation),
-        enrich_tab_ui("enrich", tabName = "enrich_tab"),
+        # The DEG upload, the enrichment-results loader and project open sit on the Data step.
+        enrich_tab_ui("enrich", tabName = "enrich_tab", upload = FALSE),
         rr_vis_tab_ui("rr_visualize", tabName = "rr_visualize_tab"),
         cluster_upload_tab_ui("cluster_upload", tabName = "cluster_upload_tab"),
         clusterTabUI("cluster", tabName = "cluster_tab"),
         clus_vis_tab_ui("clus_visualize", tabName = "clus_visualize_tab"),
-        updateTabUI("update", tabName = "update_tab"),
-        saveTabUI("save", tabName = "save_tab")
+        updateTabUI("update", tabName = "update_tab", data_step = TRUE),
+        saveTabUI("save", tabName = "save_tab", open_project = FALSE)
+      ),
+      # Share link: the bookmark control sits in the page footer, not in the navigation.
+      tags$footer(class = "rs-page-footer",
+        shiny::bookmarkButton(label = "Share link",
+          title = "Copy a link that restores this app state")
       ),
       tags$head(
         tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
@@ -210,10 +218,10 @@ ui <- function(request) {
               'home_tab': 'Home',
               'enrich_tab': 'Enrichment / Enrich',
               ", figure_breadcrumbs, "
-              'cluster_upload_tab': 'Clustering / Upload Files',
+              'cluster_upload_tab': 'Data / Upload files',
               'cluster_tab': 'Clustering / Cluster',
-              'update_tab': 'Manage Files',
-              'save_tab': 'Save / Load'
+              'update_tab': 'Data',
+              'save_tab': 'Save'
             };
             // Create breadcrumb element in navbar
             var $bc = $('<div class=\"navbar-breadcrumb\"><span class=\"bc-icon\"></span><span class=\"bc-text\">Home</span></div>');
@@ -297,7 +305,7 @@ server <- function(input, output, session) {
   if (isTRUE(getOption("richStudio.workspace_navigation", TRUE))) {
     workspace_navigation_server(session,
       u_degnames = u_degnames, u_rrnames = u_rrnames,
-      u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf
+      u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf, u_clusnames = u_clusnames
     )
   }
 

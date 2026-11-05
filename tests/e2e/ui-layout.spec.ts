@@ -31,7 +31,7 @@ test.describe('AC-011 one box style and semantic colours', () => {
     await connected(page);
     await page.locator('#home-load_demo').click();
     await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
-    await showTab(page, 'enrich_tab');
+    await showTab(page, 'update_tab');
     await page.locator('#enrich-deg_load').click();
     await showTab(page, 'cluster_tab');
     await choose(page, 'cluster-selected_rrs', 'go1');
@@ -247,3 +247,84 @@ test.describe('AC-016 layout without the card and the inline job log', () => {
     });
   }
 });
+
+// ---- M6: navigation, Data step and Save (AC-019) ------------------------------------------------
+
+async function finishedClusterJob(page: Page) {
+  await showTab(page, 'cluster_tab');
+  await choose(page, 'cluster-selected_rrs', 'go1');
+  await choose(page, 'cluster-selected_rrs', 'go2');
+  await page.locator('#cluster-cluster_name').fill('clus1');
+  await page.locator('#cluster-cluster').click();
+  await expect(page.locator('#jobs-job_badge')).toHaveText('1 job finished', { timeout: 120_000 });
+}
+
+test.describe('AC-019 navigation, Data step and Save', () => {
+  test('the navigation is flat, no page claims a feature is unsupported, and the loaders live on Data', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await populated(page);
+    await expect(page.locator('.sidebar-menu li.treeview')).toHaveCount(0);
+    await expect(page.locator('.sidebar-menu')).not.toContainText(/Bookmark/);
+    const routes = ['home_tab', 'update_tab', 'enrich_tab', 'rr_visualize_tab', 'cluster_upload_tab', 'cluster_tab', 'clus_visualize_tab', 'save_tab'];
+    for (const tab of routes) {
+      await showTab(page, tab);
+      const text = await page.locator(`#shiny-tab-${tab}`).innerText();
+      expect(text, `${tab} unsupported text`).not.toMatch(/not yet supported|currently not available|will be supported/i);
+      expect(text, `${tab} file path text`).not.toMatch(/docs\/|\.md\b/);
+      // The DEG upload on Data has a working "Text input" tab; the inert ones are gone everywhere else.
+      if (tab !== 'update_tab') expect(await page.locator(`#shiny-tab-${tab} .nav-tabs a`).allInnerTexts(), `${tab} tabs`).not.toContain('Text input');
+    }
+    // The Results page no longer has the loader; Data has it with its ids unchanged.
+    await showTab(page, 'rr_visualize_tab');
+    await expect(page.locator('#shiny-tab-rr_visualize_tab #rr_visualize-rr_files')).toHaveCount(0);
+    await showTab(page, 'update_tab');
+    await expect(page.locator('#shiny-tab-update_tab #rr_visualize-rr_files')).toHaveCount(1);
+    await expect(page.locator('#shiny-tab-update_tab').getByRole('heading', { name: 'Data', exact: true })).toBeVisible();
+    // Cluster figures has no "Load cluster result" panel; the importer route is reachable and accepts a file.
+    await showTab(page, 'clus_visualize_tab');
+    await expect(page.getByText('Load cluster result')).toHaveCount(0);
+    await showTab(page, 'cluster_upload_tab');
+    await expect(page.locator('#cluster_upload-rr_files')).toHaveCount(1);
+    await expect(page.locator('#shiny-tab-cluster_upload_tab')).toHaveClass(/\bactive\b/);
+    // Share link sits in the page footer, not in the primary navigation.
+    await expect(page.locator('footer.rs-page-footer').getByText('Share link')).toBeVisible();
+  });
+
+  test('Save has one primary Save project action and the JSON session sits inside Advanced', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await populated(page);
+    await showTab(page, 'save_tab');
+    const save = page.locator('#save-download_project');
+    await expect(save).toBeVisible();
+    await expect(save).toContainText('Save project');
+    const download = page.waitForEvent('download');
+    await save.click();
+    expect((await download).suggestedFilename()).toMatch(/^richstudio_project_.*\.zip$/);
+    const advanced = page.locator('#shiny-tab-save_tab details').filter({ hasText: 'Advanced' });
+    await expect(advanced).toHaveCount(1);
+    expect(await advanced.evaluate(d => (d as HTMLDetailsElement).open)).toBe(false);
+    await expect(page.locator('#save-download_session')).not.toBeVisible();
+    await advanced.locator('summary').click();
+    await expect(page.locator('#save-download_session')).toBeVisible();
+  });
+});
+
+for (const vp of [{ width: 1440, height: 900, top: 300 }, { width: 390, height: 844, top: 420 }]) {
+  test.describe(`AC-019 Data step layout at ${vp.width}x${vp.height}`, () => {
+    test('the DEG upload control is near the top with a context bar, with a finished job present and no overflow', async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await populated(page);
+      await finishedClusterJob(page);
+      await showTab(page, 'update_tab');
+      await expect(page.locator('.rs-context-bar').locator('visible=true')).toHaveCount(1);
+      const upload = page.locator('#enrich-deg_files');
+      await expect(page.locator('#enrich-deg_files-label')).toBeVisible();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const top = (await page.locator('#enrich-deg_files').locator('xpath=ancestor::div[contains(@class,"form-group")][1]').boundingBox())!.y;
+      expect(top, 'DEG upload control top').toBeLessThanOrEqual(vp.top);
+      expect(await upload.count()).toBe(1);
+      const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+      expect(widths[0], 'scrollWidth').toBeLessThanOrEqual(widths[1]);
+    });
+  });
+}

@@ -273,7 +273,8 @@ test_that("top-term heatmap settings update only the selected dataset", {
 test_that("save UI exposes namespaced session and export controls with format guidance", {
   html <- as.character(richStudio::saveTabUI("persist", "saved-analysis"))
   expect_match(html, 'id="shiny-tab-saved-analysis"', fixed = TRUE)
-  expect_match(html, "Save &amp; Load Analysis Session", fixed = TRUE)
+  expect_match(html, "<h2>Save project</h2>", fixed = TRUE)
+  expect_no_match(html, "Save &amp; Load Analysis Session", fixed = TRUE)
   for (control in c("session_name", "download_session",
                     "load_session_file", "load_session", "deg_summary",
                     "rr_summary", "clus_summary", "export_rr_select",

@@ -230,6 +230,7 @@ async function uploadComplete(page: Page, id: string) {
 
 async function loadSession(page: Page, file: string, names: string[]) {
   await goToTab(page, 'save_tab');
+  await page.locator('#shiny-tab-save_tab details.rs-advanced').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   await page.locator('#save-load_session_file').setInputFiles(file);
   await uploadComplete(page, 'save-load_session_file');
   await page.locator('#save-load_session').click();
@@ -240,6 +241,7 @@ async function loadSession(page: Page, file: string, names: string[]) {
 async function downloadSession(page: Page, info: TestInfo, stem: string) {
   await goToTab(page, 'save_tab');
   await page.locator('#save-session_name').fill(stem);
+  await page.locator('#shiny-tab-save_tab details.rs-advanced').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   const [download] = await Promise.all([
     page.waitForEvent('download'), page.locator('#save-download_session').click(),
   ]);

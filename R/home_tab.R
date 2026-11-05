@@ -26,7 +26,7 @@ home_quick_start_ui <- function(id) {
       class = "rs-workspace rs-workspace-actions",
       workspace_action(id, "upload_gene_lists", "Upload gene lists"),
       workspace_action(id, "import_results", "Import enrichment results"),
-      workspace_action(id, "open_saved", "Open saved analysis"),
+      workspace_action(id, "open_saved", "Open project"),
       workspace_action(id, "load_demo", "Load demo results")
     ),
     p(
@@ -322,9 +322,9 @@ home_tab_server <- function(
     demo_status <- reactiveVal("")
     output$demo_status <- renderText(demo_status())
 
-    observeEvent(input$upload_gene_lists, navigate("enrich_tab"))
+    observeEvent(input$upload_gene_lists, navigate("update_tab"))
     observeEvent(input$import_results, navigate("cluster_upload_tab"))
-    observeEvent(input$open_saved, navigate("save_tab"))
+    observeEvent(input$open_saved, navigate("update_tab"))
     observeEvent(input$load_demo, {
       added <- load_demo()
       demo_status(workspace_demo_status(added))

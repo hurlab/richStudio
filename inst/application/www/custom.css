@@ -1865,11 +1865,11 @@ table.rs-display-table th {
 
 /* --- SPEC-WS-013 M5: context bar and job tray --- */
 
-/* The context bar shows on the Enrich, Results and Cluster pages only. */
+/* The context bar shows on the Data, Enrich, Results and Cluster pages only. */
 #workspace-container {
   display: none;
 }
-body:has(#shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shiny-tab-cluster_tab.active) #workspace-container {
+body:has(#shiny-tab-update_tab.active, #shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shiny-tab-cluster_tab.active) #workspace-container {
   display: block;
 }
 .rs-context-bar {
@@ -2139,4 +2139,176 @@ body:has(#shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shin
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* --- SPEC-WS-013 M6: task stepper, flat navigation, page footer --- */
+
+.rs-stepper-bar {
+  margin: 0 0 8px;
+}
+.rs-stepper {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rs-step {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+}
+.rs-step-button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 10px;
+  text-align: left;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+.rs-step-button:hover {
+  background: var(--rs-primary-light);
+  border-color: var(--rs-primary-dark);
+}
+.rs-step-current .rs-step-button {
+  border-color: var(--rs-primary);
+  background: var(--rs-primary-light);
+  box-shadow: inset 0 -3px 0 var(--rs-primary);
+}
+.rs-step-number {
+  grid-row: 1 / span 2;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-text);
+  border: 1px solid var(--rs-text-secondary);
+  border-radius: 50%;
+}
+.rs-step-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.rs-step-status {
+  font-size: 12px;
+  color: var(--rs-text-secondary-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The next action is read by assistive technology for every step and shown for the current one. */
+.rs-step-next {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.rs-stepper-compact {
+  display: none;
+}
+.rs-stepper-compact > summary {
+  min-height: 44px;
+  line-height: 36px;
+  padding: 4px 12px;
+  font-weight: 600;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+.rs-stepper-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+.rs-step-link {
+  min-height: 44px;
+  padding: 4px 12px;
+  text-align: left;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+}
+@media (max-width: 767px) {
+  .rs-stepper {
+    display: none;
+  }
+  .rs-stepper-compact {
+    display: block;
+  }
+}
+
+/* The importer route is the sub-route of Data: indented in the flat list. */
+.sidebar-menu a[data-value="cluster_upload_tab"] {
+  padding-left: 42px;
+  font-size: 13px;
+}
+
+.rs-page-footer {
+  margin: 24px 0 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rs-border);
+  text-align: right;
+}
+.rs-advanced {
+  margin: 0 0 12px;
+}
+.rs-advanced > summary {
+  min-height: 36px;
+  line-height: 36px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--rs-text);
+}
+
+/* The Data step keeps its upload controls near the top of the page. */
+#shiny-tab-update_tab > h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  line-height: 1.1;
+}
+#shiny-tab-update_tab .nav-tabs-custom > .tab-content {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+#shiny-tab-update_tab h3 {
+  margin: 8px 0 6px;
+}
+.rs-context-bar {
+  margin-bottom: 8px;
+}
+.rs-stepper-bar {
+  margin-bottom: 6px;
+}
+.rs-step-button {
+  min-height: 40px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+/* Headroom for the Data step's upload control (AC-019). */
+.rs-step-button {
+  min-height: 38px;
+}
+#shiny-tab-update_tab > h2 {
+  margin-bottom: 2px;
+}
+#shiny-tab-update_tab .nav-tabs-custom {
+  margin-bottom: 10px;
 }

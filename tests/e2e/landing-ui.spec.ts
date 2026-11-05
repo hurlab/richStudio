@@ -34,34 +34,18 @@ test('landing shows release information and keeps empty dataset controls hidden'
   expect(errors).toEqual([]);
 });
 
-test('analysis menus start expanded and toggle independently', async ({ page }) => {
+test('the navigation is one flat list in task order with no collapsible group', async ({ page }) => {
   await expect(page.locator('#loading-overlay')).toBeHidden();
   await openNavigation(page);
-  const enrichment = page.locator('.sidebar-menu > li.treeview').filter({
-    has: page.locator('a[href="#shiny-tab-enrich_tab"]'),
-  });
-  const clustering = page.locator('.sidebar-menu > li.treeview').filter({
-    has: page.locator('a[href="#shiny-tab-cluster_tab"]'),
-  });
-  const enrichmentItems = enrichment.locator(':scope > ul');
-  const clusteringItems = clustering.locator(':scope > ul');
-  await expect(enrichmentItems).toBeVisible();
-  await expect(clusteringItems).toBeVisible();
-
-  await enrichment.locator(':scope > a').click();
-  await expect(enrichmentItems).toBeHidden();
-  await expect(clusteringItems).toBeVisible();
-  await enrichment.locator(':scope > a').click();
-  await expect(enrichmentItems).toBeVisible();
-  await expect(clusteringItems).toBeVisible();
-
-  await clustering.locator(':scope > a').click();
-  await expect(clusteringItems).toBeHidden();
-  await expect(enrichmentItems).toBeVisible();
-  await clustering.locator(':scope > a').click();
-  await expect(clusteringItems).toBeVisible();
-  await expect(enrichmentItems).toBeVisible();
-
-  await enrichment.locator('a[href="#shiny-tab-enrich_tab"]').click();
-  await expect(page.locator('#shiny-tab-enrich_tab')).toHaveClass(/\bactive\b/);
+  await expect(page.locator('.sidebar-menu li.treeview')).toHaveCount(0);
+  await expect(page.locator('.sidebar-menu .treeview-menu')).toHaveCount(0);
+  await expect(page.locator('.sidebar-menu [data-toggle="collapse"]')).toHaveCount(0);
+  const routes = ['home_tab', 'update_tab', 'cluster_upload_tab', 'enrich_tab', 'rr_visualize_tab',
+    'cluster_tab', 'clus_visualize_tab', 'save_tab'];
+  for (const route of routes) {
+    await expect(page.locator(`.sidebar-menu a[href="#shiny-tab-${route}"]`), route).toBeVisible();
+  }
+  const order = await page.locator('.sidebar-menu a[href^="#shiny-tab-"]')
+    .evaluateAll(links => links.map(link => (link.getAttribute('href') ?? '').replace('#shiny-tab-', '')));
+  expect(order).toEqual(routes);
 });

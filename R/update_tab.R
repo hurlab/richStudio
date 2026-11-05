@@ -11,11 +11,34 @@
 #' @param tabName Tab identifier for shinydashboard
 #' @return A tabItem containing the update UI
 #' @export
-updateTabUI <- function(id, tabName) {
+updateTabUI <- function(id, tabName, data_step = FALSE) {
   ns <- NS(id)
   ui <- tabItem(
     tabName = tabName,
-    h2("Manage Files"),
+    if (data_step) {
+      # The Data step (SPEC-WS-013 M6): the loaders of the other modules sit here under their
+      # own namespaces, above the file management below.
+      tagList(
+        h2("Data"),
+        fluidRow(
+          column(width = 4, enrich_upload_box_ui(NS("enrich"))),
+          column(width = 4, rr_load_box_ui(NS("rr_visualize"))),
+          column(width = 4, save_open_project_ui(NS("save")))
+        ),
+        p(
+          "Results from other tools can also be imported with the file importer, which lists what it loaded: ",
+          tags$button(
+            type = "button",
+            class = "btn btn-link",
+            onclick = workspace_step_open_js("cluster_upload_tab"),
+            "Open the importer"
+          )
+        ),
+        h3("Manage files")
+      )
+    } else {
+      h2("Manage Files")
+    },
     p("Rename or remove uploaded files and analysis results."),
     fluidRow(
       # Rename box

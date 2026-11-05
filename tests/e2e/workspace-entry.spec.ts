@@ -8,9 +8,9 @@ import { createRequire } from 'node:module';
 const requireLocal = createRequire(__filename);
 
 const homeActions = [
-  { id: 'home-upload_gene_lists', label: 'Upload gene lists', tab: 'enrich_tab', landing: '#enrich-deg_files-label' },
+  { id: 'home-upload_gene_lists', label: 'Upload gene lists', tab: 'update_tab', landing: '#enrich-deg_files-label' },
   { id: 'home-import_results', label: 'Import enrichment results', tab: 'cluster_upload_tab', landing: '#cluster_upload-rr_files-label' },
-  { id: 'home-open_saved', label: 'Open saved analysis', tab: 'save_tab', landing: '#save-load_session' },
+  { id: 'home-open_saved', label: 'Open project', tab: 'update_tab', landing: '#save-load_project_file-label' },
   { id: 'home-load_demo', label: 'Load demo results', tab: 'rr_visualize_tab', landing: '#workspace-create_figure' },
 ] as const;
 
@@ -133,7 +133,7 @@ for (const action of homeActions) {
     if (action.id === 'home-load_demo') await openContext(page);
     await expect(page.locator(action.landing)).toBeVisible();
     if (action.id === 'home-open_saved') {
-      await expect(page.locator('#save-load_session_file-label')).toBeVisible();
+      await expect(page.locator('#save-load_project_file-label')).toBeVisible();
     }
     if (action.id === 'home-load_demo') {
       await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
@@ -148,8 +148,8 @@ test('REQ-001 collapsed navigation reaches Home and Save/Load through relabelled
   if (info.project.name === 'chromium-narrow') {
     await expect(page.getByRole('button', { name: /Toggle navigation/ })).toBeVisible();
   }
-  await openRoute(page, 'save_tab', /Save\/Load/);
-  await expect(page.locator('#save-load_session')).toBeVisible();
+  await openRoute(page, 'save_tab', /Save/);
+  await expect(page.locator('#save-download_project')).toBeVisible();
   await openRoute(page, 'home_tab', /Home/);
   await expect(page.getByRole('heading', { name: 'Welcome to richStudio' })).toBeVisible();
   await expect(page.locator('#home-open_saved')).toBeVisible();

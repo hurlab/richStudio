@@ -34,8 +34,9 @@ async function twoFinishedJobs(page: Page) {
   await showTab(page, 'home_tab');
   await page.locator('#home-load_demo').click();
   await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
-  await showTab(page, 'enrich_tab');
+  await showTab(page, 'update_tab');
   await page.locator('#enrich-deg_load').click();
+  await showTab(page, 'enrich_tab');
   await choose(page, 'enrich-degs_to_enrich', 'deg_mouse1');
   await page.locator('#enrich-enrich_deg').click();
   await expect(jobRows(page)).toHaveCount(1, { timeout: 30_000 });
@@ -66,12 +67,16 @@ test.describe('AC-001 server-driven empty states', () => {
       expect(states, `${name} empty workspace`).toHaveLength(1);
       expect(states[0], name).toMatch(/\b(Load|Import|Select|Choose|Upload)\b/);
     }
+    // The enrichment-results loader sits on the Data step (SPEC-WS-013 M6).
+    await showTab(page, 'update_tab');
     await page.locator('#rr_visualize-rr_load').click();
+    await showTab(page, 'rr_visualize_tab');
     await expect(page.locator('#rr_visualize-select_net')).toHaveValue('go1');
     for (const name of RR_TABS) {
       await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name, exact: true }).click();
       if (name === 'Heatmap') {
-        await choose(page, 'rr_visualize-select_tophmap', 'go1');
+        // The heatmap selector now defaults to an existing result (SPEC-WS-013 M6, F3).
+        await expect(page.locator('#rr_visualize-select_tophmap')).toHaveValues(['go1']);
       }
       await expect.poll(() => visibleEmptyStates(page, pane), { message: `${name} populated` }).toEqual([]);
       await expect(page.locator(`${pane}`).getByText('No data to display').locator('visible=true')).toHaveCount(0);
@@ -169,7 +174,7 @@ test.describe('AC-007 menu and notifications', () => {
   });
 
   test('an error notification is gone after navigating to another step', async ({ page }) => {
-    await showTab(page, 'save_tab');
+    await showTab(page, 'update_tab');
     await page.locator('#save-load_project_file').setInputFiles({ name: 'broken.zip', mimeType: 'application/zip', buffer: Buffer.from('not a zip') });
     await expect.poll(async () => page.locator('#save-load_project_file_progress .progress-bar').textContent())
       .toContain('Upload complete');
@@ -197,11 +202,11 @@ test.describe('AC-007 menu and notifications', () => {
   });
 
   test('a success notification is opaque, clear of the page action and hides by itself', async ({ page }) => {
-    await showTab(page, 'save_tab');
+    await showTab(page, 'update_tab');
     await page.locator('#save-load_project_file').setInputFiles(baselineProject);
     await expect.poll(async () => page.locator('#save-load_project_file_progress .progress-bar').textContent())
       .toContain('Upload complete');
-    await page.locator('#save-download_project').scrollIntoViewIfNeeded();
+    await page.locator('#save-load_project').scrollIntoViewIfNeeded();
     await page.locator('#save-load_project').click();
     const toast = page.locator('.shiny-notification', { hasText: 'Project opened successfully!' });
     await expect(toast).toBeVisible();
@@ -213,9 +218,9 @@ test.describe('AC-007 menu and notifications', () => {
     expect(style.alpha).toBe(1);
     // Fully shown (opacity is animated by Shiny while it fades in, so wait for it).
     await expect.poll(() => toast.evaluate(e => Number(getComputedStyle(e).opacity))).toBe(1);
-    // Primary action of the Save step, centred in the viewport, does not sit under the toast.
-    await page.locator('#save-download_project').evaluate(e => e.scrollIntoView({ block: 'center' }));
-    const [toastBox, actionBox] = await Promise.all([toast.boundingBox(), page.locator('#save-download_project').boundingBox()]);
+    // Primary action of the Data step (Open project), centred in the viewport, does not sit under the toast.
+    await page.locator('#save-load_project').evaluate(e => e.scrollIntoView({ block: 'center' }));
+    const [toastBox, actionBox] = await Promise.all([toast.boundingBox(), page.locator('#save-load_project').boundingBox()]);
     const overlap = !(toastBox!.x + toastBox!.width <= actionBox!.x || actionBox!.x + actionBox!.width <= toastBox!.x ||
       toastBox!.y + toastBox!.height <= actionBox!.y || actionBox!.y + actionBox!.height <= toastBox!.y);
     expect(overlap).toBe(false);
@@ -279,16 +284,22 @@ test.describe('AC-008 table display', () => {
 test.describe('AC-009 gene-column validation', () => {
   test('a file without a gene column is not added until a column is picked; cancel changes nothing', async ({ page }) => {
     await connected(page);
-    await showTab(page, 'enrich_tab');
+    // The DEG upload sits on the Data step and the list of loaded sets stays on Enrich (SPEC-WS-013 M6).
+    await showTab(page, 'update_tab');
     const upload = (name: string, body: string | Buffer) =>
       page.locator('#enrich-deg_files').setInputFiles({ name, mimeType: 'text/plain', buffer: Buffer.from(body) });
     const rows = () => page.locator('#enrich-deg_list_table tbody tr').filter({ hasNotText: 'No data available' });
+    const expectRows = async (count: number) => {
+      await showTab(page, 'enrich_tab');
+      await expect(rows()).toHaveCount(count);
+      await showTab(page, 'update_tab');
+    };
     await upload('this.is.not.txt', 'this.is.not\tscore\ng1\t0.5\n');
     await expect(page.locator('#shiny-modal')).toBeVisible();
     await expect(page.locator('#shiny-modal')).toContainText('this.is.not, score');
     await expect(page.locator('#enrich-deg_upload_status')).toContainText('not added');
     await expect(page.locator('#enrich-deg_upload_status')).toContainText('1 rows');
-    await expect(rows()).toHaveCount(0);
+    await expectRows(0);
     // Cancel: nothing added, the Save summary still lists no gene list.
     await page.locator('#enrich-deg_pick_cancel').click();
     await expect(page.locator('#shiny-modal')).toHaveCount(0);
@@ -296,24 +307,25 @@ test.describe('AC-009 gene-column validation', () => {
     await showTab(page, 'save_tab');
     await expect(page.locator('#save-deg_summary')).toContainText('No DEG sets loaded');
     // Pick: exactly one dataset with the chosen gene column.
-    await showTab(page, 'enrich_tab');
+    await showTab(page, 'update_tab');
     await upload('picked.txt', 'this.is.not\tscore\ng1\t0.5\ng2\t0.7\n');
     await expect(page.locator('#shiny-modal')).toBeVisible();
     await page.locator('#enrich-deg_pick_ok').click();
     await expect(page.locator('#enrich-deg_upload_status')).toContainText('Added picked.txt: gene column GeneID, 2 rows.');
-    await expect(rows()).toHaveCount(1);
+    await expectRows(1);
     // A valid list is confirmed with its detected column and row count.
     await page.locator('#enrich-deg_files').setInputFiles(sampleDeg);
     await expect(page.locator('#enrich-deg_upload_status')).toContainText('Added deg_mouse1.txt: gene column geneID, 79 rows.');
-    await expect(rows()).toHaveCount(2);
+    await expectRows(2);
   });
 });
 
 test.describe('AC-010 environment failure', () => {
   test('a missing annotation package shows the full command, no Retry and no Retry advice', async ({ page }) => {
     await connected(page);
-    await showTab(page, 'enrich_tab');
+    await showTab(page, 'update_tab');
     await page.locator('#enrich-deg_load').click();
+    await showTab(page, 'enrich_tab');
     await choose(page, 'enrich-degs_to_enrich', 'deg_mouse1');
     await page.locator('#enrich-enrich_deg').click();
     await expect(jobRows(page)).toHaveCount(1, { timeout: 30_000 });
@@ -340,6 +352,7 @@ test.describe('AC-028 old session file', () => {
   test('an .rds file is refused with a short message and the steps in an expandable block, gone after navigating', async ({ page }) => {
     await connected(page);
     await showTab(page, 'save_tab');
+    await page.locator('#shiny-tab-save_tab details.rs-advanced > summary').click();
     await page.locator('#save-load_session_file').setInputFiles({ name: 'old.rds', mimeType: 'application/octet-stream', buffer: Buffer.from([0x58, 0x0a, 0x00, 0x00, 0x00]) });
     await expect.poll(async () => page.locator('#save-load_session_file_progress .progress-bar').textContent())
       .toContain('Upload complete');
@@ -408,5 +421,97 @@ test.describe('M4 y-axis term labels', () => {
         expect(boxes[i].top, `${name} label ${i} overlaps the previous one`).toBeGreaterThanOrEqual(boxes[i - 1].bottom - 0.5);
       }
     }
+  });
+});
+
+// ---- M6: stepper (AC-017) and cross-step handoffs (AC-018) ---------------------------------------
+
+const STEP_NAMES = ['Data', 'Enrich', 'Results', 'Cluster', 'Save'];
+
+test.describe('AC-017 task stepper', () => {
+  test('five steps in order with a textual status, every step opens by click and keyboard, imported results open Results without Enrich', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    const items = page.locator('.rs-stepper > li');
+    await expect(items).toHaveCount(5);
+    expect(await items.locator('.rs-step-name').allInnerTexts()).toEqual(STEP_NAMES);
+    for (let i = 0; i < 5; i++) {
+      await expect(items.nth(i).locator('.rs-step-status'), `${STEP_NAMES[i]} status`).not.toHaveText('');
+      await expect(items.nth(i).locator('button'), `${STEP_NAMES[i]} opens without gating`).toBeEnabled();
+    }
+    await expect(items.nth(0).locator('.rs-step-status')).toContainText('No data');
+    // Opening a later step directly works from an empty workspace, by click and by keyboard.
+    await items.nth(3).locator('button').click();
+    await expect(page.locator('#shiny-tab-cluster_tab')).toHaveClass(/\bactive\b/);
+    await expect(items.nth(3)).toHaveAttribute('aria-current', 'step');
+    await items.nth(4).locator('button').focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('#shiny-tab-save_tab')).toHaveClass(/\bactive\b/);
+    // Imported results: Results has them without any enrichment run.
+    await showTab(page, 'home_tab');
+    await page.locator('#home-load_demo').click();
+    await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
+    await expect(items.nth(2).locator('.rs-step-status')).toContainText('3 results');
+    await expect(items.nth(1).locator('.rs-step-status')).not.toContainText('results');
+    await expect(page.locator('#shiny-tab-rr_visualize_tab')).toHaveClass(/\bactive\b/);
+    await expect(items.nth(2)).toHaveAttribute('aria-current', 'step');
+    // The importer sub-route keeps Data as the current step.
+    await showTab(page, 'cluster_upload_tab');
+    await expect(items.nth(0)).toHaveAttribute('aria-current', 'step');
+  });
+
+  test('at 390x844 the stepper is one compact "Step N of 5" control that lists every step when opened', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await connected(page);
+    await expect(page.locator('.rs-stepper')).not.toBeVisible();
+    const compact = page.locator('.rs-stepper-compact summary');
+    await expect(compact).toBeVisible();
+    await expect(compact).toContainText(/Step \d of 5/);
+    expect((await compact.boundingBox())!.height).toBeGreaterThanOrEqual(36);
+    await compact.click();
+    const links = page.locator('.rs-stepper-compact button');
+    await expect(links).toHaveCount(5);
+    await expect(links.locator('visible=true')).toHaveCount(5);
+    await links.nth(2).click();
+    await expect(page.locator('#shiny-tab-rr_visualize_tab')).toHaveClass(/\bactive\b/);
+    await expect(compact).toContainText('Step 3 of 5');
+  });
+});
+
+test.describe('AC-018 handoffs', () => {
+  test('demo data show a success notification with a next action; the dataset switch sets the Cluster default; the heatmap selector has a default', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await page.locator('#home-load_demo').click();
+    const note = page.locator('.shiny-notification').filter({ hasText: /loaded/i });
+    await expect(note).toBeVisible();
+    await expect(note.getByRole('button', { name: /Cluster|Open|View/ }).or(note.getByRole('link', { name: /Cluster|Open|View/ }))).toBeVisible();
+    // The enrichment heatmap result selector defaults to an existing result.
+    await expect(page.locator('#rr_visualize-select_tophmap')).toHaveValues(['go1']);
+    // Switching the dataset in the context bar changes the default selection on Cluster and Results.
+    await page.locator('#workspace-active_result').selectOption('go2');
+    await expect.poll(() => page.locator('#cluster-selected_rrs').evaluate(el =>
+      Array.from((el as HTMLSelectElement).selectedOptions).map(o => o.value))).toEqual(['go2']);
+    await expect(page.locator('#rr_visualize-select_bar')).toHaveValue('go2');
+    // Opening Enrich with gene lists loaded selects the active dataset's source.
+    await showTab(page, 'enrich_tab');
+  });
+
+  test('a finished clustering job offers "View cluster figures" with that result selected', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await page.locator('#home-load_demo').click();
+    await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
+    await showTab(page, 'cluster_tab');
+    await choose(page, 'cluster-selected_rrs', 'go1');
+    await choose(page, 'cluster-selected_rrs', 'go2');
+    await page.locator('#cluster-cluster_name').fill('clus1');
+    await page.locator('#cluster-cluster').click();
+    // The notification's action (the stepper's Cluster step also mentions the words in its next-action text).
+    const view = page.locator('.shiny-notification').getByText('View cluster figures', { exact: true });
+    await expect(view.first()).toBeVisible({ timeout: 120_000 });
+    await view.first().click();
+    await expect(page.locator('#shiny-tab-clus_visualize_tab')).toHaveClass(/\bactive\b/);
+    await expect(page.locator('#clus_visualize-clusdf_select')).toHaveValue('clus1');
   });
 });

@@ -66,7 +66,7 @@ test.describe('AC-003 disabled controls and the unrecorded-metadata disclosure',
   test('disabled header actions look disabled, say why once, and metadata is one disclosure', async ({ page }) => {
     await connected(page);
     // Results exist but none is the active dataset: both header actions are disabled.
-    await page.locator('a[href="#shiny-tab-rr_visualize_tab"]').evaluate(l => (l as HTMLElement).click());
+    await page.locator('a[href="#shiny-tab-update_tab"]').evaluate(l => (l as HTMLElement).click());
     await page.locator('#rr_visualize-rr_load').click();
     await openContext(page);
     await expect(page.locator('#workspace-create_figure')).toBeDisabled();
@@ -279,8 +279,9 @@ test.describe('AC-015 job tray', () => {
   test('the badge counts the jobs in words, the tray never opens by itself, takes focus, and Escape returns it', async ({ page }) => {
     await connected(page);
     await loadDemo(page);
-    await showTab(page, 'enrich_tab');
+    await showTab(page, 'update_tab');
     await page.locator('#enrich-deg_load').click();
+    await showTab(page, 'enrich_tab');
     const choose = async (id: string, value: string) => {
       await expect.poll(() => page.locator(`#${id}`).evaluate((n, v) => !!(n as any).selectize?.options[v], value)).toBe(true);
       const control = page.locator(`#${id} + .selectize-control`);

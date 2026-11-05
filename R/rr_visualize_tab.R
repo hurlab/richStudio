@@ -13,6 +13,32 @@ sample_rr_path <- function(name) {
   fallback
 }
 
+# The "Load enrichment result" box and its input review. It sits on the Data step
+# (SPEC-WS-013 M6) under this module's namespace, so every id is unchanged.
+rr_load_box_ui <- function(ns) {
+  tagList(
+    tabBox(
+      title = "Load enrichment result",
+      width = NULL,
+      tabPanel(
+        "File upload",
+        fileInput(
+          ns("rr_files"),
+          "Select files",
+          multiple = TRUE,
+          accept = c(".csv", ".tsv", ".xls", ".txt")
+        ),
+        helpText("Accepted formats: .txt, .csv, .tsv"),
+        hr(),
+        h4("Load demo"),
+        p("Loads sample enrichment results: 'go1', 'go2', 'kegg1'"),
+        actionButton(ns("rr_load"), "Load data")
+      )
+    ),
+    review_result_intake_ui(ns)
+  )
+}
+
 rr_vis_tab_ui <- function(id, tabName) {
   ns <- NS(id)
   ui <- tabItem(
@@ -20,46 +46,6 @@ rr_vis_tab_ui <- function(id, tabName) {
     fluidRow(
       column(
         width = 4,
-        tabBox(
-          title = "Load enrichment result",
-          width = NULL,
-          tabPanel(
-            "File upload",
-            h4("Upload from computer"),
-            helpText("Accepted formats: .txt, .csv, .tsv"),
-            fileInput(
-              ns("rr_files"),
-              "Select files",
-              multiple = TRUE,
-              accept = c(".csv", ".tsv", ".xls", ".txt")
-            ),
-            hr(),
-            h4("Load demo"),
-            p("Loads sample enrichment results: 'go1', 'go2', 'kegg1'"),
-            actionButton(ns("rr_load"), "Load data")
-          ),
-          tabPanel(
-            "Text input",
-            helpText(
-              paste0(
-                "This functionality is currently not available, ",
-                "but will be supported in the future."
-              )
-            ),
-            textAreaInput(
-              ns("rr_text"),
-              "Text Input",
-              placeholder = "Paste dataframe-like object"
-            ),
-            textInput(
-              ns("rrtext_name"),
-              "Name",
-              placeholder = "Set name for pasted enrichment result"
-            ),
-            actionButton(ns("upload_rrtext"), "Upload")
-          )
-        ),
-        review_result_intake_ui(ns),
         shinyjs::hidden(tags$div(
           id = ns("rrlist_box"),
           box(
@@ -502,10 +488,21 @@ rr_vis_tab_server <- function(
         "select_table",
         choices = u_rrnames_reactive()
       )
+      # The heatmap result selector defaults to an existing result (SPEC-WS-013 F3): the
+      # selection the user already made is kept, an empty one takes the first result.
+      kept <- intersect(
+        shiny::isolate(input$select_tophmap),
+        as.character(u_rrnames_reactive())
+      )
       updateSelectInput(
         session = getDefaultReactiveDomain(),
         "select_tophmap",
-        choices = u_rrnames_reactive()
+        choices = u_rrnames_reactive(),
+        selected = if (length(kept)) {
+          kept
+        } else {
+          utils::head(as.character(u_rrnames_reactive()), 1L)
+        }
       )
       updateSelectInput(
         session = getDefaultReactiveDomain(),

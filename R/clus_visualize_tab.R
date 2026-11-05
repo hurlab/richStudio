@@ -6,46 +6,6 @@ clus_vis_tab_ui <- function(id, tabName) {
     fluidRow(
       column(
         width = 4,
-        tabBox(
-          title = "Load cluster result",
-          width = NULL,
-          tabPanel(
-            "File upload",
-            helpText(
-              paste0(
-                "File upload for cluster results is not yet ",
-                "supported. Use the Clustering tab to generate ",
-                "results."
-              )
-            ),
-            fileInput(
-              ns("clus_files"),
-              "Select files",
-              multiple = TRUE,
-              accept = c(".csv", ".tsv", ".xls", ".txt")
-            )
-          ),
-          tabPanel(
-            "Text input",
-            helpText(
-              paste0(
-                "This functionality is currently not available, ",
-                "but will be supported in the future."
-              )
-            ),
-            textAreaInput(
-              ns("rr_text"),
-              "Text Input",
-              placeholder = "Paste dataframe-like object"
-            ),
-            textInput(
-              ns("clustext_name"),
-              "Name",
-              placeholder = "Set name for pasted enrichment result"
-            ),
-            actionButton(ns("upload_clustext"), "Upload")
-          )
-        ),
         shinyjs::hidden(tags$div(
           id = ns("cluslist_box"),
           box(

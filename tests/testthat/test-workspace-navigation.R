@@ -133,7 +133,7 @@ test_that("REQ-001 AC-001 Home renders four native entry actions above About and
   }
   labels <- c(upload_gene_lists = "Upload gene lists",
               import_results = "Import enrichment results",
-              open_saved = "Open saved analysis",
+              open_saved = "Open project",
               load_demo = "Load demo results")
   for (id in names(labels)) {
     expect_match(html, paste0('<button id="home-', id, '" type="button"'), fixed = TRUE)
@@ -256,13 +256,12 @@ test_that("REQ-001 release switch off restores the previous Home content without
 test_that("REQ-002 sidebar relabels figure destinations and keeps every route in both switch states", {
   on <- ws3_html(richStudio:::workspace_sidebar_menu(enabled = TRUE))
   off <- ws3_html(richStudio:::workspace_sidebar_menu(enabled = FALSE))
-  # The two menu groups keep their existing group tabNames as well.
-  shared <- c(home_tab = "Home", enrich_tab_group = "Enrichment", enrich_tab = "Enrich",
-              cluster_tab_group = "Clustering", cluster_upload_tab = "Upload files",
-              cluster_tab = "Cluster", update_tab = "Manage Files", save_tab = "Save/Load")
+  # The menu is one flat, task-ordered list (SPEC-WS-013 F14): no group tabNames, route strings unchanged.
+  shared <- c(home_tab = "Home", update_tab = "Data", cluster_upload_tab = "Upload files",
+              enrich_tab = "Enrich", cluster_tab = "Cluster", save_tab = "Save")
   for (html in list(on, off)) {
     captions <- ws3_captions(html)
-    expect_setequal(names(captions), c(ws3_tabs, "enrich_tab_group", "cluster_tab_group"))
+    expect_setequal(names(captions), ws3_tabs)
     expect_identical(captions[names(shared)], shared)
   }
   expect_identical(ws3_captions(on)[c("rr_visualize_tab", "clus_visualize_tab")],
@@ -270,7 +269,7 @@ test_that("REQ-002 sidebar relabels figure destinations and keeps every route in
   expect_identical(ws3_captions(off)[c("rr_visualize_tab", "clus_visualize_tab")],
                    c(rr_visualize_tab = "Visualize", clus_visualize_tab = "Visualize"))
   expect_match(on, 'id="workspace_sidebar"', fixed = TRUE)
-  expect_identical(ws3_count(on, "menu-open"), 2L)
+  expect_identical(ws3_count(on, "menu-open"), 0L)
   expect_identical(ws3_count(on, 'data-start-selected="1"'), 1L)
   expect_false(grepl("figures", off, fixed = TRUE))
 })
@@ -340,9 +339,9 @@ test_that("REQ-001 AC-001 demo loader reproduces the bundled results once and sk
 })
 
 test_that("REQ-001 AC-001 Home actions call only their navigation callback and demo loads only on demand", {
-  routes <- list(upload_gene_lists = "navigate:enrich_tab",
+  routes <- list(upload_gene_lists = "navigate:update_tab",
                  import_results = "navigate:cluster_upload_tab",
-                 open_saved = "navigate:save_tab",
+                 open_saved = "navigate:update_tab",
                  load_demo = c("load_demo", "navigate:rr_visualize_tab"))
   for (action in names(routes)) {
     fixture <- ws3_home_fixture()
@@ -583,12 +582,14 @@ test_that("REQ-001 REQ-002 M14 session wiring routes every action through the si
       do.call(session$setInputs, stats::setNames(list(value), input))
       sent <- ws3_since(inputs, before)
       ids <- ws3_ids(sent)
-      expect_true(all(ids == "workspace_sidebar" | ws3_is_own_select(ids) | ids == "cluster-selected_rrs"), info = input)
+      # A dataset switch also sets the default selection on Cluster and Results (SPEC-WS-013 AC-018).
+      expect_true(all(ids == "workspace_sidebar" | ws3_is_own_select(ids) | ids == "cluster-selected_rrs" |
+                        grepl("^rr_visualize-select_(table|bar|dot|net)$", ids)), info = input)
       ws3_sidebar_tabs(sent)
     }
-    expect_identical(act("home-upload_gene_lists"), "enrich_tab")
+    expect_identical(act("home-upload_gene_lists"), "update_tab")
     expect_identical(act("home-import_results"), "cluster_upload_tab")
-    expect_identical(act("home-open_saved"), "save_tab")
+    expect_identical(act("home-open_saved"), "update_tab")
     expect_null(state$u_rrnames$labels)
 
     expect_identical(act("home-load_demo"), "rr_visualize_tab")

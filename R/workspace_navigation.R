@@ -116,6 +116,8 @@ workspace_sidebar_menu <- function(enabled = TRUE) {
   } else {
     c("Visualize", "Visualize")
   }
+  # One flat list in task order (SPEC-WS-013 F14): no collapsible groups. The importer
+  # route stays reachable as "Upload files", the sub-route of Data.
   shinydashboard::sidebarMenu(
     id = if (isTRUE(enabled)) workspace_sidebar_id,
     shinydashboard::menuItem(
@@ -124,57 +126,41 @@ workspace_sidebar_menu <- function(enabled = TRUE) {
       tabName = "home_tab",
       selected = TRUE
     ),
-    shiny::tags$li(class = "header", "ANALYSIS"),
     shinydashboard::menuItem(
-      "Enrichment",
-      icon = shiny::icon("flask"),
-      tabName = "enrich_tab_group",
-      startExpanded = TRUE,
-      shinydashboard::menuSubItem(
-        "Enrich",
-        icon = shiny::icon("play-circle"),
-        tabName = "enrich_tab"
-      ),
-      shinydashboard::menuSubItem(
-        figures[1],
-        icon = shiny::icon("chart-bar"),
-        tabName = "rr_visualize_tab"
-      )
-    ),
-    shinydashboard::menuItem(
-      "Clustering",
-      icon = shiny::icon("layer-group"),
-      tabName = "cluster_tab_group",
-      startExpanded = TRUE,
-      shinydashboard::menuSubItem(
-        "Upload files",
-        icon = shiny::icon("file-arrow-up"),
-        tabName = "cluster_upload_tab"
-      ),
-      shinydashboard::menuSubItem(
-        "Cluster",
-        icon = shiny::icon("vials"),
-        tabName = "cluster_tab"
-      ),
-      shinydashboard::menuSubItem(
-        figures[2],
-        icon = shiny::icon("chart-line"),
-        tabName = "clus_visualize_tab"
-      )
-    ),
-    shiny::tags$li(class = "header", "TOOLS"),
-    shinydashboard::menuItem(
-      "Manage Files",
+      "Data",
       icon = shiny::icon("folder-open"),
       tabName = "update_tab"
     ),
     shinydashboard::menuItem(
-      "Save/Load",
+      "Upload files",
+      icon = shiny::icon("file-arrow-up"),
+      tabName = "cluster_upload_tab"
+    ),
+    shinydashboard::menuItem(
+      "Enrich",
+      icon = shiny::icon("play-circle"),
+      tabName = "enrich_tab"
+    ),
+    shinydashboard::menuItem(
+      figures[1],
+      icon = shiny::icon("chart-bar"),
+      tabName = "rr_visualize_tab"
+    ),
+    shinydashboard::menuItem(
+      "Cluster",
+      icon = shiny::icon("vials"),
+      tabName = "cluster_tab"
+    ),
+    shinydashboard::menuItem(
+      figures[2],
+      icon = shiny::icon("chart-line"),
+      tabName = "clus_visualize_tab"
+    ),
+    shinydashboard::menuItem(
+      "Save",
       icon = shiny::icon("floppy-disk"),
       tabName = "save_tab"
-    ),
-    shiny::hr(),
-    shiny::bookmarkButton()
+    )
   )
 }
 
@@ -405,7 +391,23 @@ workspace_header_server <- function(
         ) {
           return()
         }
-        if (!identical(value, active_result())) active_result(value)
+        if (!identical(value, active_result())) {
+          active_result(value)
+          # Switching the dataset sets the default selection on Cluster and Results.
+          root <- session$rootScope()
+          shiny::updateSelectizeInput(
+            root,
+            "cluster-selected_rrs",
+            selected = value
+          )
+          for (select in c("select_table", "select_bar", "select_dot", "select_net")) {
+            shiny::updateSelectInput(
+              root,
+              paste0("rr_visualize-", select),
+              selected = value
+            )
+          }
+        }
       },
       ignoreInit = TRUE
     )
@@ -540,7 +542,8 @@ workspace_navigation_server <- function(
   u_degnames,
   u_rrnames,
   u_rrdfs,
-  u_big_rrdf
+  u_big_rrdf,
+  u_clusnames = NULL
 ) {
   active_result <- shiny::reactiveVal(NULL)
   navigate <- function(tab) workspace_navigate(session, tab)
@@ -568,9 +571,179 @@ workspace_navigation_server <- function(
     navigate = navigate,
     jobs = workspace_jobs_peek(session)
   )
+  workspace_stepper_server(
+    "stepper",
+    u_degnames = u_degnames,
+    u_rrnames = u_rrnames,
+    u_big_rrdf = u_big_rrdf,
+    u_clusnames = u_clusnames
+  )
+  workspace_handoffs(
+    session,
+    active_result = active_result,
+    navigate = navigate,
+    u_degnames = u_degnames,
+    u_rrnames = u_rrnames,
+    u_big_rrdf = u_big_rrdf,
+    jobs = workspace_jobs_peek(session)
+  )
   list(
     active_result = active_result,
     navigate = navigate,
     load_demo = load_demo
   )
+}
+
+# Cross-step handoffs (SPEC-WS-013 REQ-009): a success notice with a next action when data are
+# loaded, the active dataset's source as the default gene-list selection when Enrich opens, and a
+# "View cluster figures" action when a clustering job succeeds. All display state; no analysis runs.
+workspace_handoffs <- function(
+  session,
+  active_result,
+  navigate,
+  u_degnames,
+  u_rrnames,
+  u_big_rrdf,
+  jobs = NULL
+) {
+  input <- session$input
+  root <- session
+  seen <- new.env(parent = emptyenv())
+  seen$started <- FALSE
+  seen$rr <- character()
+  seen$deg <- character()
+  seen$jobs <- character()
+  seen$figures <- NULL
+
+  notice <- function(text, action_id, action_label, id) {
+    shiny::showNotification(
+      shiny::tagList(
+        shiny::tags$span(text),
+        shiny::tags$br(),
+        shiny::actionLink(action_id, action_label)
+      ),
+      duration = 12,
+      type = "message",
+      id = id
+    )
+  }
+
+  shiny::observe({
+    rr <- as.character(u_rrnames$labels)
+    deg <- as.character(u_degnames$labels)
+    shiny::isolate({
+      new_rr <- setdiff(rr, seen$rr)
+      new_deg <- setdiff(deg, seen$deg)
+      first <- !seen$started
+      seen$started <- TRUE
+      seen$rr <- rr
+      seen$deg <- deg
+      if (first) {
+        return()
+      }
+      if (length(new_rr)) {
+        notice(
+          paste0(
+            "Loaded ",
+            length(new_rr),
+            if (length(new_rr) == 1L) " result: " else " results: ",
+            paste(utils::head(new_rr, 3L), collapse = ", "),
+            if (length(new_rr) > 3L) ", ..." else "",
+            "."
+          ),
+          "workspace_next_cluster",
+          "Cluster these results",
+          "workspace-loaded"
+        )
+      } else if (length(new_deg)) {
+        notice(
+          paste0(
+            "Loaded ",
+            length(new_deg),
+            if (length(new_deg) == 1L) " gene list." else " gene lists."
+          ),
+          "workspace_next_enrich",
+          "Go to Enrich",
+          "workspace-loaded"
+        )
+      }
+    })
+  })
+
+  shiny::observeEvent(input$workspace_next_cluster, {
+    current <- active_result()
+    labels <- as.character(u_rrnames$labels)
+    shiny::updateSelectizeInput(
+      root,
+      "cluster-selected_rrs",
+      selected = if (!is.null(current) && current %in% labels) current else utils::head(labels, 1L)
+    )
+    navigate("cluster_tab")
+  })
+  shiny::observeEvent(input$workspace_next_enrich, navigate("enrich_tab"))
+
+  # Opening Enrich with an empty gene-list selection selects the gene list the active result came from.
+  shiny::observeEvent(input[[workspace_sidebar_id]], {
+    if (!identical(input[[workspace_sidebar_id]], "enrich_tab")) {
+      return()
+    }
+    current <- active_result()
+    big <- u_big_rrdf[["df"]]
+    if (
+      is.null(current) ||
+        length(input[["enrich-degs_to_enrich"]]) ||
+        !is.data.frame(big) ||
+        !all(c("name", "from_deg") %in% names(big))
+    ) {
+      return()
+    }
+    source <- as.character(big$from_deg[big$name %in% current])
+    source <- source[source %in% as.character(u_degnames$labels)]
+    if (length(source) == 1L) {
+      shiny::updateSelectizeInput(root, "enrich-degs_to_enrich", selected = source)
+    }
+  }, ignoreInit = TRUE)
+
+  if (!is.null(jobs)) {
+    shiny::observe({
+      jobs$tick()
+      shiny::isolate({
+        for (rec in jobs$records) {
+          id <- as.character(rec$run_id)
+          if (
+            id %in% seen$jobs ||
+              !identical(rec$state, "succeeded") ||
+              id %in% jobs$imported
+          ) {
+            next
+          }
+          seen$jobs <- c(seen$jobs, id)
+          if (!identical(rec$kind, "clustering")) {
+            next
+          }
+          outputs <- as.character(unlist(rec$outputs))
+          if (!length(outputs)) {
+            next
+          }
+          seen$figures <- outputs[[1L]]
+          notice(
+            paste0("Clustering finished: ", outputs[[1L]], "."),
+            "workspace_view_cluster_figures",
+            "View cluster figures",
+            "workspace-cluster-done"
+          )
+        }
+      })
+    })
+    shiny::observeEvent(input$workspace_view_cluster_figures, {
+      name <- seen$figures
+      if (!is.null(name)) {
+        for (select in c("clus_visualize-clusdf_select", "clus_visualize-cluslist_select")) {
+          shiny::updateSelectInput(root, select, selected = name)
+        }
+      }
+      navigate("clus_visualize_tab")
+    })
+  }
+  invisible(NULL)
 }

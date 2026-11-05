@@ -67,58 +67,64 @@ workspace_rds_refusal_ui <- function() {
 #' @param tabName Tab identifier for shinydashboard
 #' @return A tabItem containing the save/load UI
 #' @export
-saveTabUI <- function(id, tabName) {
+# Opening a project: the file input and its Open action. It sits on the Data step
+# (SPEC-WS-013 M6) under this module's namespace, so every id is unchanged.
+save_open_project_ui <- function(ns) {
+  box(
+    title = "Open project",
+    status = "success",
+    width = NULL,
+    solidHeader = TRUE,
+    fileInput(
+      ns('load_project_file'),
+      "Choose project file",
+      accept = c('.zip', '.ZIP')
+    ),
+    actionButton(ns('load_project'), "Open project", class = "btn-default"),
+    helpText(
+      "A project is checked completely before anything is replaced; a rejected project changes nothing."
+    )
+  )
+}
+
+saveTabUI <- function(id, tabName, open_project = TRUE) {
   ns <- NS(id)
   ui <- tabItem(tabName = tabName,
-    h2("Save & Load Analysis Session"),
-    p("Save your current analysis session or load a previously saved session."),
+    h2("Save project"),
+    p("Save your current analysis as a project, or open a project saved earlier."),
 
     fluidRow(
-      # Save session box
+      # Save project box: the one primary action
       column(width = 6,
-        box(title = "Save Session", status = "primary", width = NULL, solidHeader = TRUE,
-          p("Download your current analysis state including:"),
+        box(title = "Save project", status = "primary", width = NULL, solidHeader = TRUE,
+          p("A project (.zip) holds your analysis with a manifest of parameters, versions, statistics and a generated methods summary, next to the exact tables:"),
           tags$ul(
             tags$li("DEG sets"),
             tags$li("Enrichment results"),
-            tags$li("Clustering results"),
-            tags$li("Session settings")
+            tags$li("Clustering results")
           ),
-          hr(),
-          textInput(ns('session_name'), "Session name",
-                   value = paste0("richstudio_session_",
+          textInput(ns('session_name'), "Project name",
+                   value = paste0("richstudio_project_",
                                   format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
                                   paste0(sample(c(letters, 0:9), 8, replace = TRUE), collapse = ""))),
-          br(),
-          downloadButton(ns('download_session'), "Download Session", class = "btn-primary btn-lg"),
-          br(), br(),
+          downloadButton(ns('download_project'), "Save project", class = "btn-primary btn-lg")
+        ),
+        tags$details(
+          class = "rs-advanced",
+          tags$summary("Advanced: JSON session"),
+          p("A session is a JSON file with the analysis state only. Use it to move work between versions or to inspect it."),
+          downloadButton(ns('download_session'), "Download session (JSON)", class = "btn-default"),
           helpText("Sessions are saved as JSON with full numeric precision, so values reload exactly. Older session files in another format cannot be uploaded; if loading is refused, the message explains how to convert the file."),
-          hr(),
-          h4("Reproducible project"),
-          p("A project (.zip) adds a manifest with parameters, versions, statistics and a generated methods summary to the exact tables."),
-          downloadButton(ns('download_project'), "Download Project", class = "btn-default")
-        )
-      ),
-
-      # Load session box
-      column(width = 6,
-        box(title = "Load Session", status = "success", width = NULL, solidHeader = TRUE,
-          p("Upload a previously saved JSON session file to restore your analysis state."),
           hr(),
           fileInput(ns('load_session_file'), "Choose session file",
                    accept = c('.json', '.JSON')),
-          br(),
-          actionButton(ns('load_session'), "Load Session", class = "btn-primary btn-lg"),
-          br(), br(),
-          helpText("Loading a session will replace your current analysis state."),
-          hr(),
-          h4("Open a project"),
-          fileInput(ns('load_project_file'), "Choose project file",
-                   accept = c('.zip', '.ZIP')),
-          actionButton(ns('load_project'), "Open Project", class = "btn-default"),
-          helpText("A project is checked completely before anything is replaced; a rejected project changes nothing.")
+          actionButton(ns('load_session'), "Load session", class = "btn-default btn-lg"),
+          helpText("Loading a session will replace your current analysis state.")
         )
-      )
+      ),
+
+      # Open project box (hosted on the Data step in the app)
+      if (open_project) column(width = 6, save_open_project_ui(ns))
     ),
 
     # Session info box

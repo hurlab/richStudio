@@ -75,8 +75,17 @@ test_that("the project saved at the baseline is reproduced and opens with equal 
   fresh <- withr::local_tempfile(fileext = ".zip")
   ui_baseline_project_write(fresh, demo)
   # tables.json and tracking.json are compared as bytes, the manifest after the
-  # version-dependent fields (versions, files) are excluded.
-  expect_identical(ui_baseline_project_members(fresh), ui_baseline_project_members(baseline_zip))
+  # version-dependent fields (versions, files) are excluded. The recorded engine version is
+  # compared with the installed richR instead of the golden (it changes with the pinned release).
+  without_engine_version <- function(x) {
+    x$manifest$software$engine$version$value <- NULL
+    x
+  }
+  fresh_members <- ui_baseline_project_members(fresh)
+  expect_identical(without_engine_version(fresh_members),
+                   without_engine_version(ui_baseline_project_members(baseline_zip)))
+  expect_identical(fresh_members$manifest$software$engine$version$value,
+                   as.character(utils::packageVersion("richR")))
 
   opened <- richStudio:::project_import_read(baseline_zip)
   expect_identical(opened$degnames, names(demo$deg))

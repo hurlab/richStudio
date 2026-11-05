@@ -1,12 +1,12 @@
 # Dependency runtime: SPEC-DEPENDENCY-001
 
-The migration targets official hurlab richR 0.1.5 and standalone richCluster 2.0.1. Installed consumer acceptance AC-001–AC-010 passed scoped verification under R 4.6.1. Independent consumer review returned PASS-WITH-DEBT; full-suite/overall-coverage/LSP gates and production execution remain unverified.
+The current pin is official hurlab richR 0.1.6 (commit `cd058a6105aa0427ec9fea9d63e26e007401a23f`, asset SHA256 `a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e`; 2026-11-05: 0.1.5 was the previous pin, `9be43abdae556d9f1df128149a70721f08ab7d25`). The original migration targeted official hurlab richR 0.1.5 and standalone richCluster 2.0.1. Installed consumer acceptance AC-001–AC-010 passed scoped verification under R 4.6.1. Independent consumer review returned PASS-WITH-DEBT; full-suite/overall-coverage/LSP gates and production execution remain unverified.
 
 ## Exact source identities
 
 | Package | Version | Repository | Commit | Source archive SHA256 |
 |---|---|---|---|---|
-| richR | 0.1.5 | hurlab/richR | `9be43abdae556d9f1df128149a70721f08ab7d25` | `0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf` |
+| richR | 0.1.6 | hurlab/richR | `cd058a6105aa0427ec9fea9d63e26e007401a23f` | `a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e` |
 | richCluster | 2.0.1 | hurlab/richCluster | `a0d1f630fbe64089ab38516116b78962672e6349` | `6abe64c1c156368afcd9fbec942fadf80848ba64c00dadeac6b2faff27b73c00` |
 | bioAnno | 0.99.45 | guokai8/bioAnno | `3c8936033b806b9f40c7028faa80e4971f6d0859` | `ddab5c458aee07253aedf26d137caeeb6e548538c1ef14f1d0cb27d4d1dc9da9` |
 

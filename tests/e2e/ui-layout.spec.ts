@@ -394,3 +394,81 @@ for (const vp of [{ width: 390, height: 844, advanced: false }, { width: 1440, h
     expect(m.barTop, 'bar top against the visible header bottom').toBeLessThanOrEqual(Math.max(0, m.headerBottom) + 2);
   });
 }
+
+// ---- M8: Results master-detail (AC-022, AC-024) ---------------------------------------------------
+
+async function resultsState(page: Page) {
+  await populated(page);
+  await showTab(page, 'update_tab');
+  await page.locator('#enrich-deg_load').click();
+  await finishedClusterJob(page);
+  await showTab(page, 'rr_visualize_tab');
+  await expect(page.locator('#rr_visualize-ex_table tbody tr').first()).toBeVisible({ timeout: 20_000 });
+  await page.evaluate(() => window.scrollTo(0, 0));
+}
+
+// y-axis tick labels of the plotly figures inside `scope` must stay inside their plot container.
+async function tickLabelsInside(page: Page, scope: string) {
+  return page.locator(`${scope} .js-plotly-plot`).evaluateAll(plots => plots.flatMap(plot => {
+    const box = plot.getBoundingClientRect();
+    if (box.width === 0) return [];
+    return Array.from(plot.querySelectorAll('.yaxislayer-above .ytick text')).map(t => t.getBoundingClientRect())
+      .filter(r => r.left < box.left - 1 || r.right > box.right + 1).map(r => ({ left: r.left, right: r.right, plotLeft: box.left, plotRight: box.right }));
+  }));
+}
+
+for (const vp of [{ width: 1440, height: 900, top: 300 }, { width: 390, height: 844, top: 420 }]) {
+  test.describe(`AC-022 AC-024 Results at ${vp.width}x${vp.height}`, () => {
+    test('master-detail: no tab set, table near the top, figure beside (or above) the table, one segmented control, settings collapsed', async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await resultsState(page);
+      const pane = page.locator('#shiny-tab-rr_visualize_tab');
+      await expect(pane.getByRole('tab', { name: 'Explorer' })).toHaveCount(0);
+      for (const name of ['Table', 'Bar Plot', 'Dot Plot', 'Network', 'Heatmap']) await expect(pane.getByRole('tab', { name, exact: true })).toHaveCount(0);
+      expect(await pane.locator('ul.nav-tabs').locator('visible=true').count(), 'visible tab levels').toBeLessThanOrEqual(1);
+      expect(await pane.locator('details.rs-figure-settings').evaluate(d => (d as HTMLDetailsElement).open), 'settings collapsed').toBe(false);
+      const table = page.locator('#rr_visualize-ex_table');
+      const figure = page.locator('#rr_visualize-ex_plot');
+      const topAt = async () => (await table.boundingBox())!.y;
+      expect(await topAt(), 'term table top at first show').toBeLessThanOrEqual(vp.top);
+      await expect(figure.locator('.main-svg').first()).toBeVisible({ timeout: 20_000 });
+      const t = (await table.boundingBox())!, f = (await figure.boundingBox())!;
+      if (vp.width >= 1200) {
+        expect(f.x >= t.x + t.width - 2 || t.x >= f.x + f.width - 2, 'table and figure side by side').toBe(true);
+        expect(Math.abs(f.y - t.y), 'same top').toBeLessThan(120);
+      } else {
+        expect(f.y + f.height, 'figure above the table').toBeLessThanOrEqual(t.y + 2);
+      }
+      await table.locator('tbody tr').first().click();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      expect(await topAt(), 'term table top after selecting a term').toBeLessThanOrEqual(vp.top);
+      // one segmented control, reachable by keyboard
+      const radios = pane.locator('#rr_visualize-plot_type input[type="radio"]');
+      await expect(radios).toHaveCount(5);
+      await radios.first().focus();
+      await page.keyboard.press('ArrowRight');
+      await expect(radios.nth(1)).toBeChecked();
+    });
+
+    test('selected term: plain labels visible, Result ID and Annotation namespace only inside Details, figure labels stay inside their plot', async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await resultsState(page);
+      const pane = page.locator('#shiny-tab-rr_visualize_tab');
+      await pane.locator('#rr_visualize-ex_table tbody tr').first().click();
+      const selected = page.locator('#rr_visualize-ex_selected');
+      await expect(selected).toContainText('Term ID');
+      await expect(selected).toContainText('Member genes');
+      for (const text of ['Result ID', 'Annotation namespace']) await expect(pane.getByText(text, { exact: true }).locator('visible=true'), `"${text}" visible by default`).toHaveCount(0);
+      await selected.locator('details summary').click();
+      await expect(selected.getByText('Result ID', { exact: true })).toBeVisible();
+      for (const type of ['Terms', 'Bar', 'Dot']) {
+        await pane.getByRole('radio', { name: type, exact: true }).check();
+        await page.waitForTimeout(2500);
+        expect(await tickLabelsInside(page, '#shiny-tab-rr_visualize_tab'), `${type} y-axis labels outside the plot`).toEqual([]);
+      }
+      await showTab(page, 'clus_visualize_tab');
+      await page.waitForTimeout(2500);
+      expect(await tickLabelsInside(page, '#shiny-tab-clus_visualize_tab'), 'Cluster figures y-axis labels outside the plot').toEqual([]);
+    });
+  });
+}

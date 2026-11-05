@@ -50,7 +50,11 @@ async function twoFinishedJobs(page: Page) {
   await expect(activeRows(page)).toHaveCount(0, { timeout: 120_000 });
 }
 
-const RR_TABS = ['Table', 'Bar Plot', 'Dot Plot', 'Network', 'Heatmap'];
+// The tab set became one segmented plot-type control (SPEC-WS-013 M8); Table is the master table itself.
+const RR_TABS = ['Table', 'Bar', 'Dot', 'Network', 'Heatmap'];
+async function openResultsView(page: Page, name: string) {
+  if (name !== 'Table') await page.getByRole('radio', { name, exact: true }).check();
+}
 
 async function visibleEmptyStates(page: Page, scope: string) {
   return page.locator(`${scope} .empty-state`).locator('visible=true').allInnerTexts();
@@ -60,9 +64,14 @@ test.describe('AC-001 server-driven empty states', () => {
   test('an empty workspace shows one empty state with a next action per view; a populated one shows none', async ({ page }) => {
     await connected(page);
     await showTab(page, 'rr_visualize_tab');
-    const pane = '#shiny-tab-rr_visualize_tab .tab-pane.active';
+    const pane = '#shiny-tab-rr_visualize_tab';
     for (const name of RR_TABS) {
-      await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name, exact: true }).click();
+      await openResultsView(page, name);
+      if (name === 'Table') {
+        // The master table has no empty-state block; its notice names the next step.
+        await expect(page.locator('#rr_visualize-ex_notice')).toContainText(/\b(Load|Import|Select|Choose|Upload)\b/);
+        continue;
+      }
       const states = await visibleEmptyStates(page, pane);
       expect(states, `${name} empty workspace`).toHaveLength(1);
       expect(states[0], name).toMatch(/\b(Load|Import|Select|Choose|Upload)\b/);
@@ -73,7 +82,7 @@ test.describe('AC-001 server-driven empty states', () => {
     await showTab(page, 'rr_visualize_tab');
     await expect(page.locator('#rr_visualize-select_net')).toHaveValue('go1');
     for (const name of RR_TABS) {
-      await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name, exact: true }).click();
+      await openResultsView(page, name);
       if (name === 'Heatmap') {
         // The heatmap selector now defaults to an existing result (SPEC-WS-013 M6, F3).
         await expect(page.locator('#rr_visualize-select_tophmap')).toHaveValues(['go1']);
@@ -261,7 +270,8 @@ test.describe('AC-008 table display', () => {
     expect(listCells).not.toContain('?');
     expect(listCells).toContain('—');
     // Results Table tab: p-values to three significant figures, adjusted p-value inside the table width.
-    await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name: 'Table', exact: true }).click();
+    // The complete table sits in the page's Details disclosure (SPEC-WS-013 M8).
+    await page.locator('#shiny-tab-rr_visualize_tab details.rs-details').evaluate(d => { (d as HTMLDetailsElement).open = true; });
     const table = page.locator('#rr_visualize-rr_table');
     await expect(table.locator('tbody tr').first()).toBeVisible();
     const info = await table.evaluate((el) => {
@@ -384,7 +394,7 @@ test.describe('AC-029 network figure', () => {
       await connected(page);
       await page.locator('#home-load_demo').click();
       await page.waitForSelector('#shiny-tab-rr_visualize_tab.active');
-      await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name: 'Network', exact: true }).click();
+      await page.getByRole('radio', { name: 'Network', exact: true }).check();
       const image = page.locator('#rr_visualize-network img');
       await expect(image).toBeVisible({ timeout: 10_000 });
       await expect.poll(async () => { const b = await image.boundingBox(); return !!b && b.width >= 200 && b.height >= 200; },
@@ -412,8 +422,8 @@ test.describe('M4 y-axis term labels', () => {
     await connected(page);
     await page.locator('#home-load_demo').click();
     await page.waitForSelector('#shiny-tab-rr_visualize_tab.active');
-    for (const [name, output] of [['Dot Plot', 'dotplot'], ['Bar Plot', 'barplot']] as const) {
-      await page.locator('#shiny-tab-rr_visualize_tab').getByRole('tab', { name, exact: true }).click();
+    for (const [name, output] of [['Dot', 'dotplot'], ['Bar', 'barplot']] as const) {
+      await page.getByRole('radio', { name, exact: true }).check();
       const ticks = page.locator(`#rr_visualize-${output} .yaxislayer-above .ytick text`);
       await expect.poll(() => ticks.count(), { timeout: 20_000, message: `${name} ticks` }).toBeGreaterThan(10);
       const boxes = await ticks.evaluateAll(nodes => nodes.map(n => { const r = n.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; })
@@ -596,5 +606,37 @@ test.describe('AC-021 Enrich table and species default', () => {
     await table.locator('tbody tr', { hasText: 'kegg1' }).click();
     await expect(page.locator('#enrich-rr_table_select')).toHaveValue('kegg1');
     await expect(page.locator('#enrich-run_summary')).toContainText('Species: human (default)');
+  });
+});
+
+// The master table of the Results page (SPEC-WS-013 M8) gets the same display checks as the old Table tab.
+test.describe('AC-008 master table display', () => {
+  test('the Results term table shows labels, three significant figures, no row-name column, no unknown "?" and fits the width at 1440x900', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await twoFinishedJobs(page);
+    await showTab(page, 'rr_visualize_tab');
+    const table = page.locator('#rr_visualize-ex_table');
+    await expect(table.locator('tbody tr').first()).toBeVisible({ timeout: 15_000 });
+    const raw = ['GeneID_header', 'num_genes', 'has_expr_data', 'from_deg', 'Representative_Term', 'n_terms', 'min_pvalue', 'Padj', 'Pvalue'];
+    const info = await table.evaluate((el) => {
+      const heads = Array.from(el.querySelectorAll('thead tr:first-child th')) as HTMLElement[];
+      const names = heads.map(h => (h.textContent || '').trim());
+      const idx = names.indexOf('Adjusted p-value');
+      const p = names.indexOf('P-value');
+      const rows = Array.from(el.querySelectorAll('tbody tr')).slice(0, 10);
+      const scroller = (el.querySelector('.dataTables_scroll') || el) as HTMLElement;
+      const adj = idx >= 0 ? heads[idx].getBoundingClientRect() : null;
+      return { names, idx, p, adjRight: adj ? adj.right : -1, wrapperRight: scroller.getBoundingClientRect().right,
+        values: p >= 0 ? rows.map(r => (r.children[p] as HTMLElement).innerText.trim()) : [],
+        cells: Array.from(el.querySelectorAll('tbody td')).map(td => (td as HTMLElement).innerText.trim()) };
+    });
+    for (const name of raw) expect(info.names, name).not.toContain(name);
+    expect(info.names.filter(h => h === ''), 'empty (row-name) header').toEqual([]);
+    expect(info.cells).not.toContain('?');
+    expect(info.idx, 'Adjusted p-value column').toBeGreaterThanOrEqual(0);
+    expect(info.adjRight, 'adjusted p-value inside the table width').toBeLessThanOrEqual(info.wrapperRight + 1);
+    const significant = (text: string) => (text.replace(/e[+-]?\d+$/i, '').replace(/^0\.0*/, '').replace('.', '').replace(/^0+/, '')).length;
+    for (const value of info.values) expect(significant(value), value).toBeLessThanOrEqual(3);
   });
 });

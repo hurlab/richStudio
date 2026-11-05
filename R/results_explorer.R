@@ -225,7 +225,7 @@ explorer_actions <- function(n_results, has_run) {
   list(
     view = list(id = "ex_view", label = "View results", available = have, reason = none),
     figure = list(id = "ex_figure", label = "Create figure", available = have, reason = none),
-    cluster = list(id = "ex_cluster_go", label = "Cluster", available = have, reason = none),
+    cluster = list(id = "ex_cluster_go", label = "Cluster these results", available = have, reason = none),
     rerun = list(id = "ex_rerun", label = "Run again", available = have && has_run,
                  reason = if (!have) none else
                    "No recorded run for this result; imported results cannot be run again"))
@@ -233,7 +233,7 @@ explorer_actions <- function(n_results, has_run) {
 
 explorer_summary_ui <- function(facts, cue = NULL) {
   shiny::tags$section(class = "rs-workspace rs-workspace-card",
-    shiny::tags$h3("Result summary"),
+    shiny::tags$h4("Result summary"),
     if (!is.null(cue)) shiny::tags$p(cue),
     shiny::tags$dl(lapply(seq_along(facts), function(i) shiny::tagList(
       shiny::tags$dt(workspace_text(names(facts)[i])),
@@ -253,12 +253,15 @@ explorer_selection_ui <- function(df, index, key, dataset_id, namespace) {
     shiny::tags$dl(
       shiny::tags$dt("Term"), shiny::tags$dd(workspace_text(label, "label", missing = TRUE)),
       shiny::tags$dt("Term ID"), shiny::tags$dd(workspace_text(id, "id", missing = TRUE)),
-      shiny::tags$dt("Annotation namespace"), shiny::tags$dd(workspace_text(namespace)),
-      shiny::tags$dt("Result ID"), shiny::tags$dd(workspace_text(dataset_id)),
       shiny::tags$dt("Member genes"),
       shiny::tags$dd(if (is.null(genes)) "Not supplied" else if (!length(genes)) "None listed" else
         workspace_text(paste(genes, collapse = ", ")))),
-    shiny::tags$p("Highlighted in the table and in the figure."))
+    shiny::tags$p("Highlighted in the table and in the figure."),
+    shiny::tags$details(class = "rs-details",
+      shiny::tags$summary("Details"),
+      shiny::tags$dl(
+        shiny::tags$dt("Annotation namespace"), shiny::tags$dd(workspace_text(namespace)),
+        shiny::tags$dt("Result ID"), shiny::tags$dd(workspace_text(dataset_id)))))
 }
 
 # Figure of the strongest terms plus the selected one. The y-axis names each point
@@ -415,6 +418,17 @@ results_explorer_server <- function(input, output, session, u_rrnames, u_rrdfs, 
       selected = if (is.null(prev)) labs else intersect(prev, labs))
   })
 
+  # The figures follow the result shown in the table: choosing a result sets the bar, dot and network
+  # selectors (SPEC-WS-013 M8). They stay free to change inside the Figure settings.
+  shiny::observeEvent(list(input$ex_result, labels()), {
+    chosen <- input$ex_result
+    labs <- labels()
+    if (is.null(chosen) || !nzchar(chosen) || !chosen %in% labs) return()
+    for (id in c("select_bar", "select_dot", "select_net", "select_table")) {
+      shiny::updateSelectInput(session, id, choices = labs, selected = chosen)
+    }
+  })
+
   explorer_state <- shiny::reactive({
     label <- input$ex_result
     if (is.null(label) || !nzchar(label) || !label %in% labels()) return(NULL)
@@ -454,7 +468,9 @@ results_explorer_server <- function(input, output, session, u_rrnames, u_rrdfs, 
     acts <- explorer_actions(length(labels()), has_run = !is.null(st) && !is.null(st$run))
     ns <- session$ns(NULL)
     shiny::tags$div(class = "rs-workspace rs-workspace-actions",
-      lapply(acts, function(a) workspace_action(ns, a$id, a$label, a$available, a$reason)))
+      # The table and the figure are the page itself, so View results and Create figure have no place
+      # in the bar; Cluster these results and Run again remain.
+      lapply(acts[c("cluster", "rerun")], function(a) workspace_action(ns, a$id, a$label, a$available, a$reason)))
   })
 
   output$ex_notice <- shiny::renderUI({
@@ -630,10 +646,10 @@ results_explorer_server <- function(input, output, session, u_rrnames, u_rrdfs, 
     st <- explorer_state()
     if (is.null(st)) return()
     for (id in selects) shiny::updateSelectInput(session, id, selected = st$label)
-    shiny::updateTabsetPanel(session, "view_tabs", selected = tab)
+    shiny::updateRadioButtons(session, "plot_type", selected = tab)
   }
-  shiny::observeEvent(input$ex_view, open_view("Table", "select_table"))
-  shiny::observeEvent(input$ex_figure, open_view("Bar Plot", c("select_bar", "select_dot")))
+  shiny::observeEvent(input$ex_view, open_view("terms", "select_table"))
+  shiny::observeEvent(input$ex_figure, open_view("bar", c("select_bar", "select_dot")))
   shiny::observeEvent(input$ex_cluster_go, workspace_navigate(session, "cluster_tab"))
   shiny::observeEvent(input$ex_rerun, {
     st <- explorer_state()

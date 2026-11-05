@@ -112,7 +112,7 @@ workspace_release_metadata <- function(root = NULL) {
 # the two figure captions differ.
 workspace_sidebar_menu <- function(enabled = TRUE) {
   figures <- if (isTRUE(enabled)) {
-    c("Enrichment figures", "Cluster figures")
+    c("Results", "Cluster figures")
   } else {
     c("Visualize", "Visualize")
   }

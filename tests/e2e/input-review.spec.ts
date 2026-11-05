@@ -116,7 +116,9 @@ test('AC-002 AC-003 direct-plot uploader validates files and plots without enric
   await openRoute(page, 'update_tab');
   await exerciseUploader(page, 'rr_visualize', ['go1', 'go2', 'kegg1']);
   await openRoute(page, 'rr_visualize_tab');
-  await page.locator('#shiny-tab-rr_visualize_tab a[data-toggle="tab"][data-value="Bar Plot"]').click();
+  await page.getByRole('radio', { name: 'Bar', exact: true }).check();
+  // The figure's selectors sit in the collapsed Figure settings.
+  await page.locator('#shiny-tab-rr_visualize_tab details.rs-figure-settings').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   await chooseSelectize(page, 'rr_visualize-select_bar', 'valid-result.tsv');
   await expect(page.locator('#rr_visualize-barplot .main-svg').first()).toBeVisible();
   await attach(info, 'direct-plot-uploader', { project: info.project.name, errors });

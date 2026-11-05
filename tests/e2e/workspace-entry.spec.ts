@@ -154,7 +154,7 @@ test('REQ-001 collapsed navigation reaches Home and Save/Load through relabelled
   await expect(page.getByRole('heading', { name: 'Welcome to richStudio' })).toBeVisible();
   await expect(page.locator('#home-open_saved')).toBeVisible();
   await openSidebar(page);
-  await expect(page.locator('.sidebar-menu a[href="#shiny-tab-rr_visualize_tab"]')).toHaveText(/Enrichment figures/);
+  await expect(page.locator('.sidebar-menu a[href="#shiny-tab-rr_visualize_tab"]')).toHaveText(/Results/);
   await expect(page.locator('.sidebar-menu a[href="#shiny-tab-clus_visualize_tab"]')).toHaveText(/Cluster figures/);
   await closeNavigation(page);
 });
@@ -191,7 +191,9 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   await expectTab(page, 'rr_visualize_tab');
   await expect(page.locator('#rr_visualize-select_bar')).toHaveValue('kegg1');
   await expect(page.locator('#rr_visualize-select_dot')).toHaveValue('kegg1');
-  await page.locator('#shiny-tab-rr_visualize_tab a[data-toggle="tab"][data-value="Bar Plot"]').click();
+  await page.getByRole('radio', { name: 'Bar', exact: true }).check();
+  // The figure's selectors sit in the collapsed Figure settings.
+  await page.locator('#shiny-tab-rr_visualize_tab details.rs-figure-settings').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   await expect(page.locator('#rr_visualize-barplot .main-svg').first()).toBeVisible();
 
   // AC-003: valid settings survive a round trip through clustering.
@@ -201,7 +203,7 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   await openContext(page);
   await page.locator('#workspace-cluster_results').click();
   await expectTab(page, 'cluster_tab');
-  await openRoute(page, 'rr_visualize_tab', /Enrichment figures/);
+  await openRoute(page, 'rr_visualize_tab', /Results/);
   const settings = {
     select_bar: await page.locator('#rr_visualize-select_bar').inputValue(),
     bar_type: await page.locator('#rr_visualize-bar_type').inputValue(),

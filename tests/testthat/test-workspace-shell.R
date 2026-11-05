@@ -215,7 +215,7 @@ test_that("AC-019 the sidebar is one flat list in task order with no groups and 
   expect_identical(hrefs, c("home_tab", "update_tab", "cluster_upload_tab", "enrich_tab", "rr_visualize_tab",
                             "cluster_tab", "clus_visualize_tab", "save_tab"))
   text <- ws6s_text(html)
-  for (caption in c("Home", "Data", "Upload files", "Enrich", "Enrichment figures", "Cluster", "Cluster figures", "Save")) {
+  for (caption in c("Home", "Data", "Upload files", "Enrich", "Results", "Cluster", "Cluster figures", "Save")) {
     expect_match(text, caption, fixed = TRUE)
   }
   expect_false(grepl("Manage Files|Save/Load", text))

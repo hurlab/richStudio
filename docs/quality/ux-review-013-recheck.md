@@ -487,7 +487,47 @@ M7 fix (lead review of ff6d083): the stuck Run bar
 
 ## M8 - Results master-detail
 
-Not started.
+Decisions
+- The Results page is a master-detail view: one segmented plot-type control (Terms, Bar, Dot, Network, Heatmap; native radios, keyboard reachable), the term table (`ex_table`, the 008 table with its linked selection) as the master, the figure as the detail. The Explorer tab and the Table/Bar/Dot/Network/Heatmap tab set are gone; the only tabs left are the heatmap Top/Custom choice inside the collapsed "Figure settings".
+- Layout: CSS grid; at 1440 the table is on the left and the figure on the right with the selected-term, comparison, cluster-link and Details panel under the figure; at 390 the figure comes first, then the table, then the panel. The figure is 110 px tall at 390 so that the table stays within 420 px of the top (a trade-off: the AC-022 position clause and "figure above the table" together leave about 110 px for the figure on a narrow screen with the stepper and the context bar above).
+- Figure settings (closed) hold the result chooser (`ex_result`), the per-plot options and, for the heatmap, the Top/Custom terms choice and the delete controls (N2). Choosing a result sets the bar, dot, network and table selectors, so a figure needs no "Create figure" step; they stay free to change.
+- Selected term: plain labels (Term, Term ID, Member genes, values in other datasets in the comparison table); "Annotation namespace" and "Result ID" only inside a Details disclosure. The result summary (with its Result ID and Run) and the complete result table (`select_table`, `rr_table`) sit in a page-level Details disclosure.
+- The action bar lost "View results" and "Create figure" (the page is the table and the figure); "Cluster" is "Cluster these results", next to "Run again". `explorer_actions()` still returns the four entries and the `ex_view` / `ex_figure` observers stay (now selecting the Terms / Bar plot type); the old `resultsExplorerUI()` function is left unused.
+- Cluster figures: the linked-term paragraph renders nothing until a term is selected and is worded "Selected on Results".
+- No extra live region: `ex_selected` keeps `aria-live="off"`; the radios are plain inputs.
+- Y-axis labels (AC-024): bar, dot, heatmap and term figures take their container width (`rr_fit_plot`: no fixed width, `automargin`, and an ellipsis for tick labels that still do not fit on a narrow figure; hover text is untouched).
+
+Deferred items from the lead
+1. Results table column headers wrapping: fixed (headers `white-space: nowrap`; body cells `min-width: 7em`, no letter-by-letter wrapping).
+2. Cluster figures heatmap at 390 (640 px strip in a 340 px region): not changed. The strip is the M4 bounded, keyboard-reachable scroll region (`min-width: 640px` on purpose); fitting it to 340 px left the data area about 10 px wide and unreadable (tried and reverted). AC-024's y-axis clause holds for it (tick labels inside the plot).
+3. Stepper status text truncated at 1440: fixed (the Data step takes `flex: 1.7`).
+4. Data page box headers: unified (tab-box titles and box titles share one size, weight and colour; computed styles read: 15px, 600, rgb(10, 90, 158) for all six).
+5. Nav label "Enrichment figures" vs stepper "Results": fixed (visible label only; every `tabName` unchanged). Changed: `R/workspace_navigation.R` caption, `inst/application/app.R` breadcrumb ('Enrichment / Results', CRLF and 374 lines kept), the stepper next action "Open Results" (`R/workspace_shell.R`), `test-workspace-navigation.R` (caption, breadcrumb check), `test-workspace-shell.R` (caption), `workspace-entry.spec.ts` (2 regexps). The switch-off captions stay "Visualize". Remaining visible-text occurrences of "Enrichment figures" (none in the app): two code comments in `R/workspace_navigation.R` (l.181, l.500); docs not changed: this file (history rows), `docs/quality/ux-review-2026-11-04-reconciled.md` l.7 and l.12, `docs/specs/SPEC-WS-013.md` l.48, `docs/specs/SPEC-COMPACTUI-001/spec.md` l.46.
+
+RED (run on cd1766c)
+- `scratchpad/m8/red-testthat.txt` (17 failures: master-detail structure, Details-only identifiers, label, linked-term paragraph) and `scratchpad/m8/red-e2e.txt` (AC-022/024 tests at both viewports).
+
+Changed existing assertions (reason)
+- `test-results-explorer.R`: the AC-004 UI test expected the text "Explorer" and now expects its absence; `table_empty` is dropped from the empty-state ids (the Table tab is gone; the master table speaks through `ex_notice`).
+- `results-explorer.spec.ts`: the helper opens Figure settings (the result chooser sits there) and the Details disclosure before the summary is read; the AC-004 test asserts "Cluster these results" instead of View results / Create figure / Cluster, plots with the Bar and Terms radios instead of tab clicks (`select_bar` still equals the result because it follows the shown result); the figure-click step first dismisses a load notification that can sit over the figure.
+- `test-compact-layout.R`: unchanged (every Results id is still rendered once; `select_table` and `rr_table` moved into the Details disclosure).
+- Out-of-list edits (lead-approved): `ui-flows.spec.ts` (AC-001 loop: tab clicks became radio checks, the Table pass checks the master table's notice because `table_empty` is gone; AC-008 opens Details before reading `rr_table`; AC-029 and the M4 label test use the Network, Dot and Bar radios; new test "AC-008 master table display" runs the same display checks on `ex_table`), `input-review.spec.ts` and `workspace-entry.spec.ts` (Bar tab click became the Bar radio, then Figure settings are opened for the selector), `test-workspace-navigation.R`, `test-workspace-shell.R`, `workspace-entry.spec.ts` l.157 and l.204 (nav label), `app.R`, `R/workspace_navigation.R`, `R/workspace_shell.R` (nav label and stepper wording).
+
+Layout, measured with demo results, Data "Load data" gene lists and a finished clustering job
+| | 1440x900 | 390x844 |
+|---|---|---|
+| term table top at first show (limit 300 / 420) | 272 | 415 |
+| term table top after selecting a term | 272 | 415 |
+| figure and table | side by side | figure above the table |
+
+`custom.css` digest re-pinned in `design-system.spec.ts`: before `f34a205e...`, after `7f6af040...` (final).
+
+Verification
+- Full testthat (CI library): `RESULT files 35 tests 4430 failed 0 errors 0 skipped 0`.
+- Full browser gate via `scripts/test-workspace.sh browser` (fresh scratch `m8g`, render pre-step included, port 3871 free): `2 failed`, `184 passed (22.4m)`; the failures are `design-system.spec.ts:803` in both projects.
+- Master table width at 1440: the Adjusted p-value column ends at 820 px inside a 942 px table viewport (the Member genes column scrolls); display checks (labels, three significant figures, no row-name column) run on both `ex_table` and `rr_table`.
+- Screenshots in `scratchpad/m8-shots/` (1440x900 and 390x844): Results default, a term selected, Figure settings expanded, Cluster figures with and without a selected term.
+
 
 
 Open point for the SPEC owner: AC-003 literally requires a disabled control's computed opacity of at most 0.6. That clause conflicts with the SPEC-WS-002 guard (no opacity), so the implemented test asserts explicit colours instead; AC-003's wording needs a registry revision.

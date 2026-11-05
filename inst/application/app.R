@@ -127,7 +127,7 @@ ui <- function(request) {
   # previous Home, menu captions and no header. Stores and results are unaffected.
   workspace_navigation <- isTRUE(getOption("richStudio.workspace_navigation", TRUE))
   figure_breadcrumbs <- if (workspace_navigation) {
-    "'rr_visualize_tab': 'Enrichment / Enrichment figures',
+    "'rr_visualize_tab': 'Enrichment / Results',
               'clus_visualize_tab': 'Clustering / Cluster figures',"
   } else {
     "'rr_visualize_tab': 'Enrichment / Visualize',

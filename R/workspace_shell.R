@@ -155,7 +155,7 @@ workspace_step_status <- function(
     "Upload gene lists first"
   }
   results_status <- if (n_results > 0L) count(n_results, "result") else "No results"
-  results_next <- if (n_results > 0L) "Open Enrichment figures" else "Run Enrich or import results"
+  results_next <- if (n_results > 0L) "Open Results" else "Run Enrich or import results"
   cluster_status <- if (n_clus > 0L) {
     count(n_clus, "cluster result")
   } else if (n_results > 0L) {

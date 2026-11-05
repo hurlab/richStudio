@@ -2424,3 +2424,181 @@ body.skin-blue .wrapper .content-wrapper {
   overflow: clip !important;
 }
 
+
+/* --- SPEC-WS-013 M8: Results master-detail --- */
+.rs-results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 8px;
+}
+.rs-results-bar .shiny-input-container {
+  margin: 0;
+}
+.rs-results-bar .shiny-options-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+.rs-segmented label.radio-inline {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  margin: 0;
+  padding: 4px 16px;
+  font-weight: 600;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-text-secondary);
+  cursor: pointer;
+}
+.rs-segmented label.radio-inline + label.radio-inline {
+  margin-left: -1px;
+}
+.rs-segmented label.radio-inline:first-of-type {
+  border-radius: var(--rs-radius-sm) 0 0 var(--rs-radius-sm);
+}
+.rs-segmented label.radio-inline:last-of-type {
+  border-radius: 0 var(--rs-radius-sm) var(--rs-radius-sm) 0;
+}
+.rs-segmented label.radio-inline input[type="radio"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.rs-segmented label.radio-inline:has(input:checked) {
+  color: #ffffff;
+  background: var(--rs-primary);
+  border-color: var(--rs-primary-dark);
+}
+.rs-segmented label.radio-inline:has(input:focus-visible) {
+  outline: 3px solid var(--rs-primary-dark);
+  outline-offset: 2px;
+  z-index: 1;
+}
+.rs-figure-settings {
+  margin: 0 0 12px;
+}
+.rs-figure-settings > summary,
+.rs-details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+  color: var(--rs-text);
+}
+.rs-figure-settings > summary::-webkit-details-marker,
+.rs-details > summary::-webkit-details-marker {
+  display: none;
+}
+.rs-figure-settings > summary::before,
+.rs-details > summary::before {
+  content: "\25B8";
+  font-size: 14px;
+}
+.rs-figure-settings[open] > summary::before,
+.rs-details[open] > summary::before {
+  content: "\25BE";
+}
+.rs-master-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "master figure" "master panel";
+  grid-template-rows: auto 1fr;
+  gap: 8px 16px;
+  align-items: start;
+}
+.rs-figure {
+  grid-area: figure;
+  min-width: 0;
+}
+.rs-master {
+  grid-area: master;
+  min-width: 0;
+}
+.rs-panel {
+  grid-area: panel;
+  min-width: 0;
+}
+.rs-panel > div,
+.rs-panel > section {
+  margin-bottom: 12px;
+}
+.rs-panel h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.rs-panel .rs-workspace-actions > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  .rs-master-detail {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "figure" "master" "panel";
+    grid-template-rows: auto;
+  }
+  /* A compact figure keeps the term table in reach on a narrow screen. */
+  .rs-figure #rr_visualize-ex_plot {
+    height: 110px !important;
+  }
+  .rs-results-bar {
+    margin-bottom: 4px;
+  }
+  .rs-figure-settings {
+    margin-bottom: 4px;
+  }
+}
+
+/* Term table: header words wrap at spaces only; long cells (gene lists) are bounded, so the table fits. */
+#rr_visualize-ex_table table.dataTable thead th {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  padding: 6px 8px;
+}
+#rr_visualize-ex_table table.dataTable tbody td {
+  max-width: 14em;
+  padding: 6px 8px;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+@media (min-width: 768px) {
+  .rs-master-detail {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+/* The Data step's status text is the longest, so that step gets more of the row. */
+.rs-stepper > .rs-step:first-child {
+  flex: 1.7 1 0;
+}
+
+/* Data step: tab-box titles and the plain box header share one title style. */
+#shiny-tab-update_tab .nav-tabs-custom > .nav-tabs > li.header {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 34px;
+  color: var(--rs-primary-dark);
+}
+#shiny-tab-update_tab .box > .box-header .box-title {
+  font-size: 15px;
+  font-weight: 600;
+}

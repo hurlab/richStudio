@@ -265,7 +265,7 @@ test_that("REQ-002 sidebar relabels figure destinations and keeps every route in
     expect_identical(captions[names(shared)], shared)
   }
   expect_identical(ws3_captions(on)[c("rr_visualize_tab", "clus_visualize_tab")],
-                   c(rr_visualize_tab = "Enrichment figures", clus_visualize_tab = "Cluster figures"))
+                   c(rr_visualize_tab = "Results", clus_visualize_tab = "Cluster figures"))
   expect_identical(ws3_captions(off)[c("rr_visualize_tab", "clus_visualize_tab")],
                    c(rr_visualize_tab = "Visualize", clus_visualize_tab = "Visualize"))
   expect_match(on, 'id="workspace_sidebar"', fixed = TRUE)
@@ -779,7 +779,7 @@ test_that("REQ-001 REQ-002 installed app wires the release switch, menu, header 
                  "workspace_navigation_server\\(", "home_tab_ui\\([^)]*enabled")) {
     expect_match(text, call)
   }
-  for (caption in c("'rr_visualize_tab': 'Enrichment / Enrichment figures'",
+  for (caption in c("'rr_visualize_tab': 'Enrichment / Results'",
                     "'clus_visualize_tab': 'Clustering / Cluster figures'")) {
     expect_match(text, caption, fixed = TRUE)
   }

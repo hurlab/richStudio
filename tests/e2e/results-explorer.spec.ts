@@ -50,6 +50,10 @@ async function openExplorer(page: Page) {
   await page.locator('#home-load_demo').click();
   await expectTab(page, 'rr_visualize_tab');
   await expect(page.locator(`#${ns}-ex_summary`)).toContainText('Result summary');
+  // The result chooser sits in the collapsed Figure settings (SPEC-WS-013 M8).
+  await page.locator('#shiny-tab-rr_visualize_tab details.rs-figure-settings').evaluate(d => { (d as HTMLDetailsElement).open = true; });
+  // The result summary sits in a Details disclosure.
+  await page.locator('#shiny-tab-rr_visualize_tab details.rs-details').evaluate(d => { (d as HTMLDetailsElement).open = true; });
 }
 
 async function importDupLabels(page: Page) {
@@ -125,9 +129,9 @@ test('REQ-001 REQ-005 AC-004 imported enrichment without clusters opens result-f
   await expect(summary).toContainText('3');
   await expect(summary).toContainText('Not recorded');
   const actions = page.locator(`#${ns}-ex_actions`);
-  await expect(actions.getByRole('button', { name: 'View results' })).toBeEnabled();
-  await expect(actions.getByRole('button', { name: 'Create figure' })).toBeEnabled();
-  await expect(actions.getByRole('button', { name: 'Cluster' })).toBeEnabled();
+  // The table and the figure are the page itself, so only the cluster action is offered (M8).
+  await expect(actions.getByRole('button', { name: 'Cluster these results' })).toBeEnabled();
+  await expect(actions.getByRole('button', { name: 'View results' })).toHaveCount(0);
   const rerun = actions.getByRole('button', { name: 'Run again' });
   await expect(rerun).toBeDisabled();
   await expect(actions).toContainText('No recorded run for this result');
@@ -144,13 +148,12 @@ test('REQ-001 REQ-005 AC-004 imported enrichment without clusters opens result-f
   await expect(tableRow(page, 'GO:1')).toContainText('1.23e-12');
 
   // A figure is available without clustering through the existing figure view.
-  await actions.getByRole('button', { name: 'Create figure' }).click();
+  await page.getByRole('radio', { name: 'Bar', exact: true }).check();
   await expect(page.locator(`#${ns}-select_bar`)).toHaveValue('dup-labels.tsv');
-  await expect(page.locator(`#shiny-tab-rr_visualize_tab li.active a[data-value="Bar Plot"]`)).toHaveCount(1);
   await expect(page.locator(`#${ns}-barplot .main-svg`).first()).toBeVisible();
 
-  // The explorer's own figure also draws from the imported result.
-  await page.locator('#shiny-tab-rr_visualize_tab a[data-toggle="tab"][data-value="Explorer"]').click();
+  // The linked terms figure also draws from the imported result.
+  await page.getByRole('radio', { name: 'Terms', exact: true }).check();
   await expect(page.locator(`#${ns}-ex_plot .main-svg`).first()).toBeVisible();
   await attach(info, 'imported-without-clusters', { project: info.project.name, errors });
   expect(errors).toEqual([]);
@@ -187,6 +190,8 @@ test('REQ-002 AC-001 AC-002 selection follows the source term through sorting, t
   const index = labels.indexOf('other [GO:3]');
   expect(index).toBeGreaterThanOrEqual(0);
   const point = page.locator(`#${ns}-ex_plot .scatterlayer .points path`).nth(index);
+  // A load notification can sit over the figure; dismiss it before clicking the marker.
+  await page.evaluate(() => document.querySelectorAll('.shiny-notification').forEach(n => n.remove()));
   await point.scrollIntoViewIfNeeded();
   const box = await point.boundingBox();
   expect(box).not.toBeNull();

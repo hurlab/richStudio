@@ -540,7 +540,7 @@ clus_vis_tab_server <- function(
     output$indiv_clus_hmap <- renderPlotly({
       hmap <- plot_cluslist_hmap()
       req(inherits(hmap, "plotly"))
-      hmap
+      rr_fit_plot(hmap)
     })
 
     # Term selected in the results explorer (SPEC-WS-008): which clusters of the chosen
@@ -551,7 +551,7 @@ clus_vis_tab_server <- function(
     output$linked_term <- renderUI({
       info <- selection$info()
       if (is.null(info)) {
-        return(tags$p("No term is selected in the results explorer."))
+        return(NULL)
       }
       detail <- if (length(input$cluslist_select)) {
         u_cluslists[[input$cluslist_select]]
@@ -562,7 +562,7 @@ clus_vis_tab_server <- function(
       tags$div(
         class = "rs-workspace rs-workspace-card",
         tags$p(
-          "Selected in the results explorer: ",
+          "Selected on Results: ",
           tags$strong(workspace_text(info$label, "label", missing = TRUE)),
           " (",
           workspace_text(info$id, "id", missing = TRUE),

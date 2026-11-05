@@ -314,7 +314,8 @@ test_that("AC-004 imported enrichment without clusters offers a figure and exact
                "ex_summary", "ex_actions", "ex_selected", "ex_compare_table")) {
     expect_match(html, paste0('id="results-', id, '"'), fixed = TRUE)
   }
-  expect_match(html, "Explorer", fixed = TRUE)
+  # no Explorer tab any more (SPEC-WS-013 M8): the term table is the page
+  expect_false(grepl("Explorer", html, fixed = TRUE))
   # the existing figure routes remain reachable
   for (id in c("select_bar", "select_dot", "select_table", "select_net")) {
     expect_match(html, paste0('id="results-', id, '"'), fixed = TRUE)
@@ -524,9 +525,63 @@ test_that("AC-001 each result view hides its empty state when rows exist and sho
 
 test_that("AC-001 empty states name a next action", {
   ui <- as.character(richStudio:::rr_vis_tab_ui("results", "result_tab"))
-  for (id in c("table_empty", "bar_empty", "dot_empty", "net_empty", "hmap_empty")) {
+  # table_empty went with the Table tab (SPEC-WS-013 M8): the master table speaks through ex_notice.
+  for (id in c("bar_empty", "dot_empty", "net_empty", "hmap_empty")) {
     node <- regmatches(ui, regexpr(sprintf('id="results-%s".*?</div>', id), ui))
     expect_length(node, 1L)
     expect_match(node, "(Load|Import|Select|Choose)", info = id)
   }
+})
+
+
+# ---- SPEC-WS-013 M8: master-detail (AC-022, AC-024) -----------------------------------------
+
+rx8_html <- function() as.character(richStudio:::rr_vis_tab_ui("results", "result_tab"))
+
+test_that("AC-022 Results is a master-detail view: no tab set, one segmented plot-type control, closed figure settings", {
+  html <- rx8_html()
+  for (tab in c("Explorer", "Table", "Bar Plot", "Dot Plot", "Network")) {
+    expect_false(grepl(paste0('data-value="', tab, '"'), html, fixed = TRUE), info = tab)
+  }
+  # at most one level of tabs remains (the heatmap Top/Custom choice inside the settings)
+  expect_lte(lengths(regmatches(html, gregexpr('class="nav nav-tabs', html, fixed = TRUE)))[[1]], 1L)
+  radios <- regmatches(html, gregexpr('<input type="radio" name="results-plot_type" value="[a-z]+"', html))[[1]]
+  expect_identical(sub('.*value="([a-z]+)"', "\\1", radios), c("terms", "bar", "dot", "network", "heatmap"))
+  settings <- regmatches(html, regexpr('(?s)<details class="rs-figure-settings"[^>]*>', html, perl = TRUE))
+  expect_length(settings, 1L)
+  expect_false(grepl(" open", settings, fixed = TRUE))
+  # master (term table) and detail (figure) containers; the figure comes first in the DOM for narrow screens
+  expect_match(html, 'class="rs-master-detail"', fixed = TRUE)
+  expect_lt(regexpr('class="rs-detail"', html, fixed = TRUE), regexpr('class="rs-master"', html, fixed = TRUE))
+  expect_match(html, 'id="results-ex_table"', fixed = TRUE)
+  expect_match(html, 'id="results-ex_actions"', fixed = TRUE)
+})
+
+test_that("AC-024 Result ID and Annotation namespace are only inside a Details disclosure of the selected term", {
+  df <- rx_df()
+  html <- as.character(richStudio:::explorer_selection_ui(df, 1L, "k", "rs-1234", "GO:BP"))
+  outside <- gsub("(?s)<details.*?</details>", "", html, perl = TRUE)
+  for (term in c("Term", "Term ID", "Member genes")) expect_match(outside, term, fixed = TRUE)
+  for (term in c("Result ID", "Annotation namespace")) {
+    expect_false(grepl(term, outside, fixed = TRUE), info = term)
+    expect_match(html, term, fixed = TRUE)
+  }
+  expect_match(html, "<details", fixed = TRUE)
+})
+
+test_that("AC-022 the cluster action is labelled for what it does", {
+  expect_identical(rx_ns("explorer_actions")(1L, FALSE)$cluster$label, "Cluster these results")
+})
+
+test_that("AC-024 the Cluster figures page shows no linked-term paragraph until a term is selected", {
+  selection <- rx_ns("workspace_selection_state")()
+  shiny::testServer(rx_ns("clus_vis_tab_server"), args = list(
+    u_degnames = shiny::reactiveValues(labels = NULL), u_degdfs = shiny::reactiveValues(),
+    u_rrnames = shiny::reactiveValues(labels = NULL), u_rrdfs = shiny::reactiveValues(),
+    u_big_rrdf = shiny::reactiveValues(), u_clusnames = shiny::reactiveValues(labels = NULL),
+    u_clusdfs = shiny::reactiveValues(), u_big_clusdf = shiny::reactiveValues(),
+    u_cluslists = shiny::reactiveValues(), selection = selection), {
+    session$flushReact()
+    expect_identical(paste(output$linked_term$html, collapse = ""), "")
+  })
 })

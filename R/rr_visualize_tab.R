@@ -39,78 +39,74 @@ rr_load_box_ui <- function(ns) {
   )
 }
 
+# A figure takes the width of its container and grows the left margin for long term labels, so the
+# labels stay inside the plot (SPEC-WS-013 M8, AC-024).
+rr_fit_plot <- function(p) {
+  if (!inherits(p, "plotly")) {
+    return(p)
+  }
+  p$width <- NULL
+  p$x$layout$width <- NULL
+  p$x$layout$autosize <- TRUE
+  p <- plotly::layout(p, yaxis = list(automargin = TRUE))
+  # Plotly caps an automatic margin at about half the width, so on a narrow figure the tick labels
+  # that still do not fit are shortened with an ellipsis (static script; hover text is untouched).
+  htmlwidgets::onRender(
+    p,
+    "function(el, x) {
+      var axis = x.layout && x.layout.yaxis;
+      if (!axis || !axis.ticktext || !axis.ticktext.length) return;
+      var full = axis.ticktext.slice();
+      var fit = function() {
+        var limit = Math.max(14, Math.floor(0.4 * el.clientWidth / 6.2));
+        var cut = full.map(function(t) {
+          t = String(t);
+          return t.length > limit ? t.slice(0, limit - 1) + '\u2026' : t;
+        });
+        Plotly.relayout(el, {'yaxis.ticktext': cut});
+      };
+      fit();
+    }"
+  )
+}
+
 rr_vis_tab_ui <- function(id, tabName) {
   ns <- NS(id)
   ui <- tabItem(
     tabName = tabName,
     fluidRow(
       column(
-        width = 4,
-        shinyjs::hidden(tags$div(
-          id = ns("rrlist_box"),
-          box(
-            title = "Available enrichment results",
-            width = NULL,
-            helpText(
-              paste0(
-                "You can rename any enrichment result by ",
-                "double-clicking on the relevant cell."
-              )
-            ),
-            DT::DTOutput(ns("rr_list_table")),
-            actionButton(ns("remove_rr"), "Delete")
-          )
-        ))
-      ),
-
-      # VISUALIZATION
-      column(
-        width = 8,
-        h2("Enrichment Result Visualization"),
-        tabsetPanel(
-          id = ns("view_tabs"),
-          selected = "Explorer",
-          # Result-first explorer above the existing views (SPEC-WS-008)
-          resultsExplorerUI(ns),
-          # Table
-          tabPanel(
-            "Table",
-            box(
-              title = "Selection",
-              width = NULL,
-              status = "primary",
-              collapsible = TRUE,
-              selectInput(
-                ns("select_table"),
-                "Select enrichment result to view",
-                choices = NULL,
-                multiple = FALSE
+        width = 12,
+        h2(class = "rs-sr-only", "Enrichment Result Visualization"),
+        # Plot type is one segmented control; the term table is always the master (SPEC-WS-013 M8).
+        tags$div(
+          class = "rs-results-bar",
+          tags$div(
+            class = "rs-segmented",
+            radioButtons(
+              ns("plot_type"),
+              label = NULL,
+              choices = c(
+                "Terms" = "terms",
+                "Bar" = "bar",
+                "Dot" = "dot",
+                "Network" = "network",
+                "Heatmap" = "heatmap"
               ),
-            ),
-            box(
-              title = "Table View",
-              width = NULL,
-              status = "info",
-              solidHeader = TRUE,
-              div(
-                id = ns("table_empty"),
-                class = "empty-state",
-                icon("table", class = "empty-icon"),
-                h4("No data to display"),
-                p("Load demo results from Home or import an enrichment result, then select it above.")
-              ),
-              DT::dataTableOutput(ns("rr_table"))
+              selected = "terms",
+              inline = TRUE
             )
-          ),
-
-          # Bar plot
-          tabPanel(
-            "Bar Plot",
-            box(
-              title = "Options",
-              width = NULL,
-              status = "primary",
-              collapsible = TRUE,
+          )
+        ),
+        tags$details(
+          class = "rs-figure-settings",
+          tags$summary("Figure settings"),
+          selectInput(ns("ex_result"), "Enrichment result", choices = NULL, multiple = FALSE),
+            conditionalPanel(
+              condition = "input.plot_type == 'bar'",
+              ns = ns,
+            div(
+              class = "rs-figure-options",
               selectInput(
                 ns("select_bar"),
                 "Select enrichment result to view",
@@ -154,31 +150,13 @@ rr_vis_tab_ui <- function(id, tabName) {
                 min = 1,
                 max = 100
               )
-            ),
-            box(
-              title = "Bar Plot",
-              width = NULL,
-              status = "info",
-              solidHeader = TRUE,
-              div(
-                id = ns("bar_empty"),
-                class = "empty-state",
-                icon("chart-bar", class = "empty-icon"),
-                h4("No data to display"),
-                p("Load demo results from Home or import an enrichment result, then select it above.")
-              ),
-              jqui_resizable(plotlyOutput(ns("barplot")))
             )
-          ),
-
-          # Dot plot
-          tabPanel(
-            "Dot Plot",
-            box(
-              title = "Options",
-              width = NULL,
-              status = "primary",
-              collapsible = TRUE,
+            ),
+            conditionalPanel(
+              condition = "input.plot_type == 'dot'",
+              ns = ns,
+            div(
+              class = "rs-figure-options",
               selectInput(
                 ns("select_dot"),
                 "Select enrichment result to view",
@@ -213,31 +191,13 @@ rr_vis_tab_ui <- function(id, tabName) {
                 min = 1,
                 max = 100
               )
-            ),
-            box(
-              title = "Dot Plot",
-              width = NULL,
-              status = "info",
-              solidHeader = TRUE,
-              div(
-                id = ns("dot_empty"),
-                class = "empty-state",
-                icon("chart-line", class = "empty-icon"),
-                h4("No data to display"),
-                p("Load demo results from Home or import an enrichment result, then select it above.")
-              ),
-              jqui_resizable(plotlyOutput(ns("dotplot")))
             )
-          ),
-
-          # Network
-          tabPanel(
-            "Network",
-            box(
-              title = "Options",
-              width = NULL,
-              status = "primary",
-              collapsible = TRUE,
+            ),
+            conditionalPanel(
+              condition = "input.plot_type == 'network'",
+              ns = ns,
+            div(
+              class = "rs-figure-options",
               selectInput(
                 ns("select_net"),
                 "Select enrichment result to view",
@@ -272,26 +232,11 @@ rr_vis_tab_ui <- function(id, tabName) {
                 min = 1,
                 max = 100
               )
-            ),
-            box(
-              title = "Network",
-              width = NULL,
-              status = "info",
-              solidHeader = TRUE,
-              div(
-                id = ns("net_empty"),
-                class = "empty-state",
-                icon("project-diagram", class = "empty-icon"),
-                h4("No data to display"),
-                p("Load demo results from Home or import an enrichment result, then select it above.")
-              ),
-              jqui_resizable(plotOutput(ns("network")))
             )
-          ),
-
-          # Heatmap
-          tabPanel(
-            "Heatmap",
+            ),
+            conditionalPanel(
+              condition = "input.plot_type == 'heatmap'",
+              ns = ns,
             tabBox(
               id = ns("edit_hmap_box"),
               width = NULL,
@@ -362,14 +307,6 @@ rr_vis_tab_ui <- function(id, tabName) {
                 actionButton(ns("cushmap_add_rr"), "Add terms")
               )
             ),
-            # Shown by the server while the visible heatmap has nothing to draw.
-            div(
-              id = ns("hmap_empty"),
-              class = "empty-state",
-              icon("table-cells", class = "empty-icon"),
-              h4("No data to display"),
-              p("Choose enrichment results under Top terms, or add terms under Custom terms.")
-            ),
             # Delete result/terms from custom heatmap
             shinyjs::hidden(tags$div(
               id = ns("delete_custom_hmap_box"),
@@ -401,7 +338,83 @@ rr_vis_tab_ui <- function(id, tabName) {
                   )
                 )
               )
-            )),
+            ))
+            )
+        ),
+        tags$div(
+          class = "rs-master-detail",
+          tags$div(
+            class = "rs-figure",
+            conditionalPanel(
+              condition = "input.plot_type == 'terms'",
+              ns = ns,
+              plotly::plotlyOutput(ns("ex_plot"))
+            ),
+            conditionalPanel(
+              condition = "input.plot_type == 'bar'",
+              ns = ns,
+            box(
+              title = "Bar Plot",
+              width = NULL,
+              status = "info",
+              solidHeader = TRUE,
+              div(
+                id = ns("bar_empty"),
+                class = "empty-state",
+                icon("chart-bar", class = "empty-icon"),
+                h4("No data to display"),
+                p("Load demo results from Home or import an enrichment result, then select it above.")
+              ),
+              jqui_resizable(plotlyOutput(ns("barplot")))
+            )
+            ),
+            conditionalPanel(
+              condition = "input.plot_type == 'dot'",
+              ns = ns,
+            box(
+              title = "Dot Plot",
+              width = NULL,
+              status = "info",
+              solidHeader = TRUE,
+              div(
+                id = ns("dot_empty"),
+                class = "empty-state",
+                icon("chart-line", class = "empty-icon"),
+                h4("No data to display"),
+                p("Load demo results from Home or import an enrichment result, then select it above.")
+              ),
+              jqui_resizable(plotlyOutput(ns("dotplot")))
+            )
+            ),
+            conditionalPanel(
+              condition = "input.plot_type == 'network'",
+              ns = ns,
+            box(
+              title = "Network",
+              width = NULL,
+              status = "info",
+              solidHeader = TRUE,
+              div(
+                id = ns("net_empty"),
+                class = "empty-state",
+                icon("project-diagram", class = "empty-icon"),
+                h4("No data to display"),
+                p("Load demo results from Home or import an enrichment result, then select it above.")
+              ),
+              jqui_resizable(plotOutput(ns("network")))
+            )
+            ),
+            conditionalPanel(
+              condition = "input.plot_type == 'heatmap'",
+              ns = ns,
+            # Shown by the server while the visible heatmap has nothing to draw.
+            div(
+              id = ns("hmap_empty"),
+              class = "empty-state",
+              icon("table-cells", class = "empty-icon"),
+              h4("No data to display"),
+              p("Choose enrichment results under Top terms, or add terms under Custom terms.")
+            ),
             # The actual heatmap plots
             shinyjs::hidden(tags$div(
               id = ns("top_hmap_box"),
@@ -423,8 +436,72 @@ rr_vis_tab_ui <- function(id, tabName) {
                 jqui_resizable(plotlyOutput(ns("custom_hmap")))
               )
             ))
+            )
+          ),
+          tags$div(
+            class = "rs-master",
+            shiny::uiOutput(ns("ex_notice")),
+            DT::DTOutput(ns("ex_table")),
+            shiny::downloadButton(ns("ex_download_exact"), "Download exact values (CSV)"),
+            shiny::downloadButton(ns("ex_download_safe"), "Download spreadsheet-safe copy (CSV)"),
+            shiny::tags$p(
+              id = ns("ex_table_help"),
+              class = "help-block",
+              "Select a row to link it to the figure, the comparison and the cluster view. Values are shown to 3 significant digits; the downloads keep the stored values."
+            )
+          ),
+          tags$div(
+            class = "rs-panel",
+            shiny::uiOutput(ns("ex_plot_note")),
+            uiOutput(ns("ex_actions")),
+            tags$div(
+              class = "rs-selected",
+              shiny::uiOutput(ns("ex_selected"), `aria-live` = "off"),
+              shiny::actionButton(ns("ex_clear"), "Clear selection")
+            ),
+            tags$div(
+              class = "rs-compare",
+              tags$h3("Compare datasets"),
+              shiny::selectInput(ns("ex_compare"), "Datasets to compare", choices = NULL, multiple = TRUE),
+              shiny::uiOutput(ns("ex_compare_table")),
+              plotly::plotlyOutput(ns("ex_compare_plot"), height = "260px")
+            ),
+            tags$div(
+              class = "rs-cluster-link",
+              tags$h3("Cluster link"),
+              shiny::uiOutput(ns("ex_cluster"))
+            ),
+            tags$details(
+              class = "rs-details",
+              tags$summary("Details"),
+              shiny::uiOutput(ns("ex_summary")),
+              # The complete table (every column, full table view) stays available here.
+              tags$h4("Result table"),
+              selectInput(
+                ns("select_table"),
+                "Select enrichment result to view",
+                choices = NULL,
+                multiple = FALSE
+              ),
+              DT::dataTableOutput(ns("rr_table"))
+            )
           )
-        )
+        ),
+        shinyjs::hidden(tags$div(
+          id = ns("rrlist_box"),
+          box(
+            title = "Available enrichment results",
+            width = NULL,
+            helpText(
+              paste0(
+                "You can rename any enrichment result by ",
+                "double-clicking on the relevant cell."
+              )
+            ),
+            DT::DTOutput(ns("rr_list_table")),
+            actionButton(ns("remove_rr"), "Delete")
+          )
+        ))
       )
     )
   )
@@ -696,8 +773,9 @@ rr_vis_tab_server <- function(
       )
       return(mybar)
     })
+    # Long term labels grow the left margin instead of running outside the plot (SPEC-WS-013 M8).
     output$barplot <- renderPlotly({
-      get_rr_barplot()
+      rr_fit_plot(get_rr_barplot())
     })
 
     get_rr_dotplot <- reactive({
@@ -713,7 +791,7 @@ rr_vis_tab_server <- function(
       return(mydot)
     })
     output$dotplot <- renderPlotly({
-      get_rr_dotplot()
+      rr_fit_plot(get_rr_dotplot())
     })
 
     get_rr_network <- reactive({
@@ -977,7 +1055,7 @@ rr_vis_tab_server <- function(
       }
     })
     output$topterm_hmap <- renderPlotly({
-      plot_topterm_heatmap()
+      rr_fit_plot(plot_topterm_heatmap())
     })
 
     plot_custom_hmap <- reactive({
@@ -990,7 +1068,7 @@ rr_vis_tab_server <- function(
       }
     })
     output$custom_hmap <- renderPlotly({
-      plot_custom_hmap()
+      rr_fit_plot(plot_custom_hmap())
     })
   })
 }

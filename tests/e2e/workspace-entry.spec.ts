@@ -192,6 +192,10 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   await expect(page.locator('#rr_visualize-select_bar')).toHaveValue('kegg1');
   await expect(page.locator('#rr_visualize-select_dot')).toHaveValue('kegg1');
   await page.getByRole('radio', { name: 'Bar', exact: true }).check();
+  {
+    const toggle = page.locator('#shiny-tab-rr_visualize_tab label.rs-figure-toggle');
+    if (await toggle.isVisible() && !(await toggle.locator('input').isChecked())) await toggle.click();
+  }
   // The figure's selectors sit in the collapsed Figure settings.
   await page.locator('#shiny-tab-rr_visualize_tab details.rs-figure-settings').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   await expect(page.locator('#rr_visualize-barplot .main-svg').first()).toBeVisible();

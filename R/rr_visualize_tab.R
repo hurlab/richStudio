@@ -54,18 +54,25 @@ rr_fit_plot <- function(p) {
   htmlwidgets::onRender(
     p,
     "function(el, x) {
-      var axis = x.layout && x.layout.yaxis;
-      if (!axis || !axis.ticktext || !axis.ticktext.length) return;
-      var full = axis.ticktext.slice();
-      var fit = function() {
-        var limit = Math.max(14, Math.floor(0.4 * el.clientWidth / 6.2));
-        var cut = full.map(function(t) {
-          t = String(t);
-          return t.length > limit ? t.slice(0, limit - 1) + '\u2026' : t;
-        });
-        Plotly.relayout(el, {'yaxis.ticktext': cut});
-      };
-      fit();
+      var axis = (x.layout && x.layout.yaxis) || {};
+      var full = axis.ticktext;
+      var vals = axis.tickvals;
+      if (!full || !full.length) {
+        // A categorical y axis: the categories are the labels.
+        var y = x.data && x.data[0] && x.data[0].y;
+        if (!y || !y.length || typeof y[0] !== 'string') return;
+        var seen = {};
+        full = y.filter(function(v) { if (seen[v]) return false; seen[v] = true; return true; });
+        vals = full;
+      }
+      var limit = Math.max(14, Math.floor(0.4 * el.clientWidth / 6.2));
+      var cut = full.map(function(t) {
+        t = String(t);
+        return t.length > limit ? t.slice(0, limit - 1) + '\u2026' : t;
+      });
+      var update = {'yaxis.ticktext': cut};
+      if (vals) { update['yaxis.tickmode'] = 'array'; update['yaxis.tickvals'] = vals; }
+      Plotly.relayout(el, update);
     }"
   )
 }
@@ -345,6 +352,15 @@ rr_vis_tab_ui <- function(id, tabName) {
           class = "rs-master-detail",
           tags$div(
             class = "rs-figure",
+            # On a narrow screen the figure sits in a closed disclosure above the term table (no id, so
+            # it is not an input of the module); on a wide screen it is always shown.
+            tags$label(
+              class = "rs-figure-toggle",
+              tags$input(type = "checkbox", class = "rs-fig-check"),
+              "Figure"
+            ),
+            tags$div(
+              class = "rs-figure-body",
             conditionalPanel(
               condition = "input.plot_type == 'terms'",
               ns = ns,
@@ -436,6 +452,7 @@ rr_vis_tab_ui <- function(id, tabName) {
                 jqui_resizable(plotlyOutput(ns("custom_hmap")))
               )
             ))
+            )
             )
           ),
           tags$div(

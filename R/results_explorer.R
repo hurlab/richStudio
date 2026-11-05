@@ -575,7 +575,7 @@ results_explorer_server <- function(input, output, session, u_rrnames, u_rrdfs, 
     shiny::req(st, st$keys)
     p <- explorer_term_plot(st$df, st$keys, selection$key(), top = top, source = plot_source)
     shiny::req(p)
-    p
+    rr_fit_plot(p)
   })
 
   explorer_comparison <- shiny::reactive({

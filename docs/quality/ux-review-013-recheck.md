@@ -489,7 +489,7 @@ M7 fix (lead review of ff6d083): the stuck Run bar
 
 Decisions
 - The Results page is a master-detail view: one segmented plot-type control (Terms, Bar, Dot, Network, Heatmap; native radios, keyboard reachable), the term table (`ex_table`, the 008 table with its linked selection) as the master, the figure as the detail. The Explorer tab and the Table/Bar/Dot/Network/Heatmap tab set are gone; the only tabs left are the heatmap Top/Custom choice inside the collapsed "Figure settings".
-- Layout: CSS grid; at 1440 the table is on the left and the figure on the right with the selected-term, comparison, cluster-link and Details panel under the figure; at 390 the figure comes first, then the table, then the panel. The figure is 110 px tall at 390 so that the table stays within 420 px of the top (a trade-off: the AC-022 position clause and "figure above the table" together leave about 110 px for the figure on a narrow screen with the stepper and the context bar above).
+- Layout: CSS grid; at 1440 the table is on the left and the figure on the right with the selected-term, comparison, cluster-link and Details panel under the figure; at 390 the figure comes first, then the table, then the panel. At 390 the figure is a closed "Figure" disclosure (a native checkbox in a label, no script) placed above the term table; opened it renders at its normal height. This is the reading of AC-022's "figure above the table at 390x844" that also keeps the table within 420 px: with the stepper and the context bar above, a visible figure leaves room for only about 110 px, which is unreadable.
 - Figure settings (closed) hold the result chooser (`ex_result`), the per-plot options and, for the heatmap, the Top/Custom terms choice and the delete controls (N2). Choosing a result sets the bar, dot, network and table selectors, so a figure needs no "Create figure" step; they stay free to change.
 - Selected term: plain labels (Term, Term ID, Member genes, values in other datasets in the comparison table); "Annotation namespace" and "Result ID" only inside a Details disclosure. The result summary (with its Result ID and Run) and the complete result table (`select_table`, `rr_table`) sit in a page-level Details disclosure.
 - The action bar lost "View results" and "Create figure" (the page is the table and the figure); "Cluster" is "Cluster these results", next to "Run again". `explorer_actions()` still returns the four entries and the `ex_view` / `ex_figure` observers stay (now selecting the Terms / Bar plot type); the old `resultsExplorerUI()` function is left unused.
@@ -499,7 +499,7 @@ Decisions
 
 Deferred items from the lead
 1. Results table column headers wrapping: fixed (headers `white-space: nowrap`; body cells `min-width: 7em`, no letter-by-letter wrapping).
-2. Cluster figures heatmap at 390 (640 px strip in a 340 px region): not changed. The strip is the M4 bounded, keyboard-reachable scroll region (`min-width: 640px` on purpose); fitting it to 340 px left the data area about 10 px wide and unreadable (tried and reverted). AC-024's y-axis clause holds for it (tick labels inside the plot).
+2. Cluster figures heatmap at 390 (640 px strip in a 340 px region): not changed; it scrolls horizontally inside its box (`#clus_visualize-clusdf_hmap_region`: `overflow: auto`, `role="region"`, `tabindex="0"`) rather than being cut. The strip is the M4 bounded, keyboard-reachable scroll region (`min-width: 640px` on purpose); fitting it to 340 px left the data area about 10 px wide and unreadable (tried and reverted). AC-024's y-axis clause holds for it (tick labels inside the plot).
 3. Stepper status text truncated at 1440: fixed (the Data step takes `flex: 1.7`).
 4. Data page box headers: unified (tab-box titles and box titles share one size, weight and colour; computed styles read: 15px, 600, rgb(10, 90, 158) for all six).
 5. Nav label "Enrichment figures" vs stepper "Results": fixed (visible label only; every `tabName` unchanged). Changed: `R/workspace_navigation.R` caption, `inst/application/app.R` breadcrumb ('Enrichment / Results', CRLF and 374 lines kept), the stepper next action "Open Results" (`R/workspace_shell.R`), `test-workspace-navigation.R` (caption, breadcrumb check), `test-workspace-shell.R` (caption), `workspace-entry.spec.ts` (2 regexps). The switch-off captions stay "Visualize". Remaining visible-text occurrences of "Enrichment figures" (none in the app): two code comments in `R/workspace_navigation.R` (l.181, l.500); docs not changed: this file (history rows), `docs/quality/ux-review-2026-11-04-reconciled.md` l.7 and l.12, `docs/specs/SPEC-WS-013.md` l.48, `docs/specs/SPEC-COMPACTUI-001/spec.md` l.46.
@@ -516,15 +516,16 @@ Changed existing assertions (reason)
 Layout, measured with demo results, Data "Load data" gene lists and a finished clustering job
 | | 1440x900 | 390x844 |
 |---|---|---|
-| term table top at first show (limit 300 / 420) | 272 | 415 |
-| term table top after selecting a term | 272 | 415 |
-| figure and table | side by side | figure above the table |
+| term table top at first show (limit 300 / 420), figure disclosure closed at 390 | 272 | 341 |
+| term table top after selecting a term | 272 | 341 |
+| term table top with the figure disclosure open | - | 741 |
+| figure and table | side by side | figure disclosure above the table (opened: figure above the table, 300 px or more high) |
 
-`custom.css` digest re-pinned in `design-system.spec.ts`: before `f34a205e...`, after `7f6af040...` (final).
+`custom.css` digest re-pinned in `design-system.spec.ts`: before `f34a205e...`, after `78f3e3c1...` (final).
 
 Verification
 - Full testthat (CI library): `RESULT files 35 tests 4430 failed 0 errors 0 skipped 0`.
-- Full browser gate via `scripts/test-workspace.sh browser` (fresh scratch `m8g`, render pre-step included, port 3871 free): `2 failed`, `184 passed (22.4m)`; the failures are `design-system.spec.ts:803` in both projects.
+- Full browser gate via `scripts/test-workspace.sh browser` (fresh scratch `m8g`, render pre-step included, port 3871 free): `2 failed`, `184 passed (21.7m)`; the failures are `design-system.spec.ts:803` in both projects.
 - Master table width at 1440: the Adjusted p-value column ends at 820 px inside a 942 px table viewport (the Member genes column scrolls); display checks (labels, three significant figures, no row-name column) run on both `ex_table` and `rr_table`.
 - Screenshots in `scratchpad/m8-shots/` (1440x900 and 390x844): Results default, a term selected, Figure settings expanded, Cluster figures with and without a selected term.
 

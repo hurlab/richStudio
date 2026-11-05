@@ -2426,6 +2426,19 @@ body.skin-blue .wrapper .content-wrapper {
 
 
 /* --- SPEC-WS-013 M8: Results master-detail --- */
+.rs-figure-toggle {
+  display: none;
+}
+.rs-fig-check {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
 .rs-results-bar {
   display: flex;
   flex-wrap: wrap;
@@ -2555,9 +2568,33 @@ body.skin-blue .wrapper .content-wrapper {
     grid-template-areas: "figure" "master" "panel";
     grid-template-rows: auto;
   }
-  /* A compact figure keeps the term table in reach on a narrow screen. */
-  .rs-figure #rr_visualize-ex_plot {
-    height: 110px !important;
+  /* The figure is a closed disclosure above the term table, so the table stays in reach. */
+  .rs-figure-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    margin: 0;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--rs-text);
+  }
+  .rs-figure-toggle::before {
+    content: "\25B8";
+    font-size: 14px;
+  }
+  .rs-figure-toggle:has(.rs-fig-check:checked)::before {
+    content: "\25BE";
+  }
+  .rs-figure-toggle:has(.rs-fig-check:focus-visible) {
+    outline: 3px solid var(--rs-primary-dark);
+    outline-offset: 2px;
+  }
+  .rs-figure-body {
+    display: none;
+  }
+  .rs-figure:has(.rs-fig-check:checked) .rs-figure-body {
+    display: block;
   }
   .rs-results-bar {
     margin-bottom: 4px;

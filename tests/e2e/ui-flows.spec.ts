@@ -52,8 +52,17 @@ async function twoFinishedJobs(page: Page) {
 
 // The tab set became one segmented plot-type control (SPEC-WS-013 M8); Table is the master table itself.
 const RR_TABS = ['Table', 'Bar', 'Dot', 'Network', 'Heatmap'];
+// On a narrow screen the Results figure is a closed disclosure above the term table (SPEC-WS-013 M8).
+async function openFigure(page: Page) {
+  const label = page.locator('#shiny-tab-rr_visualize_tab label.rs-figure-toggle');
+  if (await label.isVisible() && !(await label.locator('input').isChecked())) await label.click();
+}
+
 async function openResultsView(page: Page, name: string) {
-  if (name !== 'Table') await page.getByRole('radio', { name, exact: true }).check();
+  if (name !== 'Table') {
+    await page.getByRole('radio', { name, exact: true }).check();
+    await openFigure(page);
+  }
 }
 
 async function visibleEmptyStates(page: Page, scope: string) {
@@ -395,6 +404,7 @@ test.describe('AC-029 network figure', () => {
       await page.locator('#home-load_demo').click();
       await page.waitForSelector('#shiny-tab-rr_visualize_tab.active');
       await page.getByRole('radio', { name: 'Network', exact: true }).check();
+      await openFigure(page);
       const image = page.locator('#rr_visualize-network img');
       await expect(image).toBeVisible({ timeout: 10_000 });
       await expect.poll(async () => { const b = await image.boundingBox(); return !!b && b.width >= 200 && b.height >= 200; },
@@ -424,6 +434,7 @@ test.describe('M4 y-axis term labels', () => {
     await page.waitForSelector('#shiny-tab-rr_visualize_tab.active');
     for (const [name, output] of [['Dot', 'dotplot'], ['Bar', 'barplot']] as const) {
       await page.getByRole('radio', { name, exact: true }).check();
+      await openFigure(page);
       const ticks = page.locator(`#rr_visualize-${output} .yaxislayer-above .ytick text`);
       await expect.poll(() => ticks.count(), { timeout: 20_000, message: `${name} ticks` }).toBeGreaterThan(10);
       const boxes = await ticks.evaluateAll(nodes => nodes.map(n => { const r = n.getBoundingClientRect(); return { top: r.top, bottom: r.bottom }; })

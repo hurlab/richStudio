@@ -431,13 +431,23 @@ for (const vp of [{ width: 1440, height: 900, top: 300 }, { width: 390, height: 
       const figure = page.locator('#rr_visualize-ex_plot');
       const topAt = async () => (await table.boundingBox())!.y;
       expect(await topAt(), 'term table top at first show').toBeLessThanOrEqual(vp.top);
-      await expect(figure.locator('.main-svg').first()).toBeVisible({ timeout: 20_000 });
-      const t = (await table.boundingBox())!, f = (await figure.boundingBox())!;
-      if (vp.width >= 1200) {
+      if (vp.width < 768) {
+        // Narrow: the figure is a closed disclosure above the table; opened, it has its normal height.
+        const toggle = pane.locator('label.rs-figure-toggle');
+        await expect(toggle).toBeVisible();
+        expect((await toggle.boundingBox())!.y + (await toggle.boundingBox())!.height, 'figure disclosure above the table').toBeLessThanOrEqual((await table.boundingBox())!.y + 2);
+        await expect(figure).not.toBeVisible();
+        await toggle.click();
+        await expect(figure.locator('.main-svg').first()).toBeVisible({ timeout: 20_000 });
+        const t = (await table.boundingBox())!, f = (await figure.boundingBox())!;
+        expect(f.y + f.height, 'figure above the table').toBeLessThanOrEqual(t.y + 2);
+        expect(f.height, 'figure at a readable height').toBeGreaterThanOrEqual(300);
+        await toggle.click();
+      } else {
+        await expect(figure.locator('.main-svg').first()).toBeVisible({ timeout: 20_000 });
+        const t = (await table.boundingBox())!, f = (await figure.boundingBox())!;
         expect(f.x >= t.x + t.width - 2 || t.x >= f.x + f.width - 2, 'table and figure side by side').toBe(true);
         expect(Math.abs(f.y - t.y), 'same top').toBeLessThan(120);
-      } else {
-        expect(f.y + f.height, 'figure above the table').toBeLessThanOrEqual(t.y + 2);
       }
       await table.locator('tbody tr').first().click();
       await page.evaluate(() => window.scrollTo(0, 0));
@@ -461,6 +471,8 @@ for (const vp of [{ width: 1440, height: 900, top: 300 }, { width: 390, height: 
       for (const text of ['Result ID', 'Annotation namespace']) await expect(pane.getByText(text, { exact: true }).locator('visible=true'), `"${text}" visible by default`).toHaveCount(0);
       await selected.locator('details summary').click();
       await expect(selected.getByText('Result ID', { exact: true })).toBeVisible();
+      const figureToggle = pane.locator('label.rs-figure-toggle');
+      if (await figureToggle.isVisible()) await figureToggle.click();
       for (const type of ['Terms', 'Bar', 'Dot']) {
         await pane.getByRole('radio', { name: type, exact: true }).check();
         await page.waitForTimeout(2500);

@@ -52,6 +52,11 @@ async function openExplorer(page: Page) {
   await expect(page.locator(`#${ns}-ex_summary`)).toContainText('Result summary');
   // The result chooser sits in the collapsed Figure settings (SPEC-WS-013 M8).
   await page.locator('#shiny-tab-rr_visualize_tab details.rs-figure-settings').evaluate(d => { (d as HTMLDetailsElement).open = true; });
+  // On a narrow screen the figure is a closed disclosure above the table.
+  {
+    const toggle = page.locator('#shiny-tab-rr_visualize_tab label.rs-figure-toggle');
+    if (await toggle.isVisible() && !(await toggle.locator('input').isChecked())) await toggle.click();
+  }
   // The result summary sits in a Details disclosure.
   await page.locator('#shiny-tab-rr_visualize_tab details.rs-details').evaluate(d => { (d as HTMLDetailsElement).open = true; });
 }

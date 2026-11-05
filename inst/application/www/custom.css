@@ -2345,7 +2345,7 @@ body:has(#shiny-tab-update_tab.active, #shiny-tab-enrich_tab.active, #shiny-tab-
 /* --- SPEC-WS-013 M7: Enrich in three parts with a sticky Run bar --- */
 .rs-run-bar {
   position: sticky;
-  top: 50px;
+  top: 0;
   z-index: 30;
   display: flex;
   flex-wrap: wrap;
@@ -2418,10 +2418,9 @@ body:has(#shiny-tab-update_tab.active, #shiny-tab-enrich_tab.active, #shiny-tab-
   margin: 0 0 4px;
   font-size: 13px;
 }
-/* A clipping box (not a scroll container) keeps the Run bar sticky to the viewport on narrow screens. */
-@media (max-width: 767px) {
-  .wrapper,
-  body.skin-blue .wrapper .content-wrapper {
-    overflow: clip !important;
-  }
+/* A clipping box (not a scroll container) keeps the Run bar sticky to the viewport at every width. */
+.wrapper,
+body.skin-blue .wrapper .content-wrapper {
+  overflow: clip !important;
 }
+

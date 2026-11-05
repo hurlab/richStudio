@@ -478,6 +478,13 @@ Verification
 - Note: the rename/stored-rows tables under Advanced render when the disclosure is opened (as the page did before, when hidden); keeping them live while hidden made the AC-009 row count stale in about half of the runs.
 - Screenshots in `scratchpad/m7-shots/` (1440x900 and 390x844): default without and with a finished job, scrolled to the middle and to the bottom, Adjust expanded, Advanced expanded.
 
+M7 fix (lead review of ff6d083): the stuck Run bar
+- Defect: `.rs-run-bar { top: 50px }` assumed a fixed header, but `.main-header` scrolls away, so a 50 px band of page content showed above the stuck bar; and at 1440 the bar did not stick at all on a long page (`.wrapper` was a scroll container there). RED (`scratchpad/m7fix/red-e2e.txt`, `red-e2e-2.txt`): bar top 50 against a header bottom of -162 at 390; bar top -1650 at 1440 with Advanced open.
+- Fix: `top: 0`; `overflow: clip` on `.wrapper` and `.content-wrapper` at every width (it was narrow-only). New test "the stuck Run bar leaves no band of content above it" in `ui-layout.spec.ts`; it applies once the page has scrolled past the bar's natural position.
+- Measured at scroll bottom: 390x844 bar top 0 (header bottom -162, scrollY 262); 1440x900 with Advanced open bar top 0 (header bottom -2720, scrollY 2771). AC-020 numbers unchanged.
+- `custom.css` digest re-pinned: `749513df...` -> `f34a205e...`.
+- Verification: full testthat `RESULT files 35 tests 4409 failed 0 errors 0 skipped 0`; full browser gate `3 failed, 173 passed (21.4m)`: `design-system.spec.ts:803` x2 and one `clustering-roundtrip.spec.ts:160` failure in chromium-narrow (a `toHaveValues` check) that passed 6 of 6 when that spec was rerun in both projects (3 repeats each). Every 1440 layout and visual test that passed on ff6d083 passed again. Screenshots: `scratchpad/m7-shots/fix-390-bottom.png`, `fix-1440-advanced-bottom.png`, `fix-1440-clusfig.png`.
+
 ## M8 - Results master-detail
 
 Not started.

@@ -366,3 +366,31 @@ for (const vp of [{ width: 1440, height: 900, bar: 300, height_max: 1350 }, { wi
     });
   });
 }
+
+// ---- M7 fix: the stuck Run bar sits directly below the header that is actually visible ----------
+
+for (const vp of [{ width: 390, height: 844, advanced: false }, { width: 1440, height: 900, advanced: true }]) {
+  test(`AC-020 the stuck Run bar leaves no band of content above it at ${vp.width}x${vp.height}`, async ({ page }) => {
+    await page.setViewportSize({ width: vp.width, height: vp.height });
+    await populated(page);
+    await showTab(page, 'update_tab');
+    await page.locator('#enrich-deg_load').click();
+    await showTab(page, 'enrich_tab');
+    if (vp.advanced) await page.locator('#shiny-tab-enrich_tab details').evaluateAll(ds => ds.forEach(d => { (d as HTMLDetailsElement).open = true; }));
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const natural = await page.locator('#shiny-tab-enrich_tab .rs-run-bar').evaluate(e => e.getBoundingClientRect().top);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    await page.waitForTimeout(300);
+    const m = await page.evaluate(() => {
+      const bar = document.querySelector('#shiny-tab-enrich_tab .rs-run-bar')!.getBoundingClientRect();
+      const header = document.querySelector('.main-header')!.getBoundingClientRect();
+      const above = bar.top > 4 ? document.elementFromPoint(bar.left + bar.width / 2, bar.top - 4) : null;
+      return { barTop: bar.top, headerBottom: header.bottom, aboveClass: above ? (above as HTMLElement).className : null, scrollY };
+    });
+    await test.info().attach('bar-vs-header', { body: JSON.stringify(m), contentType: 'application/json' });
+    // The bar only sticks once the page has scrolled past its natural position; shorter pages leave it unstuck.
+    if (m.scrollY < natural) return;
+    expect(m.barTop, 'bar is stuck, not scrolled away').toBeGreaterThanOrEqual(-2);
+    expect(m.barTop, 'bar top against the visible header bottom').toBeLessThanOrEqual(Math.max(0, m.headerBottom) + 2);
+  });
+}

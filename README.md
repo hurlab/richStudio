@@ -47,7 +47,7 @@ install.packages(c("shiny", "shinydashboard", "shinyjs", "shinyWidgets",
 BiocManager::install(c("AnnotationDbi", "org.Hs.eg.db"))
 
 # GitHub packages
-devtools::install_github("guokai8/richR")
+devtools::install_github("hurlab/richR")
 devtools::install_github("guokai8/bioAnno")
 ```
 

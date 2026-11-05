@@ -152,7 +152,7 @@ sudo su - shiny -c "R -e \"install.packages(c('shiny', 'shinydashboard', 'shinyj
 
 # Install GitHub packages
 sudo su - shiny -c "R -e \"install.packages('remotes', repos='https://cloud.r-project.org')\""
-sudo su - shiny -c "R -e \"remotes::install_github('guokai8/richR')\""
+sudo su - shiny -c "R -e \"remotes::install_github('hurlab/richR')\""
 sudo su - shiny -c "R -e \"remotes::install_github('guokai8/bioAnno')\""
 
 # Install Bioconductor packages

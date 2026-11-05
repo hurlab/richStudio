@@ -79,7 +79,7 @@ jobs:
             ('rcmdcheck','https://cran.r-project.org/src/contrib/rcmdcheck_1.4.0.tar.gz','bbd4ef7d514b8c2076196a7c4a6041d34623d55fbe73f2771758ce61fd32c9d0'),
           ]
           sources=tooling_sources+[
-            ('richR','https://github.com/hurlab/richR/releases/download/v0.1.5/richR_0.1.5.tar.gz','0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf'),
+            ('richR','https://github.com/hurlab/richR/releases/download/v0.1.6/richR_0.1.6.tar.gz','a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e'),
             ('richCluster','https://api.github.com/repos/hurlab/richCluster/tarball/a0d1f630fbe64089ab38516116b78962672e6349','6abe64c1c156368afcd9fbec942fadf80848ba64c00dadeac6b2faff27b73c00'),
             ('bioAnno','https://api.github.com/repos/guokai8/bioAnno/tarball/3c8936033b806b9f40c7028faa80e4971f6d0859','ddab5c458aee07253aedf26d137caeeb6e548538c1ef14f1d0cb27d4d1dc9da9')]
           attempt_path=pathlib.Path(os.environ['WORKSPACE_ARTIFACTS'],'archive-download-attempts.jsonl')

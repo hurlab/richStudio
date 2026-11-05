@@ -239,7 +239,7 @@ test_that("REQ-004 AC-003 an unsupported route leaves the control unavailable an
   expect_identical(richStudio:::enrichment_background_missing_routes(fake), "enrich")
 })
 
-test_that("the installed richR 0.1.5 passes the capability self-check", {
+test_that("the installed richR 0.1.6 passes the capability self-check", {
   cap <- richStudio:::enrichment_background_capability(refresh = TRUE)
   expect_true(cap$available)
   expect_null(cap$reason)

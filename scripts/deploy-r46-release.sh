@@ -25,8 +25,8 @@ readonly EXPECTED_TAILSCALE_IP="100.94.67.89"
 readonly EXPECTED_R="4.6.1"
 readonly BIOC_VERSION="3.23"
 readonly CRAN_BINARY_REPO="https://packagemanager.posit.co/cran/__linux__/noble/latest"
-readonly RICHR_URL="https://github.com/hurlab/richR/releases/download/v0.1.5/richR_0.1.5.tar.gz"
-readonly RICHR_SHA256="0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf"
+readonly RICHR_URL="https://github.com/hurlab/richR/releases/download/v0.1.6/richR_0.1.6.tar.gz"
+readonly RICHR_SHA256="a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e"
 readonly RICHCLUSTER_URL="https://api.github.com/repos/hurlab/richCluster/tarball/a0d1f630fbe64089ab38516116b78962672e6349"
 readonly RICHCLUSTER_SHA256="6abe64c1c156368afcd9fbec942fadf80848ba64c00dadeac6b2faff27b73c00"
 readonly BIOANNO_URL="https://api.github.com/repos/guokai8/bioAnno/tarball/3c8936033b806b9f40c7028faa80e4971f6d0859"
@@ -125,15 +125,15 @@ as_app_user "$BUILD_DIR" mkdir -p "$LIB" logs
 SRC="$WORK_ROOT/src"
 as_app_user "$WORK_ROOT" mkdir "$SRC" "$SRC/richCluster" "$SRC/bioAnno"
 fetch() { as_app_user "$WORK_ROOT" curl --fail --location --silent --show-error --proto '=https' --tlsv1.2 --max-time 180 "$1" --output "$2"; }
-fetch "$RICHR_URL" "$SRC/richR_0.1.5.tar.gz"
+fetch "$RICHR_URL" "$SRC/richR_0.1.6.tar.gz"
 fetch "$RICHCLUSTER_URL" "$SRC/richCluster.tar.gz"
 fetch "$BIOANNO_URL" "$SRC/bioAnno.tar.gz"
-printf '%s  %s\n' "$RICHR_SHA256" "$SRC/richR_0.1.5.tar.gz" | sha256sum --check --status || fail 'richR archive SHA256 mismatch'
+printf '%s  %s\n' "$RICHR_SHA256" "$SRC/richR_0.1.6.tar.gz" | sha256sum --check --status || fail 'richR archive SHA256 mismatch'
 printf '%s  %s\n' "$RICHCLUSTER_SHA256" "$SRC/richCluster.tar.gz" | sha256sum --check --status || fail 'richCluster archive SHA256 mismatch'
 printf '%s  %s\n' "$BIOANNO_SHA256" "$SRC/bioAnno.tar.gz" | sha256sum --check --status || fail 'bioAnno archive SHA256 mismatch'
 as_app_user "$WORK_ROOT" tar -xzf "$SRC/richCluster.tar.gz" --strip-components=1 -C "$SRC/richCluster"
 as_app_user "$WORK_ROOT" tar -xzf "$SRC/bioAnno.tar.gz" --strip-components=1 -C "$SRC/bioAnno"
-as_app_user "$WORK_ROOT" tar -xzf "$SRC/richR_0.1.5.tar.gz" -C "$SRC"
+as_app_user "$WORK_ROOT" tar -xzf "$SRC/richR_0.1.6.tar.gz" -C "$SRC"
 [[ -f "$SRC/richR/DESCRIPTION" ]] || fail 'richR archive did not unpack to richR/'
 
 # ---- third-party dependencies (only what the R 4.6 libraries lack) ----------
@@ -177,7 +177,7 @@ r_build Rscript -e '
 ' "$LIB" "$CRAN_BINARY_REPO" "$BIOC_VERSION" "$SRC/richR" "$SRC/bioAnno" "$SRC/richCluster" "$BUILD_DIR"
 
 printf 'Building compiled hurlab packages and richStudio from source for R %s\n' "$EXPECTED_R"
-for pkg_src in "$SRC/richR_0.1.5.tar.gz" "$SRC/bioAnno" "$SRC/richCluster" "$BUILD_DIR"; do
+for pkg_src in "$SRC/richR_0.1.6.tar.gz" "$SRC/bioAnno" "$SRC/richCluster" "$BUILD_DIR"; do
     r_build R CMD INSTALL --no-test-load --library="$LIB" "$pkg_src"
 done
 
@@ -189,7 +189,7 @@ verify_release() {
       lib <- normalizePath(commandArgs(TRUE)[[1L]], mustWork = TRUE)
       stopifnot(identical(normalizePath(.libPaths()[[1L]]), lib))
       if (any(grepl("R-4\\.5|PREV", .libPaths()))) stop("an R 4.5 library is on the search path")
-      expected <- c(richR = "0.1.5", bioAnno = "0.99.45", richCluster = "2.0.1")
+      expected <- c(richR = "0.1.6", bioAnno = "0.99.45", richCluster = "2.0.1")
       for (p in c(names(expected), "richStudio")) {
         stopifnot(startsWith(normalizePath(find.package(p)), paste0(lib, .Platform$file.sep)))
         if (p %in% names(expected)) stopifnot(as.character(packageVersion(p)) == expected[[p]])

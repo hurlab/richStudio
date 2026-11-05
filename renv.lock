@@ -6208,13 +6208,13 @@
     },
     "richR": {
       "Package": "richR",
-      "Version": "0.1.5",
+      "Version": "0.1.6",
       "Source": "GitHub",
       "Type": "Package",
       "Title": "Function Enrichment analysis and Network construction",
-      "Author": "Kai Guo",
-      "Maintainer": "Kai Guo <guokai8@gmail.com>",
-      "Description": "This package is used for for enrichment analysis and network construction.",
+      "Author": "Kai Guo [aut], Junguk Hur [aut, cre]",
+      "Maintainer": "Junguk Hur <junguk.hur@med.und.edu>",
+      "Description": "Provides functions for functional enrichment analysis (ORA) via hypergeometric testing, Gene Set Enrichment Analysis (GSEA), and kappa-score-based term clustering. Provides publication-ready visualizations including bar plots, dot plots, network graphs, heatmaps, and cluster plots. Includes a color-enhanced UpSet plot for set intersection visualization.",
       "License": "GPL-3",
       "LazyData": "TRUE",
       "Depends": [
@@ -6261,8 +6261,8 @@
       "RemoteHost": "api.github.com",
       "RemoteUsername": "hurlab",
       "RemoteRepo": "richR",
-      "RemoteRef": "9be43abdae556d9f1df128149a70721f08ab7d25",
-      "RemoteSha": "9be43abdae556d9f1df128149a70721f08ab7d25"
+      "RemoteRef": "cd058a6105aa0427ec9fea9d63e26e007401a23f",
+      "RemoteSha": "cd058a6105aa0427ec9fea9d63e26e007401a23f"
     },
     "rlang": {
       "Package": "rlang",

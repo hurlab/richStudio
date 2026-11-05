@@ -86,10 +86,10 @@ if (richR_supported) {
   richR_available <- TRUE
 } else if (richR_installed) {
   message("Note: richR 0.1.5 or newer is required for enrichment analysis.")
-  message("Update with: remotes::install_github('hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25')")
+  message("Update with: remotes::install_github('hurlab/richR@cd058a6105aa0427ec9fea9d63e26e007401a23f')")
 } else {
   message("Note: richR package not installed. Enrichment analysis features will be limited.")
-  message("Install with: remotes::install_github('hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25')")
+  message("Install with: remotes::install_github('hurlab/richR@cd058a6105aa0427ec9fea9d63e26e007401a23f')")
 }
 
 if (requireNamespace("bioAnno", quietly = TRUE)) {

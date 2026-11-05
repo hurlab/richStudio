@@ -128,8 +128,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
   genes <- paste0("g", seq_len(20))
   parent <- dependency_richr_identity()
   cat("parent richR identity ", jsonlite::toJSON(parent, auto_unbox = TRUE), "\n", sep = "")
-  expect_identical(parent$namespace_version, "0.1.5")
-  expect_true(dependency_richr_origin(parent, parent$namespace_path, "0.1.5"))
+  expect_identical(parent$namespace_version, "0.1.6")
+  expect_true(dependency_richr_origin(parent, parent$namespace_path, "0.1.6"))
 
   # Register before creating anything. Nested worker cleanup runs before this.
   temporary <- tempfile("richr-origin-")
@@ -175,13 +175,13 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
     expect_identical(worker$namespace_version, expected_version)
     expect_identical(worker$package_version, expected_version)
     expect_identical(worker$namespace_path, if (label == "wrong-origin" || label == "wrong-version") copied_package else parent$namespace_path)
-    expect_identical(dependency_richr_origin(worker, parent$namespace_path, "0.1.5"), expected_origin)
+    expect_identical(dependency_richr_origin(worker, parent$namespace_path, "0.1.6"), expected_origin)
     if (label == "wrong-origin") {
-      expect_true(dependency_richr_origin(worker, copied_package, "0.1.5"))
+      expect_true(dependency_richr_origin(worker, copied_package, "0.1.6"))
     }
     # Version rejection is independent of origin: use the copy's own true path.
     if (label == "wrong-version") {
-      expect_false(dependency_richr_origin(worker, copied_package, "0.1.5"))
+      expect_false(dependency_richr_origin(worker, copied_package, "0.1.6"))
       expect_true(dependency_richr_origin(worker, copied_package, expected_version))
     }
     if (label == "valid-alias") {
@@ -199,8 +199,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
       })(), packages = "richR", seed = TRUE))
       cat("worker richR identity undeclared-library ", jsonlite::toJSON(unresolved, auto_unbox = TRUE), "\n", sep = "")
       expect_identical(unresolved$namespace_path, parent$namespace_path)
-      expect_identical(unresolved$namespace_version, "0.1.5")
-      expect_false(dependency_richr_origin(unresolved, parent$namespace_path, "0.1.5"))
+      expect_identical(unresolved$namespace_version, "0.1.6")
+      expect_false(dependency_richr_origin(unresolved, parent$namespace_path, "0.1.6"))
     }
     for (anntype in routes) {
       annotation <- dependency_annot_object(anntype, dependency_annotation_fixture(anntype, genes))
@@ -265,7 +265,7 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
     }
   }
   routes <- c("GO", "KEGG", "Reactome")
-  check_worker(parent$lib_paths, "ordinary", TRUE, "0.1.5", routes)
+  check_worker(parent$lib_paths, "ordinary", TRUE, "0.1.6", routes)
   # Preserve every other package and its precedence when replacing richR.
   other_libraries <- vapply(seq_along(parent$lib_paths), function(i) {
     library <- parent$lib_paths[[i]]
@@ -287,8 +287,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
     }
     projection
   }, character(1))
-  check_worker(c(alias, other_libraries), "valid-alias", TRUE, "0.1.5", routes)
-  check_worker(c(copied, other_libraries), "wrong-origin", FALSE, "0.1.5", "Reactome")
+  check_worker(c(alias, other_libraries), "valid-alias", TRUE, "0.1.6", routes)
+  check_worker(c(copied, other_libraries), "wrong-origin", FALSE, "0.1.6", "Reactome")
 
   # Synthetic metadata-only mismatch, not an upstream richR release. Keep the
   # supported >=0.1.5 API so the actual route reaches the identity comparison.
@@ -299,12 +299,12 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
             startsWith(normalizePath(description), paste0(copied_package, "/")),
             startsWith(normalizePath(metadata), paste0(copied_package, "/")))
   dcf <- read.dcf(description)
-  dcf[1L, "Version"] <- "0.1.6"
+  dcf[1L, "Version"] <- "0.1.7"
   write.dcf(dcf, description)
   meta <- readRDS(metadata)
-  meta$DESCRIPTION["Version"] <- "0.1.6"
+  meta$DESCRIPTION["Version"] <- "0.1.7"
   saveRDS(meta, metadata)
-  check_worker(c(copied, other_libraries), "wrong-version", FALSE, "0.1.6", "Reactome")
+  check_worker(c(copied, other_libraries), "wrong-version", FALSE, "0.1.7", "Reactome")
 })
 
 test_that("standalone hierarchical clustering uses public paths and strict raw-Pvalue filtering", {

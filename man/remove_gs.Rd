@@ -4,7 +4,7 @@
 \alias{remove_gs}
 \title{Remove selected terms or an entire geneset from the combined dataframe}
 \usage{
-remove_gs(custom_data, gs_name, term_vec, delete_all = NULL)
+remove_gs(custom_data, gs_name, term_vec, delete_all = NULL, gs_cols = NULL)
 }
 \arguments{
 \item{custom_data}{A data frame accumulating terms across genesets.}
@@ -15,7 +15,12 @@ remove_gs(custom_data, gs_name, term_vec, delete_all = NULL)
 \code{delete_all} is \code{NULL}).}
 
 \item{delete_all}{Character vector or \code{NULL}. If provided, all columns
-for \code{gs_name} and all rows matching these terms are removed.}
+for \code{gs_name} are removed, together with every row that no other
+geneset still holds a value for. Only its non-\code{NULL} status matters.}
+
+\item{gs_cols}{Character vector or \code{NULL}. Column names of the geneset's
+own result table; when given, its merged columns are matched exactly
+instead of by the \code{_gs_name} suffix.}
 }
 \value{
 Updated \code{custom_data} data frame with terms/geneset removed.

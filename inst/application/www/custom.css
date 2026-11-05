@@ -152,7 +152,7 @@ hr {
   padding: 12px 16px 12px 18px;
   font-size: 14px;
   font-weight: 500;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .skin-blue .sidebar-menu > li > a:hover {
@@ -188,7 +188,7 @@ hr {
   color: var(--rs-sidebar-text) !important;
   padding: 10px 16px 10px 46px;
   font-size: 13px;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .skin-blue .sidebar-menu .treeview-menu > li > a:hover {
@@ -442,7 +442,7 @@ hr {
   font-size: 13px;
   padding: 10px 16px;
   border: none !important;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .nav-tabs-custom > .nav-tabs > li > a:hover {
@@ -477,7 +477,7 @@ hr {
   color: var(--rs-text-secondary) !important;
   font-weight: 500;
   padding: 10px 16px;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .nav-tabs > li > a:hover {
@@ -595,7 +595,7 @@ input[type="number"].form-control {
   font-weight: 600;
   font-size: 13px;
   padding: 8px 16px;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
   border: 1px solid transparent;
   letter-spacing: 0.2px;
 }
@@ -880,7 +880,7 @@ input[type="number"].form-control {
   border: 1px solid var(--rs-border);
   padding: 20px 18px;
   position: relative;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .step-card:first-child {
@@ -971,7 +971,7 @@ input[type="number"].form-control {
   border-radius: var(--rs-radius);
   text-decoration: none;
   color: var(--rs-text);
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
   background: var(--rs-bg-card);
 }
 
@@ -1135,7 +1135,7 @@ pre, .shiny-text-output {
   font-weight: 500;
   padding: 12px 16px 12px 18px;
   text-align: left;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 #ss-bookmark-btn:hover,
@@ -1201,7 +1201,7 @@ pre, .shiny-text-output {
   color: var(--rs-text);
   font-size: 13px;
   font-weight: 500;
-  transition: all var(--rs-transition);
+  transition: color var(--rs-transition), background-color var(--rs-transition), border-color var(--rs-transition), box-shadow var(--rs-transition);
 }
 
 .link-list-compact a:hover {
@@ -1491,4 +1491,1151 @@ pre, .shiny-text-output {
     transition: none !important;
     transform: none !important;
   }
+}
+
+
+/* Compact workflow layout (SPEC-COMPACTUI-001): structural spacing only. */
+.rs-compact-workflow .box,
+.rs-compact-workflow .nav-tabs-custom {
+  margin-bottom: 12px;
+}
+.rs-compact-workflow .box > .box-header {
+  padding: 10px 12px !important;
+}
+.rs-compact-workflow .box > .box-body,
+.rs-compact-workflow .nav-tabs-custom > .tab-content {
+  padding: 12px !important;
+}
+.rs-compact-workflow .form-group {
+  margin-bottom: 10px;
+}
+.rs-compact-workflow hr {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.rs-compact-workflow .shiny-input-container:not(.shiny-input-container-inline) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+.rs-compact-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 16px;
+}
+.rs-compact-fields > * {
+  min-width: 0;
+}
+.rs-compact-review li {
+  overflow-wrap: anywhere;
+}
+@media (min-width: 992px) {
+  .rs-compact-fields,
+  .rs-compact-review .review-card-entry > ul {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 20px;
+  }
+}
+
+
+/* --- SPEC-WS-013 M1: presentation quick wins --- */
+/* Overrides of earlier rules, placed after them (the original rules above are
+   pinned byte-for-byte by test-workspace-components.R). */
+:root {
+  --rs-text-secondary-strong: #475569;
+  --rs-focus: #0a4f8a;
+  --rs-focus-on-dark: #ffffff;
+}
+.help-block {
+  font-size: 13px !important;
+  color: var(--rs-text-secondary-strong) !important;
+}
+.main-sidebar .sidebar-menu > li.header,
+.sidebar-menu .header {
+  color: #cbd5e1 !important;
+  font-size: 13px !important;
+}
+.sidebar-footer a {
+  font-size: 13px;
+}
+.sidebar-footer .lab-dept {
+  font-size: 13px;
+  color: #cbd5e1;
+}
+.form-control:focus {
+  outline: 3px solid var(--rs-focus) !important;
+  outline-offset: 0;
+}
+.shiny-notification {
+  opacity: 1 !important;
+  background-color: #ffffff;
+  color: var(--rs-text);
+}
+.shiny-notification-message { border-left: 4px solid var(--rs-info); }
+.shiny-notification-warning { border-left: 4px solid var(--rs-warning); background-color: #fef9ec; }
+.shiny-notification-error { border-left: 4px solid var(--rs-danger); background-color: #fdf0f1; color: #7f1d1d; }
+@media (max-width: 767px) {
+  #shiny-notification-panel { left: 8px; right: 8px; bottom: 8px; width: auto; }
+  .shiny-notification { width: 100%; }
+}
+
+
+/* F10: visible focus on every focusable control. The outline colour is chosen
+   against the surface the control sits on (dark sidebar vs light content). */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+.selectize-input.focus {
+  outline: 3px solid var(--rs-focus) !important;
+  outline-offset: 2px;
+  /* Earlier rules transition "all"; the focus indicator must be there at once. */
+  transition: none !important;
+}
+.main-sidebar a:focus-visible,
+.main-sidebar button:focus-visible,
+.main-sidebar .btn:focus-visible,
+.main-sidebar summary:focus-visible {
+  outline-color: var(--rs-focus-on-dark) !important;
+}
+.form-control:focus-visible {
+  outline-offset: 0;
+}
+
+/* F4: a disabled control looks disabled through explicit colours, never through opacity (the
+   SPEC-WS-002 contrast guard refuses opacity): muted neutral surface and border, secondary text,
+   not-allowed cursor, and no hover or active change. */
+button:disabled,
+.btn:disabled,
+.btn.disabled,
+.btn[disabled],
+input:disabled,
+select:disabled,
+textarea:disabled,
+[aria-disabled="true"],
+.rs-workspace-action:disabled {
+  opacity: 1 !important;
+  cursor: not-allowed !important;
+  color: var(--rs-text-secondary-strong) !important;
+  background-color: var(--rs-border) !important;
+  border: 1px solid var(--rs-text-secondary) !important;
+  box-shadow: none !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled {
+  cursor: not-allowed !important;
+}
+.rs-workspace-actions > span {
+  flex: 1 1 100%;
+  font-size: 13px;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-workspace-unrecorded {
+  margin-top: 0.8rem;
+}
+.rs-workspace-unrecorded > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--rs-text-secondary-strong);
+}
+
+/* F1/N1: the job panel is one disclosure line while collapsed, compact rows when open. */
+.rs-workspace-jobs {
+  margin: 0 0 10px;
+}
+.rs-jobs-disclosure {
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  padding: 0 12px;
+}
+.rs-jobs-disclosure:not(:has(.rs-job)) {
+  display: none;
+}
+.rs-jobs-summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 40px;
+  min-height: 40px;
+  color: var(--rs-text);
+}
+.rs-jobs-disclosure[open] > .rs-jobs-summary {
+  border-bottom: 1px solid var(--rs-border);
+  margin-bottom: 6px;
+}
+.rs-job-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.rs-job {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--rs-border-light);
+  font-size: 13px;
+}
+.rs-job .rs-job-id,
+.rs-workspace-jobs code {
+  color: inherit;
+  background: transparent;
+  padding: 0;
+  font-family: var(--rs-font-mono);
+  font-size: 12px;
+}
+.rs-job-kind {
+  font-weight: 600;
+}
+.rs-job-state {
+  font-weight: 600;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-job-details {
+  flex: 1 1 100%;
+}
+.rs-job-details > summary {
+  cursor: pointer;
+  color: var(--rs-text-secondary-strong);
+  font-size: 13px;
+}
+.rs-job-settings {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+}
+.rs-workspace-jobs .btn {
+  padding: 2px 10px;
+  font-size: 13px;
+}
+.rs-job-status,
+.rs-job-time {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-job-status code {
+  color: inherit;
+}
+
+/* F12: on a narrow screen the slide-in menu closes at once (a destination was chosen) and
+   keeps its slide when it opens. */
+@media (max-width: 767px) {
+  .main-sidebar,
+  .left-side {
+    transition: none !important;
+  }
+  body.sidebar-open .main-sidebar,
+  body.sidebar-open .left-side {
+    transition: transform 0.3s ease-in-out !important;
+  }
+}
+
+/* --- SPEC-WS-013 M2: data tables fit their container --- */
+table.rs-display-table td,
+table.rs-display-table th {
+  max-width: 28em;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.rs-job-command {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  user-select: all;
+  background: var(--rs-bg);
+  color: var(--rs-text);
+  padding: 2px 6px;
+}
+.rs-refusal-steps > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+/* --- SPEC-WS-013 M3: one visual system --- */
+
+/* One box style: every box (whatever status or solidHeader it was built with) gets the same
+   neutral surface, the same header and the one primary accent. Red and green are reserved for
+   destructive/error and success states, which are not boxes. */
+.box,
+.box.box-primary,
+.box.box-info,
+.box.box-success,
+.box.box-danger,
+.box.box-warning,
+.box.box-default,
+.box.box-solid {
+  border-top: 3px solid var(--rs-primary) !important;
+}
+.box > .box-header,
+.box.box-primary > .box-header,
+.box.box-info > .box-header,
+.box.box-success > .box-header,
+.box.box-danger > .box-header,
+.box.box-warning > .box-header,
+.box.box-default > .box-header,
+.box.box-solid > .box-header,
+.box.box-solid.box-primary > .box-header,
+.box.box-solid.box-info > .box-header,
+.box.box-solid.box-success > .box-header,
+.box.box-solid.box-danger > .box-header {
+  background: var(--rs-primary-lighter) !important;
+  border-bottom: 1px solid var(--rs-primary-light) !important;
+}
+.box > .box-header .box-title,
+.box.box-primary > .box-header .box-title,
+.box.box-info > .box-header .box-title,
+.box.box-success > .box-header .box-title,
+.box.box-danger > .box-header .box-title,
+.box.box-warning > .box-header .box-title,
+.box.box-default > .box-header .box-title,
+.box.box-solid > .box-header .box-title,
+.box.box-solid.box-primary > .box-header .box-title,
+.box.box-solid.box-info > .box-header .box-title,
+.box.box-solid.box-success > .box-header .box-title,
+.box.box-solid.box-danger > .box-header .box-title {
+  color: var(--rs-primary-dark) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+/* One accent: the primary action carries the primary blue, not a blue-to-teal gradient. */
+.btn-action-hero {
+  background: var(--rs-primary) !important;
+  box-shadow: var(--rs-shadow-md) !important;
+}
+.btn-action-hero:hover {
+  background: var(--rs-primary-dark) !important;
+}
+
+/* Home: the result message is plain text and takes no visible space while empty. */
+.home-status .shiny-text-output {
+  font-family: inherit;
+  font-size: 14px;
+  background: transparent !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+/* An empty text output shows nothing but must stay rendered (Shiny does not render hidden outputs). */
+.shiny-text-output:empty {
+  border: 0 !important;
+  padding: 0 !important;
+  min-height: 0;
+}
+
+/* Submenu icons line up with the top-level icons. */
+.skin-blue .sidebar-menu .treeview-menu > li > a > .fa,
+.skin-blue .sidebar-menu .treeview-menu > li > a > .fas,
+.skin-blue .sidebar-menu .treeview-menu > li > a > .far {
+  display: inline-block;
+  width: 22px;
+  margin-right: 8px;
+  text-align: center;
+}
+
+/* F16: reduced motion removes the menu, content and notification transitions. */
+@media (prefers-reduced-motion: reduce) {
+  body .main-sidebar,
+  body .left-side,
+  body.sidebar-open .main-sidebar,
+  body.sidebar-open .left-side,
+  .content-wrapper,
+  .main-footer,
+  .main-header,
+  .main-header .logo,
+  .main-header .navbar,
+  .sidebar-menu a,
+  .sidebar-menu > li > a,
+  .sidebar-menu .treeview-menu > li > a,
+  .shiny-notification,
+  .shiny-notification-panel,
+  .box,
+  .btn {
+    transition: none !important;
+  }
+}
+
+/* --- SPEC-WS-013 M5: context bar and job tray --- */
+
+/* The context bar shows on the Data, Enrich, Results and Cluster pages only. */
+#workspace-container {
+  display: none;
+}
+body:has(#shiny-tab-update_tab.active, #shiny-tab-enrich_tab.active, #shiny-tab-rr_visualize_tab.active, #shiny-tab-cluster_tab.active) #workspace-container {
+  display: block;
+}
+.rs-context-bar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-height: 0;
+  margin: 0 0 12px;
+  padding: 4px 12px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow-sm);
+  position: relative;
+}
+.rs-context-bar .form-group {
+  margin: 0;
+  flex: 0 1 220px;
+  min-width: 140px;
+}
+.rs-context-bar .control-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.rs-context-bar select.form-control {
+  min-height: 36px;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+.rs-context-more {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.rs-context-more > .shiny-html-output {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 4px 12px;
+  min-width: 0;
+}
+.rs-context-bar p {
+  margin: 0;
+  white-space: nowrap;
+}
+.rs-context-bar dl {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  margin: 0;
+}
+.rs-context-bar dt {
+  margin: 0;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-context-bar dd {
+  margin: 0 6px 0 0;
+  font-weight: 600;
+}
+.rs-context-bar .rs-context-note {
+  font-size: 12px;
+  color: var(--rs-text-secondary-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 16em;
+}
+.rs-context-bar .rs-workspace-unrecorded {
+  margin: 0;
+  position: relative;
+}
+.rs-context-bar .rs-workspace-unrecorded[open] > dl {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 20;
+  flex-direction: column;
+  padding: 8px 12px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  box-shadow: var(--rs-shadow-md);
+  white-space: nowrap;
+}
+.rs-context-bar .rs-workspace-actions {
+  flex-wrap: nowrap;
+  gap: 8px;
+}
+.rs-context-bar .rs-workspace-actions > span {
+  flex: 0 1 auto;
+  font-size: 12px;
+  max-width: 14em;
+  line-height: 1.2;
+}
+.rs-context-bar .rs-workspace-action,
+.rs-context-bar .rs-workspace button {
+  min-height: 40px;
+  padding: 4px 12px;
+}
+.rs-context-toggle {
+  display: none;
+}
+.rs-job-badge {
+  margin-left: auto;
+  min-height: 36px;
+  padding: 4px 12px;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-text-secondary);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+.rs-job-badge[data-running]:not([data-running="0"]) {
+  border-color: var(--rs-primary);
+  background: var(--rs-primary-light);
+  color: var(--rs-primary-dark);
+}
+@media (max-width: 767px) {
+  .rs-context-bar {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px 8px;
+  }
+  .rs-context-bar .form-group {
+    flex: 1 1 140px;
+  }
+  .rs-context-toggle {
+    display: inline-block;
+    min-height: 36px;
+    min-width: 36px;
+    padding: 4px 6px;
+    font-size: 12px;
+    color: var(--rs-text);
+    background: var(--rs-bg-card);
+    border: 1px solid var(--rs-text-secondary);
+    border-radius: var(--rs-radius-sm);
+  }
+  /* Collapsed: the switcher, the "not recorded" trigger, the job badge and the toggle stay in
+     one row; the name, the chips, the note and the actions appear when the toggle is opened. */
+  .rs-context-more,
+  .rs-context-more > .shiny-html-output {
+    display: contents;
+  }
+  .rs-context-bar .rs-context-name,
+  .rs-context-bar dl,
+  .rs-context-bar .rs-context-note,
+  .rs-context-bar #workspace-actions {
+    display: none;
+  }
+  .rs-context-bar.rs-context-open .rs-context-name,
+  .rs-context-bar.rs-context-open > .rs-context-more dl,
+  .rs-context-bar.rs-context-open #workspace-actions {
+    display: flex;
+  }
+  .rs-context-bar.rs-context-open .rs-workspace-unrecorded dl {
+    display: flex;
+  }
+  .rs-context-bar .rs-workspace-unrecorded dl {
+    display: none;
+  }
+  .rs-context-bar .rs-workspace-unrecorded[open] dl {
+    display: flex;
+  }
+  .rs-context-bar .rs-workspace-unrecorded > summary {
+    min-height: 36px;
+    line-height: 36px;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+  .rs-context-bar .form-group {
+    flex: 1 1 64px;
+    min-width: 64px;
+  }
+  /* These two carry the bar's own button rule (min-height 40, 12 px side padding), so they repeat the bar scope. */
+  .rs-context-bar .rs-job-badge,
+  .rs-context-bar .rs-context-toggle {
+    min-height: 36px;
+    padding: 4px 5px;
+    font-size: 12px;
+  }
+  .rs-context-bar .rs-context-toggle {
+    color: var(--rs-text);
+    background: var(--rs-bg-card);
+    border-color: var(--rs-text-secondary);
+  }
+  .rs-job-badge {
+    margin-left: 0;
+  }
+}
+
+/* The job tray: a slide-over below the navbar, opened by the job badge. */
+.rs-job-tray {
+  position: fixed;
+  top: 50px;
+  right: 0;
+  bottom: 0;
+  width: min(420px, 100vw);
+  margin: 0;
+  padding: 8px 16px 16px;
+  overflow-y: auto;
+  background: var(--rs-bg-card);
+  border-left: 1px solid var(--rs-border);
+  box-shadow: var(--rs-shadow-lg);
+  z-index: 1040;
+  transform: translateX(100%);
+  visibility: hidden;
+  /* Hidden only after it has slid out; visible at once on opening, so focus can move in. */
+  transition: transform var(--rs-transition), visibility 0s linear 0.2s;
+}
+.rs-job-tray.rs-job-tray-open {
+  transform: translateX(0);
+  visibility: visible;
+  transition: transform var(--rs-transition), visibility 0s;
+}
+.rs-job-tray:focus {
+  outline: none;
+}
+.rs-job-tray-header {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 4px;
+}
+.rs-job-tray .rs-jobs-disclosure {
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.rs-job-tray .rs-jobs-summary {
+  pointer-events: none;
+  list-style: none;
+}
+.rs-job-tray .rs-jobs-summary::-webkit-details-marker {
+  display: none;
+}
+@media (max-width: 767px) {
+  .rs-job-tray {
+    width: 100vw;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .rs-job-tray {
+    transition: none !important;
+  }
+}
+
+/* Visually hidden, still read by assistive technology (not display: none). */
+.rs-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- SPEC-WS-013 M6: task stepper, flat navigation, page footer --- */
+
+.rs-stepper-bar {
+  margin: 0 0 8px;
+}
+.rs-stepper {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rs-step {
+  flex: 1 1 0;
+  min-width: 0;
+  margin: 0;
+}
+.rs-step-button {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 4px 10px;
+  text-align: left;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+.rs-step-button:hover {
+  background: var(--rs-primary-light);
+  border-color: var(--rs-primary-dark);
+}
+.rs-step-current .rs-step-button {
+  border-color: var(--rs-primary);
+  background: var(--rs-primary-light);
+  box-shadow: inset 0 -3px 0 var(--rs-primary);
+}
+.rs-step-number {
+  grid-row: 1 / span 2;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-text);
+  border: 1px solid var(--rs-text-secondary);
+  border-radius: 50%;
+}
+.rs-step-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.rs-step-status {
+  font-size: 12px;
+  color: var(--rs-text-secondary-strong);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* The next action is read by assistive technology for every step and shown for the current one. */
+.rs-step-next {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.rs-stepper-compact {
+  display: none;
+}
+.rs-stepper-compact > summary {
+  min-height: 44px;
+  line-height: 36px;
+  padding: 4px 12px;
+  font-weight: 600;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+  cursor: pointer;
+}
+.rs-stepper-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+.rs-step-link {
+  min-height: 44px;
+  padding: 4px 12px;
+  text-align: left;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-sm);
+}
+@media (max-width: 767px) {
+  .rs-stepper {
+    display: none;
+  }
+  .rs-stepper-compact {
+    display: block;
+  }
+}
+
+/* The importer route is the sub-route of Data: indented in the flat list. */
+.sidebar-menu a[data-value="cluster_upload_tab"] {
+  padding-left: 42px;
+  font-size: 13px;
+}
+
+.rs-page-footer {
+  margin: 24px 0 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rs-border);
+  text-align: right;
+}
+.rs-advanced {
+  margin: 0 0 12px;
+}
+.rs-advanced > summary {
+  min-height: 36px;
+  line-height: 36px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--rs-text);
+}
+
+/* The Data step keeps its upload controls near the top of the page. */
+#shiny-tab-update_tab > h2 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  line-height: 1.1;
+}
+#shiny-tab-update_tab .nav-tabs-custom > .tab-content {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+#shiny-tab-update_tab h3 {
+  margin: 8px 0 6px;
+}
+.rs-context-bar {
+  margin-bottom: 8px;
+}
+.rs-stepper-bar {
+  margin-bottom: 6px;
+}
+.rs-step-button {
+  min-height: 40px;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+/* Headroom for the Data step's upload control (AC-019). */
+.rs-step-button {
+  min-height: 38px;
+}
+#shiny-tab-update_tab > h2 {
+  margin-bottom: 2px;
+}
+#shiny-tab-update_tab .nav-tabs-custom {
+  margin-bottom: 10px;
+}
+
+/* btn-primary wins over the global btn-default rule wherever both classes are present. */
+.btn.btn-default.btn-primary {
+  background: var(--rs-primary) !important;
+  border-color: var(--rs-primary-dark) !important;
+  color: #ffffff !important;
+}
+.btn.btn-default.btn-primary:hover,
+.btn.btn-default.btn-primary:focus {
+  background: var(--rs-primary-dark) !important;
+}
+
+/* The Advanced disclosure shows an open/closed marker. */
+.rs-advanced > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  list-style: none;
+}
+.rs-advanced > summary::-webkit-details-marker {
+  display: none;
+}
+.rs-advanced > summary::before {
+  content: "\25B8";
+  font-size: 14px;
+}
+.rs-advanced[open] > summary::before {
+  content: "\25BE";
+}
+
+/* --- SPEC-WS-013 M7: Enrich in three parts with a sticky Run bar --- */
+.rs-run-bar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 8px;
+  padding: 6px 12px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow-sm);
+}
+.rs-run-bar .btn-action-hero {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.rs-run-bar-text {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-run-bar-text .shiny-html-output {
+  margin: 0;
+}
+.rs-enrich-part {
+  margin: 0 0 12px;
+  padding: 8px 12px 4px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+}
+.rs-enrich-part > h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rs-primary-dark);
+}
+.rs-enrich-part .rs-settings-summary,
+.rs-enrich-part .rs-plain-preview {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.rs-adjust,
+.rs-enrich-part .rs-advanced {
+  margin: 0 0 8px;
+}
+.rs-adjust > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+  color: var(--rs-text);
+}
+.rs-adjust > summary::-webkit-details-marker {
+  display: none;
+}
+.rs-adjust > summary::before {
+  content: "\25B8";
+  font-size: 14px;
+}
+.rs-adjust[open] > summary::before {
+  content: "\25BE";
+}
+.rs-review-plain p {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+/* A clipping box (not a scroll container) keeps the Run bar sticky to the viewport at every width. */
+.wrapper,
+body.skin-blue .wrapper .content-wrapper {
+  overflow: clip !important;
+}
+
+
+/* --- SPEC-WS-013 M8: Results master-detail --- */
+.rs-figure-toggle {
+  display: none;
+}
+.rs-fig-check {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+.rs-results-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: 0 0 8px;
+}
+.rs-results-bar .shiny-input-container {
+  margin: 0;
+}
+.rs-results-bar .shiny-options-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+}
+.rs-segmented label.radio-inline {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  margin: 0;
+  padding: 4px 16px;
+  font-weight: 600;
+  color: var(--rs-text);
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-text-secondary);
+  cursor: pointer;
+}
+.rs-segmented label.radio-inline + label.radio-inline {
+  margin-left: -1px;
+}
+.rs-segmented label.radio-inline:first-of-type {
+  border-radius: var(--rs-radius-sm) 0 0 var(--rs-radius-sm);
+}
+.rs-segmented label.radio-inline:last-of-type {
+  border-radius: 0 var(--rs-radius-sm) var(--rs-radius-sm) 0;
+}
+.rs-segmented label.radio-inline input[type="radio"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+.rs-segmented label.radio-inline:has(input:checked) {
+  color: #ffffff;
+  background: var(--rs-primary);
+  border-color: var(--rs-primary-dark);
+}
+.rs-segmented label.radio-inline:has(input:focus-visible) {
+  outline: 3px solid var(--rs-primary-dark);
+  outline-offset: 2px;
+  z-index: 1;
+}
+.rs-figure-settings {
+  margin: 0 0 12px;
+}
+.rs-figure-settings > summary,
+.rs-details > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+  color: var(--rs-text);
+}
+.rs-figure-settings > summary::-webkit-details-marker,
+.rs-details > summary::-webkit-details-marker {
+  display: none;
+}
+.rs-figure-settings > summary::before,
+.rs-details > summary::before {
+  content: "\25B8";
+  font-size: 14px;
+}
+.rs-figure-settings[open] > summary::before,
+.rs-details[open] > summary::before {
+  content: "\25BE";
+}
+.rs-master-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas: "master figure" "master panel";
+  grid-template-rows: auto 1fr;
+  gap: 8px 16px;
+  align-items: start;
+}
+.rs-figure {
+  grid-area: figure;
+  min-width: 0;
+}
+.rs-master {
+  grid-area: master;
+  min-width: 0;
+}
+.rs-panel {
+  grid-area: panel;
+  min-width: 0;
+}
+.rs-panel > div,
+.rs-panel > section {
+  margin-bottom: 12px;
+}
+.rs-panel h3 {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.rs-panel .rs-workspace-actions > span {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+}
+@media (max-width: 767px) {
+  .rs-master-detail {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "figure" "master" "panel";
+    grid-template-rows: auto;
+  }
+  /* The figure is a closed disclosure above the term table, so the table stays in reach. */
+  .rs-figure-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    margin: 0;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--rs-text);
+  }
+  .rs-figure-toggle::before {
+    content: "\25B8";
+    font-size: 14px;
+  }
+  .rs-figure-toggle:has(.rs-fig-check:checked)::before {
+    content: "\25BE";
+  }
+  .rs-figure-toggle:has(.rs-fig-check:focus-visible) {
+    outline: 3px solid var(--rs-primary-dark);
+    outline-offset: 2px;
+  }
+  .rs-figure-body {
+    display: none;
+  }
+  .rs-figure:has(.rs-fig-check:checked) .rs-figure-body {
+    display: block;
+  }
+  .rs-results-bar {
+    margin-bottom: 4px;
+  }
+  .rs-figure-settings {
+    margin-bottom: 4px;
+  }
+}
+
+/* Term table: header words wrap at spaces only; long cells (gene lists) are bounded, so the table fits. */
+#rr_visualize-ex_table table.dataTable thead th {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+  padding: 6px 8px;
+}
+#rr_visualize-ex_table table.dataTable tbody td {
+  max-width: 14em;
+  padding: 6px 8px;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+@media (min-width: 768px) {
+  .rs-master-detail {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+/* The Data step's status text is the longest, so that step gets more of the row. */
+.rs-stepper > .rs-step:first-child {
+  flex: 1.7 1 0;
+}
+
+/* Data step: tab-box titles and the plain box header share one title style. */
+#shiny-tab-update_tab .nav-tabs-custom > .nav-tabs > li.header {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 34px;
+  color: var(--rs-primary-dark);
+}
+#shiny-tab-update_tab .box > .box-header .box-title {
+  font-size: 15px;
+  font-weight: 600;
 }

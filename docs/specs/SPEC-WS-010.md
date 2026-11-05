@@ -4,7 +4,7 @@ title: "Clustering chooser and named run comparison"
 version: "0.1.0"
 status: draft
 created: "2026-10-20"
-updated: "2026-10-20"
+updated: "2026-11-03"
 author: "workspace planning team"
 priority: P1
 phase: "v0.1.7 target"
@@ -23,7 +23,7 @@ Three clustering routes already exist with different significance and background
 
 ## Dependencies and ownership
 
-- Logical prerequisites: SPEC-WS-006, SPEC-WS-008.
+- Logical prerequisites: SPEC-WS-006, SPEC-WS-008, SPEC-WS-013.
 - One disposable implementer owns this entire leaf in its own fresh worktree; independently reviewed before integration.
 - Shared targets are exclusive locks, even for nonoverlapping line edits; derive conflicts from the umbrella dispatch.json. No metadata/namespace edits outside this list without registry revision.
 - Upstream richR work is separately owned and integrated through an official release, never edited by this consumer leaf.
@@ -102,3 +102,4 @@ Disable comparison/chooser presentation while retaining existing public engine a
 ## HISTORY
 
 - 2026-10-20: Planning-only draft, authored after repository inspection and Hur Harness team consultation.
+- 2026-11-03: Added SPEC-WS-013 (workspace UI/UX restructure) as a logical prerequisite by owner decision; this leaf builds on the restructured layout. No REQ or AC text changed. See [amendment 013](SPEC-WORKSPACE-001/amendments/013-registration.md).

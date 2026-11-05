@@ -118,7 +118,7 @@ test_that("original CSS bytes precede additive scoped workspace rules", {
   file <- tempfile()
   on.exit(unlink(file), add = TRUE)
   writeBin(charToRaw(original), file)
-  expect_identical(unname(tools::md5sum(file)), "3dc7da1312126fb3a028db075e1c0e60")
+  expect_identical(unname(tools::md5sum(file)), "5f71dabdcf3df0ea8d7f66367f463678")
   expect_match(text, ".rs-workspace", fixed = TRUE)
   expect_match(text, "prefers-reduced-motion: reduce", fixed = TRUE)
 })
@@ -160,4 +160,62 @@ test_that("workspace sizing resolves frozen design values against native Bootstr
   expect_equal(size(".rs-workspace-field", "margin-bottom"), 12)
   expect_equal(size(".rs-workspace-action-group, .rs-workspace-actions", "gap"), 8)
   expect_false(grepl("(^|[}\\n])\\s*html\\s*\\{", css))
+})
+
+# ---- SPEC-WS-013 M1: shared disabled reason (AC-003) and one job live region (AC-006) ----
+
+test_that("AC-003 a grouped disabled action exposes its reason through title and one shared hint", {
+  action <- getFromNamespace("workspace_action", "richStudio")
+  button <- action("w", "go", "Go", FALSE, "Choose a result first",
+                   show_reason = FALSE, reason_id = "w-actions-reason")
+  html <- as.character(button)
+  expect_identical(button$name, "button")
+  expect_match(html, "disabled")
+  expect_match(html, 'title="Choose a result first"', fixed = TRUE)
+  expect_match(html, 'aria-describedby="w-actions-reason"', fixed = TRUE)
+  expect_false(grepl("Choose a result first</span>", html, fixed = TRUE))
+  # default behaviour is unchanged: the reason follows the button
+  plain <- as.character(action("a", "go", "Go", FALSE, "No recorded input"))
+  expect_match(plain, 'aria-describedby="a-go-reason"', fixed = TRUE)
+  expect_match(plain, 'title="No recorded input"', fixed = TRUE)
+})
+
+test_that("AC-006 the job panel carries exactly one polite live region and no log role", {
+  ui <- as.character(getFromNamespace("workspace_jobs_ui", "richStudio")("jobs"))
+  # Shiny adds aria-live="polite" to every bound output that has no aria-live of
+  # its own, so the quiet outputs say "off"; one output is the polite region.
+  expect_identical(lengths(regmatches(ui, gregexpr('aria-live="polite"', ui, fixed = TRUE))), 1L)
+  expect_identical(lengths(regmatches(ui, gregexpr('aria-live="off"', ui, fixed = TRUE))), 3L)
+  expect_match(ui, '<div id="jobs-jobs_announce"[^>]*aria-live="polite"')
+  expect_false(grepl('role="log"', ui, fixed = TRUE))
+  # existing output ids and the region label are kept
+  for (id in c("jobs-jobs_list", "jobs-jobs_status", "jobs-jobs_time", "jobs-jobs_announce")) {
+    expect_match(ui, paste0('id="', id, '"'), fixed = TRUE)
+  }
+  expect_match(ui, 'aria-label="Analysis jobs"', fixed = TRUE)
+})
+
+test_that("AC-002 the job panel is a native disclosure that works without scripts", {
+  ui <- as.character(getFromNamespace("workspace_jobs_ui", "richStudio")("jobs"))
+  expect_match(ui, "<details", fixed = TRUE)
+  expect_match(ui, "rs-jobs-disclosure", fixed = TRUE)
+  expect_match(ui, "<summary", fixed = TRUE)
+  # open by default: rows are readable without workspace-ui.js, which collapses it when idle
+  expect_match(regmatches(ui, regexpr("<details[^>]*>", ui)), " open", fixed = TRUE)
+  css <- readLines(system.file("application/www/custom.css", package = "richStudio"), warn = FALSE)
+  expect_true(any(grepl(".rs-jobs-disclosure:not(:has(.rs-job))", css, fixed = TRUE)))
+})
+
+test_that("AC-002 a job row carries a textual status and keeps run settings in a closed disclosure", {
+  row <- getFromNamespace("workspace_jobs_row", "richStudio")
+  html <- as.character(row(
+    ns = shiny::NS("jobs"), rec = list(run_id = "0123456789abcdef", kind = "enrichment",
+      state = "succeeded", inputs = list(list(label = "deg_a")),
+      settings = list(species = "human", cutoff = 0.05)),
+    buttons = list()))
+  expect_match(html, 'data-state="succeeded"', fixed = TRUE)
+  expect_match(html, "Succeeded")
+  expect_match(html, "<details class=\"rs-job-details\"", fixed = TRUE)
+  expect_false(grepl("<details[^>]*rs-job-details[^>]* open", html))
+  expect_match(html, "species: human", fixed = TRUE)
 })

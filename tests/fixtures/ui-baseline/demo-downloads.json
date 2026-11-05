@@ -1,0 +1,156 @@
+{
+  "cluster_upload:rr go1 .csv": {
+    "name": "go1.csv",
+    "bytes": 32790,
+    "sha256": "951436ab4d0c0fce1469b59cf55488e5a747b4b0cec2c8efb3f7da506a59d794",
+    "n_lines": 330,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "\"GO:0006084\",\"acetyl-CoA metabolic process\",30,4,2.27e-08,2.36e-05,\"Acly,Acaca,Fasn,Acss2\"", "\"GO:0006637\",\"acyl-CoA metabolic process\",72,4,8.28e-07,0.00023812,\"Acly,Acaca,Fasn,Acss2\""]
+  },
+  "cluster_upload:rr go1 .tsv": {
+    "name": "go1.tsv",
+    "bytes": 32790,
+    "sha256": "8dca1a15e4288a8a55ef0a83e0e672a755ae6c094ec6f0da18fd65a414376c0b",
+    "n_lines": 330,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0006084\"\t\"acetyl-CoA metabolic process\"\t30\t4\t2.27e-08\t2.36e-05\t\"Acly,Acaca,Fasn,Acss2\"", "\"GO:0006637\"\t\"acyl-CoA metabolic process\"\t72\t4\t8.28e-07\t0.00023812\t\"Acly,Acaca,Fasn,Acss2\""]
+  },
+  "cluster_upload:rr go1 .txt": {
+    "name": "go1.txt",
+    "bytes": 32790,
+    "sha256": "8dca1a15e4288a8a55ef0a83e0e672a755ae6c094ec6f0da18fd65a414376c0b",
+    "n_lines": 330,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0006084\"\t\"acetyl-CoA metabolic process\"\t30\t4\t2.27e-08\t2.36e-05\t\"Acly,Acaca,Fasn,Acss2\"", "\"GO:0006637\"\t\"acyl-CoA metabolic process\"\t72\t4\t8.28e-07\t0.00023812\t\"Acly,Acaca,Fasn,Acss2\""]
+  },
+  "cluster_upload:rr go2 .csv": {
+    "name": "go2.csv",
+    "bytes": 152657,
+    "sha256": "bf53023bb8d6111f5d91a65f2797a558c0c7e17b8596be48cdf926aabd2b9e34",
+    "n_lines": 894,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "\"GO:0016126\",\"sterol biosynthetic process\",50,18,4.17464187307769e-24,8.74234666650691e-21,\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Cyp51,Sc5d,Fdps,Mvd,Lss,Nsdhl,Fdft1,Hsd17b7,Hmgcs2,Hmgcr,Mvk,Hmgcs1,Sqle,Msmo1\"", "\"GO:0008610\",\"lipid biosynthetic process\",499,39,4.99705439640292e-24,8.74234666650691e-21,\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Pcyt2,Srd5a1,Fads2,Acly,Cyp51,Elovl4,Sc5d,Pip5k1b,Pigq,Stard4,Ldlr,Fdps,Mvd,Lss,Nsdhl,Fdft1,Acsl3,Hsd17b7,Mboat1,Hmgcs2,Elovl6,Cds2,Idi1,Acss2,Fa2h,Hmgcr,Mvk,Hsd17b12,Hmgcs1,Mid1ip1,Fitm1,Sqle,Ugt8a,Agpat3,Msmo1\""]
+  },
+  "cluster_upload:rr go2 .tsv": {
+    "name": "go2.tsv",
+    "bytes": 152657,
+    "sha256": "991927e778f60854a52f0a0fa3ebd19d388f0b1db3e3084eceecc61b17e51bee",
+    "n_lines": 894,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0016126\"\t\"sterol biosynthetic process\"\t50\t18\t4.17464187307769e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Cyp51,Sc5d,Fdps,Mvd,Lss,Nsdhl,Fdft1,Hsd17b7,Hmgcs2,Hmgcr,Mvk,Hmgcs1,Sqle,Msmo1\"", "\"GO:0008610\"\t\"lipid biosynthetic process\"\t499\t39\t4.99705439640292e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Pcyt2,Srd5a1,Fads2,Acly,Cyp51,Elovl4,Sc5d,Pip5k1b,Pigq,Stard4,Ldlr,Fdps,Mvd,Lss,Nsdhl,Fdft1,Acsl3,Hsd17b7,Mboat1,Hmgcs2,Elovl6,Cds2,Idi1,Acss2,Fa2h,Hmgcr,Mvk,Hsd17b12,Hmgcs1,Mid1ip1,Fitm1,Sqle,Ugt8a,Agpat3,Msmo1\""]
+  },
+  "cluster_upload:rr go2 .txt": {
+    "name": "go2.txt",
+    "bytes": 152657,
+    "sha256": "991927e778f60854a52f0a0fa3ebd19d388f0b1db3e3084eceecc61b17e51bee",
+    "n_lines": 894,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0016126\"\t\"sterol biosynthetic process\"\t50\t18\t4.17464187307769e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Cyp51,Sc5d,Fdps,Mvd,Lss,Nsdhl,Fdft1,Hsd17b7,Hmgcs2,Hmgcr,Mvk,Hmgcs1,Sqle,Msmo1\"", "\"GO:0008610\"\t\"lipid biosynthetic process\"\t499\t39\t4.99705439640292e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Pcyt2,Srd5a1,Fads2,Acly,Cyp51,Elovl4,Sc5d,Pip5k1b,Pigq,Stard4,Ldlr,Fdps,Mvd,Lss,Nsdhl,Fdft1,Acsl3,Hsd17b7,Mboat1,Hmgcs2,Elovl6,Cds2,Idi1,Acss2,Fa2h,Hmgcr,Mvk,Hsd17b12,Hmgcs1,Mid1ip1,Fitm1,Sqle,Ugt8a,Agpat3,Msmo1\""]
+  },
+  "cluster_upload:rr kegg1 .csv": {
+    "name": "kegg1.csv",
+    "bytes": 9951,
+    "sha256": "24545ebc39318db936517bbce2fb8d743cde4de4fb0ce7421b676ddb846cb4a4",
+    "n_lines": 58,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "100,\"Steroid biosynthesis\",18,11,4.94510057315031e-09,9.84075014056912e-07,\"Dhcr24,Tm7sf2,Cyp51,Sc5d,Lss,Fdft1,Hsd17b7,Nsdhl,Lipa,Sqle,Msmo1\"", "900,\"Terpenoid backbone biosynthesis\",14,9,7.12321825287706e-08,7.08760216161268e-06,\"Fdps,Mvd,Hmgcs2,Idi1,Pmvk,Hmgcr,Mvk,Hmgcs1,Acat2\""]
+  },
+  "cluster_upload:rr kegg1 .tsv": {
+    "name": "kegg1.tsv",
+    "bytes": 9951,
+    "sha256": "da3eedd7244af2e73666d9406f7014e86b096f839b43e793e45519dae81024f9",
+    "n_lines": 58,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "100\t\"Steroid biosynthesis\"\t18\t11\t4.94510057315031e-09\t9.84075014056912e-07\t\"Dhcr24,Tm7sf2,Cyp51,Sc5d,Lss,Fdft1,Hsd17b7,Nsdhl,Lipa,Sqle,Msmo1\"", "900\t\"Terpenoid backbone biosynthesis\"\t14\t9\t7.12321825287706e-08\t7.08760216161268e-06\t\"Fdps,Mvd,Hmgcs2,Idi1,Pmvk,Hmgcr,Mvk,Hmgcs1,Acat2\""]
+  },
+  "cluster_upload:rr kegg1 .txt": {
+    "name": "kegg1.txt",
+    "bytes": 9951,
+    "sha256": "da3eedd7244af2e73666d9406f7014e86b096f839b43e793e45519dae81024f9",
+    "n_lines": 58,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "100\t\"Steroid biosynthesis\"\t18\t11\t4.94510057315031e-09\t9.84075014056912e-07\t\"Dhcr24,Tm7sf2,Cyp51,Sc5d,Lss,Fdft1,Hsd17b7,Nsdhl,Lipa,Sqle,Msmo1\"", "900\t\"Terpenoid backbone biosynthesis\"\t14\t9\t7.12321825287706e-08\t7.08760216161268e-06\t\"Fdps,Mvd,Hmgcs2,Idi1,Pmvk,Hmgcr,Mvk,Hmgcs1,Acat2\""]
+  },
+  "save:export_clus clus1 csv exact": {
+    "name": "clus1.csv",
+    "bytes": 1800,
+    "sha256": "fb8ed602c0400eb9baa913ac92fe5e368683426d0890f827dec3c7f2d084123e",
+    "n_lines": 21,
+    "head": ["\"Cluster\",\"Representative_Term\",\"Pvalue_go1\",\"Pvalue_go2\",\"Padj_go1\",\"Padj_go2\"", "1,\"sterol metabolic process\",NA,1.11987152963033e-21,NA,8.56257602808571e-19", "2,\"small molecule metabolic process\",3.58e-06,3.58310786241132e-10,0.000532071,5.698770186626e-08"]
+  },
+  "save:export_rr go1 csv exact": {
+    "name": "go1.csv",
+    "bytes": 32790,
+    "sha256": "951436ab4d0c0fce1469b59cf55488e5a747b4b0cec2c8efb3f7da506a59d794",
+    "n_lines": 330,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "\"GO:0006084\",\"acetyl-CoA metabolic process\",30,4,2.27e-08,2.36e-05,\"Acly,Acaca,Fasn,Acss2\"", "\"GO:0006637\",\"acyl-CoA metabolic process\",72,4,8.28e-07,0.00023812,\"Acly,Acaca,Fasn,Acss2\""]
+  },
+  "save:export_rr go1 csv safe": {
+    "name": "go1.csv",
+    "bytes": 32790,
+    "sha256": "951436ab4d0c0fce1469b59cf55488e5a747b4b0cec2c8efb3f7da506a59d794",
+    "n_lines": 330,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "\"GO:0006084\",\"acetyl-CoA metabolic process\",30,4,2.27e-08,2.36e-05,\"Acly,Acaca,Fasn,Acss2\"", "\"GO:0006637\",\"acyl-CoA metabolic process\",72,4,8.28e-07,0.00023812,\"Acly,Acaca,Fasn,Acss2\""]
+  },
+  "save:export_rr go1 tsv exact": {
+    "name": "go1.tsv",
+    "bytes": 32790,
+    "sha256": "8dca1a15e4288a8a55ef0a83e0e672a755ae6c094ec6f0da18fd65a414376c0b",
+    "n_lines": 330,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0006084\"\t\"acetyl-CoA metabolic process\"\t30\t4\t2.27e-08\t2.36e-05\t\"Acly,Acaca,Fasn,Acss2\"", "\"GO:0006637\"\t\"acyl-CoA metabolic process\"\t72\t4\t8.28e-07\t0.00023812\t\"Acly,Acaca,Fasn,Acss2\""]
+  },
+  "save:export_rr go1 tsv safe": {
+    "name": "go1.tsv",
+    "bytes": 32790,
+    "sha256": "8dca1a15e4288a8a55ef0a83e0e672a755ae6c094ec6f0da18fd65a414376c0b",
+    "n_lines": 330,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0006084\"\t\"acetyl-CoA metabolic process\"\t30\t4\t2.27e-08\t2.36e-05\t\"Acly,Acaca,Fasn,Acss2\"", "\"GO:0006637\"\t\"acyl-CoA metabolic process\"\t72\t4\t8.28e-07\t0.00023812\t\"Acly,Acaca,Fasn,Acss2\""]
+  },
+  "save:export_rr go2 csv exact": {
+    "name": "go2.csv",
+    "bytes": 152657,
+    "sha256": "bf53023bb8d6111f5d91a65f2797a558c0c7e17b8596be48cdf926aabd2b9e34",
+    "n_lines": 894,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "\"GO:0016126\",\"sterol biosynthetic process\",50,18,4.17464187307769e-24,8.74234666650691e-21,\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Cyp51,Sc5d,Fdps,Mvd,Lss,Nsdhl,Fdft1,Hsd17b7,Hmgcs2,Hmgcr,Mvk,Hmgcs1,Sqle,Msmo1\"", "\"GO:0008610\",\"lipid biosynthetic process\",499,39,4.99705439640292e-24,8.74234666650691e-21,\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Pcyt2,Srd5a1,Fads2,Acly,Cyp51,Elovl4,Sc5d,Pip5k1b,Pigq,Stard4,Ldlr,Fdps,Mvd,Lss,Nsdhl,Fdft1,Acsl3,Hsd17b7,Mboat1,Hmgcs2,Elovl6,Cds2,Idi1,Acss2,Fa2h,Hmgcr,Mvk,Hsd17b12,Hmgcs1,Mid1ip1,Fitm1,Sqle,Ugt8a,Agpat3,Msmo1\""]
+  },
+  "save:export_rr go2 csv safe": {
+    "name": "go2.csv",
+    "bytes": 152657,
+    "sha256": "bf53023bb8d6111f5d91a65f2797a558c0c7e17b8596be48cdf926aabd2b9e34",
+    "n_lines": 894,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "\"GO:0016126\",\"sterol biosynthetic process\",50,18,4.17464187307769e-24,8.74234666650691e-21,\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Cyp51,Sc5d,Fdps,Mvd,Lss,Nsdhl,Fdft1,Hsd17b7,Hmgcs2,Hmgcr,Mvk,Hmgcs1,Sqle,Msmo1\"", "\"GO:0008610\",\"lipid biosynthetic process\",499,39,4.99705439640292e-24,8.74234666650691e-21,\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Pcyt2,Srd5a1,Fads2,Acly,Cyp51,Elovl4,Sc5d,Pip5k1b,Pigq,Stard4,Ldlr,Fdps,Mvd,Lss,Nsdhl,Fdft1,Acsl3,Hsd17b7,Mboat1,Hmgcs2,Elovl6,Cds2,Idi1,Acss2,Fa2h,Hmgcr,Mvk,Hsd17b12,Hmgcs1,Mid1ip1,Fitm1,Sqle,Ugt8a,Agpat3,Msmo1\""]
+  },
+  "save:export_rr go2 tsv exact": {
+    "name": "go2.tsv",
+    "bytes": 152657,
+    "sha256": "991927e778f60854a52f0a0fa3ebd19d388f0b1db3e3084eceecc61b17e51bee",
+    "n_lines": 894,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0016126\"\t\"sterol biosynthetic process\"\t50\t18\t4.17464187307769e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Cyp51,Sc5d,Fdps,Mvd,Lss,Nsdhl,Fdft1,Hsd17b7,Hmgcs2,Hmgcr,Mvk,Hmgcs1,Sqle,Msmo1\"", "\"GO:0008610\"\t\"lipid biosynthetic process\"\t499\t39\t4.99705439640292e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Pcyt2,Srd5a1,Fads2,Acly,Cyp51,Elovl4,Sc5d,Pip5k1b,Pigq,Stard4,Ldlr,Fdps,Mvd,Lss,Nsdhl,Fdft1,Acsl3,Hsd17b7,Mboat1,Hmgcs2,Elovl6,Cds2,Idi1,Acss2,Fa2h,Hmgcr,Mvk,Hsd17b12,Hmgcs1,Mid1ip1,Fitm1,Sqle,Ugt8a,Agpat3,Msmo1\""]
+  },
+  "save:export_rr go2 tsv safe": {
+    "name": "go2.tsv",
+    "bytes": 152657,
+    "sha256": "991927e778f60854a52f0a0fa3ebd19d388f0b1db3e3084eceecc61b17e51bee",
+    "n_lines": 894,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "\"GO:0016126\"\t\"sterol biosynthetic process\"\t50\t18\t4.17464187307769e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Cyp51,Sc5d,Fdps,Mvd,Lss,Nsdhl,Fdft1,Hsd17b7,Hmgcs2,Hmgcr,Mvk,Hmgcs1,Sqle,Msmo1\"", "\"GO:0008610\"\t\"lipid biosynthetic process\"\t499\t39\t4.99705439640292e-24\t8.74234666650691e-21\t\"Dhcr7,Dhcr24,Insig1,Tm7sf2,Pcyt2,Srd5a1,Fads2,Acly,Cyp51,Elovl4,Sc5d,Pip5k1b,Pigq,Stard4,Ldlr,Fdps,Mvd,Lss,Nsdhl,Fdft1,Acsl3,Hsd17b7,Mboat1,Hmgcs2,Elovl6,Cds2,Idi1,Acss2,Fa2h,Hmgcr,Mvk,Hsd17b12,Hmgcs1,Mid1ip1,Fitm1,Sqle,Ugt8a,Agpat3,Msmo1\""]
+  },
+  "save:export_rr kegg1 csv exact": {
+    "name": "kegg1.csv",
+    "bytes": 9951,
+    "sha256": "24545ebc39318db936517bbce2fb8d743cde4de4fb0ce7421b676ddb846cb4a4",
+    "n_lines": 58,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "100,\"Steroid biosynthesis\",18,11,4.94510057315031e-09,9.84075014056912e-07,\"Dhcr24,Tm7sf2,Cyp51,Sc5d,Lss,Fdft1,Hsd17b7,Nsdhl,Lipa,Sqle,Msmo1\"", "900,\"Terpenoid backbone biosynthesis\",14,9,7.12321825287706e-08,7.08760216161268e-06,\"Fdps,Mvd,Hmgcs2,Idi1,Pmvk,Hmgcr,Mvk,Hmgcs1,Acat2\""]
+  },
+  "save:export_rr kegg1 csv safe": {
+    "name": "kegg1.csv",
+    "bytes": 9951,
+    "sha256": "24545ebc39318db936517bbce2fb8d743cde4de4fb0ce7421b676ddb846cb4a4",
+    "n_lines": 58,
+    "head": ["\"Annot\",\"Term\",\"Annotated\",\"Significant\",\"Pvalue\",\"Padj\",\"GeneID\"", "100,\"Steroid biosynthesis\",18,11,4.94510057315031e-09,9.84075014056912e-07,\"Dhcr24,Tm7sf2,Cyp51,Sc5d,Lss,Fdft1,Hsd17b7,Nsdhl,Lipa,Sqle,Msmo1\"", "900,\"Terpenoid backbone biosynthesis\",14,9,7.12321825287706e-08,7.08760216161268e-06,\"Fdps,Mvd,Hmgcs2,Idi1,Pmvk,Hmgcr,Mvk,Hmgcs1,Acat2\""]
+  },
+  "save:export_rr kegg1 tsv exact": {
+    "name": "kegg1.tsv",
+    "bytes": 9951,
+    "sha256": "da3eedd7244af2e73666d9406f7014e86b096f839b43e793e45519dae81024f9",
+    "n_lines": 58,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "100\t\"Steroid biosynthesis\"\t18\t11\t4.94510057315031e-09\t9.84075014056912e-07\t\"Dhcr24,Tm7sf2,Cyp51,Sc5d,Lss,Fdft1,Hsd17b7,Nsdhl,Lipa,Sqle,Msmo1\"", "900\t\"Terpenoid backbone biosynthesis\"\t14\t9\t7.12321825287706e-08\t7.08760216161268e-06\t\"Fdps,Mvd,Hmgcs2,Idi1,Pmvk,Hmgcr,Mvk,Hmgcs1,Acat2\""]
+  },
+  "save:export_rr kegg1 tsv safe": {
+    "name": "kegg1.tsv",
+    "bytes": 9951,
+    "sha256": "da3eedd7244af2e73666d9406f7014e86b096f839b43e793e45519dae81024f9",
+    "n_lines": 58,
+    "head": ["\"Annot\"\t\"Term\"\t\"Annotated\"\t\"Significant\"\t\"Pvalue\"\t\"Padj\"\t\"GeneID\"", "100\t\"Steroid biosynthesis\"\t18\t11\t4.94510057315031e-09\t9.84075014056912e-07\t\"Dhcr24,Tm7sf2,Cyp51,Sc5d,Lss,Fdft1,Hsd17b7,Nsdhl,Lipa,Sqle,Msmo1\"", "900\t\"Terpenoid backbone biosynthesis\"\t14\t9\t7.12321825287706e-08\t7.08760216161268e-06\t\"Fdps,Mvd,Hmgcs2,Idi1,Pmvk,Hmgcr,Mvk,Hmgcs1,Acat2\""]
+  }
+}

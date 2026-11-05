@@ -2,74 +2,82 @@
 
 ## 1. Project Overview
 
-richStudio is an R Shiny application for enrichment analysis, gene-set clustering, visualization, saved sessions and exports. The authorized workspace evolution covers SPEC-WS-001 through SPEC-WS-012 in dependency and file-lock order.
+Last updated: 2026-10-30 20:43 CDT. Last coding CLI used: **Codex**.
+R Shiny application for enrichment, corrected richCluster clustering, scientific
+visualization, saved sessions and exports. Conversation Korean; artifacts English.
 
-- Last updated: 2026-10-25 (Claude Code)
-- Last coding CLI used: Claude Code (root changed from Codex on 2026-10-21; user-instructed).
-- Conversation: Korean (`/lang gloss`); artifacts: English.
-- Integration worktree: `/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-evolution-integration`, branch `WT-workspace-evolution-integration`, HEAD `9f403c2d4a308ddaf7116f9cb70ea8860097a9c9` (pushed; SPEC-WS-002, 003, 004, 006, the R 4.6.1 deploy script and the 2026-10-23 handoff commit `2b52c9d`).
-- Corrective source worktree: `/home/juhur/PROJECTS/20_libs/richStudio/.moai/worktrees/workspace-check-warning-portability`, branch `WT-workspace-check-warning-portability`, HEAD and remote `2442363`. Now integrated; keep until I is pushed/merged.
-- Previous handoffs preserved verbatim: [2026-10-21 15:56](logs/PROJECT_HANDOFF_2026-10-21_1556.md), [2026-10-21 21:02 pre-update](logs/PROJECT_HANDOFF_2026-10-21_2102.md).
-- Reusable lesson: [CI evidence needs protocol and type identity](/home/juhur/PROJECTS/wiki/concept/ci-evidence-needs-protocol-and-type-identity.md).
+- Authoritative worktree: `/home/juhur/.moai/worktrees/projects/richStudio/compact-workspace-layout`, branch `WT-compact-workspace-layout`.
+- Pushed verification/docs baseline: `db3bd42d4fc1b3eea3cab5150644a34d3e2ba0a3`; session-close docs follow.
+- Original entry: `/home/juhur/PROJECTS/20_libs/richStudio`. Its tracked handoff is historical; machine-local NEXT_SESSION.md points here. Do not switch/reset/stash the primary checkout.
+- Superseded handoff is preserved in Git at db3bd42; history lives in PROJECT_LOG.md and archives. Do not dispatch completed work from historical pending lists.
 
 ## 2. Current State
 
-Status as of 2026-10-21 21:02 CDT:
+**Completed in Session 2026-10-30 20:43 CDT: compact workflow implementation, owner-run deployment and actual public/native verification.**
 
-- **Completed:** SPEC-WS-001 foundation (prior session).
-- **Completed in Session 2026-10-21 21:02 CDT: whole SPEC-WS-002 acceptance.** Scope `ws002-acceptance-recovery` closed COMPLETE at 1/cap5. Hosted run 39664812571 at `2442363`: 7/7 jobs success; tests 122/1351/0 fail/0 skip; R CMD check 0E/0W/5N (NOTE headings unchanged); coverage 3424/3988 = 85.86% (denominator unchanged); browser 16 pass, axe 0 violations; in-run negative rejection. Independently judged R1–R11 PASS (R11 via R11-bis). Integrated by fast-forward; amendment `docs/specs/SPEC-WORKSPACE-001/amendments/002-acceptance-recovery.md` and SPEC-WS-002 link published in `b8eb759`.
-- **User decisions this session:** U1 keep the established audit method; U2 direct human keyboard/focus/200% zoom/contrast/reduced-motion review deferred to the SPEC-WS-011 release gate; U3 same-SHA negative alias skipped; U4 200% zoom state judged from measured layout receipts (screenshot capture was partial).
-- **Completed 2026-10-22: SPEC-WS-003 accepted and integrated.** I = `2835467` (pushed). Gating hosted run 39726772374: 7/7 success; tests 145/1703; check 0E/0W/5N; coverage 86.65%; browser 30/30, axe 0. Result audit `ws003-result-audit-r1.md` PASS; receipt `.moai/reports/SPEC-WORKSPACE-001/implementation/003/ws003-root-acceptance.json`. Scopes: `ws003-navigation` STOP5 (preserved), `ws003-recovery` COMPLETE 2/5. Confirmatory I-branch run 39730055735 (not a gate). New holds: enrich_tab.R zero-height pane (pre-existing), design-system fixture flake, CI shiny 1.14 vs local 1.12.1 drift.
-- **Completed 2026-10-23: SPEC-WS-004 accepted and integrated.** I = `4142c94` (pushed; tree `7d8d3264…` equals card tree). Gating run 39911249412: 7/7 success; tests 176/2102, 0 fail/err/skip/warn; check 0E/0W/5N (headings unchanged); coverage 88.48% (4194/4740); browser 38/38, 0 flaky. Result audit `004/ws004-result-audit-r1.md` PASS (f149ae63…); receipt `004/ws004-root-acceptance.json` (c10eec17…). Scope `ws004-intake` COMPLETE at 4/5: step-6 browser test race (fixed `fbdbb0b`), review r1 FAIL (invalid-UTF-8 session close; correction `0d7bfdb`/`a212d3a`, r2 PASS), two environment timeouts of run 39879098364 (owner-authorized workflow timeout 45→90, `4142c94`, review r4 PASS). Deviations D-A04-1, D-A04-2, D-AC002, D-A04-3 (Mapped-from only in importing tab), zero-token paste refused, workflow file-lock exception. Confirmatory I run 39914518293 (not a gate).
-- **Deploy WS-001–004 (owner decision): preflight PASS 2026-10-23** for release `4142c94` on hurlab (`~/richStudio-deploy-r46-4142c94/`, script sha256 `7f3d1614…`; build left at `~/richStudio-r46-preflight.20261023T065708Z`). **Deployed and verified live 2026-10-23** (user-run sudo, run id `ws004-20261023`): live `/opt/richStudio/releases/richStudio-4142c94…-20261023T085133Z`, previous `06206d0…-20261022T114305Z` kept. Independent checks: symlink match; HTTPS 200, 0 error-text matches; R 4.6.1 only, workers on `release-r46` library, no R 4.5 process; app log clean (package-dir warning and masking messages only); browser via SSH tunnel to :3838 (public HTTPS cert CN mismatch blocks a headless browser) — DEG upload shows "Preview — not committed", review card "Default rule (not customized)", commit → "Committed revision 1, Submitted genes: 2", 0 console errors. Recorded in `004/ws004-state.json` (event DEPLOYED_VERIFIED). Preflight build `~/richStudio-r46-preflight.20261023T065708Z` deleted afterwards (user-authorized). Open: SPEC-WS-005 dispatch, merge to main, SPEC lifecycle sync (owner decisions); keep `.claude/worktrees/agent-aa140c340b8c52b17` and `agent-aa2a86ab19b0cc738` until the merge to main lands.
-- **Completed 2026-10-25: SPEC-WS-006 accepted and integrated.** I = `9f403c2` (ff-only from `2b52c9d`, pushed; tree `08fc4de2…` equals card tree `WT-workspace-jobs`). Gating run 40150691880: 7/7 success; tests 229/2830, 0 fail/err/skip/warn (non-jobs rows equal the 004 baseline); check 5 NOTEs, headings unchanged, non-ASCII OK; coverage 89.40% (target 85); browser 44/44, 0 flaky. Result audit `006/ws006-result-audit-r1.md` PASS (760be8d4…); receipt `006/ws006-root-acceptance.json` (7154928f…). Scope `ws006-jobs` COMPLETE at 4/5: GREEN test-helper defects, browser fixture packages, hosted run 40091007286 (shiny 1.14.0 destroys session-domain reactives on close: the shared queue counter broke every Run after the first session closed; a live two-user check disconnected the second user; fixed `96029ee`, regression test R37), hosted run 40141898906 (non-ASCII em dash literals, fixed `9f403c2`). Reviews r1–r5 PASS; owner decisions D11–D15. **Deployed and verified live 2026-10-25** (user-run sudo, run id `ws006-9f403c2-20261025`): live `/opt/richStudio/releases/richStudio-9f403c2…-20261025T023118Z`, previous `4142c94` and `06206d0` kept; DEPLOY COMPLETE, HTTP 200, two live sessions — closing one left the other connected and a new session started; server resolves shiny 1.14.0 / later 1.4.8; preflight build deleted. Confirmatory I run 40153783832 (not a gate).
-- **Not started:** SPEC-WS-005, 007–012. SPEC-WS-005 pre-investigation (no richR release needed): `implementation/005/ws005-preflight-probe-summary.md`.
-- **Server (updated 2026-10-23):** live app now runs release `4142c94` (WS-001–004), see the deploy entry above. As of 2026-10-22: hurlab runs R 4.6.1 + Bioconductor 3.23. Live app `https://100.94.67.89/richStudio/` (Tailscale) ran release `06206d0` rebuilt for R 4.6.1 (`/opt/richStudio/releases/richStudio-06206d0…-20261022T114305Z`, release-private library `renv/library/release-r46`, no R 4.5 fallback) via user-run `scripts/deploy-r46-release.sh`; HTTP 200, 0 error pages. R 4.5-era releases and `richStudio.PREV.20261020T164533Z` were removed; `scripts/rollback.sh` and `scripts/deploy-dependency-update.sh` are obsolete (R 4.5). No workspace work deployed.
-- **Known CI flake:** `tests/e2e/design-system.spec.ts:758` 'Unknown process joined owned fixture group' failed once on run 39709359169 (I branch), passed on job rerun.
-- No push, deployment, sudo, worktree disposal or primary-checkout branch change happened.
+- Actual application source `e8fef99a07b744dfdfcbb69f226e3a624fdce51e`; live release `/opt/richStudio/releases/richStudio-e8fef99a07b744dfdfcbb69f226e3a624fdce51e-20261031T012242Z`.
+- Site https://hurlab.med.und.edu/richStudio/ ; SSH juhur@100.94.67.89. Owner executed the prepared command; DEPLOY COMPLETE, service active; previous4bc retained.
+- Seven workflow menus compacted. Enrich desktop related settings use two columns; narrow screens stack. Initial desktop Run bottom526.265625px; populated spans641.65625/661.65625px versus1044.34375 baseline (38.56%/36.64% reduction).
+- All17non-UI definitions,155control expressions and scientific/heatmap boundaries remain intact. Old33777CSSbytes preserved; total34803bytes SHA256 `b3c1ad641912f6597f5cdc6c2324fb59e66d70c38d2133efbb855cde30d1e78f`.
+- Full wide Enrich document is longer because retained previews move below the compact primary form; no total-page-height reduction is claimed.
+- **In progress (records/local gap only):** SPEC-COMPACTUI-001 v0.1.2 frontmatter remains in-progress. Two local native-zoom launches failed before Chromium page creation; public success does not rewrite those failures.
+- Prior completed heatmap/scientific/manuscript/deployment-recovery milestones remain completed. Preserve their evidence/worktrees; no new analysis or figure refresh is requested.
 
 ## 3. Execution Plan Status
 
-| Phase | Status | Last updated | Current condition |
-|---|---|---|---|
-| 001 foundation | Completed | 2026-10-21 | Prior accepted integration |
-| 002 design/components/browser | Completed | 2026-10-21 21:02 CDT | Accepted and integrated in I (`b8eb759`); holds below |
-| 003 Home / header / navigation | Completed | 2026-10-22 | Accepted and integrated in I (`2835467`); holds in section 4 |
-| 004 intake/review | Completed | 2026-10-23 | Accepted and integrated in I (`4142c94`); deployed live 2026-10-23 and verified |
-| 006 jobs/queue/cancellation | Completed | 2026-10-25 | Accepted and integrated in I (`9f403c2`); deployed live 2026-10-25 and verified |
-| 005, 007–010 workspace | Not started | 2026-10-25 | Each needs its own dispatch; 005 depends on 004 and 006; respect app.R lock conflicts with 007/008/012 |
-| 012 legacy restoration | Not started | 2026-10-21 | Required before 011 release |
-| 011 compatibility/release | Blocked | 2026-10-21 21:02 CDT | Target R, SYNC, science, legacy, human review (incl. U2) gates |
+Statuses last updated 2026-10-30 20:43 CDT.
+
+| Phase | Status | Current note |
+|---|---|---|
+| Compact plan, implementation and independent review | Completed | Seven static UIs and append-only CSS, sourcee8 |
+| Scoped local verification | Completed with recorded gap |32density/protected+6primitive browser passes;2native launch failures retained |
+| Exact-source server preflight / wrapper checks | Completed |Preflight/Shiny construction PASS; recovery11tests and wrapper10controls |
+| Owner-run deployment | Completed |New e8 release; previous4bc retained |
+| Actual public/native verification | Completed |15public passes; source/runtime/7installed UI checks pass |
+| GitHub CI deployment prerequisite | Superseded |Explicit owner policy removes request/review/poll/wait |
+| Further development / integration / formal release | Not started in this scope |Owner selects; no automatic merge, release or redeployment |
 
 ## 4. Outstanding Work
 
-- **Open; updated 2026-10-21 21:02 CDT:** decide SPEC-WS-003 activation. Draft `.moai/reports/SPEC-WORKSPACE-001/implementation/003/next-dispatch-draft.md` (unactivated).
-- **Open; updated 2026-10-21 21:02 CDT:** push `WT-workspace-evolution-integration` and plan merge to `main` (owner decision; not done).
-- **Hold (011); recorded 2026-10-21 21:02 CDT:** direct human keyboard/focus/200% zoom/contrast/reduced-motion review; 011 planning must read `docs/specs/SPEC-WORKSPACE-001/amendments/002-acceptance-recovery.md`.
-- **Hold; recorded 2026-10-21 21:02 CDT:** fix the partial 200% screenshot capture — `page.screenshot({ fullPage: true })` under native zoom in `tests/e2e/design-system.spec.ts` (L363 at `2442363`) records only the top-left quarter — at the next browser-test change.
-- **Hold; recorded 2026-10-21 21:02 CDT:** hosted browser-only negative path (`-negative-canary` ref / `negative_assertion` dispatch) never observed (U3).
-- **Open:** SPEC-WS-002 lifecycle `status: draft` → completed belongs to a sync phase.
-- **Decision 2026-10-22 (owner):** do not deploy WS-001–003 (`9fc6b21`) on its own; deploy once SPEC-WS-004 is integrated, using `scripts/deploy-r46-release.sh` (preflight first, then user-run sudo).
-- **Open; target changed 2026-10-22:** target R qualification (011) is now **R 4.6.1 + Bioc 3.23** (server upgraded; R 4.5.2 superseded).
-- **Holds from SPEC-WS-006 (2026-10-25):** local dev library is shiny 1.12.1 / later 1.4.4 while CI and live run shiny 1.14.0 / later 1.4.8 — a scratch 1.14.0 library is at `ROOT/tmp/runs/ws006-diag.D04h9XLm/deps`; root triage of a failed hosted run must read the R CMD check status as well as the test totals; queue limits 8/1 to adopt into the 001 policy; renv.lock future/parallelly pins stale; review minors F5–F10, F14, F15 and r4 O3 (full list in `006/ws006-root-acceptance.json`). Keep agent worktrees `.claude/worktrees/agent-af7d38c9292b799e6`, `agent-afa69f0452883160d`, `agent-a2132ec70f25d6cc0` and `I/.claude/worktrees/agent-a0c15f03dff8b5734` until the merge to main (their commits are integrated; hoist evidence before disposal).
-- **Open (unchanged):** SYNC1884 release hold, SCI-RETENTION-001 (008/009), SCI-NETWORK-002 (009), B3-OBS-002 (009), unclassified B3-OBS-001 (004/010), legacy 012, deployment.
+All entries updated 2026-10-30 20:43 CDT; reference PROJECT_LOG.md Session 2026-10-30 20:43 CDT.
+
+- **Open:** agree the next scope with the owner; no further implementation was assigned at close.
+- **Open if selected:** diagnose the two retained local native200%zoom launch failures and reconcile compact SPEC progress. SIGTRAP was pre-page; AF_UNIX path length remains a hypothesis, not an established cause or product defect.
+- **Deferred:** main integration/formal release and retained-worktree disposition are separate work. Do not remove worktrees until branches are remotely integrated.
+- Historical WS activation/deployment/CI holds are not fresh assignments; do not reopen completed items.
 
 ## 5. Risks, Open Questions, Assumptions
 
-- **Open; 2026-10-21 21:02 CDT:** I is unpushed; worktree I is the only copy of `b8eb759`. Do not dispose of I or W until pushed and merged.
-- **Open:** 002 accessibility rests on automated evidence until the 011 human review.
-- **Mitigated:** STOP5 of the prior publication scope was caused by reader tools (PNG decoded as UTF-8; JSON shape assumption), not by product defects; type-aware reading rules now apply.
-- **Process note:** the audit method is heavy (four proposal revisions plus a correction were needed). Keep tool failures distinct from product failures.
+- **Resolved, 2026-10-30 20:43 CDT:** agent prepares and verifies the deployment script; owner executes sudo on the server. Passwordless sudo is not a required agent capability.
+- **Resolved, 2026-10-30 20:43 CDT:** retain local/server checks, but do not launch, review, poll or wait for GitHub CI as a deployment gate. Never fabricate ci.ok.
+- **Mitigated, 2026-10-30 20:43 CDT:** compact wrapper `/home/juhur/richStudio-deploy-compact-e8fef99/deploy.sh` is consumed. Do not rerun it or the older4bc wrapper. Future release preparation must pin a new source and the then-current live target.
+- **Open, 2026-10-30 20:43 CDT:** preserve local failed-zoom receipts/scratch. No successful zoom or application regression is inferred from them.
+- **Open, 2026-10-30 20:43 CDT:** not every scientific input, concurrent load, browser or journal print reduction is verified. No new inference/heavy2000-row export/live rollback was run for compact deployment.
+- **Mitigated, 2026-10-30 20:43 CDT:** retain this tree and heatmap-legibility. Prior immutable manuscript archive stays in the latter at `.moai/reports/richStudio-manuscript-figures-20261030.tar.gz`,140982334bytes,SHA256 `b5e59be8426abc6093440dc4363cf8138cf6042a33a5e720541b8e667dd99bb3`. This close did not rehash or regenerate it.
 
 ## 6. Verification Status
 
-Evidence directory: I `.moai/reports/SPEC-WORKSPACE-001/implementation/002/` (gitignored). Key files: `ws002-acceptance-recovery-plan-r4.md` (5f8d3098…), plan audit r4 PASS (4116f94e…), `ws002-acceptance-recovery-r11-correction-plan-r2.md` (bc319d57…) with audit r2 PASS (23584bd9…), result audit r1 (1769727d…; R1–R10 PASS), result audit r2 (fdefa89a…; R11-bis PASS), state `ws002-acceptance-recovery-state.json` (COMPLETE 1/5), receipt `ws002-acceptance-recovery-root-acceptance.json` (8b5ca741…). Raw retention: `/home/juhur/PROJECTS/20_libs/richStudio/tmp/runs/ws002-acceptance-recovery.cciaGXiu` (terminal metadata, full artifact, six screenshots, inventory 7bc659c9…).
+Session evidence recorded 2026-10-30 20:43 CDT; not a new full-suite measurement.
 
-- Root verified: `git show HEAD:<path> | sha256sum` equals accepted amendment r6 (a8af6fa4…) and expected SPEC r5 (b8bef7e8…); `git diff --quiet 2442363 HEAD -- . ':!docs'` identical; I tree at `2442363` = `3f89bfc5…`.
-- Not observed: hosted browser-only negative path; complete 200% screenshot; human/AT/participant review; target R; local full suite (none run, by policy).
+- Public Playwright15/15 at1440x900,1280x720,375x667: all seven menus, initial/populated Enrich, full review, preview/commit, keyboard/navigation/resize and method Reset. Zero skips/retries/flaky cases or console/page errors.
+- Public HTTPS/CSS200, TLSverify0; CSS34803bytes matches the approved digest.
+- Independent native audit:275tracked Git files,274immutable exact; sole explicit exclusion is historical logs/PROJECT_LOG_2026-H1.md removed by runtime-log recreation. Code root-owned/read-only; logs app-writable.
+- R4.6.1, private richStudio0.1.6/richR0.1.5/richCluster2.0.1/bioAnno0.99.45; seven installed UI bodies/formals equal deployed source.
+- Actual worker2320774 ->2320770 ->serviceMainPID2320697; its three native DLLs use the new release. PIDs are point-in-time observations, not fixed restart prerequisites.
+- Observed local browser descendants and three Playwright workers exited; production R left intact.
+- Local ledger38PASS/2native-launchFAIL; rendered-control59/primitive138R assertions pass. Actual27R-file LSP diagnostics0/syncPASS; AST26documents/0findings/negative canary; ASCII pass. Air's sole protected Save-helper indentation matches baseline.
+- Reports: `docs/quality/compact-workspace-post-deployment-20261030.md`, `docs/quality/compact-workspace-layout-20261030.md`.
+- Evidence: `.moai/reports/layout-density/{impl,qa,tooling,deployment,post-deploy}/`; independent final native/public reports are post-deploy/native/report.md and post-deploy/browser/report.md.
+- Unobserved in this scope: full R suite/check/coverage, native zoom success, real rollback, exhaustive science/network/concurrency. No GitHub CI review is needed.
 
 ## 7. Restart Instructions
 
-Last updated: 2026-10-21 21:02 CDT. Say **resume**; read the primary-root `NEXT_SESSION.md`, give a one-line summary and confirm before executing. Start in integration worktree I. Verify `git -C I rev-parse HEAD` = `b8eb759…` and the state file reads COMPLETE before treating 002 as accepted.
+Last updated: 2026-10-30 20:43 CDT. Say **resume**. Read project-root NEXT_SESSION.md,
+summarize in one line, CONFIRM before execution, verify its four preconditions and
+report drift. Matching prompts are saved in this worktree and original entry root;
+Claude auto-memory points at NEXT_SESSION.md first.
 
-Next action candidates (owner decides): (a) dispatch SPEC-WS-003 from the existing draft; (b) push I and plan the merge to `main`; (c) fix the 200% capture hold as a small test-only card. Preserve the primary checkout's foreign `.gitignore` change; root owns I's handoff/log. No local full R suite/check/coverage; deployment remains user-manual sudo after review.
+Start in the authoritative worktree. Read this handoff and newest log entry,
+then agree the next outstanding scope with the owner. Do not redeploy, run a full
+local suite, activate GitHub CI, discard worktrees or repeat completed manuscript work
+as a default resume action.

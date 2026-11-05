@@ -1,234 +1,510 @@
-# Functions to create comprehensive and individual term heatmaps for cluster results
+# Functions to create comprehensive and individual term heatmaps for cluster
+# results
 
 # Named constants for heatmap configuration
-HMAP_ROUND_DIGITS <- 4L
-HMAP_COLOR_LOW <- "green"
-HMAP_COLOR_HIGH <- "red"
+hmap_round_digits <- 4L
+# Sequential, colour-blind-safe scale (viridis, base grDevices): low significance
+# is dark, high significance is bright. No red-to-green scale.
+hmap_colors <- grDevices::hcl.colors(9L, "viridis")
+# The cluster summary heatmap shows this many clusters by default (display only).
+hmap_top_default <- 30L
 
 
 # Prepare cluster result for heatmap
 hmap_prepare <- function(clustered_gs, gs_names) {
-  
   # Create tibble with Term and AnnotationCluster
-  x <- tibble::as_tibble(cbind(clustered_gs$AnnotationCluster, clustered_gs$Term))
-  colnames(x) <- c('Cluster', 'Representative_Term')
-  
+  x <- tibble::as_tibble(cbind(
+    clustered_gs$AnnotationCluster,
+    clustered_gs$Term
+  ))
+  colnames(x) <- c("Cluster", "Representative_Term")
+
   # Order clusters numerically
   x <- x[order(as.numeric(x$Cluster)), ]
-  
+
   # Subset Padj columns of clustered_gs into new df values
   value_cols <- c(paste0("Pvalue_", gs_names), paste0("Padj_", gs_names))
   values <- clustered_gs[, value_cols]
-  
+
   # Combine Term and Cluster with Padj values
   final_data <- data.frame()
   final_data <- cbind(x, values)
-  
-  return(final_data)
+
+  final_data
 }
 
 
-# Change whether heatmap cell displays mean, median, min, or max Pvalue/Padj
-change_finaldata_valueby <- function(final_data, cluster_list, value_by="mean") {
-  
-  new_final_data <- final_data
-  value_cols <- c(grep(paste0("^", "Pvalue"), colnames(cluster_list), value=TRUE), 
-                  grep(paste0("^", "Padj"), colnames(cluster_list), value=TRUE))
-
-  for (i in seq_along(final_data$Cluster)) {
-    x <- filter(cluster_list, Cluster == i) # Creat subsetted df containing all terms in cluster
-    
-    # Find mean/med/min/max of Pvalue and Padjs
-    if (value_by == "mean") {
-      x_values <- colMeans(x[, c(value_cols)], na.rm = TRUE)
-    } else if (value_by == "median") {
-      x_values <- sapply(x[, c(value_cols)], median, na.rm = TRUE)
-    } else if (value_by == "min") {
-      x_values <- sapply(x[, c(value_cols)], function(col) suppressWarnings(min(col, na.rm = TRUE)))
-    } else if (value_by == "max") {
-      x_values <- sapply(x[, c(value_cols)], function(col) suppressWarnings(max(col, na.rm = TRUE)))
-    }
-    x_values[!is.finite(x_values)] <- NA
-    
-    final_x <- new_final_data[new_final_data$Cluster==i, , drop = FALSE] # Specific row in final_data
-    # Align lengths before assignment
-    common_cols <- intersect(value_cols, colnames(final_x))
-    if (length(common_cols) > 0) {
-      final_x[, common_cols] <- x_values[common_cols]
-    }
-    new_final_data[new_final_data$Cluster==i, ] <- final_x
+# Convert display probabilities without altering the source tables.
+hmap_numeric_pvalues <- function(values, where) {
+  raw <- values
+  if (is.factor(values)) {
+    values <- as.character(values)
   }
-  
-  return(new_final_data)
-  
-}
-
-
-# Create comprehensive heatmap displaying Pvalue/Padj for each cluster
-# value_type = Type of value to display in heatmap (Pvalue/Padj)
-# value_by = How Pvalue is calculated
-comprehensive_hmap <- function(final_data, cluster_list, value_type="Padj", value_by="mean") {
-  
-  # change value based on value_by
-  new_final_data <- change_finaldata_valueby(final_data=final_data, cluster_list=cluster_list, value_by=value_by)
-  
-  # grab either Pvalue or Padj
-  value_cols <- grep(paste0("^", value_type), colnames(new_final_data), value=TRUE)
-  
-  # subset new_final_data by value_type
-  subsetted_final_data <- new_final_data[, c("Cluster", "Representative_Term", value_cols)]
-  
-  # remove "Pvalue" or "Padj" from colnames
-  colnames(subsetted_final_data) <- gsub(paste0("^", value_type, "_"), "", colnames(subsetted_final_data))
-  
-  # melt the data for heatmap construction
-  melted_data <- reshape2::melt(subsetted_final_data, id.vars = c("Cluster", "Representative_Term"))
-  melted_data$Cluster <- as.numeric(melted_data$Cluster)
-  melted_data <- melted_data[order(melted_data$Cluster), ] # order by cluster #
-  raw_hmap_value <- melted_data$value
-  melted_data$value <- withCallingHandlers(
-    as.numeric(melted_data$value),
-    warning = function(w) {
-      if (grepl("NAs introduced by coercion", conditionMessage(w)))
-        invokeRestart("muffleWarning")
-    }
-  )
-  # Detect values that were non-NA strings but became NA after numeric conversion
-  coerced_na <- is.na(melted_data$value) & !is.na(raw_hmap_value) & nzchar(as.character(raw_hmap_value))
-  if (any(coerced_na)) {
+  values <- suppressWarnings(as.numeric(values))
+  coerced <- is.na(values) & !is.na(raw) & nzchar(as.character(raw))
+  if (any(coerced)) {
     warning(
-      sprintf("comprehensive_hmap: %d non-numeric value(s) coerced to NA in heatmap data",
-              sum(coerced_na)),
+      sprintf(
+        "%s: %d non-numeric value(s) coerced to NA in heatmap data",
+        where,
+        sum(coerced)
+      ),
       call. = FALSE
     )
   }
-  melted_data$value[is.na(melted_data$value) | melted_data$value <= 0] <- 1
-  melted_data$value <- -log10(melted_data$value)
-  melted_data$value <- round(melted_data$value, HMAP_ROUND_DIGITS)
-  my_nticks <- length(unique(melted_data$Representative_Term)) # get # of clusters to show on y axis
-  
-  p <- plot_ly (
+  invalid <- !is.na(values) & (!is.finite(values) | values < 0 | values > 1)
+  if (any(invalid)) {
+    warning(
+      sprintf(
+        "%s: %d probability value(s) outside [0, 1] treated as missing",
+        where,
+        sum(invalid)
+      ),
+      call. = FALSE
+    )
+    values[invalid] <- NA_real_
+  }
+  values
+}
+
+hmap_display_values <- function(values, digits = hmap_round_digits) {
+  # The smallest representable positive value keeps an underflowed zero finite.
+  # Raw zeros are retained separately and explicitly identified in hover text.
+  floor_value <- .Machine$double.xmin * .Machine$double.eps
+  if (floor_value == 0) {
+    floor_value <- .Machine$double.xmin
+  }
+  values[!is.na(values) & values == 0] <- floor_value
+  scores <- -log10(values)
+  if (is.null(digits)) scores else round(scores, digits)
+}
+
+hmap_cluster_choices <- function(final_data) {
+  ids <- as.character(final_data$Cluster)
+  if (anyNA(ids) || any(!nzchar(ids)) || anyDuplicated(ids)) {
+    stop(
+      "Cluster summary must contain unique, non-missing cluster IDs",
+      call. = FALSE
+    )
+  }
+  stats::setNames(
+    paste0("cluster:", ids),
+    paste0("Cluster ", ids, " | ", final_data$Representative_Term)
+  )
+}
+
+# Change whether heatmap cells display mean, median, min, or max Pvalue/Padj.
+change_finaldata_valueby <- function(
+  final_data,
+  cluster_list,
+  value_by = "mean"
+) {
+  if (
+    length(value_by) != 1L || !value_by %in% c("mean", "median", "min", "max")
+  ) {
+    stop("Invalid value_by parameter", call. = FALSE)
+  }
+  new_final_data <- final_data
+  value_cols <- intersect(
+    grep("^(Pvalue|Padj)", names(cluster_list), value = TRUE),
+    names(final_data)
+  )
+  values <- lapply(
+    cluster_list[value_cols],
+    hmap_numeric_pvalues,
+    where = "change_finaldata_valueby"
+  )
+  aggregate_value <- function(x) {
+    if (!length(x) || all(is.na(x))) {
+      return(NA_real_)
+    }
+    switch(
+      value_by,
+      mean = mean(x, na.rm = TRUE),
+      median = median(x, na.rm = TRUE),
+      min = min(x, na.rm = TRUE),
+      max = max(x, na.rm = TRUE)
+    )
+  }
+  for (i in seq_len(nrow(final_data))) {
+    rows <- !is.na(cluster_list$Cluster) &
+      as.character(cluster_list$Cluster) == as.character(final_data$Cluster[i])
+    for (column in value_cols) {
+      new_final_data[i, column] <- aggregate_value(values[[column]][rows])
+    }
+  }
+  new_final_data
+}
+
+# Bound 14px monospace display labels within the 240px label margin, without
+# a graphics device or changing source strings.
+hmap_axis_labels <- function(final_data) {
+  ids <- as.character(final_data$Cluster)
+  prefixes <- paste0("Cluster ", ids)
+  # Leave one extra column for a wide Unicode character at the excerpt edge.
+  # A nine-column budget retains at least eight columns before any ellipsis.
+  term_width <- nchar(paste0(final_data$Representative_Term), type = "width")
+  excerpt_width <- pmin(9L, term_width) + as.integer(term_width > 9L)
+  aliases <- nchar(prefixes, type = "width") + 3L + excerpt_width > 27L
+  prefixes[aliases] <- paste0(
+    "Display row ",
+    rev(seq_along(ids))[aliases]
+  )
+  labels <- vapply(
+    seq_along(ids),
+    function(i) {
+      separator <- if (aliases[i]) "|" else " | "
+      budget <- 27L - nchar(prefixes[i], type = "width") - nchar(separator)
+      label <- prefixes[i]
+      if (budget >= 1L) {
+        term <- paste0(final_data$Representative_Term[i])
+        if (nchar(term, type = "width") > budget) {
+          # Bound by Unicode characters before measuring display width. No
+          # graphics device is opened, including in read-only installations.
+          term <- substr(term, 1L, budget - 1L)
+          while (nchar(term, type = "width") > budget - 1L) {
+            term <- substr(term, 1L, nchar(term) - 1L)
+          }
+          term <- paste0(term, intToUtf8(8230L))
+        }
+        label <- paste0(label, separator, term)
+      }
+      as.character(htmltools::htmlEscape(label))
+    },
+    character(1)
+  )
+  list(labels = labels, aliases = aliases, prefixes = prefixes)
+}
+
+# Row positions run from the top of the existing reversed category display.
+hmap_row_view <- function(plot, rows, start = 1L, limit = NULL) {
+  starts <- seq.int(1L, max(1L, rows), by = 400L)
+  if (length(start) != 1L || is.na(start) || !start %in% starts) {
+    start <- 1L
+  }
+  end <- min(rows, start + 399L)
+  # A display limit shows only the first rows (the most significant clusters);
+  # the figure still holds every row.
+  limited <- !is.null(limit) && rows > limit
+  if (limited) {
+    start <- 1L
+    end <- as.integer(limit)
+  }
+  visible <- max(1L, end - start + 1L)
+  # Plotly omits single-category ticks in a very short drawable band. Keep
+  # a compact 90px minimum band, independently of the dataset/note margins.
+  height <- max(90L, visible * 18L) + 70L + attr(plot, "hmap_bottom")
+  plot$height <- height
+  plot$x$layout$height <- height
+  plot <- plotly::layout(
+    plot,
+    yaxis = list(range = c(rows - end - 0.5, rows - start + 0.5)),
+    title = list(
+      text = paste0(
+        attr(plot, "hmap_title"),
+        "<br><sup>",
+        if (limited) {
+          paste0(end, " of ", rows, " shown, most significant first")
+        } else {
+          paste0("Rows ", start, intToUtf8(8211L), end, " of ", rows)
+        },
+        "</sup>"
+      ),
+      font = list(size = 16)
+    )
+  )
+  plotly::config(
+    plot,
+    toImageButtonOptions = list(
+      height = height,
+      width = 1000,
+      scale = 1
+    )
+  )
+}
+
+# Create the cluster summary heatmap using cluster IDs, not representative
+# names.
+comprehensive_hmap <- function(
+  final_data,
+  cluster_list,
+  value_type = "Padj",
+  value_by = "mean",
+  top_n = NULL
+) {
+  if (length(value_type) != 1L || !value_type %in% c("Pvalue", "Padj")) {
+    stop("Invalid value_type parameter", call. = FALSE)
+  }
+  workspace_check_resources(list(render_rows = nrow(final_data)))
+  if (!nrow(final_data)) {
+    return(NULL)
+  }
+  choices <- hmap_cluster_choices(final_data)
+  axis <- hmap_axis_labels(final_data)
+  new_final_data <- change_finaldata_valueby(final_data, cluster_list, value_by)
+  # With a display limit the rows are ordered by significance (smallest p in any
+  # dataset); every row stays in the figure.
+  limited <- !is.null(top_n) && nrow(final_data) > top_n
+  if (limited) {
+    value_columns <- grep(
+      paste0("^", value_type, "(_|$)"),
+      names(new_final_data),
+      value = TRUE
+    )
+    p <- suppressWarnings(vapply(
+      seq_len(nrow(new_final_data)),
+      function(i) {
+        v <- suppressWarnings(as.numeric(unlist(new_final_data[i, value_columns])))
+        v <- v[!is.na(v)]
+        if (length(v)) min(v) else Inf
+      },
+      numeric(1)
+    ))
+    # The display counts rows from the top of the reversed category axis, so the
+    # most significant cluster is the last category.
+    rank_order <- rev(order(p, seq_along(p)))
+    ids_ranked <- paste0("cluster:", new_final_data$Cluster[rank_order])
+    position <- match(ids_ranked, unname(choices))
+    choices <- choices[position]
+    axis$labels <- axis$labels[position]
+    axis$aliases <- axis$aliases[position]
+    axis$prefixes <- axis$prefixes[position]
+  }
+  value_cols <- grep(
+    paste0("^", value_type, "(_|$)"),
+    names(new_final_data),
+    value = TRUE
+  )
+  subsetted <- new_final_data[,
+    c("Cluster", "Representative_Term", value_cols),
+    drop = FALSE
+  ]
+  names(subsetted) <- sub(paste0("^", value_type, "_"), "", names(subsetted))
+  melted_data <- reshape2::melt(
+    subsetted,
+    id.vars = c("Cluster", "Representative_Term")
+  )
+  numeric_ids <- suppressWarnings(as.numeric(as.character(melted_data$Cluster)))
+  ordering <- if (anyNA(numeric_ids)) {
+    as.character(melted_data$Cluster)
+  } else {
+    numeric_ids
+  }
+  melted_data <- melted_data[order(ordering), ]
+  melted_data$raw_value <- hmap_numeric_pvalues(
+    melted_data$value,
+    "comprehensive_hmap"
+  )
+  melted_data$value <- hmap_display_values(melted_data$raw_value)
+  if (all(is.na(melted_data$value))) {
+    melted_data$value <- I(melted_data$value)
+  }
+  melted_data$cluster_key <- paste0("cluster:", melted_data$Cluster)
+  description <- ifelse(
+    is.na(melted_data$raw_value),
+    "Not available",
+    ifelse(
+      melted_data$raw_value == 0,
+      paste0("0 (display floor; -log10 = ", melted_data$value, ")"),
+      paste0("-log10(", value_type, "): ", melted_data$value)
+    )
+  )
+  melted_data$hover <- paste0(
+    "Cluster ",
+    melted_data$Cluster,
+    "<br>",
+    melted_data$Representative_Term,
+    "<br>",
+    description
+  )
+  alias_index <- match(melted_data$cluster_key, unname(choices))
+  aliased <- axis$aliases[alias_index]
+  melted_data$hover[aliased] <- paste0(
+    axis$prefixes[alias_index[aliased]],
+    "<br>",
+    melted_data$hover[aliased]
+  )
+  # Rotated, fixed-size dataset ticks have a predictable vertical footprint.
+  # Reserve their full band plus the axis title before the explanation band.
+  dataset_width <- max(nchar(levels(melted_data$variable), type = "width"))
+  note_offset <- min(
+    860L,
+    max(120L, ceiling(dataset_width * 7.2 / sqrt(2)) + 70L)
+  )
+  bottom <- note_offset + 60L
+  plot <- plot_ly(
     data = melted_data,
     x = ~variable,
-    y = ~Representative_Term,
+    y = ~cluster_key,
     z = ~value,
     type = "heatmap",
-    colors = c(HMAP_COLOR_LOW, HMAP_COLOR_HIGH),
-    text = ~paste0("Cluster ", Cluster, "<br>", Representative_Term, "<br>", "-log10(", value_type, "): ", value),
-    colorbar = list(title = paste0("-log10(", value_type, ")")),
-    hoverinfo = "text"
+    colors = hmap_colors,
+    text = ~hover,
+    hoverinfo = "text",
+    hoverongaps = TRUE,
+    colorbar = list(title = paste0("-log10(", value_type, ")"))
   ) %>%
-    layout (
+    layout(
       title = paste0("-log10(", value_type, ") by Cluster"),
-      xaxis = list(title = 'Geneset'),
-      yaxis = list(title = 'Representative Term for Cluster', categoryorder = "trace", nticks = my_nticks)
+      xaxis = list(
+        title = list(text = "Geneset", standoff = 20),
+        tickangle = -45,
+        tickfont = list(size = 12, family = "monospace"),
+        automargin = FALSE
+      ),
+      yaxis = list(
+        title = "",
+        categoryorder = "array",
+        categoryarray = unname(choices),
+        tickmode = "array",
+        tickvals = unname(choices),
+        ticktext = axis$labels,
+        tickfont = list(size = 14, family = "monospace"),
+        automargin = FALSE,
+        fixedrange = TRUE
+      ),
+      plot_bgcolor = "#eeeeee",
+      annotations = list(list(
+        text = paste0(
+          "Grey cells: no available value; zero p-values ",
+          "use a display floor",
+          if (any(axis$aliases)) {
+            paste0(
+              "<br>Display row aliases identify long IDs; hover for full IDs."
+            )
+          } else {
+            ""
+          }
+        ),
+        x = 0,
+        y = 0,
+        yshift = -note_offset,
+        yanchor = "top",
+        xref = "paper",
+        yref = "paper",
+        showarrow = FALSE,
+        xanchor = "left",
+        font = list(size = 11)
+      )),
+      margin = list(l = 240, r = 95, t = 70, b = bottom)
     )
-    return(p)
+  attr(plot, "hmap_bottom") <- bottom
+  attr(plot, "hmap_title") <- paste0("-log10(", value_type, ") by Cluster")
+  plot <- hmap_row_view(plot, nrow(final_data), limit = if (limited) top_n)
+  attr(plot, "hmap_limited") <- limited
+  plot
 }
 
-
-# Create heatmap displaying expression for each term in cluster
-# term_vec = Vector of clusters to display
-# term_vec <- c("transport", "monocarboxylic acid biosynthetic process", "isoprenoid metabolic process", "acetyl-CoA metabolic process")
-cluster_hmap <- function(cluster_list, term_vec, final_data, value_type="Padj") {
-  
-  # find cluster associated with term
-  term_name_df <- final_data[final_data$Representative_Term %in% term_vec, ]
-  term_nums <- term_name_df$Cluster # list of cluster #s
-  
-  cluster_hmap <- data.frame()
-  for (i in seq_along(term_nums)) {
-    tmp <- cluster_list[cluster_list$Cluster == term_nums[i], ]
-    cluster_hmap <- rbind(cluster_hmap, tmp)
+# Create a term heatmap. New UI selections use IDs; legacy representative names
+# remain accepted, selecting all matching clusters as in older saved sessions.
+cluster_hmap <- function(
+  cluster_list,
+  term_vec,
+  final_data,
+  value_type = "Padj"
+) {
+  if (length(value_type) != 1L || !value_type %in% c("Pvalue", "Padj")) {
+    stop("Invalid value_type parameter", call. = FALSE)
   }
-  
-  # Subset value_type columns
-  value_cols <- base::grep(paste0("^", value_type), colnames(cluster_hmap), value=TRUE)
-  cluster_hmap <- cluster_hmap[, c("Cluster", "Term", value_cols)]
-  # Remove "Padj_" from colnames
-  colnames(cluster_hmap) <- gsub(paste0("^", value_type, "_"), "", colnames(cluster_hmap))
-  
-  # Melt the data for heatmap construction
-  melted_chmap_data <- reshape2::melt(cluster_hmap, id.vars = c("Cluster", "Term"))
-  
-  
-  raw_chmap_value <- melted_chmap_data$value
-  melted_chmap_data$value <- withCallingHandlers(
-    as.numeric(melted_chmap_data$value),
-    warning = function(w) {
-      if (grepl("NAs introduced by coercion", conditionMessage(w)))
-        invokeRestart("muffleWarning")
-    }
+  choices <- hmap_cluster_choices(final_data)
+  id_selection <- paste0("cluster:", final_data$Cluster) %in% term_vec
+  legacy_selection <- final_data$Representative_Term %in%
+    setdiff(term_vec, unname(choices))
+  ids <- final_data$Cluster[id_selection | legacy_selection]
+  selected <- cluster_list[cluster_list$Cluster %in% ids, , drop = FALSE]
+  if (!nrow(selected)) {
+    stop("No matching clusters selected", call. = FALSE)
+  }
+  selected <- selected[order(match(selected$Cluster, ids)), , drop = FALSE]
+  value_cols <- grep(
+    paste0("^", value_type, "(_|$)"),
+    names(selected),
+    value = TRUE
   )
-  # Detect values that were non-NA strings but became NA after numeric conversion
-  coerced_chmap_na <- is.na(melted_chmap_data$value) & !is.na(raw_chmap_value) & nzchar(as.character(raw_chmap_value))
-  if (any(coerced_chmap_na)) {
-    warning(
-      sprintf("cluster_hmap: %d non-numeric value(s) coerced to NA in heatmap data",
-              sum(coerced_chmap_na)),
-      call. = FALSE
+  if (!length(value_cols)) {
+    stop("No probability columns available", call. = FALSE)
+  }
+  values <- as.data.frame(lapply(
+    selected[value_cols],
+    hmap_numeric_pvalues,
+    where = "cluster_hmap"
+  ))
+  names(values) <- sub(paste0("^", value_type, "_"), "", names(values))
+  raw_values <- as.matrix(values)
+  clusty <- matrix(
+    hmap_display_values(as.vector(raw_values), digits = NULL),
+    nrow = nrow(raw_values),
+    dimnames = list(NULL, names(values))
+  )
+  labels <- as.character(selected$Term)
+  if (anyDuplicated(labels)) {
+    labels <- paste0("Cluster ", selected$Cluster, " | ", labels)
+  }
+  rownames(clusty) <- make.unique(labels)
+  notes <- matrix(
+    ifelse(
+      is.na(raw_values),
+      "Not available",
+      ifelse(raw_values == 0, "0 (display floor)", as.character(raw_values))
+    ),
+    nrow = nrow(raw_values),
+    dimnames = dimnames(clusty)
+  )
+  notes <- matrix(
+    paste0(
+      "Term: ",
+      rownames(clusty)[row(clusty)],
+      "<br>Analysis: ",
+      colnames(clusty)[col(clusty)],
+      "<br>",
+      value_type,
+      ": ",
+      notes,
+      "<br>-log10(",
+      value_type,
+      "): ",
+      clusty
+    ),
+    nrow = nrow(clusty),
+    dimnames = dimnames(clusty)
+  )
+  # heatmaply cannot infer a color domain when every cell is missing.
+  # AsIs keeps plotly from mapping the NA matrix through a numeric palette.
+  if (all(is.na(clusty))) {
+    return(
+      plotly::plot_ly(
+        x = colnames(clusty),
+        y = rownames(clusty),
+        z = I(clusty),
+        text = notes,
+        type = "heatmap",
+        hoverinfo = "text",
+        hoverongaps = TRUE,
+        showscale = FALSE
+      ) %>%
+        layout(
+          title = "No available values",
+          plot_bgcolor = "#eeeeee",
+          xaxis = list(title = "Analysis"),
+          yaxis = list(title = "Term")
+        )
     )
   }
-  melted_chmap_data$value <- -log10(melted_chmap_data$value)
-  melted_chmap_data$value <- round(melted_chmap_data$value, HMAP_ROUND_DIGITS)
-  
-  melted_chmap_data$Cluster <- as.numeric(melted_chmap_data$Cluster)
-  melted_chmap_data <- melted_chmap_data[order(melted_chmap_data$Cluster), ] # Order by cluster #
-  
-  my_nticks <- length(unique(melted_chmap_data$Term)) # Get # of terms to show on y axis
-  
-  
-  # Plot the heatmap
-  p <- plot_ly (
-    data = melted_chmap_data,
-    x = ~variable,
-    y = ~Term,
-    z = ~value,
-    type = "heatmap",
-    colors = c(HMAP_COLOR_LOW, HMAP_COLOR_HIGH),
-    text = ~paste0("Cluster ", Cluster, "<br>", Term, "<br>", "-log10(", value_type, "): ", value),  # Customize hover text
-    colorbar = list(title = paste0("-log10(", value_type, ")")),
-    hoverinfo = "text"
-  ) %>%
-  layout (
-    title = paste0("-log10(", value_type, ") by Term"),
-    xaxis = list(title = 'Geneset'), 
-    yaxis = list(title = 'Term', categoryorder = "trace", nticks = my_nticks)
+  heatmaply(
+    clusty,
+    row_side_colors = data.frame(
+      "Cluster" = as.character(selected$Cluster),
+      check.names = FALSE
+    ),
+    custom_hovertext = notes,
+    plot_method = "plotly",
+    cluster_rows = FALSE,
+    cluster_cols = FALSE,
+    Rowv = FALSE,
+    Colv = FALSE,
+    main = paste0("-log10(", value_type, ") by Term"),
+    colors = grDevices::hcl.colors(256L, "viridis"),
+    key.title = paste0("-log10(", value_type, ")"),
+    na.value = "#eeeeee"
   )
-  
-  clusty_annot <- melted_chmap_data %>%
-    distinct(Cluster, Term) %>%
-    arrange(Cluster)
-  
-  clusty <- cluster_hmap[, !(colnames(cluster_hmap) %in% c("Cluster", "Term")), drop = FALSE]
-  # Convert to numeric matrix with explicit NA handling before log transform
-  clusty <- as.data.frame(lapply(clusty, function(col) {
-    num_col <- suppressWarnings(as.numeric(col))
-    coerced <- is.na(num_col) & !is.na(col) & nzchar(as.character(col))
-    if (any(coerced)) {
-      warning(
-        sprintf("cluster_hmap: %d non-numeric value(s) found in heatmap columns",
-                sum(coerced)),
-        call. = FALSE
-      )
-    }
-    num_col
-  }))
-  clusty <- apply(clusty, c(1, 2), function(x) -log10(as.numeric(x)))
-  rownames(clusty) <- clusty_annot$Term
-  
-  my_hm <- heatmaply(
-    clusty, 
-    row_side_colors=data.frame("Cluster"=clusty_annot$Cluster, check.names=FALSE),
-    cellnote=clusty,
-    plot_method='plotly',
-    cluster_rows=FALSE, cluster_cols=FALSE,
-    Rowv=FALSE,
-    Colv=FALSE,
-    main=paste0("-log10(", value_type, ") by Term"),
-    key.title=paste0("-log10(", value_type, ")")
-  )
-  
-  return(my_hm)
 }
-  

@@ -21,29 +21,58 @@ async function identity(pid: number): Promise<Identity | undefined> {
     const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
     return { pid, parent: Number(fields[1]), group: Number(fields[2]), start: fields[19], state: fields[0] };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    // A pid that exits during a /proc scan reports ENOENT or ESRCH; either means it is gone.
+    if (['ENOENT', 'ESRCH'].includes((error as NodeJS.ErrnoException).code ?? '')) return undefined;
     throw error;
   }
 }
 async function same(record: Identity) {
   const now = await identity(record.pid);
-  return !!now && now.start === record.start && now.state !== 'Z';
+  return !!now && now.start === record.start && now.group === record.group && now.state !== 'Z' && now.state !== 'X';
 }
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
 // Every process in the owner's group must carry the nonce; anything else is a foreign joiner.
-async function fixtureProcesses(owner: Identity, nonce: string) {
+async function fixtureProcesses(owner: Identity, nonce: string, observations: unknown[] = []) {
   const found: Identity[] = [];
+  const deadline = Date.now() + 2000;
   for (const entry of (await fs.readdir('/proc')).filter(x => /^\d+$/.test(x))) {
     const record = await identity(Number(entry));
-    if (!record || record.group !== owner.group) continue;
-    try {
-      const environment = (await fs.readFile(`/proc/${entry}/environ`, 'utf8')).split('\0');
-      if (!environment.includes(`WS_JOBS_NONCE=${nonce}`)) throw new Error('Unknown process joined owned fixture group');
-      found.push(record);
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    if (!record) continue;
+    if (record.pid === owner.pid && (record.start !== owner.start || record.group !== owner.group)) {
+      observations.push({ pid: record.pid, expectedStart: owner.start, current: record });
+      throw new Error('Fixture owner identity changed during ownership check');
+    }
+    if (record.group !== owner.group) continue;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      // Fresh identity surrounds every environment read; a nonce cannot cross PID reuse.
+      const before = await identity(record.pid);
+      if (!before) { observations.push({ pid: record.pid, attempt, current: null }); break; }
+      if (before.start !== record.start || before.group !== record.group) {
+        observations.push({ pid: record.pid, attempt, expectedStart: record.start, current: before });
+        throw new Error('Fixture process identity changed during ownership check');
+      }
+      let environment: string | undefined, readError: unknown;
+      try { environment = await fs.readFile(`/proc/${entry}/environ`, 'utf8'); }
+      catch (error) { readError = error; }
+      const current = await identity(record.pid);
+      const nonceMatched = environment?.split('\0').includes(`WS_JOBS_NONCE=${nonce}`) === true;
+      observations.push({ pid: record.pid, start: record.start, group: record.group, attempt,
+        current, nonceMatched, error: readError === undefined ? undefined : String(readError) });
+      if (!current) break;
+      if (current.start !== record.start || current.group !== record.group) {
+        throw new Error('Fixture process identity changed during ownership check');
+      }
+      if (current.state === 'Z' || current.state === 'X') break;
+      if (nonceMatched) { found.push(current); break; }
+      if (attempt === 3 || Date.now() + 500 > deadline) {
+        if (readError) throw readError;
+        throw new Error(`Unknown process joined owned fixture group (pid ${current.pid}, start ${current.start}, state ${current.state})`);
+      }
+      await delay(500);
+    }
   }
   return found;
 }
@@ -70,9 +99,11 @@ root <- normalizePath(getwd(), mustWork=TRUE)
 dir.create(file.path(root, 'pids'), showWarnings=FALSE)
 dir.create(file.path(root, 'release'), showWarnings=FALSE)
 future::plan(future::multisession, workers=I(as.integer(Sys.getenv('WS_JOBS_WORKERS'))))
-enrichTabUI <- getFromNamespace('enrichTabUI', 'richStudio')
-enrichTabServer <- getFromNamespace('enrichTabServer', 'richStudio')
+enrich_tab_ui <- getFromNamespace('enrich_tab_ui', 'richStudio')
+enrich_tab_server <- getFromNamespace('enrich_tab_server', 'richStudio')
 jobs_ui <- getFromNamespace('workspace_jobs_ui', 'richStudio')
+badge_ui <- getFromNamespace('workspace_jobs_badge_ui', 'richStudio')
+shiny::addResourcePath('rs', system.file('application/www', package='richStudio'))
 jobs_server <- getFromNamespace('workspace_jobs_server', 'richStudio')
 jobs_registry <- getFromNamespace('workspace_jobs_registry', 'richStudio')
 jobs_close <- getFromNamespace('workspace_jobs_close', 'richStudio')
@@ -101,8 +132,10 @@ ui <- dashboardPage(
     menuItem('Other tab', tabName='other_tab'))),
   dashboardBody(shinyjs::useShinyjs(),
     tags$div(id='fixture', 'data-nonce'=Sys.getenv('WS_JOBS_NONCE')),
+    tags$head(tags$link(rel='stylesheet', href='rs/custom.css'), tags$script(src='rs/workspace-ui.js')),
+    badge_ui('jobs'),
     jobs_ui('jobs'),
-    tabItems(enrichTabUI('enrich', tabName='enrich_tab'),
+    tabItems(enrich_tab_ui('enrich', tabName='enrich_tab'),
       tabItem(tabName='other_tab', h2('Other tab'), p('Navigation target'))))
 )
 server <- function(input, output, session) {
@@ -117,7 +150,7 @@ server <- function(input, output, session) {
   session$userData$workspace_jobs <- jobs
   session$onSessionEnded(function() jobs_close(jobs))
   jobs_server('jobs', jobs)
-  enrichTabServer('enrich', u_degnames=u_degnames, u_degdfs=u_degdfs, u_big_degdf=u_big_degdf,
+  enrich_tab_server('enrich', u_degnames=u_degnames, u_degdfs=u_degdfs, u_big_degdf=u_big_degdf,
     u_rrnames=u_rrnames, u_rrdfs=u_rrdfs, u_big_rrdf=u_big_rrdf, enrichment_runner=latch_runner)
 }
 runApp(shinyApp(ui, server), host='127.0.0.1', port=${port}, launch.browser=FALSE)
@@ -134,7 +167,8 @@ const test = base.extend<{ workers: number; fixture: Fixture }>({
     if (!runs || !temporary || !path.isAbsolute(runs) || !path.isAbsolute(temporary)) throw new Error('Explicit project-local runs root/TMPDIR required');
     const canonicalRuns = await fs.realpath(runs);
     if (canonicalRuns !== runs) throw new Error('Runs root is not canonical');
-    const lifecycle: Record<string, unknown> = { nonce, port, workers, parent: canonicalRuns };
+    const proofObservations: unknown[] = [];
+    const lifecycle: Record<string, unknown> = { nonce, port, workers, parent: canonicalRuns, proofObservations };
     const merge = (more: Identity[]) => { owned = [...new Map([...owned, ...more].map(record => [record.pid, record])).values()]; };
     try {
       await portFree();
@@ -156,13 +190,19 @@ const test = base.extend<{ workers: number; fixture: Fixture }>({
       if (!child.pid) throw new Error('Fixture spawn allocated no PID');
       const attempted = await identity(child.pid);
       if (!attempted || attempted.group !== attempted.pid) { safe = false; throw new Error('Fixture process identity unavailable'); }
-      owner = attempted; lifecycle.owner = owner; merge(await fixtureProcesses(owner, nonce));
+      owner = attempted; lifecycle.owner = owner;
+      const initialOwned = await fixtureProcesses(owner, nonce, proofObservations);
+      merge(initialOwned);
+      if (!initialOwned.some(record => record.pid === owner?.pid && record.start === owner.start)) throw new Error('Fixture owner is not live and nonce-proven');
       await expect.poll(async () => {
         if (reaped || child?.exitCode !== null || child?.signalCode) throw new Error(`Fixture exited before ready: ${log}`);
         try { const response = await fetch(url, { signal: AbortSignal.timeout(1000) }); return response.ok && (await response.text()).includes(nonce); }
         catch { return false; }
       }, { timeout: 60_000 }).toBe(true);
-      merge(await fixtureProcesses(owner, nonce)); lifecycle.started = owned;
+      const readyOwned = await fixtureProcesses(owner, nonce, proofObservations);
+      merge(readyOwned);
+      if (!readyOwned.some(record => record.pid === owner?.pid && record.start === owner.start)) throw new Error('Fixture owner is not live and nonce-proven');
+      lifecycle.started = owned;
       const fixtureRoot = root;
       await use({ root: fixtureRoot, nonce, record: async (pid: number) => {
         const record = await identity(pid);
@@ -173,20 +213,20 @@ const test = base.extend<{ workers: number; fixture: Fixture }>({
     } finally {
       try {
         if (child?.pid) {
-          try { if (owner) merge(await fixtureProcesses(owner, nonce)); }
+          try { if (owner) merge(await fixtureProcesses(owner, nonce, proofObservations)); }
           catch (error) { safe = false; lifecycle.discoveryError = String(error); }
           if (safe && owner && await same(owner)) {
             lifecycle.beforeTerm = owned;
             try { process.kill(-owner.group, 'SIGTERM'); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
-          } else if (child.exitCode === null && !child.signalCode) { if (!owner) safe = false; child.kill('SIGTERM'); }
+          } else if (child.exitCode === null && !child.signalCode) { safe = false; }
           const deadline = Date.now() + 5500;
           while (!reaped && Date.now() < deadline) await delay(25);
-          try { if (owner) merge(await fixtureProcesses(owner, nonce)); }
+          let proven: Identity[] = [];
+          try { if (owner) { proven = await fixtureProcesses(owner, nonce, proofObservations); merge(proven); } }
           catch (error) { safe = false; lifecycle.discoveryError = String(error); }
-          for (const record of [...owned].reverse()) if (await same(record)) {
+          for (const record of [...owned].reverse()) if (safe && proven.some(current => current.pid === record.pid && current.start === record.start) && await same(record)) {
             try { process.kill(record.pid, 'SIGKILL'); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ESRCH') throw error; }
           }
-          if (child.exitCode === null && !child.signalCode) child.kill('SIGKILL');
           const end = Date.now() + 2000;
           while (Date.now() < end && (!reaped || (await Promise.all(owned.map(same))).some(Boolean))) await delay(25);
           lifecycle.exit = { code: child.exitCode, signal: child.signalCode, reaped };
@@ -244,6 +284,12 @@ async function workerPid(fixture: Fixture, key: string) {
 const release = (fixture: Fixture, key: string) => fs.writeFile(path.join(fixture.root, 'release', key), '');
 const panel = (page: Page) => page.locator('section[aria-label="Analysis jobs"]');
 const status = (page: Page) => page.locator('#jobs-jobs_status');
+// The jobs sit in a tray that only the job badge opens (SPEC-WS-013 M5).
+async function openTray(page: Page) {
+  const tray = page.locator('#jobs-tray');
+  if (!(await tray.isVisible())) await page.locator('#jobs-job_badge').click();
+  await expect(tray).toBeVisible();
+}
 const stopButton = (page: Page) => page.locator('#jobs-jobs_list button', { hasText: /^\s*Stop\s*$/ });
 async function newPage(browser: Browser, info: TestInfo) {
   const context = await browser.newContext({ viewport: info.project.use.viewport ?? undefined });
@@ -262,6 +308,7 @@ test.describe('workers = 2', () => {
     await expect(status(page)).toContainText(/running/i);
     await showTab(page, 'other_tab');
     await showTab(page, 'enrich_tab');
+    await openTray(page);
     await expect(panel(page)).toBeVisible();
     await expect(status(page)).toContainText('Progress: not reported by this engine');
     const time = page.locator('#jobs-jobs_time');
@@ -286,6 +333,40 @@ test.describe('workers = 2', () => {
     expect(errors).toEqual([]);
   });
 
+  test('AC-015 REQ-003 one running and two finished jobs: the badge says so, the tray opens only on request, takes focus, and Escape returns it', async ({ page, fixture }) => {
+    await open(page, fixture);
+    const runFresh = async (label: string) => {
+      await showTab(page, 'enrich_tab');
+      await page.evaluate(() => (document.getElementById('enrich-degs_to_enrich') as any).selectize.clear());
+      await run(page, label);
+    };
+    await runFresh('deg_a'); await workerPid(fixture, 'deg_a.1'); await release(fixture, 'deg_a.1');
+    await expect(status(page)).toContainText(/succeeded/i, { timeout: 30_000 });
+    await runFresh('deg_b'); await workerPid(fixture, 'deg_b.1'); await release(fixture, 'deg_b.1');
+    await expect(page.locator('.rs-job[data-state="succeeded"]')).toHaveCount(2, { timeout: 30_000 });
+    await runFresh('deg_a');
+    await workerPid(fixture, 'deg_a.2');
+    const badge = page.locator('#jobs-job_badge');
+    const tray = page.locator('#jobs-tray');
+    // A running job is visible without opening the tray, and the tray has not opened by itself.
+    await expect(badge).toBeVisible();
+    await expect(badge).toHaveText('1 job running');
+    await expect(tray).not.toBeVisible();
+    await badge.click();
+    await expect(tray).toBeVisible();
+    await expect(tray.locator('.rs-job').locator('visible=true')).toHaveCount(3);
+    for (const state of ['succeeded', 'succeeded', 'running']) {
+      expect(await tray.locator('.rs-job').evaluateAll((rows, wanted) => rows.some(r => r.getAttribute('data-state') === wanted), state)).toBe(true);
+    }
+    for (const row of await tray.locator('.rs-job').all()) await expect(row).toContainText(/Succeeded|Running|Queued/);
+    expect(await page.evaluate(() => !!document.activeElement?.closest('#jobs-tray'))).toBe(true);
+    await page.keyboard.press('Escape');
+    await expect(tray).not.toBeVisible();
+    await expect(badge).toBeFocused();
+    await release(fixture, 'deg_a.2');
+    await expect(status(page)).toContainText(/succeeded/i, { timeout: 30_000 });
+  });
+
   test('AC-002 REQ-003 Stop in one session ends only its worker, and only after the PID is gone', async ({ browser, fixture }, info) => {
     const one = await newPage(browser, info), two = await newPage(browser, info);
     try {
@@ -297,6 +378,7 @@ test.describe('workers = 2', () => {
       const pid2 = await workerPid(fixture, 'deg_b.1');
       expect(pid1.pid).not.toBe(pid2.pid);
       await expect(status(one)).toContainText(/running/i);
+      await openTray(one);
       await stopButton(one).click();
       // Panel text never leads the process: "Cancelled" may appear only once /proc shows pid1 gone.
       const observations: { cancelled: boolean; alive: boolean }[] = [];
@@ -333,6 +415,7 @@ test.describe('workers = 1', () => {
       await expect(status(one)).toContainText(/running/i);
       await run(two, 'deg_b');
       await expect(status(two)).toContainText("Queued: 0 job(s) ahead in this server's queue");
+      await openTray(two);
       const text = await panel(two).innerText();
       for (const word of ['ETA', 'remaining', '%']) expect(text).not.toContain(word);
       await release(fixture, 'deg_a.1');

@@ -14,8 +14,8 @@ readonly SHINY_URL="http://127.0.0.1:3838/richStudio/"
 readonly EXPECTED_HOST="Hurlab.und.nodak.edu"
 readonly EXPECTED_TAILSCALE_IP="100.94.67.89"
 readonly EXPECTED_BASELINE="fc124971b004fcbc24a212a40636d34cc57fd587"
-readonly RICHR_URL="https://github.com/hurlab/richR/releases/download/v0.1.5/richR_0.1.5.tar.gz"
-readonly RICHR_SHA256="0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf"
+readonly RICHR_URL="https://github.com/hurlab/richR/releases/download/v0.1.6/richR_0.1.6.tar.gz"
+readonly RICHR_SHA256="a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e"
 readonly RICHCLUSTER_URL="https://api.github.com/repos/hurlab/richCluster/tarball/a0d1f630fbe64089ab38516116b78962672e6349"
 readonly RICHCLUSTER_SHA256="6abe64c1c156368afcd9fbec942fadf80848ba64c00dadeac6b2faff27b73c00"
 readonly BIOANNO_URL="https://api.github.com/repos/guokai8/bioAnno/tarball/3c8936033b806b9f40c7028faa80e4971f6d0859"
@@ -273,7 +273,7 @@ write_renviron() {
 }
 write_renviron "$BASELINE_LIB"
 
-RICHR_ARCHIVE="$RESULT_DIR/richR_0.1.5.tar.gz"
+RICHR_ARCHIVE="$RESULT_DIR/richR_0.1.6.tar.gz"
 RICHCLUSTER_ARCHIVE="$RESULT_DIR/richCluster-a0d1f630.tar.gz"
 RICHCLUSTER_SOURCE="$BUILD_ROOT/src-richCluster"
 BIOANNO_ARCHIVE="$RESULT_DIR/bioAnno-3c893603.tar.gz"
@@ -300,7 +300,7 @@ as_app_user "$BUILD_DIR" env R_ENVIRON_USER=/dev/null RENV_CONFIG_AUTOLOADER_ENA
 as_app_user "$BUILD_DIR" env R_ENVIRON_USER=/dev/null RENV_CONFIG_AUTOLOADER_ENABLED=FALSE R_LIBS_USER="$OVERLAY_LIB:$BASELINE_LIB" R CMD INSTALL --library="$OVERLAY_LIB" "$BUILD_DIR"
 
 as_app_user "$BUILD_DIR" env R_ENVIRON_USER=/dev/null RENV_CONFIG_AUTOLOADER_ENABLED=FALSE R_LIBS_USER="$OVERLAY_LIB:$BASELINE_LIB" Rscript -e '
-  expected <- c(richR = "0.1.5", bioAnno = "0.99.45", richCluster = "2.0.1")
+  expected <- c(richR = "0.1.6", bioAnno = "0.99.45", richCluster = "2.0.1")
   overlay <- normalizePath(file.path(getwd(), "renv", "library", "dependency-overlay"), mustWork = TRUE)
   libs <- normalizePath(.libPaths(), mustWork = TRUE)
   stopifnot(identical(libs[[1L]], overlay))
@@ -381,7 +381,7 @@ fi
 FINAL_OVERLAY_LIB="$RELEASE_STAGE/renv/library/dependency-overlay"
 printf 'Verifying the root-owned finalized release before app publication.\n'
 as_app_user "$RELEASE_STAGE" env R_ENVIRON_USER=/dev/null RENV_CONFIG_AUTOLOADER_ENABLED=FALSE R_LIBS_USER="$FINAL_OVERLAY_LIB:$BASELINE_LIB" Rscript -e '
-  expected <- c(richR = "0.1.5", bioAnno = "0.99.45", richCluster = "2.0.1")
+  expected <- c(richR = "0.1.6", bioAnno = "0.99.45", richCluster = "2.0.1")
   overlay <- normalizePath(file.path(getwd(), "renv", "library", "dependency-overlay"), mustWork = TRUE)
   libs <- normalizePath(.libPaths(), mustWork = TRUE)
   stopifnot(identical(libs[[1L]], overlay))
@@ -422,7 +422,7 @@ as_app_user "$APP_PARENT" ln -s -- "$RELEASE_DIR" "$APP_PATH"
 [[ -L "$APP_PATH" && "$(readlink -- "$APP_PATH")" == "$RELEASE_DIR" ]] || fail 'published app path does not point to the reviewed release'
 
 as_app_user "$APP_PATH" env RENV_CONFIG_AUTOLOADER_ENABLED=FALSE R_LIBS_USER="$FINAL_OVERLAY_LIB:$FALLBACK_LIB" Rscript -e '
-  expected <- c(richR = "0.1.5", bioAnno = "0.99.45", richCluster = "2.0.1")
+  expected <- c(richR = "0.1.6", bioAnno = "0.99.45", richCluster = "2.0.1")
   overlay <- normalizePath(file.path(getwd(), "renv", "library", "dependency-overlay"), mustWork = TRUE)
   fallback <- normalizePath(strsplit(Sys.getenv("R_LIBS_USER"), ":", fixed = TRUE)[[1L]][[2L]], mustWork = TRUE)
   libs <- normalizePath(.libPaths(), mustWork = TRUE)

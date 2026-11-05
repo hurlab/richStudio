@@ -6,10 +6,24 @@
 #
 
 # Ensure package code is available when running outside an installed package.
-pkg_root <- tryCatch(
-  normalizePath(file.path(getwd(), "..", ".."), mustWork = TRUE),
-  error = function(e) NULL
-)
+app_root_candidates <- function() {
+  wd <- normalizePath(getwd(), mustWork = FALSE)
+  candidates <- c(getOption("richStudio.appdir"), wd, dirname(wd),
+                  dirname(dirname(wd)), system.file(package = "richStudio"))
+  candidates <- unique(as.character(candidates))
+  candidates <- candidates[!is.na(candidates) & nzchar(candidates)]
+  vapply(candidates, normalizePath, character(1), mustWork = FALSE)
+}
+app_package_root <- function() {
+  for (candidate in app_root_candidates()) {
+    description <- file.path(candidate, "DESCRIPTION")
+    if (!file.exists(description)) next
+    fields <- tryCatch(read.dcf(description, fields = "Package"), error = function(e) NULL)
+    if (!is.null(fields) && identical(unname(fields[[1L]]), "richStudio")) return(candidate)
+  }
+  NULL
+}
+pkg_root <- app_package_root()
 richStudio_namespace <- NULL
 
 if (!is.null(pkg_root) && file.exists(file.path(pkg_root, "DESCRIPTION"))) {
@@ -25,6 +39,13 @@ if (!is.null(pkg_root) && file.exists(file.path(pkg_root, "DESCRIPTION"))) {
 } else if (requireNamespace("richStudio", quietly = TRUE)) {
   library(richStudio)
   richStudio_namespace <- asNamespace("richStudio")
+}
+
+# Size uploads from the installed resource policy (Shiny's default is 5 MB).
+if (!is.null(richStudio_namespace)) {
+  base::get("workspace_apply_upload_limit", envir = richStudio_namespace)()
+} else {
+  workspace_apply_upload_limit()
 }
 
 # Enable async processing for long-running operations
@@ -65,10 +86,10 @@ if (richR_supported) {
   richR_available <- TRUE
 } else if (richR_installed) {
   message("Note: richR 0.1.5 or newer is required for enrichment analysis.")
-  message("Update with: remotes::install_github('hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25')")
+  message("Update with: remotes::install_github('hurlab/richR@cd058a6105aa0427ec9fea9d63e26e007401a23f')")
 } else {
   message("Note: richR package not installed. Enrichment analysis features will be limited.")
-  message("Install with: remotes::install_github('hurlab/richR@9be43abdae556d9f1df128149a70721f08ab7d25')")
+  message("Install with: remotes::install_github('hurlab/richR@cd058a6105aa0427ec9fea9d63e26e007401a23f')")
 }
 
 if (requireNamespace("bioAnno", quietly = TRUE)) {
@@ -80,9 +101,9 @@ if (requireNamespace("bioAnno", quietly = TRUE)) {
 }
 
 # richCluster is optional - load the supported public API version if available
-richCluster_available <- requireNamespace("richCluster", quietly = TRUE) &&
+rich_cluster_available <- requireNamespace("richCluster", quietly = TRUE) &&
   utils::packageVersion("richCluster") >= "2.0.1"
-if (richCluster_available) {
+if (rich_cluster_available) {
   library(richCluster)
 } else if (requireNamespace("richCluster", quietly = TRUE)) {
   message("Note: richCluster 2.0.1 or newer is required for hierarchical and DAVID clustering.")
@@ -92,7 +113,13 @@ if (richCluster_available) {
   message("Install from CRAN with: install.packages('richCluster')")
 }
 
-app_version <- "0.1.6"
+app_release <- if (!is.null(richStudio_namespace)) {
+  base::get("workspace_release_metadata", envir = richStudio_namespace)(pkg_root)
+} else {
+  workspace_release_metadata(pkg_root)
+}
+app_version <- app_release$version
+app_build <- app_release$build
 
 # UI Definition
 ui <- function(request) {
@@ -100,7 +127,7 @@ ui <- function(request) {
   # previous Home, menu captions and no header. Stores and results are unaffected.
   workspace_navigation <- isTRUE(getOption("richStudio.workspace_navigation", TRUE))
   figure_breadcrumbs <- if (workspace_navigation) {
-    "'rr_visualize_tab': 'Enrichment / Enrichment figures',
+    "'rr_visualize_tab': 'Enrichment / Results',
               'clus_visualize_tab': 'Clustering / Cluster figures',"
   } else {
     "'rr_visualize_tab': 'Enrichment / Visualize',
@@ -137,25 +164,47 @@ ui <- function(request) {
       # Enable shinyjs
       shinyjs::useShinyjs(),
 
+      workspace_stepper_ui("stepper", enabled = workspace_navigation),
+
       workspace_header_ui("workspace", enabled = workspace_navigation),
 
       # Analysis job panel (SPEC-WS-006), shown above every tab.
       workspace_jobs_ui("jobs"),
 
       tabItems(
-        homeTabUI("home", tabName = "home_tab", app_version = app_version,
-                  enabled = workspace_navigation),
-        enrichTabUI("enrich", tabName = "enrich_tab"),
-        rrVisTabUI("rr_visualize", tabName = "rr_visualize_tab"),
-        clusterUploadTabUI("cluster_upload", tabName = "cluster_upload_tab"),
+        home_tab_ui("home", tabName = "home_tab", app_version = app_version,
+                  app_build = app_build, enabled = workspace_navigation),
+        # The DEG upload, the enrichment-results loader and project open sit on the Data step.
+        enrich_tab_ui("enrich", tabName = "enrich_tab", upload = FALSE),
+        rr_vis_tab_ui("rr_visualize", tabName = "rr_visualize_tab"),
+        cluster_upload_tab_ui("cluster_upload", tabName = "cluster_upload_tab"),
         clusterTabUI("cluster", tabName = "cluster_tab"),
-        clusVisTabUI("clus_visualize", tabName = "clus_visualize_tab"),
-        updateTabUI("update", tabName = "update_tab"),
-        saveTabUI("save", tabName = "save_tab")
+        clus_vis_tab_ui("clus_visualize", tabName = "clus_visualize_tab"),
+        updateTabUI("update", tabName = "update_tab", data_step = TRUE),
+        saveTabUI("save", tabName = "save_tab", open_project = FALSE)
+      ),
+      # Share link: the bookmark control sits in the page footer, not in the navigation.
+      tags$footer(class = "rs-page-footer",
+        shiny::bookmarkButton(label = "Share link",
+          title = "Copy a link that restores this app state")
       ),
       tags$head(
         tags$link(rel = "icon", type = "image/svg+xml", href = "favicon.svg"),
         tags$link(rel = "stylesheet", type = "text/css", href = "custom.css"),
+        tags$script(src = "workspace-ui.js", defer = NA),
+        if (workspace_navigation) tags$script(HTML("
+          document.addEventListener('click', function(event) {
+            var link = event.target.closest('.sidebar-menu > li.treeview > a');
+            if (!link) return;
+            var menu = link.nextElementSibling;
+            if (!menu || !menu.classList.contains('treeview-menu')) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            var open = menu.style.display !== 'none';
+            menu.style.display = open ? 'none' : 'block';
+            menu.classList.toggle('menu-open', !open);
+          }, true);
+        ")),
         tags$script(HTML(paste0("
           $(document).on('shiny:connected', function() {
             // Hide loading overlay with fade
@@ -169,10 +218,10 @@ ui <- function(request) {
               'home_tab': 'Home',
               'enrich_tab': 'Enrichment / Enrich',
               ", figure_breadcrumbs, "
-              'cluster_upload_tab': 'Clustering / Upload Files',
+              'cluster_upload_tab': 'Data / Upload files',
               'cluster_tab': 'Clustering / Cluster',
-              'update_tab': 'Manage Files',
-              'save_tab': 'Save / Load'
+              'update_tab': 'Data',
+              'save_tab': 'Save'
             };
             // Create breadcrumb element in navbar
             var $bc = $('<div class=\"navbar-breadcrumb\"><span class=\"bc-icon\"></span><span class=\"bc-text\">Home</span></div>');
@@ -223,6 +272,10 @@ server <- function(input, output, session) {
   session$userData$workspace_jobs <- jobs
   workspace_jobs_server("jobs", jobs)
 
+  # Session-local result selection shared by the results explorer and the cluster
+  # views (SPEC-WS-008). Display state only; it is never saved.
+  selection <- workspace_selection_state()
+
   # Generate unique session ID for debugging concurrent issues
   session_id <- paste0("rs_", format(Sys.time(), "%Y%m%d_%H%M%S"), "_",
                        substr(digest::digest(runif(1)), 1, 8))
@@ -252,22 +305,23 @@ server <- function(input, output, session) {
   if (isTRUE(getOption("richStudio.workspace_navigation", TRUE))) {
     workspace_navigation_server(session,
       u_degnames = u_degnames, u_rrnames = u_rrnames,
-      u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf
+      u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf, u_clusnames = u_clusnames
     )
   }
 
-  enrichTabServer("enrich",
+  enrich_tab_server("enrich",
     u_degnames = u_degnames, u_degdfs = u_degdfs, u_big_degdf = u_big_degdf,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf
   )
 
-  rrVisTabServer("rr_visualize",
+  rr_vis_tab_server("rr_visualize",
     u_degnames = u_degnames, u_degdfs = u_degdfs, u_big_degdf = u_big_degdf,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
-    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists
+    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists,
+    selection = selection
   )
 
-  clusterUploadTabServer("cluster_upload",
+  cluster_upload_tab_server("cluster_upload",
     u_degnames = u_degnames, u_degdfs = u_degdfs,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
     u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
@@ -282,11 +336,12 @@ server <- function(input, output, session) {
     clus_intermed = clus_intermed
   )
 
-  clusVisTabServer("clus_visualize",
+  clus_vis_tab_server("clus_visualize",
     u_degnames = u_degnames, u_degdfs = u_degdfs,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs, u_big_rrdf = u_big_rrdf,
     u_clusnames = u_clusnames, u_clusdfs = u_clusdfs,
-    u_big_clusdf = u_big_clusdf, u_cluslists = u_cluslists
+    u_big_clusdf = u_big_clusdf, u_cluslists = u_cluslists,
+    selection = selection
   )
 
   updateTabServer("update",
@@ -298,7 +353,8 @@ server <- function(input, output, session) {
   saveTabServer("save",
     u_degnames = u_degnames, u_degdfs = u_degdfs,
     u_rrnames = u_rrnames, u_rrdfs = u_rrdfs,
-    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists
+    u_clusnames = u_clusnames, u_clusdfs = u_clusdfs, u_cluslists = u_cluslists,
+    u_big_rrdf = u_big_rrdf, u_big_clusdf = u_big_clusdf
   )
 }
 
@@ -307,7 +363,7 @@ server <- function(input, output, session) {
 # available without exporting those implementation functions.
 if (!is.null(richStudio_namespace)) {
   ui_environment <- list2env(
-    list(app_version = app_version),
+    list(app_version = app_version, app_build = app_build),
     parent = richStudio_namespace
   )
   environment(ui) <- ui_environment

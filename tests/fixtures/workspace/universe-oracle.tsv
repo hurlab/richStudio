@@ -1,0 +1,50 @@
+role	term	gene
+member	T1	g1
+member	T1	g2
+member	T1	g3
+member	T1	g4
+member	T1	g5
+member	T2	g3
+member	T2	g4
+member	T2	g5
+member	T2	g6
+member	T2	g7
+member	T2	g8
+member	T2	g9
+member	T2	g10
+member	T2	g11
+member	T3	g12
+member	T3	g13
+member	T3	g14
+member	T4	g15
+member	T4	g16
+member	T4	g17
+member	T4	g18
+member	T4	g19
+member	T4	g20
+member	T5	g16
+member	T5	g17
+member	T5	g18
+query		g1
+query		g2
+query		g3
+query		g12
+query_extra		g15
+query_extra		ghostQ
+universe		g1
+universe		g2
+universe		g3
+universe		g4
+universe		g5
+universe		g6
+universe		g7
+universe		g8
+universe		g9
+universe		g11
+universe		g12
+universe		g13
+universe		g14
+universe		g1
+universe		g1
+universe		ghostU1
+universe		ghostU2

@@ -1,0 +1,71 @@
+{
+  "deg_mouse1": {
+    "gene_col": "geneID",
+    "query_rule": {
+      "gene_col": "geneID",
+      "column": "padj",
+      "role": "adjusted",
+      "cutoff": 0.050000000000000003
+    },
+    "counts": {
+      "kept": 31,
+      "submitted": 31,
+      "distinct": 31,
+      "excluded": [0, 48, 0],
+      "duplicates": 0
+    },
+    "note": null,
+    "source_digest": "34ff201542ea026791121d45b387ce7c",
+    "digest": "86204d4b9307c9b824d3996211b5ed15",
+    "submitted_n": 31,
+    "submitted_head": ["Wnt10a", "Rxrg", "Myh2", "Cd68", "Kcnj2"],
+    "submitted_sha256": "e3ec635a7184167293985db546de9fa4386aab0140b1c09b0f82790ea68ec424",
+    "items": ["Source digest: 34ff201542ea", "Gene column: geneID", "Rule: padj < 0.05 (adjusted)", "Rows kept: 31", "Submitted genes: 31", "Distinct genes: 31", "Excluded: p missing 0, p ≥ cutoff 48, blank/missing ID 0", "Duplicates (information): 0", ""]
+  },
+  "deg_mouse2": {
+    "gene_col": "geneID",
+    "query_rule": {
+      "gene_col": "geneID",
+      "column": "padj",
+      "role": "adjusted",
+      "cutoff": 0.050000000000000003
+    },
+    "counts": {
+      "kept": 25,
+      "submitted": 25,
+      "distinct": 25,
+      "excluded": [0, 4, 0],
+      "duplicates": 0
+    },
+    "note": null,
+    "source_digest": "a7b0fced731a3bdd74792b51aab019b3",
+    "digest": "c4e401569e4f46e14f64c2899ad1d322",
+    "submitted_n": 25,
+    "submitted_head": ["Ddit3", "Acaca", "Acly", "Fasn", "Tst"],
+    "submitted_sha256": "343e88910de9cec9cda784f34474751222fdae276f6b106519955d9ae180b9c9",
+    "items": ["Source digest: a7b0fced731a", "Gene column: geneID", "Rule: padj < 0.05 (adjusted)", "Rows kept: 25", "Submitted genes: 25", "Distinct genes: 25", "Excluded: p missing 0, p ≥ cutoff 4, blank/missing ID 0", "Duplicates (information): 0", ""]
+  },
+  "deg_mouse3": {
+    "gene_col": "geneID",
+    "query_rule": {
+      "gene_col": "geneID",
+      "column": "padj",
+      "role": "adjusted",
+      "cutoff": 0.050000000000000003
+    },
+    "counts": {
+      "kept": 802,
+      "submitted": 802,
+      "distinct": 802,
+      "excluded": [0, 0, 0],
+      "duplicates": 0
+    },
+    "note": null,
+    "source_digest": "8ffab1b9e43e2199fbba8f1788a3d013",
+    "digest": "99cde22ee336ec99db9155394b348763",
+    "submitted_n": 802,
+    "submitted_head": ["Atp6v1h", "Prex2", "Sbspon", "Cnnm3", "Sema4c"],
+    "submitted_sha256": "aceaf1c17daff7b08b99d11ec4bd3e102e9789e2c8ccd12cac91eaaa16089467",
+    "items": ["Source digest: 8ffab1b9e43e", "Gene column: geneID", "Rule: padj < 0.05 (adjusted)", "Rows kept: 802", "Submitted genes: 802", "Distinct genes: 802", "Excluded: p missing 0, p ≥ cutoff 0, blank/missing ID 0", "Duplicates (information): 0", ""]
+  }
+}

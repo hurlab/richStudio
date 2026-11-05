@@ -49,6 +49,7 @@ An intermediate release may disable unverified custom background, Stop or new-fo
 | [010](../SPEC-WS-010.md) | Clustering chooser and named comparisons |006,008| G4; false cross-engine equivalence |
 | [011](../SPEC-WS-011.md) | Integrated journeys, usability/accessibility/security and release |001..010,012| G5; unsupported completion claims |
 | [012](../SPEC-WS-012.md) | Bounded legacy isolation discovery, bridge and representative migration |001,006,007| G3L; unproven confinement/usability |
+| [013](../SPEC-WS-013.md) | Workspace UI/UX restructure: stepper, context bar and job tray, Results master-detail, one visual system, Enrich progressive disclosure | 003,004,006,007,008 | G4; layout change breaks routes, job or 008 behaviour |
 
 Leaf technical sections identify concrete existing/new target files. `dispatch.json` is the exact machine-readable registry and must agree with those sections. `.github/workflows/workspace-quality.yml` and `playwright.config.ts` are created by 001 and modified by 011; their prerequisite-created classification does not imply they exist in the current baseline.
 
@@ -75,6 +76,10 @@ flowchart TD
     S6 --> S12
     S7 --> S12
     S12 --> S11[011 Integrated release]
+    S8 --> S13[013 UI/UX restructure]
+    S13 --> S9
+    S13 --> S10
+    S13 --> S11
     S5 --> S11
     S9 --> S11
     S10 --> S11
@@ -183,3 +188,7 @@ B7 additionally owns only the verified public richR::ggnetwork, dplyr::distinct 
 The narrow remote-only profile also suppresses local URL findings inside a remote-guarded tools call. The existing runner therefore has a bounded companion reusing only fixed installed expressions4,9,10,12,13,14,15,18,23,24 with exact version/body/shape/mirror/formatter/enumerator/severity-wrapper guards; no network/header replay, checker fork or AST framework is permitted. Source URL enumeration records the actual candidate hash/From and all findings. Real local NOTEs remain original-severity visible, counted PASS_WITH_NOTES and nonblocking under unchanged error_on=warning; zero findings alone is CLEAN. Any unknown/guard/error holds PREP/G0, and WARNING/ERROR behavior is unchanged. Expected control findings are distinct from real-source acceptance.
 
 Focused retained evidence contains10 source-db controls (4valid/6intended findings), frozen e2a8ac9f inventory5records/3unique/0findings, and a separate actual-input visible NOTE with findings1/PASS_WITH_NOTES. This is not a rerun of fourteen package checks or full CI; later composed source requires fresh enumeration. Prior rejected master-FALSE/source evidence stays unchanged. B9's existing DESCRIPTION target additionally covers direct withr test use verified by B5/F2 alongside later; no new writers/children/graph or runtime/scientific scope is introduced. Confirming plan audit/root review still precede default/source switch; G0 remains OPEN.
+
+## Leaf 013 registration — UI/UX restructure (2026-11-03, revised 2026-11-04)
+
+[SPEC-WS-013](../SPEC-WS-013.md) is a thirteenth draft leaf derived from the hands-on [UX review of 081ef06](../../quality/ux-review-2026-11-03.md). By owner decision it is scheduled before 009 and 010: it depends on 003, 004, 006, 007 and 008, and 009, 010 and 011 now list 013 as a logical prerequisite. Its planned relation to 008 is merge 008 first, then reshape the 008 explorer into the Results master-detail view (no sixth Explorer tab); this is recorded as owner decision OD-1 (owner default applied 2026-11-04; owner may override) together with OD-2..OD-8 in the leaf. 013 is delivered in a baseline-capture milestone M0 plus eight independently merged and CI-verified milestones (M1-M8), smallest risk first. Its targets overlap 002-010 and 012 in `dispatch.json`, so lock serialization follows the registry as for every other leaf. The registration and dependency delta are recorded in [amendment 013](amendments/013-registration.md); no other leaf's REQ or AC text changed.

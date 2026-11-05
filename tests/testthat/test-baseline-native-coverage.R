@@ -2,7 +2,7 @@
 # The shared helper records the committed imported-table provenance and oracles.
 
 test_that("characterize installed clustering engines and distinct native API", {
-  expect_identical(as.character(utils::packageVersion("richR")), "0.1.5")
+  expect_identical(as.character(utils::packageVersion("richR")), "0.1.6")
   expect_identical(as.character(utils::packageVersion("richCluster")), "2.0.1")
   methods <- richStudio::get_clustering_methods()
   expect_named(methods, c("richR", "hierarchical", "david"))

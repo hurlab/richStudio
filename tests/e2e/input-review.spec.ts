@@ -57,6 +57,12 @@ async function chooseSelectize(page: Page, id: string, value: string) {
   await expect(page.locator(`#${id}`)).toHaveValue(value);
 }
 
+// Moves to a route through its sidebar anchor and waits for the pane (the loaders sit on Data, SPEC-WS-013 M6).
+async function openRoute(page: Page, tab: string) {
+  await page.locator(`a[href="#shiny-tab-${tab}"]`).evaluate(link => (link as HTMLElement).click());
+  await expectTab(page, tab);
+}
+
 async function expectTab(page: Page, tab: string) {
   const pane = page.locator(`#shiny-tab-${tab}`);
   await expect(pane).toHaveClass(/\bactive\b/);
@@ -107,8 +113,16 @@ test('AC-002 AC-003 direct-plot uploader validates files and plots without enric
   page.on('pageerror', error => errors.push(error.message));
   await page.locator('#home-load_demo').click();
   await expectTab(page, 'rr_visualize_tab');
+  await openRoute(page, 'update_tab');
   await exerciseUploader(page, 'rr_visualize', ['go1', 'go2', 'kegg1']);
-  await page.locator('#shiny-tab-rr_visualize_tab a[data-toggle="tab"][data-value="Bar Plot"]').click();
+  await openRoute(page, 'rr_visualize_tab');
+  await page.getByRole('radio', { name: 'Bar', exact: true }).check();
+  {
+    const toggle = page.locator('#shiny-tab-rr_visualize_tab label.rs-figure-toggle');
+    if (await toggle.isVisible() && !(await toggle.locator('input').isChecked())) await toggle.click();
+  }
+  // The figure's selectors sit in the collapsed Figure settings.
+  await page.locator('#shiny-tab-rr_visualize_tab details.rs-figure-settings').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   await chooseSelectize(page, 'rr_visualize-select_bar', 'valid-result.tsv');
   await expect(page.locator('#rr_visualize-barplot .main-svg').first()).toBeVisible();
   await attach(info, 'direct-plot-uploader', { project: info.project.name, errors });
@@ -117,8 +131,8 @@ test('AC-002 AC-003 direct-plot uploader validates files and plots without enric
 
 test('REQ-001 REQ-002 DEG preview and commit are labelled separately and the card shows before Run', async ({ page }, info) => {
   await page.locator('#home-upload_gene_lists').click();
-  await expectTab(page, 'enrich_tab');
-  const pane = page.locator('#shiny-tab-enrich_tab');
+  await expectTab(page, 'update_tab');
+  const pane = page.locator('#shiny-tab-update_tab');
   const box = await pane.boundingBox();
   await attach(info, 'enrich-tab-box', { project: info.project.name, box });
   if (info.project.name === 'chromium-desktop') {
@@ -128,6 +142,8 @@ test('REQ-001 REQ-002 DEG preview and commit are labelled separately and the car
     await expect(pane.locator('*:visible').first()).toBeVisible();
   }
   await page.locator('#enrich-deg_files').setInputFiles(degList);
+  await openRoute(page, 'enrich_tab');
+  await page.locator('#shiny-tab-enrich_tab details').evaluateAll(ds => ds.forEach(d => { (d as HTMLDetailsElement).open = true; }));
   await chooseSelectize(page, 'enrich-deg_table_select', 'review-genes.csv');
   await expect(page.getByText('Preview — not committed', { exact: true })).toBeVisible();
   await expect(page.locator('#enrich-review_preview_ui')).toContainText('padj < 0.05 (adjusted)');
@@ -148,8 +164,9 @@ test('REQ-003 a hostile upload label renders as text and injects no element', as
     await dialog.dismiss();
   });
   await page.locator('#home-upload_gene_lists').click();
-  await expectTab(page, 'enrich_tab');
+  await expectTab(page, 'update_tab');
   await page.locator('#enrich-deg_files').setInputFiles(hostileDeg);
+  await openRoute(page, 'enrich_tab');
   await chooseSelectize(page, 'enrich-degs_to_enrich', hostileLabel);
   const card = page.locator('#enrich-review_card');
   await expect(card).toContainText(hostileLabel);

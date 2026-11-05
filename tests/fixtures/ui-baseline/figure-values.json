@@ -1,0 +1,3773 @@
+{
+  "bar": {
+    "go1:Padj:rich": {
+      "order": ["acetyl-CoA metabolic process", "acyl-CoA metabolic process", "thioester metabolic process", "fatty acid metabolic process", "lipid metabolic process", "single-organism metabolic process", "small molecule metabolic process", "small molecule biosynthetic process", "fatty acid biosynthetic process", "coenzyme metabolic process", "monocarboxylic acid metabolic process", "carboxylic acid metabolic process", "oxoacid metabolic process", "cellular lipid metabolic process", "organic acid metabolic process", "cofactor metabolic process", "monocarboxylic acid biosynthetic process", "organic acid biosynthetic process", "carboxylic acid biosynthetic process", "single-organism biosynthetic process", "lipid biosynthetic process", "acetyl-CoA biosynthetic process", "sulfur compound metabolic process", "thioester biosynthetic process", "acyl-CoA biosynthetic process"],
+      "values": {
+        "acetyl-CoA biosynthetic process": {
+          "final_value": "2.194",
+          "rich": "0.1176"
+        },
+        "acetyl-CoA metabolic process": {
+          "final_value": "4.6271000000000004",
+          "rich": "0.1333"
+        },
+        "acyl-CoA biosynthetic process": {
+          "final_value": "2.1051000000000002",
+          "rich": "0.10000000000000001"
+        },
+        "acyl-CoA metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.055599999999999997"
+        },
+        "carboxylic acid biosynthetic process": {
+          "final_value": "2.2073999999999998",
+          "rich": "0.016"
+        },
+        "carboxylic acid metabolic process": {
+          "final_value": "3.0137999999999998",
+          "rich": "0.0086999999999999994"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "2.8811",
+          "rich": "0.0080999999999999996"
+        },
+        "coenzyme metabolic process": {
+          "final_value": "3.0284",
+          "rich": "0.017500000000000002"
+        },
+        "cofactor metabolic process": {
+          "final_value": "2.8147000000000002",
+          "rich": "0.0144"
+        },
+        "fatty acid biosynthetic process": {
+          "final_value": "3.1164999999999998",
+          "rich": "0.033099999999999997"
+        },
+        "fatty acid metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.017399999999999999"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "2.194",
+          "rich": "0.01"
+        },
+        "lipid metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.0077999999999999996"
+        },
+        "monocarboxylic acid biosynthetic process": {
+          "final_value": "2.8102999999999998",
+          "rich": "0.0235"
+        },
+        "monocarboxylic acid metabolic process": {
+          "final_value": "3.0137999999999998",
+          "rich": "0.0117"
+        },
+        "organic acid biosynthetic process": {
+          "final_value": "2.2073999999999998",
+          "rich": "0.016"
+        },
+        "organic acid metabolic process": {
+          "final_value": "2.8723000000000001",
+          "rich": "0.0080000000000000002"
+        },
+        "oxoacid metabolic process": {
+          "final_value": "2.8811",
+          "rich": "0.0080999999999999996"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "2.194",
+          "rich": "0.0060000000000000001"
+        },
+        "single-organism metabolic process": {
+          "final_value": "3.5063",
+          "rich": "0.0038999999999999998"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "3.2339000000000002",
+          "rich": "0.0135"
+        },
+        "small molecule metabolic process": {
+          "final_value": "3.274",
+          "rich": "0.0057999999999999996"
+        },
+        "sulfur compound metabolic process": {
+          "final_value": "2.1930000000000001",
+          "rich": "0.015100000000000001"
+        },
+        "thioester biosynthetic process": {
+          "final_value": "2.1051000000000002",
+          "rich": "0.10000000000000001"
+        },
+        "thioester metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.055599999999999997"
+        }
+      }
+    },
+    "go1:Pvalue:value": {
+      "order": ["acetyl-CoA metabolic process", "acyl-CoA metabolic process", "thioester metabolic process", "fatty acid metabolic process", "lipid metabolic process", "single-organism metabolic process", "small molecule metabolic process", "small molecule biosynthetic process", "fatty acid biosynthetic process", "coenzyme metabolic process", "monocarboxylic acid metabolic process", "carboxylic acid metabolic process", "oxoacid metabolic process", "cellular lipid metabolic process", "organic acid metabolic process", "cofactor metabolic process", "monocarboxylic acid biosynthetic process", "organic acid biosynthetic process", "carboxylic acid biosynthetic process", "single-organism biosynthetic process", "lipid biosynthetic process", "acetyl-CoA biosynthetic process", "sulfur compound metabolic process", "thioester biosynthetic process", "acyl-CoA biosynthetic process"],
+      "values": {
+        "acetyl-CoA biosynthetic process": {
+          "final_value": "3.8690000000000002",
+          "rich": "0.1176"
+        },
+        "acetyl-CoA metabolic process": {
+          "final_value": "7.6440000000000001",
+          "rich": "0.1333"
+        },
+        "acyl-CoA biosynthetic process": {
+          "final_value": "3.7246000000000001",
+          "rich": "0.10000000000000001"
+        },
+        "acyl-CoA metabolic process": {
+          "final_value": "6.0819999999999999",
+          "rich": "0.055599999999999997"
+        },
+        "carboxylic acid biosynthetic process": {
+          "final_value": "3.9460999999999999",
+          "rich": "0.016"
+        },
+        "carboxylic acid metabolic process": {
+          "final_value": "4.9508000000000001",
+          "rich": "0.0086999999999999994"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "4.7519999999999998",
+          "rich": "0.0080999999999999996"
+        },
+        "coenzyme metabolic process": {
+          "final_value": "5.0457999999999998",
+          "rich": "0.017500000000000002"
+        },
+        "cofactor metabolic process": {
+          "final_value": "4.6288999999999998",
+          "rich": "0.0144"
+        },
+        "fatty acid biosynthetic process": {
+          "final_value": "5.1798000000000002",
+          "rich": "0.033099999999999997"
+        },
+        "fatty acid metabolic process": {
+          "final_value": "5.9871999999999996",
+          "rich": "0.017399999999999999"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "3.8862000000000001",
+          "rich": "0.01"
+        },
+        "lipid metabolic process": {
+          "final_value": "5.9431000000000003",
+          "rich": "0.0077999999999999996"
+        },
+        "monocarboxylic acid biosynthetic process": {
+          "final_value": "4.5968999999999998",
+          "rich": "0.0235"
+        },
+        "monocarboxylic acid metabolic process": {
+          "final_value": "4.9913999999999996",
+          "rich": "0.0117"
+        },
+        "organic acid biosynthetic process": {
+          "final_value": "3.9460999999999999",
+          "rich": "0.016"
+        },
+        "organic acid metabolic process": {
+          "final_value": "4.7144000000000004",
+          "rich": "0.0080000000000000002"
+        },
+        "oxoacid metabolic process": {
+          "final_value": "4.7519999999999998",
+          "rich": "0.0080999999999999996"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "3.8988999999999998",
+          "rich": "0.0060000000000000001"
+        },
+        "single-organism metabolic process": {
+          "final_value": "5.7446999999999999",
+          "rich": "0.0038999999999999998"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "5.3487",
+          "rich": "0.0135"
+        },
+        "small molecule metabolic process": {
+          "final_value": "5.4461000000000004",
+          "rich": "0.0057999999999999996"
+        },
+        "sulfur compound metabolic process": {
+          "final_value": "3.8487",
+          "rich": "0.015100000000000001"
+        },
+        "thioester biosynthetic process": {
+          "final_value": "3.7246000000000001",
+          "rich": "0.10000000000000001"
+        },
+        "thioester metabolic process": {
+          "final_value": "6.0819999999999999",
+          "rich": "0.055599999999999997"
+        }
+      }
+    },
+    "go2:Padj:rich": {
+      "order": ["sterol biosynthetic process", "lipid biosynthetic process", "cholesterol biosynthetic process", "sterol metabolic process", "secondary alcohol biosynthetic process", "cholesterol metabolic process", "secondary alcohol metabolic process", "lipid metabolic process", "steroid biosynthetic process", "single-organism biosynthetic process", "steroid metabolic process", "alcohol metabolic process", "organic hydroxy compound biosynthetic process", "organic hydroxy compound metabolic process", "alcohol biosynthetic process", "small molecule biosynthetic process", "single-organism metabolic process", "cellular lipid metabolic process", "single-organism cellular process", "single-organism process", "isoprenoid biosynthetic process", "small molecule metabolic process", "cellular process", "phospholipid biosynthetic process", "biosynthetic process"],
+      "values": {
+        "alcohol biosynthetic process": {
+          "final_value": "12.5365",
+          "rich": "0.16669999999999999"
+        },
+        "alcohol metabolic process": {
+          "final_value": "13.168200000000001",
+          "rich": "0.095000000000000001"
+        },
+        "biosynthetic process": {
+          "final_value": "5.6048",
+          "rich": "0.016799999999999999"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "9.1397999999999993",
+          "rich": "0.039399999999999998"
+        },
+        "cellular process": {
+          "final_value": "6.3653000000000004",
+          "rich": "0.0124"
+        },
+        "cholesterol biosynthetic process": {
+          "final_value": "18.067399999999999",
+          "rich": "0.37209999999999999"
+        },
+        "cholesterol metabolic process": {
+          "final_value": "17.609300000000001",
+          "rich": "0.1842"
+        },
+        "isoprenoid biosynthetic process": {
+          "final_value": "7.3735999999999997",
+          "rich": "0.27589999999999998"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "20.058399999999999",
+          "rich": "0.078200000000000006"
+        },
+        "lipid metabolic process": {
+          "final_value": "16.645900000000001",
+          "rich": "0.043999999999999997"
+        },
+        "organic hydroxy compound biosynthetic process": {
+          "final_value": "13.1652",
+          "rich": "0.1099"
+        },
+        "organic hydroxy compound metabolic process": {
+          "final_value": "12.8071",
+          "rich": "0.0683"
+        },
+        "phospholipid biosynthetic process": {
+          "final_value": "5.6181999999999999",
+          "rich": "0.083900000000000002"
+        },
+        "secondary alcohol biosynthetic process": {
+          "final_value": "18.067399999999999",
+          "rich": "0.36359999999999998"
+        },
+        "secondary alcohol metabolic process": {
+          "final_value": "17.345700000000001",
+          "rich": "0.17799999999999999"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "14.293100000000001",
+          "rich": "0.040899999999999999"
+        },
+        "single-organism cellular process": {
+          "final_value": "8.8665000000000003",
+          "rich": "0.014800000000000001"
+        },
+        "single-organism metabolic process": {
+          "final_value": "10.919600000000001",
+          "rich": "0.0224"
+        },
+        "single-organism process": {
+          "final_value": "8.4011999999999993",
+          "rich": "0.013299999999999999"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "11.103300000000001",
+          "rich": "0.0608"
+        },
+        "small molecule metabolic process": {
+          "final_value": "7.2442000000000002",
+          "rich": "0.026499999999999999"
+        },
+        "steroid biosynthetic process": {
+          "final_value": "15.514099999999999",
+          "rich": "0.14480000000000001"
+        },
+        "steroid metabolic process": {
+          "final_value": "14.1897",
+          "rich": "0.092600000000000002"
+        },
+        "sterol biosynthetic process": {
+          "final_value": "20.058399999999999",
+          "rich": "0.35999999999999999"
+        },
+        "sterol metabolic process": {
+          "final_value": "18.067399999999999",
+          "rich": "0.1774"
+        }
+      }
+    },
+    "go2:Pvalue:value": {
+      "order": ["sterol biosynthetic process", "lipid biosynthetic process", "cholesterol biosynthetic process", "sterol metabolic process", "secondary alcohol biosynthetic process", "cholesterol metabolic process", "secondary alcohol metabolic process", "lipid metabolic process", "steroid biosynthetic process", "single-organism biosynthetic process", "steroid metabolic process", "alcohol metabolic process", "organic hydroxy compound biosynthetic process", "organic hydroxy compound metabolic process", "alcohol biosynthetic process", "small molecule biosynthetic process", "single-organism metabolic process", "cellular lipid metabolic process", "single-organism cellular process", "single-organism process", "isoprenoid biosynthetic process", "small molecule metabolic process", "cellular process", "phospholipid biosynthetic process", "biosynthetic process"],
+      "values": {
+        "alcohol biosynthetic process": {
+          "final_value": "14.904400000000001",
+          "rich": "0.16669999999999999"
+        },
+        "alcohol metabolic process": {
+          "final_value": "15.632999999999999",
+          "rich": "0.095000000000000001"
+        },
+        "biosynthetic process": {
+          "final_value": "7.7507999999999999",
+          "rich": "0.016799999999999999"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "11.4285",
+          "rich": "0.039399999999999998"
+        },
+        "cellular process": {
+          "final_value": "8.5474999999999994",
+          "rich": "0.0124"
+        },
+        "cholesterol biosynthetic process": {
+          "final_value": "21.105",
+          "rich": "0.37209999999999999"
+        },
+        "cholesterol metabolic process": {
+          "final_value": "20.3751",
+          "rich": "0.1842"
+        },
+        "isoprenoid biosynthetic process": {
+          "final_value": "9.5952999999999999",
+          "rich": "0.27589999999999998"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "23.301300000000001",
+          "rich": "0.078200000000000006"
+        },
+        "lipid metabolic process": {
+          "final_value": "19.286799999999999",
+          "rich": "0.043999999999999997"
+        },
+        "organic hydroxy compound biosynthetic process": {
+          "final_value": "15.5952",
+          "rich": "0.1099"
+        },
+        "organic hydroxy compound metabolic process": {
+          "final_value": "15.2049",
+          "rich": "0.0683"
+        },
+        "phospholipid biosynthetic process": {
+          "final_value": "7.7819000000000003",
+          "rich": "0.083900000000000002"
+        },
+        "secondary alcohol biosynthetic process": {
+          "final_value": "20.912400000000002",
+          "rich": "0.36359999999999998"
+        },
+        "secondary alcohol metabolic process": {
+          "final_value": "20.044499999999999",
+          "rich": "0.17799999999999999"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "16.8371",
+          "rich": "0.040899999999999999"
+        },
+        "single-organism cellular process": {
+          "final_value": "11.1317",
+          "rich": "0.014800000000000001"
+        },
+        "single-organism metabolic process": {
+          "final_value": "13.2331",
+          "rich": "0.0224"
+        },
+        "single-organism process": {
+          "final_value": "10.6441",
+          "rich": "0.013299999999999999"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "13.443099999999999",
+          "rich": "0.0608"
+        },
+        "small molecule metabolic process": {
+          "final_value": "9.4457000000000004",
+          "rich": "0.026499999999999999"
+        },
+        "steroid biosynthetic process": {
+          "final_value": "18.1038",
+          "rich": "0.14480000000000001"
+        },
+        "steroid metabolic process": {
+          "final_value": "16.6922",
+          "rich": "0.092600000000000002"
+        },
+        "sterol biosynthetic process": {
+          "final_value": "23.3794",
+          "rich": "0.35999999999999999"
+        },
+        "sterol metabolic process": {
+          "final_value": "20.950800000000001",
+          "rich": "0.1774"
+        }
+      }
+    },
+    "kegg1:Padj:rich": {
+      "order": ["Steroid biosynthesis", "Terpenoid backbone biosynthesis", "Metabolic pathways", "Lysosome", "Antigen processing and presentation", "Protein processing in endoplasmic reticulum", "B cell receptor signaling pathway", "PPAR signaling pathway", "Pentose phosphate pathway", "Toxoplasmosis", "MAPK signaling pathway", "Glycolysis / Gluconeogenesis", "Amoebiasis", "Chemokine signaling pathway", "Propanoate metabolism", "Leukocyte transendothelial migration", "Neurotrophin signaling pathway", "Staphylococcus aureus infection", "Prion diseases", "Glycerolipid metabolism", "Small cell lung cancer", "Long-term potentiation", "Synthesis and degradation of ketone bodies", "Fructose and mannose metabolism", "Glycerophospholipid metabolism"],
+      "values": {
+        "Amoebiasis": {
+          "final_value": "1.641",
+          "rich": "0.1552"
+        },
+        "Antigen processing and presentation": {
+          "final_value": "4.8190999999999997",
+          "rich": "0.25640000000000002"
+        },
+        "B cell receptor signaling pathway": {
+          "final_value": "2.6469",
+          "rich": "0.21049999999999999"
+        },
+        "Chemokine signaling pathway": {
+          "final_value": "1.641",
+          "rich": "0.1351"
+        },
+        "Fructose and mannose metabolism": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.2162"
+        },
+        "Glycerolipid metabolism": {
+          "final_value": "1.5274000000000001",
+          "rich": "0.1961"
+        },
+        "Glycerophospholipid metabolism": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.16250000000000001"
+        },
+        "Glycolysis / Gluconeogenesis": {
+          "final_value": "1.7150000000000001",
+          "rich": "0.19670000000000001"
+        },
+        "Leukocyte transendothelial migration": {
+          "final_value": "1.5558000000000001",
+          "rich": "0.14999999999999999"
+        },
+        "Long-term potentiation": {
+          "final_value": "1.5027999999999999",
+          "rich": "0.1739"
+        },
+        "Lysosome": {
+          "final_value": "4.8190999999999997",
+          "rich": "0.21310000000000001"
+        },
+        "MAPK signaling pathway": {
+          "final_value": "1.8692",
+          "rich": "0.1273"
+        },
+        "Metabolic pathways": {
+          "final_value": "5.1111000000000004",
+          "rich": "0.10979999999999999"
+        },
+        "Neurotrophin signaling pathway": {
+          "final_value": "1.5428999999999999",
+          "rich": "0.14499999999999999"
+        },
+        "PPAR signaling pathway": {
+          "final_value": "2.4258000000000002",
+          "rich": "0.20000000000000001"
+        },
+        "Pentose phosphate pathway": {
+          "final_value": "1.8825000000000001",
+          "rich": "0.28570000000000001"
+        },
+        "Prion diseases": {
+          "final_value": "1.5274000000000001",
+          "rich": "0.2286"
+        },
+        "Propanoate metabolism": {
+          "final_value": "1.5932999999999999",
+          "rich": "0.2424"
+        },
+        "Protein processing in endoplasmic reticulum": {
+          "final_value": "2.6585000000000001",
+          "rich": "0.1598"
+        },
+        "Small cell lung cancer": {
+          "final_value": "1.5274000000000001",
+          "rich": "0.1628"
+        },
+        "Staphylococcus aureus infection": {
+          "final_value": "1.5428999999999999",
+          "rich": "0.20000000000000001"
+        },
+        "Steroid biosynthesis": {
+          "final_value": "6.0069999999999997",
+          "rich": "0.61109999999999998"
+        },
+        "Synthesis and degradation of ketone bodies": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.40000000000000002"
+        },
+        "Terpenoid backbone biosynthesis": {
+          "final_value": "5.1494999999999997",
+          "rich": "0.64290000000000003"
+        },
+        "Toxoplasmosis": {
+          "final_value": "1.8692",
+          "rich": "0.1575"
+        }
+      }
+    },
+    "kegg1:Pvalue:value": {
+      "order": ["Steroid biosynthesis", "Terpenoid backbone biosynthesis", "Metabolic pathways", "Lysosome", "Antigen processing and presentation", "Protein processing in endoplasmic reticulum", "B cell receptor signaling pathway", "PPAR signaling pathway", "Pentose phosphate pathway", "Toxoplasmosis", "MAPK signaling pathway", "Glycolysis / Gluconeogenesis", "Amoebiasis", "Chemokine signaling pathway", "Propanoate metabolism", "Leukocyte transendothelial migration", "Neurotrophin signaling pathway", "Staphylococcus aureus infection", "Prion diseases", "Glycerolipid metabolism", "Small cell lung cancer", "Long-term potentiation", "Synthesis and degradation of ketone bodies", "Fructose and mannose metabolism", "Glycerophospholipid metabolism"],
+      "values": {
+        "Amoebiasis": {
+          "final_value": "2.8199999999999998",
+          "rich": "0.1552"
+        },
+        "Antigen processing and presentation": {
+          "final_value": "6.4188999999999998",
+          "rich": "0.25640000000000002"
+        },
+        "B cell receptor signaling pathway": {
+          "final_value": "4.1006999999999998",
+          "rich": "0.21049999999999999"
+        },
+        "Chemokine signaling pathway": {
+          "final_value": "2.7936999999999999",
+          "rich": "0.1351"
+        },
+        "Fructose and mannose metabolism": {
+          "final_value": "2.3826000000000001",
+          "rich": "0.2162"
+        },
+        "Glycerolipid metabolism": {
+          "final_value": "2.5198",
+          "rich": "0.1961"
+        },
+        "Glycerophospholipid metabolism": {
+          "final_value": "2.3552",
+          "rich": "0.16250000000000001"
+        },
+        "Glycolysis / Gluconeogenesis": {
+          "final_value": "2.9346999999999999",
+          "rich": "0.19670000000000001"
+        },
+        "Leukocyte transendothelial migration": {
+          "final_value": "2.6505999999999998",
+          "rich": "0.14999999999999999"
+        },
+        "Long-term potentiation": {
+          "final_value": "2.4592999999999998",
+          "rich": "0.1739"
+        },
+        "Lysosome": {
+          "final_value": "6.4203000000000001",
+          "rich": "0.21310000000000001"
+        },
+        "MAPK signaling pathway": {
+          "final_value": "3.1267",
+          "rich": "0.1273"
+        },
+        "Metabolic pathways": {
+          "final_value": "6.9328000000000003",
+          "rich": "0.10979999999999999"
+        },
+        "Neurotrophin signaling pathway": {
+          "final_value": "2.5958000000000001",
+          "rich": "0.14499999999999999"
+        },
+        "PPAR signaling pathway": {
+          "final_value": "3.8216000000000001",
+          "rich": "0.20000000000000001"
+        },
+        "Pentose phosphate pathway": {
+          "final_value": "3.2271000000000001",
+          "rich": "0.28570000000000001"
+        },
+        "Prion diseases": {
+          "final_value": "2.5423",
+          "rich": "0.2286"
+        },
+        "Propanoate metabolism": {
+          "final_value": "2.7161",
+          "rich": "0.2424"
+        },
+        "Protein processing in endoplasmic reticulum": {
+          "final_value": "4.1791999999999998",
+          "rich": "0.1598"
+        },
+        "Small cell lung cancer": {
+          "final_value": "2.5041000000000002",
+          "rich": "0.1628"
+        },
+        "Staphylococcus aureus infection": {
+          "final_value": "2.5863999999999998",
+          "rich": "0.20000000000000001"
+        },
+        "Steroid biosynthesis": {
+          "final_value": "8.3057999999999996",
+          "rich": "0.61109999999999998"
+        },
+        "Synthesis and degradation of ketone bodies": {
+          "final_value": "2.4024000000000001",
+          "rich": "0.40000000000000002"
+        },
+        "Terpenoid backbone biosynthesis": {
+          "final_value": "7.1473000000000004",
+          "rich": "0.64290000000000003"
+        },
+        "Toxoplasmosis": {
+          "final_value": "3.1566000000000001",
+          "rich": "0.1575"
+        }
+      }
+    }
+  },
+  "dot": {
+    "go1:Padj": {
+      "order": ["acetyl-CoA metabolic process", "acyl-CoA metabolic process", "thioester metabolic process", "fatty acid metabolic process", "lipid metabolic process", "single-organism metabolic process", "small molecule metabolic process", "small molecule biosynthetic process", "fatty acid biosynthetic process", "coenzyme metabolic process", "monocarboxylic acid metabolic process", "carboxylic acid metabolic process", "oxoacid metabolic process", "cellular lipid metabolic process", "organic acid metabolic process", "cofactor metabolic process", "monocarboxylic acid biosynthetic process", "organic acid biosynthetic process", "carboxylic acid biosynthetic process", "single-organism biosynthetic process", "lipid biosynthetic process", "acetyl-CoA biosynthetic process", "sulfur compound metabolic process", "thioester biosynthetic process", "acyl-CoA biosynthetic process", "single-organism cellular process", "positive regulation of positive chemotaxis", "regulation of positive chemotaxis", "negative regulation of myoblast differentiation", "regulation of intracellular signal transduction"],
+      "values": {
+        "acetyl-CoA biosynthetic process": {
+          "final_value": "2.194",
+          "rich": "0.1176"
+        },
+        "acetyl-CoA metabolic process": {
+          "final_value": "4.6271000000000004",
+          "rich": "0.1333"
+        },
+        "acyl-CoA biosynthetic process": {
+          "final_value": "2.1051000000000002",
+          "rich": "0.10000000000000001"
+        },
+        "acyl-CoA metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.055599999999999997"
+        },
+        "carboxylic acid biosynthetic process": {
+          "final_value": "2.2073999999999998",
+          "rich": "0.016"
+        },
+        "carboxylic acid metabolic process": {
+          "final_value": "3.0137999999999998",
+          "rich": "0.0086999999999999994"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "2.8811",
+          "rich": "0.0080999999999999996"
+        },
+        "coenzyme metabolic process": {
+          "final_value": "3.0284",
+          "rich": "0.017500000000000002"
+        },
+        "cofactor metabolic process": {
+          "final_value": "2.8147000000000002",
+          "rich": "0.0144"
+        },
+        "fatty acid biosynthetic process": {
+          "final_value": "3.1164999999999998",
+          "rich": "0.033099999999999997"
+        },
+        "fatty acid metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.017399999999999999"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "2.194",
+          "rich": "0.01"
+        },
+        "lipid metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.0077999999999999996"
+        },
+        "monocarboxylic acid biosynthetic process": {
+          "final_value": "2.8102999999999998",
+          "rich": "0.0235"
+        },
+        "monocarboxylic acid metabolic process": {
+          "final_value": "3.0137999999999998",
+          "rich": "0.0117"
+        },
+        "negative regulation of myoblast differentiation": {
+          "final_value": "1.873",
+          "rich": "0.071400000000000005"
+        },
+        "organic acid biosynthetic process": {
+          "final_value": "2.2073999999999998",
+          "rich": "0.016"
+        },
+        "organic acid metabolic process": {
+          "final_value": "2.8723000000000001",
+          "rich": "0.0080000000000000002"
+        },
+        "oxoacid metabolic process": {
+          "final_value": "2.8811",
+          "rich": "0.0080999999999999996"
+        },
+        "positive regulation of positive chemotaxis": {
+          "final_value": "1.907",
+          "rich": "0.076899999999999996"
+        },
+        "regulation of intracellular signal transduction": {
+          "final_value": "1.6482000000000001",
+          "rich": "0.0045999999999999999"
+        },
+        "regulation of positive chemotaxis": {
+          "final_value": "1.8896999999999999",
+          "rich": "0.074099999999999999"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "2.194",
+          "rich": "0.0060000000000000001"
+        },
+        "single-organism cellular process": {
+          "final_value": "1.9378",
+          "rich": "0.0019"
+        },
+        "single-organism metabolic process": {
+          "final_value": "3.5063",
+          "rich": "0.0038999999999999998"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "3.2339000000000002",
+          "rich": "0.0135"
+        },
+        "small molecule metabolic process": {
+          "final_value": "3.274",
+          "rich": "0.0057999999999999996"
+        },
+        "sulfur compound metabolic process": {
+          "final_value": "2.1930000000000001",
+          "rich": "0.015100000000000001"
+        },
+        "thioester biosynthetic process": {
+          "final_value": "2.1051000000000002",
+          "rich": "0.10000000000000001"
+        },
+        "thioester metabolic process": {
+          "final_value": "3.6232000000000002",
+          "rich": "0.055599999999999997"
+        }
+      }
+    },
+    "go1:Pvalue": {
+      "order": ["acetyl-CoA metabolic process", "acyl-CoA metabolic process", "thioester metabolic process", "fatty acid metabolic process", "lipid metabolic process", "single-organism metabolic process", "small molecule metabolic process", "small molecule biosynthetic process", "fatty acid biosynthetic process", "coenzyme metabolic process", "monocarboxylic acid metabolic process", "carboxylic acid metabolic process", "oxoacid metabolic process", "cellular lipid metabolic process", "organic acid metabolic process", "cofactor metabolic process", "monocarboxylic acid biosynthetic process", "organic acid biosynthetic process", "carboxylic acid biosynthetic process", "single-organism biosynthetic process", "lipid biosynthetic process", "acetyl-CoA biosynthetic process", "sulfur compound metabolic process", "thioester biosynthetic process", "acyl-CoA biosynthetic process", "single-organism cellular process", "positive regulation of positive chemotaxis", "regulation of positive chemotaxis", "negative regulation of myoblast differentiation", "regulation of intracellular signal transduction"],
+      "values": {
+        "acetyl-CoA biosynthetic process": {
+          "final_value": "3.8690000000000002",
+          "rich": "0.1176"
+        },
+        "acetyl-CoA metabolic process": {
+          "final_value": "7.6440000000000001",
+          "rich": "0.1333"
+        },
+        "acyl-CoA biosynthetic process": {
+          "final_value": "3.7246000000000001",
+          "rich": "0.10000000000000001"
+        },
+        "acyl-CoA metabolic process": {
+          "final_value": "6.0819999999999999",
+          "rich": "0.055599999999999997"
+        },
+        "carboxylic acid biosynthetic process": {
+          "final_value": "3.9460999999999999",
+          "rich": "0.016"
+        },
+        "carboxylic acid metabolic process": {
+          "final_value": "4.9508000000000001",
+          "rich": "0.0086999999999999994"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "4.7519999999999998",
+          "rich": "0.0080999999999999996"
+        },
+        "coenzyme metabolic process": {
+          "final_value": "5.0457999999999998",
+          "rich": "0.017500000000000002"
+        },
+        "cofactor metabolic process": {
+          "final_value": "4.6288999999999998",
+          "rich": "0.0144"
+        },
+        "fatty acid biosynthetic process": {
+          "final_value": "5.1798000000000002",
+          "rich": "0.033099999999999997"
+        },
+        "fatty acid metabolic process": {
+          "final_value": "5.9871999999999996",
+          "rich": "0.017399999999999999"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "3.8862000000000001",
+          "rich": "0.01"
+        },
+        "lipid metabolic process": {
+          "final_value": "5.9431000000000003",
+          "rich": "0.0077999999999999996"
+        },
+        "monocarboxylic acid biosynthetic process": {
+          "final_value": "4.5968999999999998",
+          "rich": "0.0235"
+        },
+        "monocarboxylic acid metabolic process": {
+          "final_value": "4.9913999999999996",
+          "rich": "0.0117"
+        },
+        "negative regulation of myoblast differentiation": {
+          "final_value": "3.4279999999999999",
+          "rich": "0.071400000000000005"
+        },
+        "organic acid biosynthetic process": {
+          "final_value": "3.9460999999999999",
+          "rich": "0.016"
+        },
+        "organic acid metabolic process": {
+          "final_value": "4.7144000000000004",
+          "rich": "0.0080000000000000002"
+        },
+        "oxoacid metabolic process": {
+          "final_value": "4.7519999999999998",
+          "rich": "0.0080999999999999996"
+        },
+        "positive regulation of positive chemotaxis": {
+          "final_value": "3.4931000000000001",
+          "rich": "0.076899999999999996"
+        },
+        "regulation of intracellular signal transduction": {
+          "final_value": "3.1884999999999999",
+          "rich": "0.0045999999999999999"
+        },
+        "regulation of positive chemotaxis": {
+          "final_value": "3.46",
+          "rich": "0.074099999999999999"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "3.8988999999999998",
+          "rich": "0.0060000000000000001"
+        },
+        "single-organism cellular process": {
+          "final_value": "3.5402999999999998",
+          "rich": "0.0019"
+        },
+        "single-organism metabolic process": {
+          "final_value": "5.7446999999999999",
+          "rich": "0.0038999999999999998"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "5.3487",
+          "rich": "0.0135"
+        },
+        "small molecule metabolic process": {
+          "final_value": "5.4461000000000004",
+          "rich": "0.0057999999999999996"
+        },
+        "sulfur compound metabolic process": {
+          "final_value": "3.8487",
+          "rich": "0.015100000000000001"
+        },
+        "thioester biosynthetic process": {
+          "final_value": "3.7246000000000001",
+          "rich": "0.10000000000000001"
+        },
+        "thioester metabolic process": {
+          "final_value": "6.0819999999999999",
+          "rich": "0.055599999999999997"
+        }
+      }
+    },
+    "go2:Padj": {
+      "order": ["sterol biosynthetic process", "lipid biosynthetic process", "cholesterol biosynthetic process", "sterol metabolic process", "secondary alcohol biosynthetic process", "cholesterol metabolic process", "secondary alcohol metabolic process", "lipid metabolic process", "steroid biosynthetic process", "single-organism biosynthetic process", "steroid metabolic process", "alcohol metabolic process", "organic hydroxy compound biosynthetic process", "organic hydroxy compound metabolic process", "alcohol biosynthetic process", "small molecule biosynthetic process", "single-organism metabolic process", "cellular lipid metabolic process", "single-organism cellular process", "single-organism process", "isoprenoid biosynthetic process", "small molecule metabolic process", "cellular process", "phospholipid biosynthetic process", "biosynthetic process", "organic substance biosynthetic process", "metabolic process", "isoprenoid metabolic process", "oxidation-reduction process", "primary metabolic process"],
+      "values": {
+        "alcohol biosynthetic process": {
+          "final_value": "12.5365",
+          "rich": "0.16669999999999999"
+        },
+        "alcohol metabolic process": {
+          "final_value": "13.168200000000001",
+          "rich": "0.095000000000000001"
+        },
+        "biosynthetic process": {
+          "final_value": "5.6048",
+          "rich": "0.016799999999999999"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "9.1397999999999993",
+          "rich": "0.039399999999999998"
+        },
+        "cellular process": {
+          "final_value": "6.3653000000000004",
+          "rich": "0.0124"
+        },
+        "cholesterol biosynthetic process": {
+          "final_value": "18.067399999999999",
+          "rich": "0.37209999999999999"
+        },
+        "cholesterol metabolic process": {
+          "final_value": "17.609300000000001",
+          "rich": "0.1842"
+        },
+        "isoprenoid biosynthetic process": {
+          "final_value": "7.3735999999999997",
+          "rich": "0.27589999999999998"
+        },
+        "isoprenoid metabolic process": {
+          "final_value": "5.3296999999999999",
+          "rich": "0.12330000000000001"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "20.058399999999999",
+          "rich": "0.078200000000000006"
+        },
+        "lipid metabolic process": {
+          "final_value": "16.645900000000001",
+          "rich": "0.043999999999999997"
+        },
+        "metabolic process": {
+          "final_value": "5.3459000000000003",
+          "rich": "0.0137"
+        },
+        "organic hydroxy compound biosynthetic process": {
+          "final_value": "13.1652",
+          "rich": "0.1099"
+        },
+        "organic hydroxy compound metabolic process": {
+          "final_value": "12.8071",
+          "rich": "0.0683"
+        },
+        "organic substance biosynthetic process": {
+          "final_value": "5.5937999999999999",
+          "rich": "0.016799999999999999"
+        },
+        "oxidation-reduction process": {
+          "final_value": "5.0811999999999999",
+          "rich": "0.0309"
+        },
+        "phospholipid biosynthetic process": {
+          "final_value": "5.6181999999999999",
+          "rich": "0.083900000000000002"
+        },
+        "primary metabolic process": {
+          "final_value": "5.0419999999999998",
+          "rich": "0.014"
+        },
+        "secondary alcohol biosynthetic process": {
+          "final_value": "18.067399999999999",
+          "rich": "0.36359999999999998"
+        },
+        "secondary alcohol metabolic process": {
+          "final_value": "17.345700000000001",
+          "rich": "0.17799999999999999"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "14.293100000000001",
+          "rich": "0.040899999999999999"
+        },
+        "single-organism cellular process": {
+          "final_value": "8.8665000000000003",
+          "rich": "0.014800000000000001"
+        },
+        "single-organism metabolic process": {
+          "final_value": "10.919600000000001",
+          "rich": "0.0224"
+        },
+        "single-organism process": {
+          "final_value": "8.4011999999999993",
+          "rich": "0.013299999999999999"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "11.103300000000001",
+          "rich": "0.0608"
+        },
+        "small molecule metabolic process": {
+          "final_value": "7.2442000000000002",
+          "rich": "0.026499999999999999"
+        },
+        "steroid biosynthetic process": {
+          "final_value": "15.514099999999999",
+          "rich": "0.14480000000000001"
+        },
+        "steroid metabolic process": {
+          "final_value": "14.1897",
+          "rich": "0.092600000000000002"
+        },
+        "sterol biosynthetic process": {
+          "final_value": "20.058399999999999",
+          "rich": "0.35999999999999999"
+        },
+        "sterol metabolic process": {
+          "final_value": "18.067399999999999",
+          "rich": "0.1774"
+        }
+      }
+    },
+    "go2:Pvalue": {
+      "order": ["sterol biosynthetic process", "lipid biosynthetic process", "cholesterol biosynthetic process", "sterol metabolic process", "secondary alcohol biosynthetic process", "cholesterol metabolic process", "secondary alcohol metabolic process", "lipid metabolic process", "steroid biosynthetic process", "single-organism biosynthetic process", "steroid metabolic process", "alcohol metabolic process", "organic hydroxy compound biosynthetic process", "organic hydroxy compound metabolic process", "alcohol biosynthetic process", "small molecule biosynthetic process", "single-organism metabolic process", "cellular lipid metabolic process", "single-organism cellular process", "single-organism process", "isoprenoid biosynthetic process", "small molecule metabolic process", "cellular process", "phospholipid biosynthetic process", "biosynthetic process", "organic substance biosynthetic process", "metabolic process", "isoprenoid metabolic process", "oxidation-reduction process", "primary metabolic process"],
+      "values": {
+        "alcohol biosynthetic process": {
+          "final_value": "14.904400000000001",
+          "rich": "0.16669999999999999"
+        },
+        "alcohol metabolic process": {
+          "final_value": "15.632999999999999",
+          "rich": "0.095000000000000001"
+        },
+        "biosynthetic process": {
+          "final_value": "7.7507999999999999",
+          "rich": "0.016799999999999999"
+        },
+        "cellular lipid metabolic process": {
+          "final_value": "11.4285",
+          "rich": "0.039399999999999998"
+        },
+        "cellular process": {
+          "final_value": "8.5474999999999994",
+          "rich": "0.0124"
+        },
+        "cholesterol biosynthetic process": {
+          "final_value": "21.105",
+          "rich": "0.37209999999999999"
+        },
+        "cholesterol metabolic process": {
+          "final_value": "20.3751",
+          "rich": "0.1842"
+        },
+        "isoprenoid biosynthetic process": {
+          "final_value": "9.5952999999999999",
+          "rich": "0.27589999999999998"
+        },
+        "isoprenoid metabolic process": {
+          "final_value": "7.4264999999999999",
+          "rich": "0.12330000000000001"
+        },
+        "lipid biosynthetic process": {
+          "final_value": "23.301300000000001",
+          "rich": "0.078200000000000006"
+        },
+        "lipid metabolic process": {
+          "final_value": "19.286799999999999",
+          "rich": "0.043999999999999997"
+        },
+        "metabolic process": {
+          "final_value": "7.4584999999999999",
+          "rich": "0.0137"
+        },
+        "organic hydroxy compound biosynthetic process": {
+          "final_value": "15.5952",
+          "rich": "0.1099"
+        },
+        "organic hydroxy compound metabolic process": {
+          "final_value": "15.2049",
+          "rich": "0.0683"
+        },
+        "organic substance biosynthetic process": {
+          "final_value": "7.7228000000000003",
+          "rich": "0.016799999999999999"
+        },
+        "oxidation-reduction process": {
+          "final_value": "7.1627999999999998",
+          "rich": "0.0309"
+        },
+        "phospholipid biosynthetic process": {
+          "final_value": "7.7819000000000003",
+          "rich": "0.083900000000000002"
+        },
+        "primary metabolic process": {
+          "final_value": "7.1087999999999996",
+          "rich": "0.014"
+        },
+        "secondary alcohol biosynthetic process": {
+          "final_value": "20.912400000000002",
+          "rich": "0.36359999999999998"
+        },
+        "secondary alcohol metabolic process": {
+          "final_value": "20.044499999999999",
+          "rich": "0.17799999999999999"
+        },
+        "single-organism biosynthetic process": {
+          "final_value": "16.8371",
+          "rich": "0.040899999999999999"
+        },
+        "single-organism cellular process": {
+          "final_value": "11.1317",
+          "rich": "0.014800000000000001"
+        },
+        "single-organism metabolic process": {
+          "final_value": "13.2331",
+          "rich": "0.0224"
+        },
+        "single-organism process": {
+          "final_value": "10.6441",
+          "rich": "0.013299999999999999"
+        },
+        "small molecule biosynthetic process": {
+          "final_value": "13.443099999999999",
+          "rich": "0.0608"
+        },
+        "small molecule metabolic process": {
+          "final_value": "9.4457000000000004",
+          "rich": "0.026499999999999999"
+        },
+        "steroid biosynthetic process": {
+          "final_value": "18.1038",
+          "rich": "0.14480000000000001"
+        },
+        "steroid metabolic process": {
+          "final_value": "16.6922",
+          "rich": "0.092600000000000002"
+        },
+        "sterol biosynthetic process": {
+          "final_value": "23.3794",
+          "rich": "0.35999999999999999"
+        },
+        "sterol metabolic process": {
+          "final_value": "20.950800000000001",
+          "rich": "0.1774"
+        }
+      }
+    },
+    "kegg1:Padj": {
+      "order": ["Steroid biosynthesis", "Terpenoid backbone biosynthesis", "Metabolic pathways", "Lysosome", "Antigen processing and presentation", "Protein processing in endoplasmic reticulum", "B cell receptor signaling pathway", "PPAR signaling pathway", "Pentose phosphate pathway", "Toxoplasmosis", "MAPK signaling pathway", "Glycolysis / Gluconeogenesis", "Amoebiasis", "Chemokine signaling pathway", "Propanoate metabolism", "Leukocyte transendothelial migration", "Neurotrophin signaling pathway", "Staphylococcus aureus infection", "Prion diseases", "Glycerolipid metabolism", "Small cell lung cancer", "Long-term potentiation", "Synthesis and degradation of ketone bodies", "Fructose and mannose metabolism", "Glycerophospholipid metabolism", "Osteoclast differentiation", "Butanoate metabolism", "Chagas disease (American trypanosomiasis)", "Glioma", "Fatty acid biosynthesis"],
+      "values": {
+        "Amoebiasis": {
+          "final_value": "1.641",
+          "rich": "0.1552"
+        },
+        "Antigen processing and presentation": {
+          "final_value": "4.8190999999999997",
+          "rich": "0.25640000000000002"
+        },
+        "B cell receptor signaling pathway": {
+          "final_value": "2.6469",
+          "rich": "0.21049999999999999"
+        },
+        "Butanoate metabolism": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.23330000000000001"
+        },
+        "Chagas disease (American trypanosomiasis)": {
+          "final_value": "1.4443999999999999",
+          "rich": "0.14999999999999999"
+        },
+        "Chemokine signaling pathway": {
+          "final_value": "1.641",
+          "rich": "0.1351"
+        },
+        "Fatty acid biosynthesis": {
+          "final_value": "1.3766",
+          "rich": "0.5"
+        },
+        "Fructose and mannose metabolism": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.2162"
+        },
+        "Glioma": {
+          "final_value": "1.3766",
+          "rich": "0.16919999999999999"
+        },
+        "Glycerolipid metabolism": {
+          "final_value": "1.5274000000000001",
+          "rich": "0.1961"
+        },
+        "Glycerophospholipid metabolism": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.16250000000000001"
+        },
+        "Glycolysis / Gluconeogenesis": {
+          "final_value": "1.7150000000000001",
+          "rich": "0.19670000000000001"
+        },
+        "Leukocyte transendothelial migration": {
+          "final_value": "1.5558000000000001",
+          "rich": "0.14999999999999999"
+        },
+        "Long-term potentiation": {
+          "final_value": "1.5027999999999999",
+          "rich": "0.1739"
+        },
+        "Lysosome": {
+          "final_value": "4.8190999999999997",
+          "rich": "0.21310000000000001"
+        },
+        "MAPK signaling pathway": {
+          "final_value": "1.8692",
+          "rich": "0.1273"
+        },
+        "Metabolic pathways": {
+          "final_value": "5.1111000000000004",
+          "rich": "0.10979999999999999"
+        },
+        "Neurotrophin signaling pathway": {
+          "final_value": "1.5428999999999999",
+          "rich": "0.14499999999999999"
+        },
+        "Osteoclast differentiation": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.14410000000000001"
+        },
+        "PPAR signaling pathway": {
+          "final_value": "2.4258000000000002",
+          "rich": "0.20000000000000001"
+        },
+        "Pentose phosphate pathway": {
+          "final_value": "1.8825000000000001",
+          "rich": "0.28570000000000001"
+        },
+        "Prion diseases": {
+          "final_value": "1.5274000000000001",
+          "rich": "0.2286"
+        },
+        "Propanoate metabolism": {
+          "final_value": "1.5932999999999999",
+          "rich": "0.2424"
+        },
+        "Protein processing in endoplasmic reticulum": {
+          "final_value": "2.6585000000000001",
+          "rich": "0.1598"
+        },
+        "Small cell lung cancer": {
+          "final_value": "1.5274000000000001",
+          "rich": "0.1628"
+        },
+        "Staphylococcus aureus infection": {
+          "final_value": "1.5428999999999999",
+          "rich": "0.20000000000000001"
+        },
+        "Steroid biosynthesis": {
+          "final_value": "6.0069999999999997",
+          "rich": "0.61109999999999998"
+        },
+        "Synthesis and degradation of ketone bodies": {
+          "final_value": "1.4683999999999999",
+          "rich": "0.40000000000000002"
+        },
+        "Terpenoid backbone biosynthesis": {
+          "final_value": "5.1494999999999997",
+          "rich": "0.64290000000000003"
+        },
+        "Toxoplasmosis": {
+          "final_value": "1.8692",
+          "rich": "0.1575"
+        }
+      }
+    },
+    "kegg1:Pvalue": {
+      "order": ["Steroid biosynthesis", "Terpenoid backbone biosynthesis", "Metabolic pathways", "Lysosome", "Antigen processing and presentation", "Protein processing in endoplasmic reticulum", "B cell receptor signaling pathway", "PPAR signaling pathway", "Pentose phosphate pathway", "Toxoplasmosis", "MAPK signaling pathway", "Glycolysis / Gluconeogenesis", "Amoebiasis", "Chemokine signaling pathway", "Propanoate metabolism", "Leukocyte transendothelial migration", "Neurotrophin signaling pathway", "Staphylococcus aureus infection", "Prion diseases", "Glycerolipid metabolism", "Small cell lung cancer", "Long-term potentiation", "Synthesis and degradation of ketone bodies", "Fructose and mannose metabolism", "Glycerophospholipid metabolism", "Osteoclast differentiation", "Butanoate metabolism", "Chagas disease (American trypanosomiasis)", "Glioma", "Fatty acid biosynthesis"],
+      "values": {
+        "Amoebiasis": {
+          "final_value": "2.8199999999999998",
+          "rich": "0.1552"
+        },
+        "Antigen processing and presentation": {
+          "final_value": "6.4188999999999998",
+          "rich": "0.25640000000000002"
+        },
+        "B cell receptor signaling pathway": {
+          "final_value": "4.1006999999999998",
+          "rich": "0.21049999999999999"
+        },
+        "Butanoate metabolism": {
+          "final_value": "2.3357999999999999",
+          "rich": "0.23330000000000001"
+        },
+        "Chagas disease (American trypanosomiasis)": {
+          "final_value": "2.2961",
+          "rich": "0.14999999999999999"
+        },
+        "Chemokine signaling pathway": {
+          "final_value": "2.7936999999999999",
+          "rich": "0.1351"
+        },
+        "Fatty acid biosynthesis": {
+          "final_value": "2.1983999999999999",
+          "rich": "0.5"
+        },
+        "Fructose and mannose metabolism": {
+          "final_value": "2.3826000000000001",
+          "rich": "0.2162"
+        },
+        "Glioma": {
+          "final_value": "2.2040999999999999",
+          "rich": "0.16919999999999999"
+        },
+        "Glycerolipid metabolism": {
+          "final_value": "2.5198",
+          "rich": "0.1961"
+        },
+        "Glycerophospholipid metabolism": {
+          "final_value": "2.3552",
+          "rich": "0.16250000000000001"
+        },
+        "Glycolysis / Gluconeogenesis": {
+          "final_value": "2.9346999999999999",
+          "rich": "0.19670000000000001"
+        },
+        "Leukocyte transendothelial migration": {
+          "final_value": "2.6505999999999998",
+          "rich": "0.14999999999999999"
+        },
+        "Long-term potentiation": {
+          "final_value": "2.4592999999999998",
+          "rich": "0.1739"
+        },
+        "Lysosome": {
+          "final_value": "6.4203000000000001",
+          "rich": "0.21310000000000001"
+        },
+        "MAPK signaling pathway": {
+          "final_value": "3.1267",
+          "rich": "0.1273"
+        },
+        "Metabolic pathways": {
+          "final_value": "6.9328000000000003",
+          "rich": "0.10979999999999999"
+        },
+        "Neurotrophin signaling pathway": {
+          "final_value": "2.5958000000000001",
+          "rich": "0.14499999999999999"
+        },
+        "Osteoclast differentiation": {
+          "final_value": "2.3475999999999999",
+          "rich": "0.14410000000000001"
+        },
+        "PPAR signaling pathway": {
+          "final_value": "3.8216000000000001",
+          "rich": "0.20000000000000001"
+        },
+        "Pentose phosphate pathway": {
+          "final_value": "3.2271000000000001",
+          "rich": "0.28570000000000001"
+        },
+        "Prion diseases": {
+          "final_value": "2.5423",
+          "rich": "0.2286"
+        },
+        "Propanoate metabolism": {
+          "final_value": "2.7161",
+          "rich": "0.2424"
+        },
+        "Protein processing in endoplasmic reticulum": {
+          "final_value": "4.1791999999999998",
+          "rich": "0.1598"
+        },
+        "Small cell lung cancer": {
+          "final_value": "2.5041000000000002",
+          "rich": "0.1628"
+        },
+        "Staphylococcus aureus infection": {
+          "final_value": "2.5863999999999998",
+          "rich": "0.20000000000000001"
+        },
+        "Steroid biosynthesis": {
+          "final_value": "8.3057999999999996",
+          "rich": "0.61109999999999998"
+        },
+        "Synthesis and degradation of ketone bodies": {
+          "final_value": "2.4024000000000001",
+          "rich": "0.40000000000000002"
+        },
+        "Terpenoid backbone biosynthesis": {
+          "final_value": "7.1473000000000004",
+          "rich": "0.64290000000000003"
+        },
+        "Toxoplasmosis": {
+          "final_value": "3.1566000000000001",
+          "rich": "0.1575"
+        }
+      }
+    }
+  },
+  "network": {
+    "go1": {
+      "n_nodes": 50,
+      "n_edge_rows": 527,
+      "nodes": {
+        "10-formyltetrahydrofolate catabolic process": {
+          "color": "#FF0000",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "acetate biosynthetic process": {
+          "color": "#FF0000",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "acetyl-CoA biosynthetic process": {
+          "color": "#FF2600",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "acetyl-CoA metabolic process": {
+          "color": "#FFA500",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "acyl-CoA biosynthetic process": {
+          "color": "#FF2200",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "acyl-CoA metabolic process": {
+          "color": "#FF7000",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "alcohol metabolic process": {
+          "color": "#FF0000",
+          "size": "4.7712125471966242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "carboxylic acid biosynthetic process": {
+          "color": "#FF2700",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "carboxylic acid metabolic process": {
+          "color": "#FF5100",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cellular lipid metabolic process": {
+          "color": "#FF4A00",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "coenzyme metabolic process": {
+          "color": "#FF5200",
+          "size": "6.9897000433601884",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cofactor metabolic process": {
+          "color": "#FF4700",
+          "size": "6.9897000433601884",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "fatty acid biosynthetic process": {
+          "color": "#FF5700",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "fatty acid metabolic process": {
+          "color": "#FF7000",
+          "size": "7.7815125038364368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "folic acid-containing compound catabolic process": {
+          "color": "#FF0000",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "lipid biosynthetic process": {
+          "color": "#FF2600",
+          "size": "6.9897000433601884",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "lipid metabolic process": {
+          "color": "#FF7000",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "metabolic process": {
+          "color": "#FF0000",
+          "size": "12.552725051033061",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "monocarboxylic acid biosynthetic process": {
+          "color": "#FF4600",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "monocarboxylic acid metabolic process": {
+          "color": "#FF5100",
+          "size": "7.7815125038364368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "myo-inositol transport": {
+          "color": "#FF0000",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "negative regulation of fat cell differentiation": {
+          "color": "#FF0300",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "negative regulation of myoblast differentiation": {
+          "color": "#FF1600",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic acid biosynthetic process": {
+          "color": "#FF2700",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic acid metabolic process": {
+          "color": "#FF4900",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic substance metabolic process": {
+          "color": "#FF0500",
+          "size": "12.552725051033061",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "oxoacid metabolic process": {
+          "color": "#FF4A00",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "positive chemotaxis": {
+          "color": "#FF0600",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "positive regulation of axon extension involved in regeneration": {
+          "color": "#FF0500",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "positive regulation of positive chemotaxis": {
+          "color": "#FF1800",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "positive regulation of response to wounding": {
+          "color": "#FF0000",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "positive regulation of sprouting of injured axon": {
+          "color": "#FF0500",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "protein oligomerization": {
+          "color": "#FF0000",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of DNA-templated transcription in response to stress": {
+          "color": "#FF0400",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of intracellular signal transduction": {
+          "color": "#FF0A00",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of myoblast differentiation": {
+          "color": "#FF0000",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of positive chemotaxis": {
+          "color": "#FF1700",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of transcription from RNA polymerase II promoter in response to stress": {
+          "color": "#FF0500",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of transcription involved in anterior/posterior axis specification": {
+          "color": "#FF0500",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "response to anticoagulant": {
+          "color": "#FF0500",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "response to astaxanthin": {
+          "color": "#FF0500",
+          "size": "0",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism biosynthetic process": {
+          "color": "#FF2600",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism cellular process": {
+          "color": "#FF1900",
+          "size": "12.787536009528289",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism metabolic process": {
+          "color": "#FF6A00",
+          "size": "11.46128035678238",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism process": {
+          "color": "#FF0000",
+          "size": "13.222192947339193",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "small molecule biosynthetic process": {
+          "color": "#FF5C00",
+          "size": "7.7815125038364368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "small molecule metabolic process": {
+          "color": "#FF5E00",
+          "size": "10",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "sulfur compound metabolic process": {
+          "color": "#FF2600",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "thioester biosynthetic process": {
+          "color": "#FF2200",
+          "size": "3.0102999566398121",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "thioester metabolic process": {
+          "color": "#FF7000",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        }
+      }
+    },
+    "go2": {
+      "n_nodes": 50,
+      "n_edge_rows": 543,
+      "nodes": {
+        "alcohol biosynthetic process": {
+          "color": "#FF5C00",
+          "size": "12.041199826559248",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "alcohol metabolic process": {
+          "color": "#FF6100",
+          "size": "13.617278360175929",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "axon ensheathment": {
+          "color": "#FF0200",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "biological regulation": {
+          "color": "#FF0800",
+          "size": "21.702617153949575",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "biosynthetic process": {
+          "color": "#FF1900",
+          "size": "19.493900066449129",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "carboxylic acid biosynthetic process": {
+          "color": "#FF0200",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cellular component organization": {
+          "color": "#FF0300",
+          "size": "19.294189257142929",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cellular component organization or biogenesis": {
+          "color": "#FF0200",
+          "size": "19.344984512435676",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cellular lipid metabolic process": {
+          "color": "#FF3B00",
+          "size": "15.314789170422552",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cellular metabolic process": {
+          "color": "#FF0300",
+          "size": "20.863598306747484",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cellular process": {
+          "color": "#FF2000",
+          "size": "22.741578492636801",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cholesterol biosynthetic process": {
+          "color": "#FF9100",
+          "size": "12.041199826559248",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "cholesterol metabolic process": {
+          "color": "#FF8C00",
+          "size": "13.222192947339193",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "ensheathment of neurons": {
+          "color": "#FF0200",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "fatty acid biosynthetic process": {
+          "color": "#FF0500",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "isopentenyl diphosphate biosynthetic process": {
+          "color": "#FF0000",
+          "size": "4.7712125471966242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "isoprenoid biosynthetic process": {
+          "color": "#FF2A00",
+          "size": "9.0308998699194358",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "isoprenoid metabolic process": {
+          "color": "#FF1600",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "lipid biosynthetic process": {
+          "color": "#FFA500",
+          "size": "15.910646070264992",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "lipid metabolic process": {
+          "color": "#FF8300",
+          "size": "17.075701760979364",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "localization": {
+          "color": "#FF0400",
+          "size": "19.294189257142929",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "metabolic process": {
+          "color": "#FF1700",
+          "size": "21.492191126553799",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "monocarboxylic acid biosynthetic process": {
+          "color": "#FF0900",
+          "size": "10.41392685158225",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "myelination": {
+          "color": "#FF0200",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic acid biosynthetic process": {
+          "color": "#FF0200",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic cyclic compound biosynthetic process": {
+          "color": "#FF0800",
+          "size": "18.129133566428553",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic hydroxy compound biosynthetic process": {
+          "color": "#FF6100",
+          "size": "13.222192947339193",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic hydroxy compound metabolic process": {
+          "color": "#FF5E00",
+          "size": "14.471580313422193",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic substance biosynthetic process": {
+          "color": "#FF1900",
+          "size": "19.444826721501688",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "organic substance metabolic process": {
+          "color": "#FF1100",
+          "size": "21.271047983648078",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "oxidation-reduction process": {
+          "color": "#FF1400",
+          "size": "14.471580313422193",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "phospholipid biosynthetic process": {
+          "color": "#FF1900",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "phospholipid metabolic process": {
+          "color": "#FF1300",
+          "size": "12.041199826559248",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "positive regulation of biological process": {
+          "color": "#FF0100",
+          "size": "19.084850188786497",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "primary metabolic process": {
+          "color": "#FF1300",
+          "size": "21.139433523068369",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of biological process": {
+          "color": "#FF0300",
+          "size": "21.492191126553799",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of biological quality": {
+          "color": "#FF0000",
+          "size": "17.558748556724915",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "regulation of localization": {
+          "color": "#FF0400",
+          "size": "16.812412373755873",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "secondary alcohol biosynthetic process": {
+          "color": "#FF9100",
+          "size": "12.041199826559248",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "secondary alcohol metabolic process": {
+          "color": "#FF8A00",
+          "size": "13.222192947339193",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism biosynthetic process": {
+          "color": "#FF6D00",
+          "size": "16.812412373755873",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism cellular process": {
+          "color": "#FF3900",
+          "size": "21.702617153949575",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism metabolic process": {
+          "color": "#FF4C00",
+          "size": "19.084850188786497",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "single-organism process": {
+          "color": "#FF3400",
+          "size": "22.504200023088941",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "small molecule biosynthetic process": {
+          "color": "#FF4E00",
+          "size": "14.313637641589875",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "small molecule metabolic process": {
+          "color": "#FF2900",
+          "size": "16.62757831681574",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "steroid biosynthetic process": {
+          "color": "#FF7900",
+          "size": "13.222192947339193",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "steroid metabolic process": {
+          "color": "#FF6B00",
+          "size": "13.979400086720377",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "sterol biosynthetic process": {
+          "color": "#FFA500",
+          "size": "12.552725051033061",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "sterol metabolic process": {
+          "color": "#FF9100",
+          "size": "13.424226808222063",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        }
+      }
+    },
+    "kegg1": {
+      "n_nodes": 50,
+      "n_edge_rows": 44,
+      "nodes": {
+        "Alzheimer's disease": {
+          "color": "#FF0A00",
+          "size": "13.424226808222063",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Amoebiasis": {
+          "color": "#FF1700",
+          "size": "12.552725051033061",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Antigen processing and presentation": {
+          "color": "#FF7E00",
+          "size": "13.010299956639813",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Apoptosis": {
+          "color": "#FF0400",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Arginine and proline metabolism": {
+          "color": "#FF0800",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Axon guidance": {
+          "color": "#FF0100",
+          "size": "12.041199826559248",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "B cell receptor signaling pathway": {
+          "color": "#FF3800",
+          "size": "12.041199826559248",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Butanoate metabolism": {
+          "color": "#FF1200",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Calcium signaling pathway": {
+          "color": "#FF0000",
+          "size": "13.010299956639813",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Cell adhesion molecules (CAMs)": {
+          "color": "#FF0A00",
+          "size": "12.787536009528289",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Chagas disease (American trypanosomiasis)": {
+          "color": "#FF1100",
+          "size": "11.760912590556813",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Chemokine signaling pathway": {
+          "color": "#FF1700",
+          "size": "13.979400086720377",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "ECM-receptor interaction": {
+          "color": "#FF0C00",
+          "size": "11.139433523068368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Fat digestion and absorption": {
+          "color": "#FF0800",
+          "size": "9.0308998699194358",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Fatty acid biosynthesis": {
+          "color": "#FF0E00",
+          "size": "4.7712125471966242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Focal adhesion": {
+          "color": "#FF0C00",
+          "size": "13.80211241711606",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Fructose and mannose metabolism": {
+          "color": "#FF1200",
+          "size": "9.0308998699194358",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Glioma": {
+          "color": "#FF0E00",
+          "size": "10.41392685158225",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Glycerolipid metabolism": {
+          "color": "#FF1300",
+          "size": "10",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Glycerophospholipid metabolism": {
+          "color": "#FF1200",
+          "size": "11.139433523068368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Glycolysis / Gluconeogenesis": {
+          "color": "#FF1900",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "GnRH signaling pathway": {
+          "color": "#FF0100",
+          "size": "11.139433523068368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Leukocyte transendothelial migration": {
+          "color": "#FF1400",
+          "size": "12.552725051033061",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Long-term potentiation": {
+          "color": "#FF1300",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Lysosome": {
+          "color": "#FF7E00",
+          "size": "14.14973347970818",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "MAPK signaling pathway": {
+          "color": "#FF1E00",
+          "size": "15.314789170422552",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Metabolic pathways": {
+          "color": "#FF8700",
+          "size": "21.105897102992486",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "N-Glycan biosynthesis": {
+          "color": "#FF0100",
+          "size": "9.0308998699194358",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Natural killer cell mediated cytotoxicity": {
+          "color": "#FF0C00",
+          "size": "12.304489213782739",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Neurotrophin signaling pathway": {
+          "color": "#FF1400",
+          "size": "12.787536009528289",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Osteoclast differentiation": {
+          "color": "#FF1200",
+          "size": "12.304489213782739",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Other glycan degradation": {
+          "color": "#FF0000",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "PPAR signaling pathway": {
+          "color": "#FF3000",
+          "size": "12.041199826559248",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Pentose phosphate pathway": {
+          "color": "#FF1F00",
+          "size": "9.0308998699194358",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Peroxisome": {
+          "color": "#FF0A00",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Prion diseases": {
+          "color": "#FF1300",
+          "size": "9.0308998699194358",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Progesterone-mediated oocyte maturation": {
+          "color": "#FF0C00",
+          "size": "11.139433523068368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Propanoate metabolism": {
+          "color": "#FF1500",
+          "size": "9.0308998699194358",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Prostate cancer": {
+          "color": "#FF0A00",
+          "size": "11.139433523068368",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Protein processing in endoplasmic reticulum": {
+          "color": "#FF3800",
+          "size": "14.313637641589875",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Pyruvate metabolism": {
+          "color": "#FF0000",
+          "size": "8.4509804001425675",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Rheumatoid arthritis": {
+          "color": "#FF0000",
+          "size": "10.41392685158225",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Small cell lung cancer": {
+          "color": "#FF1300",
+          "size": "11.46128035678238",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Staphylococcus aureus infection": {
+          "color": "#FF1400",
+          "size": "10",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Steroid biosynthesis": {
+          "color": "#FFA500",
+          "size": "10.41392685158225",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Synthesis and degradation of ketone bodies": {
+          "color": "#FF1200",
+          "size": "6.0205999132796242",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "T cell receptor signaling pathway": {
+          "color": "#FF0A00",
+          "size": "11.760912590556813",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Terpenoid backbone biosynthesis": {
+          "color": "#FF8800",
+          "size": "9.5424250943932485",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "Toxoplasmosis": {
+          "color": "#FF1E00",
+          "size": "13.010299956639813",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        },
+        "VEGF signaling pathway": {
+          "color": "#FF0C00",
+          "size": "10.791812460476249",
+          "shape": "20",
+          "alpha": "0.69999999999999996"
+        }
+      }
+    }
+  },
+  "network_has_nodes": [true, true, true],
+  "enrichment_heatmap": {
+    "Padj": {
+      "acetyl-CoA metabolic process | go1": {
+        "value": "7.6440000000000001"
+      },
+      "acetyl-CoA metabolic process | go2": {
+        "value": null
+      },
+      "acyl-CoA metabolic process | go1": {
+        "value": "6.0819999999999999"
+      },
+      "acyl-CoA metabolic process | go2": {
+        "value": null
+      },
+      "cholesterol biosynthetic process | go1": {
+        "value": null
+      },
+      "cholesterol biosynthetic process | go2": {
+        "value": "21.105"
+      },
+      "cholesterol metabolic process | go1": {
+        "value": null
+      },
+      "cholesterol metabolic process | go2": {
+        "value": "20.3751"
+      },
+      "coenzyme metabolic process | go1": {
+        "value": "5.0457999999999998"
+      },
+      "coenzyme metabolic process | go2": {
+        "value": null
+      },
+      "fatty acid biosynthetic process | go1": {
+        "value": "5.1798000000000002"
+      },
+      "fatty acid biosynthetic process | go2": {
+        "value": null
+      },
+      "fatty acid metabolic process | go1": {
+        "value": "5.9871999999999996"
+      },
+      "fatty acid metabolic process | go2": {
+        "value": null
+      },
+      "lipid biosynthetic process | go1": {
+        "value": null
+      },
+      "lipid biosynthetic process | go2": {
+        "value": "23.301300000000001"
+      },
+      "lipid metabolic process | go1": {
+        "value": "5.9431000000000003"
+      },
+      "lipid metabolic process | go2": {
+        "value": "19.286799999999999"
+      },
+      "secondary alcohol biosynthetic process | go1": {
+        "value": null
+      },
+      "secondary alcohol biosynthetic process | go2": {
+        "value": "20.912400000000002"
+      },
+      "secondary alcohol metabolic process | go1": {
+        "value": null
+      },
+      "secondary alcohol metabolic process | go2": {
+        "value": "20.044499999999999"
+      },
+      "single-organism biosynthetic process | go1": {
+        "value": null
+      },
+      "single-organism biosynthetic process | go2": {
+        "value": "16.8371"
+      },
+      "single-organism metabolic process | go1": {
+        "value": "5.7446999999999999"
+      },
+      "single-organism metabolic process | go2": {
+        "value": null
+      },
+      "small molecule biosynthetic process | go1": {
+        "value": "5.3487"
+      },
+      "small molecule biosynthetic process | go2": {
+        "value": null
+      },
+      "small molecule metabolic process | go1": {
+        "value": "5.4461000000000004"
+      },
+      "small molecule metabolic process | go2": {
+        "value": null
+      },
+      "steroid biosynthetic process | go1": {
+        "value": null
+      },
+      "steroid biosynthetic process | go2": {
+        "value": "18.1038"
+      },
+      "sterol biosynthetic process | go1": {
+        "value": null
+      },
+      "sterol biosynthetic process | go2": {
+        "value": "23.3794"
+      },
+      "sterol metabolic process | go1": {
+        "value": null
+      },
+      "sterol metabolic process | go2": {
+        "value": "20.950800000000001"
+      },
+      "thioester metabolic process | go1": {
+        "value": "6.0819999999999999"
+      },
+      "thioester metabolic process | go2": {
+        "value": null
+      }
+    },
+    "Pvalue": {
+      "acetyl-CoA metabolic process | go1": {
+        "value": "7.6440000000000001"
+      },
+      "acetyl-CoA metabolic process | go2": {
+        "value": null
+      },
+      "acyl-CoA metabolic process | go1": {
+        "value": "6.0819999999999999"
+      },
+      "acyl-CoA metabolic process | go2": {
+        "value": null
+      },
+      "cholesterol biosynthetic process | go1": {
+        "value": null
+      },
+      "cholesterol biosynthetic process | go2": {
+        "value": "21.105"
+      },
+      "cholesterol metabolic process | go1": {
+        "value": null
+      },
+      "cholesterol metabolic process | go2": {
+        "value": "20.3751"
+      },
+      "coenzyme metabolic process | go1": {
+        "value": "5.0457999999999998"
+      },
+      "coenzyme metabolic process | go2": {
+        "value": null
+      },
+      "fatty acid biosynthetic process | go1": {
+        "value": "5.1798000000000002"
+      },
+      "fatty acid biosynthetic process | go2": {
+        "value": null
+      },
+      "fatty acid metabolic process | go1": {
+        "value": "5.9871999999999996"
+      },
+      "fatty acid metabolic process | go2": {
+        "value": null
+      },
+      "lipid biosynthetic process | go1": {
+        "value": null
+      },
+      "lipid biosynthetic process | go2": {
+        "value": "23.301300000000001"
+      },
+      "lipid metabolic process | go1": {
+        "value": "5.9431000000000003"
+      },
+      "lipid metabolic process | go2": {
+        "value": "19.286799999999999"
+      },
+      "secondary alcohol biosynthetic process | go1": {
+        "value": null
+      },
+      "secondary alcohol biosynthetic process | go2": {
+        "value": "20.912400000000002"
+      },
+      "secondary alcohol metabolic process | go1": {
+        "value": null
+      },
+      "secondary alcohol metabolic process | go2": {
+        "value": "20.044499999999999"
+      },
+      "single-organism biosynthetic process | go1": {
+        "value": null
+      },
+      "single-organism biosynthetic process | go2": {
+        "value": "16.8371"
+      },
+      "single-organism metabolic process | go1": {
+        "value": "5.7446999999999999"
+      },
+      "single-organism metabolic process | go2": {
+        "value": null
+      },
+      "small molecule biosynthetic process | go1": {
+        "value": "5.3487"
+      },
+      "small molecule biosynthetic process | go2": {
+        "value": null
+      },
+      "small molecule metabolic process | go1": {
+        "value": "5.4461000000000004"
+      },
+      "small molecule metabolic process | go2": {
+        "value": null
+      },
+      "steroid biosynthetic process | go1": {
+        "value": null
+      },
+      "steroid biosynthetic process | go2": {
+        "value": "18.1038"
+      },
+      "sterol biosynthetic process | go1": {
+        "value": null
+      },
+      "sterol biosynthetic process | go2": {
+        "value": "23.3794"
+      },
+      "sterol metabolic process | go1": {
+        "value": null
+      },
+      "sterol metabolic process | go2": {
+        "value": "20.950800000000001"
+      },
+      "thioester metabolic process | go1": {
+        "value": "6.0819999999999999"
+      },
+      "thioester metabolic process | go2": {
+        "value": null
+      }
+    }
+  },
+  "cluster_table": {
+    "1": {
+      "representative": "sterol metabolic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "1.1198715296303299e-21",
+      "padj_go1": null,
+      "padj_go2": "8.5625760280857102e-19"
+    },
+    "10": {
+      "representative": "cellular component organization",
+      "pvalue_go1": null,
+      "pvalue_go2": "5.3127403277829297e-06",
+      "padj_go1": null,
+      "padj_go2": "0.00047664816427980702"
+    },
+    "11": {
+      "representative": "isopentenyl diphosphate biosynthetic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "1.7745936300061399e-05",
+      "padj_go1": null,
+      "padj_go2": "0.00119727535176987"
+    },
+    "12": {
+      "representative": "extracellular matrix organization",
+      "pvalue_go1": null,
+      "pvalue_go2": "0.000162386184522747",
+      "padj_go1": null,
+      "padj_go2": "0.0071023657455636302"
+    },
+    "13": {
+      "representative": "collagen-activated tyrosine kinase receptor signaling pathway",
+      "pvalue_go1": null,
+      "pvalue_go2": "0.000141223272064736",
+      "padj_go1": null,
+      "padj_go2": "0.0065018451178225304"
+    },
+    "14": {
+      "representative": "cholesterol metabolic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "4.2157596908213803e-21",
+      "padj_go1": null,
+      "padj_go2": "2.458490526364e-18"
+    },
+    "15": {
+      "representative": "single-organism cellular process",
+      "pvalue_go1": "0.00028822599999999999",
+      "pvalue_go2": "7.384832845076e-12",
+      "padj_go1": "0.011540142",
+      "padj_go2": "1.35997526973268e-09"
+    },
+    "16": {
+      "representative": "lipid metabolic process",
+      "pvalue_go1": "1.1400000000000001e-06",
+      "pvalue_go2": "5.1667114277335597e-20",
+      "padj_go1": "0.00023812",
+      "padj_go2": "2.2597904107049701e-17"
+    },
+    "17": {
+      "representative": "steroid biosynthetic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "7.8743983004587802e-19",
+      "padj_go1": null,
+      "padj_go2": "3.0613910725894698e-16"
+    },
+    "18": {
+      "representative": "regulation of biological process",
+      "pvalue_go1": null,
+      "pvalue_go2": "5.5475234776882399e-06",
+      "padj_go1": null,
+      "padj_go2": "0.00048526961621077802"
+    },
+    "19": {
+      "representative": "biological regulation",
+      "pvalue_go1": null,
+      "pvalue_go2": "1.4312303949863501e-06",
+      "padj_go1": null,
+      "padj_go2": "0.00014684203396418799"
+    },
+    "2": {
+      "representative": "small molecule metabolic process",
+      "pvalue_go1": "3.58e-06",
+      "pvalue_go2": "3.5831078624113199e-10",
+      "padj_go1": "0.00053207099999999995",
+      "padj_go2": "5.6987701866260001e-08"
+    },
+    "20": {
+      "representative": "response to stimulus",
+      "pvalue_go1": null,
+      "pvalue_go2": "4.5350746790952297e-05",
+      "padj_go1": null,
+      "padj_go2": "0.0027069116101708299"
+    },
+    "3": {
+      "representative": "steroid metabolic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "2.0313831482316299e-17",
+      "padj_go1": null,
+      "padj_go2": "6.4616451233295299e-15"
+    },
+    "4": {
+      "representative": "phospholipid biosynthetic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "1.65230609489842e-08",
+      "padj_go1": null,
+      "padj_go2": "2.4089245941873298e-06"
+    },
+    "5": {
+      "representative": "phospholipid metabolic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "8.4250449313469798e-08",
+      "padj_go1": null,
+      "padj_go2": "9.5094297467042207e-06"
+    },
+    "6": {
+      "representative": "isoprenoid metabolic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "3.74573106158648e-08",
+      "padj_go1": null,
+      "padj_go2": "4.6808260658896804e-06"
+    },
+    "7": {
+      "representative": "organophosphate metabolic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "4.5643836810539898e-05",
+      "padj_go1": null,
+      "padj_go2": "0.0027069116101708299"
+    },
+    "8": {
+      "representative": "myelination",
+      "pvalue_go1": null,
+      "pvalue_go2": "7.1637550334651403e-06",
+      "padj_go1": null,
+      "padj_go2": "0.00056968133777487604"
+    },
+    "9": {
+      "representative": "isopentenyl diphosphate biosynthetic process",
+      "pvalue_go1": null,
+      "pvalue_go2": "1.7745936300061399e-05",
+      "padj_go1": null,
+      "padj_go2": "0.00119727535176987"
+    }
+  },
+  "cluster_heatmap": {
+    "summary:Padj": {
+      "cluster:1 | go1": {
+        "value": "1.1033999999999999"
+      },
+      "cluster:1 | go2": {
+        "value": "8.3902999999999999"
+      },
+      "cluster:10 | go1": {
+        "value": null
+      },
+      "cluster:10 | go2": {
+        "value": "3.2555999999999998"
+      },
+      "cluster:11 | go1": {
+        "value": "0.92769999999999997"
+      },
+      "cluster:11 | go2": {
+        "value": "2.4799000000000002"
+      },
+      "cluster:12 | go1": {
+        "value": null
+      },
+      "cluster:12 | go2": {
+        "value": "1.5946"
+      },
+      "cluster:13 | go1": {
+        "value": null
+      },
+      "cluster:13 | go2": {
+        "value": "2.0821999999999998"
+      },
+      "cluster:14 | go1": {
+        "value": "1.9752000000000001"
+      },
+      "cluster:14 | go2": {
+        "value": "1.8959999999999999"
+      },
+      "cluster:15 | go1": {
+        "value": "1.6116999999999999"
+      },
+      "cluster:15 | go2": {
+        "value": "8.5742999999999991"
+      },
+      "cluster:16 | go1": {
+        "value": "2.7282000000000002"
+      },
+      "cluster:16 | go2": {
+        "value": "7.8461999999999996"
+      },
+      "cluster:17 | go1": {
+        "value": "1.5203"
+      },
+      "cluster:17 | go2": {
+        "value": "6.3346999999999998"
+      },
+      "cluster:18 | go1": {
+        "value": null
+      },
+      "cluster:18 | go2": {
+        "value": "1.4332"
+      },
+      "cluster:19 | go1": {
+        "value": null
+      },
+      "cluster:19 | go2": {
+        "value": "1.5255000000000001"
+      },
+      "cluster:2 | go1": {
+        "value": "2.7109999999999999"
+      },
+      "cluster:2 | go2": {
+        "value": "1.7372000000000001"
+      },
+      "cluster:20 | go1": {
+        "value": null
+      },
+      "cluster:20 | go2": {
+        "value": "1.3625"
+      },
+      "cluster:3 | go1": {
+        "value": "1.9681999999999999"
+      },
+      "cluster:3 | go2": {
+        "value": "8.1928000000000001"
+      },
+      "cluster:4 | go1": {
+        "value": "2.8811"
+      },
+      "cluster:4 | go2": {
+        "value": "1.7632000000000001"
+      },
+      "cluster:5 | go1": {
+        "value": "2.734"
+      },
+      "cluster:5 | go2": {
+        "value": "1.4044000000000001"
+      },
+      "cluster:6 | go1": {
+        "value": "0.90300000000000002"
+      },
+      "cluster:6 | go2": {
+        "value": "3.5230000000000001"
+      },
+      "cluster:7 | go1": {
+        "value": null
+      },
+      "cluster:7 | go2": {
+        "value": "1.3087"
+      },
+      "cluster:8 | go1": {
+        "value": null
+      },
+      "cluster:8 | go2": {
+        "value": "3.2223000000000002"
+      },
+      "cluster:9 | go1": {
+        "value": "0.92769999999999997"
+      },
+      "cluster:9 | go2": {
+        "value": "2.4799000000000002"
+      }
+    },
+    "terms:Padj": {
+      "1 | 1": {
+        "value": "2.567525925183241"
+      },
+      "10 | 1": {
+        "value": "3.8331496085503343"
+      },
+      "100 | 1": {
+        "value": "5.6181767943731371"
+      },
+      "101 | 2": {
+        "value": "1.9643913230342653"
+      },
+      "102 | 3": {
+        "value": "2.567525925183241"
+      },
+      "103 | 1": {
+        "value": "2.4831366274218101"
+      },
+      "104 | 2": {
+        "value": "1.3421491676175537"
+      },
+      "105 | 3": {
+        "value": "1.0598790069680464"
+      },
+      "106 | 1": {
+        "value": "3.1821211774186291"
+      },
+      "107 | 2": {
+        "value": "14.189656897326092"
+      },
+      "108 | 3": {
+        "value": "3.5750138940690324"
+      },
+      "109 | 1": {
+        "value": "3.5349400089107901"
+      },
+      "11 | 2": {
+        "value": "3.3140168999583386"
+      },
+      "110 | 2": {
+        "value": "3.807298749892623"
+      },
+      "111 | 3": {
+        "value": "2.4950133199584359"
+      },
+      "112 | 1": {
+        "value": "1.4540370869547166"
+      },
+      "113 | 2": {
+        "value": "3.9242341217842243"
+      },
+      "114 | 3": {
+        "value": "2.4950133199587814"
+      },
+      "115 | 1": {
+        "value": "3.1821211774186291"
+      },
+      "116 | 2": {
+        "value": "3.5750138940690324"
+      },
+      "117 | 3": {
+        "value": "1.4476190512844462"
+      },
+      "118 | 1": {
+        "value": "1.4165472145050537"
+      },
+      "119 | 2": {
+        "value": "2.4720483153032307"
+      },
+      "12 | 3": {
+        "value": "1.3421491676175537"
+      },
+      "120 | 3": {
+        "value": "2.3941021777630334"
+      },
+      "121 | 1": {
+        "value": "3.0848200636152998"
+      },
+      "122 | 2": {
+        "value": "2.9018414034712672"
+      },
+      "123 | 3": {
+        "value": "3.2807621100315774"
+      },
+      "124 | 1": {
+        "value": "3.1821211774186291"
+      },
+      "125 | 2": {
+        "value": "1.6360649603029249"
+      },
+      "126 | 3": {
+        "value": "2.4720483153032307"
+      },
+      "127 | 1": {
+        "value": "18.067395559332336"
+      },
+      "128 | 2": {
+        "value": "1.1022141673580774"
+      },
+      "129 | 3": {
+        "value": "14.189656897326092"
+      },
+      "13 | 1": {
+        "value": "0.98489596630170206"
+      },
+      "130 | 1": {
+        "value": "15.514081188593076"
+      },
+      "131 | 2": {
+        "value": "3.5750138940690324"
+      },
+      "132 | 3": {
+        "value": "3.5349400089107901"
+      },
+      "133 | 1": {
+        "value": "17.345690777147308"
+      },
+      "134 | 2": {
+        "value": "1.1306271428262704"
+      },
+      "135 | 3": {
+        "value": "1.4540370869547166"
+      },
+      "136 | 1": {
+        "value": "1.3303355904424208"
+      },
+      "137 | 2": {
+        "value": "17.609331460896605"
+      },
+      "138 | 3": {
+        "value": "1.1361762530036006"
+      },
+      "139 | 1": {
+        "value": "1.7286428089728516"
+      },
+      "14 | 2": {
+        "value": "1.8001221581696045"
+      },
+      "140 | 2": {
+        "value": "1.5623876091805842"
+      },
+      "15 | 3": {
+        "value": "1.2578734242554945"
+      },
+      "16 | 1": {
+        "value": "3.1431263299145584"
+      },
+      "17 | 2": {
+        "value": "15.514081188593076"
+      },
+      "18 | 3": {
+        "value": "3.5750138940690324"
+      },
+      "19 | 1": {
+        "value": "3.5349400089107901"
+      },
+      "2 | 2": {
+        "value": "2.2943116652819575"
+      },
+      "20 | 2": {
+        "value": "3.807298749892623"
+      },
+      "21 | 3": {
+        "value": "2.4950133199584359"
+      },
+      "22 | 1": {
+        "value": "1.2357138842356501"
+      },
+      "23 | 2": {
+        "value": "1.3303355904424208"
+      },
+      "24 | 3": {
+        "value": "3.9242341217842243"
+      },
+      "25 | 1": {
+        "value": "2.4950133199587814"
+      },
+      "26 | 2": {
+        "value": "3.1821211774186291"
+      },
+      "27 | 3": {
+        "value": "1.4185016147241147"
+      },
+      "28 | 1": {
+        "value": "3.5750138940690324"
+      },
+      "29 | 2": {
+        "value": "3.807298749892623"
+      },
+      "3 | 3": {
+        "value": "0.91214012257479649"
+      },
+      "30 | 3": {
+        "value": "2.4950133199584359"
+      },
+      "31 | 1": {
+        "value": "3.9242341217842243"
+      },
+      "32 | 2": {
+        "value": "1.7286427628184033"
+      },
+      "33 | 3": {
+        "value": "2.2388187916918021"
+      },
+      "34 | 1": {
+        "value": "14.189656897326092"
+      },
+      "35 | 2": {
+        "value": "3.5750138940690324"
+      },
+      "36 | 3": {
+        "value": "3.5349400089107901"
+      },
+      "37 | 1": {
+        "value": "3.807298749892623"
+      },
+      "38 | 2": {
+        "value": "2.4950133199584359"
+      },
+      "39 | 3": {
+        "value": "17.345690777147308"
+      },
+      "4 | 1": {
+        "value": "1.398694493212596"
+      },
+      "40 | 1": {
+        "value": "1.4476190512844462"
+      },
+      "41 | 2": {
+        "value": "1.4540370869547166"
+      },
+      "42 | 3": {
+        "value": "1.4165472145050537"
+      },
+      "43 | 1": {
+        "value": "3.9242341217842243"
+      },
+      "44 | 2": {
+        "value": "2.4950133199587814"
+      },
+      "45 | 3": {
+        "value": "17.609331460896605"
+      },
+      "46 | 1": {
+        "value": "3.1821211774186291"
+      },
+      "47 | 2": {
+        "value": "1.6360649603029249"
+      },
+      "48 | 3": {
+        "value": "1.7286428089728516"
+      },
+      "49 | 1": {
+        "value": "2.1869633801607438"
+      },
+      "5 | 2": {
+        "value": "2.2943116652819575"
+      },
+      "50 | 2": {
+        "value": "1.9977956137826787"
+      },
+      "51 | 3": {
+        "value": "1.1510766123026024"
+      },
+      "52 | 1": {
+        "value": "1.6304557311380958"
+      },
+      "53 | 2": {
+        "value": "2.137822072506983"
+      },
+      "54 | 3": {
+        "value": "2.1485969668992122"
+      },
+      "55 | 1": {
+        "value": "1.7268867661962612"
+      },
+      "56 | 2": {
+        "value": "1.2287597506521932"
+      },
+      "57 | 3": {
+        "value": "2.9218059581966576"
+      },
+      "58 | 1": {
+        "value": "1.9643913230342653"
+      },
+      "59 | 2": {
+        "value": "2.9218059581966576"
+      },
+      "6 | 3": {
+        "value": "1.398694493212596"
+      },
+      "60 | 3": {
+        "value": "3.1981230301732744"
+      },
+      "61 | 1": {
+        "value": "3.3218020752416062"
+      },
+      "62 | 2": {
+        "value": "1.2287597506521932"
+      },
+      "63 | 3": {
+        "value": "2.9218059581966576"
+      },
+      "64 | 1": {
+        "value": "1.9643913230342653"
+      },
+      "65 | 2": {
+        "value": "2.9218059581966576"
+      },
+      "66 | 3": {
+        "value": "3.2443680073892818"
+      },
+      "67 | 1": {
+        "value": "3.2117090142876927"
+      },
+      "68 | 2": {
+        "value": "3.2117090142876927"
+      },
+      "69 | 3": {
+        "value": "0.75161109018562866"
+      },
+      "7 | 1": {
+        "value": "3.3140168999583386"
+      },
+      "70 | 1": {
+        "value": "2.2377212979694607"
+      },
+      "71 | 2": {
+        "value": "1.9643913230342653"
+      },
+      "72 | 3": {
+        "value": "2.567525925183241"
+      },
+      "73 | 1": {
+        "value": "1.1022141673580774"
+      },
+      "74 | 2": {
+        "value": "1.1306271428262704"
+      },
+      "75 | 3": {
+        "value": "5.3296774964559317"
+      },
+      "76 | 1": {
+        "value": "1.2287597506521932"
+      },
+      "77 | 2": {
+        "value": "2.9218059581966576"
+      },
+      "78 | 3": {
+        "value": "2.9218059581966576"
+      },
+      "79 | 1": {
+        "value": "1.1361762530036006"
+      },
+      "8 | 2": {
+        "value": "3.1431263299145584"
+      },
+      "80 | 2": {
+        "value": "1.5623876091805842"
+      },
+      "81 | 3": {
+        "value": "3.5750138940690324"
+      },
+      "82 | 1": {
+        "value": "3.5349400089107901"
+      },
+      "83 | 2": {
+        "value": "2.4950133199584359"
+      },
+      "84 | 3": {
+        "value": "5.0218455256793222"
+      },
+      "85 | 1": {
+        "value": "0.85018727558280027"
+      },
+      "86 | 2": {
+        "value": "1.4476190512844462"
+      },
+      "87 | 3": {
+        "value": "1.4165472145050537"
+      },
+      "88 | 1": {
+        "value": "2.3941021777630334"
+      },
+      "89 | 2": {
+        "value": "3.9242341217842243"
+      },
+      "9 | 3": {
+        "value": "0.91214012257479649"
+      },
+      "90 | 3": {
+        "value": "2.4950133199587814"
+      },
+      "91 | 1": {
+        "value": "1.3421491676175537"
+      },
+      "92 | 2": {
+        "value": "0.96660193709507913"
+      },
+      "93 | 3": {
+        "value": "1.0598790069680464"
+      },
+      "94 | 1": {
+        "value": "1.0549254360042857"
+      },
+      "95 | 2": {
+        "value": "2.9018414034712672"
+      },
+      "96 | 3": {
+        "value": "3.1821211774186291"
+      },
+      "97 | 1": {
+        "value": "1.6360649603029249"
+      },
+      "98 | 2": {
+        "value": "2.2377212979694607"
+      },
+      "99 | 3": {
+        "value": "5.0218455256793222"
+      }
+    },
+    "summary:Pvalue": {
+      "cluster:1 | go1": {
+        "value": "1.7297"
+      },
+      "cluster:1 | go2": {
+        "value": "10.591799999999999"
+      },
+      "cluster:10 | go1": {
+        "value": null
+      },
+      "cluster:10 | go2": {
+        "value": "5.1604000000000001"
+      },
+      "cluster:11 | go1": {
+        "value": "1.5336000000000001"
+      },
+      "cluster:11 | go2": {
+        "value": "4.1024000000000003"
+      },
+      "cluster:12 | go1": {
+        "value": null
+      },
+      "cluster:12 | go2": {
+        "value": "2.883"
+      },
+      "cluster:13 | go1": {
+        "value": null
+      },
+      "cluster:13 | go2": {
+        "value": "3.7183999999999999"
+      },
+      "cluster:14 | go1": {
+        "value": "3.0632000000000001"
+      },
+      "cluster:14 | go2": {
+        "value": "3.0832000000000002"
+      },
+      "cluster:15 | go1": {
+        "value": "3.0459000000000001"
+      },
+      "cluster:15 | go2": {
+        "value": "10.822800000000001"
+      },
+      "cluster:16 | go1": {
+        "value": "4.4790000000000001"
+      },
+      "cluster:16 | go2": {
+        "value": "10.047700000000001"
+      },
+      "cluster:17 | go1": {
+        "value": "2.2746"
+      },
+      "cluster:17 | go2": {
+        "value": "8.4726999999999997"
+      },
+      "cluster:18 | go1": {
+        "value": null
+      },
+      "cluster:18 | go2": {
+        "value": "2.5026000000000002"
+      },
+      "cluster:19 | go1": {
+        "value": null
+      },
+      "cluster:19 | go2": {
+        "value": "2.5215000000000001"
+      },
+      "cluster:2 | go1": {
+        "value": "4.5110999999999999"
+      },
+      "cluster:2 | go2": {
+        "value": "2.9411"
+      },
+      "cluster:20 | go1": {
+        "value": null
+      },
+      "cluster:20 | go2": {
+        "value": "2.2397999999999998"
+      },
+      "cluster:3 | go1": {
+        "value": "2.9759000000000002"
+      },
+      "cluster:3 | go2": {
+        "value": "10.3954"
+      },
+      "cluster:4 | go1": {
+        "value": "4.7519999999999998"
+      },
+      "cluster:4 | go2": {
+        "value": "2.9437000000000002"
+      },
+      "cluster:5 | go1": {
+        "value": "4.5067000000000004"
+      },
+      "cluster:5 | go2": {
+        "value": "2.395"
+      },
+      "cluster:6 | go1": {
+        "value": "1.4666999999999999"
+      },
+      "cluster:6 | go2": {
+        "value": "5.3525"
+      },
+      "cluster:7 | go1": {
+        "value": null
+      },
+      "cluster:7 | go2": {
+        "value": "1.9818"
+      },
+      "cluster:8 | go1": {
+        "value": null
+      },
+      "cluster:8 | go2": {
+        "value": "5.1094999999999997"
+      },
+      "cluster:9 | go1": {
+        "value": "1.5336000000000001"
+      },
+      "cluster:9 | go2": {
+        "value": "4.1024000000000003"
+      }
+    },
+    "terms:Pvalue": {
+      "1 | 1": {
+        "value": "4.3434155570158079"
+      },
+      "10 | 1": {
+        "value": "5.8442904492470831"
+      },
+      "100 | 1": {
+        "value": "7.781909495144439"
+      },
+      "101 | 2": {
+        "value": "3.5492938731960759"
+      },
+      "102 | 3": {
+        "value": "4.3406178560240027"
+      },
+      "103 | 1": {
+        "value": "4.2417507348939498"
+      },
+      "104 | 2": {
+        "value": "2.6030255763872012"
+      },
+      "105 | 3": {
+        "value": "2.1399299604650457"
+      },
+      "106 | 1": {
+        "value": "5.0530566378162973"
+      },
+      "107 | 2": {
+        "value": "16.692208154650775"
+      },
+      "108 | 3": {
+        "value": "5.7471035040451302"
+      },
+      "109 | 1": {
+        "value": "5.6497519781714978"
+      },
+      "11 | 2": {
+        "value": "5.2559008511132816"
+      },
+      "110 | 2": {
+        "value": "6.0457574764540691"
+      },
+      "111 | 3": {
+        "value": "4.199881175672429"
+      },
+      "112 | 1": {
+        "value": "2.3887024348674157"
+      },
+      "113 | 2": {
+        "value": "6.244125144327489"
+      },
+      "114 | 3": {
+        "value": "4.1872336602168145"
+      },
+      "115 | 1": {
+        "value": "5.0530566378162973"
+      },
+      "116 | 2": {
+        "value": "5.7471035040451302"
+      },
+      "117 | 3": {
+        "value": "2.6271910209881448"
+      },
+      "118 | 1": {
+        "value": "2.5686673073401205"
+      },
+      "119 | 2": {
+        "value": "4.2222925391395023"
+      },
+      "12 | 3": {
+        "value": "2.6090016465524064"
+      },
+      "120 | 3": {
+        "value": "4.0658724238603696"
+      },
+      "121 | 1": {
+        "value": "4.8824413781363347"
+      },
+      "122 | 2": {
+        "value": "4.7441411865349812"
+      },
+      "123 | 3": {
+        "value": "5.3223063118117917"
+      },
+      "124 | 1": {
+        "value": "5.0530566378162973"
+      },
+      "125 | 2": {
+        "value": "2.9366771579099891"
+      },
+      "126 | 3": {
+        "value": "4.2222925391395023"
+      },
+      "127 | 1": {
+        "value": "20.950831796234127"
+      },
+      "128 | 2": {
+        "value": "1.6024690026351263"
+      },
+      "129 | 3": {
+        "value": "16.692208154650775"
+      },
+      "13 | 1": {
+        "value": "1.8984120337595836"
+      },
+      "130 | 1": {
+        "value": "18.103782621636658"
+      },
+      "131 | 2": {
+        "value": "5.7471035040451302"
+      },
+      "132 | 3": {
+        "value": "5.6497519781714978"
+      },
+      "133 | 1": {
+        "value": "20.044536679615955"
+      },
+      "134 | 2": {
+        "value": "1.6567161779158404"
+      },
+      "135 | 3": {
+        "value": "2.3887024348674157"
+      },
+      "136 | 1": {
+        "value": "2.0918692095879967"
+      },
+      "137 | 2": {
+        "value": "20.375124152995866"
+      },
+      "138 | 3": {
+        "value": "1.666488603785093"
+      },
+      "139 | 1": {
+        "value": "3.0290086702062688"
+      },
+      "14 | 2": {
+        "value": "3.3617948676129439"
+      },
+      "140 | 2": {
+        "value": "2.6660244370037587"
+      },
+      "15 | 3": {
+        "value": "2.4794139388646537"
+      },
+      "16 | 1": {
+        "value": "5.0058290350218781"
+      },
+      "17 | 2": {
+        "value": "18.103782621636658"
+      },
+      "18 | 3": {
+        "value": "5.7471035040451302"
+      },
+      "19 | 1": {
+        "value": "5.6497519781714978"
+      },
+      "2 | 2": {
+        "value": "3.9931575677506057"
+      },
+      "20 | 2": {
+        "value": "6.0457574764540691"
+      },
+      "21 | 3": {
+        "value": "4.199881175672429"
+      },
+      "22 | 1": {
+        "value": "1.8774962236733035"
+      },
+      "23 | 2": {
+        "value": "2.0918692095879967"
+      },
+      "24 | 3": {
+        "value": "6.244125144327489"
+      },
+      "25 | 1": {
+        "value": "4.1872336602168145"
+      },
+      "26 | 2": {
+        "value": "5.0530566378162973"
+      },
+      "27 | 3": {
+        "value": "2.2946033305575209"
+      },
+      "28 | 1": {
+        "value": "5.7471035040451302"
+      },
+      "29 | 2": {
+        "value": "6.0457574764540691"
+      },
+      "3 | 3": {
+        "value": "1.7663635146321592"
+      },
+      "30 | 3": {
+        "value": "4.199881175672429"
+      },
+      "31 | 1": {
+        "value": "6.244125144327489"
+      },
+      "32 | 2": {
+        "value": "3.121736208758946"
+      },
+      "33 | 3": {
+        "value": "3.8412968298934231"
+      },
+      "34 | 1": {
+        "value": "16.692208154650775"
+      },
+      "35 | 2": {
+        "value": "5.7471035040451302"
+      },
+      "36 | 3": {
+        "value": "5.6497519781714978"
+      },
+      "37 | 1": {
+        "value": "6.0457574764540691"
+      },
+      "38 | 2": {
+        "value": "4.199881175672429"
+      },
+      "39 | 3": {
+        "value": "20.044536679615955"
+      },
+      "4 | 1": {
+        "value": "2.7222186865070097"
+      },
+      "40 | 1": {
+        "value": "2.6271910209881448"
+      },
+      "41 | 2": {
+        "value": "2.3887024348674157"
+      },
+      "42 | 3": {
+        "value": "2.5686673073401205"
+      },
+      "43 | 1": {
+        "value": "6.244125144327489"
+      },
+      "44 | 2": {
+        "value": "4.1872336602168145"
+      },
+      "45 | 3": {
+        "value": "20.375124152995866"
+      },
+      "46 | 1": {
+        "value": "5.0530566378162973"
+      },
+      "47 | 2": {
+        "value": "2.9366771579099891"
+      },
+      "48 | 3": {
+        "value": "3.0290086702062688"
+      },
+      "49 | 1": {
+        "value": "3.8500937303628597"
+      },
+      "5 | 2": {
+        "value": "3.9931575677506057"
+      },
+      "50 | 2": {
+        "value": "3.617460270203702"
+      },
+      "51 | 3": {
+        "value": "2.3112051888050775"
+      },
+      "52 | 1": {
+        "value": "3.106213811874841"
+      },
+      "53 | 2": {
+        "value": "3.7732809961112395"
+      },
+      "54 | 3": {
+        "value": "3.7894509223901744"
+      },
+      "55 | 1": {
+        "value": "3.2613866096565491"
+      },
+      "56 | 2": {
+        "value": "1.8345909188135361"
+      },
+      "57 | 3": {
+        "value": "4.7509010817363544"
+      },
+      "58 | 1": {
+        "value": "3.5521324783286876"
+      },
+      "59 | 2": {
+        "value": "4.7509010817363544"
+      },
+      "6 | 3": {
+        "value": "2.7150826894556475"
+      },
+      "60 | 3": {
+        "value": "5.0699691147204629"
+      },
+      "61 | 1": {
+        "value": "5.2746814106980136"
+      },
+      "62 | 2": {
+        "value": "1.8345909188135361"
+      },
+      "63 | 3": {
+        "value": "4.7509010817363544"
+      },
+      "64 | 1": {
+        "value": "3.5521324783286876"
+      },
+      "65 | 2": {
+        "value": "4.7509010817363544"
+      },
+      "66 | 3": {
+        "value": "5.1448592733860012"
+      },
+      "67 | 1": {
+        "value": "5.0928951250890258"
+      },
+      "68 | 2": {
+        "value": "5.0928951250890258"
+      },
+      "69 | 3": {
+        "value": "1.3843974239285588"
+      },
+      "7 | 1": {
+        "value": "5.2559008511132816"
+      },
+      "70 | 1": {
+        "value": "3.9183423803319104"
+      },
+      "71 | 2": {
+        "value": "3.5492938731960759"
+      },
+      "72 | 3": {
+        "value": "4.3406178560240027"
+      },
+      "73 | 1": {
+        "value": "1.6024690026351263"
+      },
+      "74 | 2": {
+        "value": "1.6567161779158404"
+      },
+      "75 | 3": {
+        "value": "7.4264634075966196"
+      },
+      "76 | 1": {
+        "value": "1.8345909188135361"
+      },
+      "77 | 2": {
+        "value": "4.7509010817363544"
+      },
+      "78 | 3": {
+        "value": "4.7509010817363544"
+      },
+      "79 | 1": {
+        "value": "1.666488603785093"
+      },
+      "8 | 2": {
+        "value": "5.0058290350218781"
+      },
+      "80 | 2": {
+        "value": "2.6660244370037587"
+      },
+      "81 | 3": {
+        "value": "5.7471035040451302"
+      },
+      "82 | 1": {
+        "value": "5.6497519781714978"
+      },
+      "83 | 2": {
+        "value": "4.199881175672429"
+      },
+      "84 | 3": {
+        "value": "7.0744277743279564"
+      },
+      "85 | 1": {
+        "value": "1.6088013830549397"
+      },
+      "86 | 2": {
+        "value": "2.6271910209881448"
+      },
+      "87 | 3": {
+        "value": "2.5686673073401205"
+      },
+      "88 | 1": {
+        "value": "4.0658724238603696"
+      },
+      "89 | 2": {
+        "value": "6.244125144327489"
+      },
+      "9 | 3": {
+        "value": "1.7663635146321592"
+      },
+      "90 | 3": {
+        "value": "4.1872336602168145"
+      },
+      "91 | 1": {
+        "value": "2.6030255763872012"
+      },
+      "92 | 2": {
+        "value": "1.8720566226233482"
+      },
+      "93 | 3": {
+        "value": "2.1399299604650457"
+      },
+      "94 | 1": {
+        "value": "2.0913970893877476"
+      },
+      "95 | 2": {
+        "value": "4.7441411865349812"
+      },
+      "96 | 3": {
+        "value": "5.0530566378162973"
+      },
+      "97 | 1": {
+        "value": "2.9366771579099891"
+      },
+      "98 | 2": {
+        "value": "3.9183423803319104"
+      },
+      "99 | 3": {
+        "value": "7.0744277743279564"
+      }
+    }
+  }
+}

@@ -8,7 +8,7 @@
 #   workspace_jobs_now, workspace_jobs_free_workers, workspace_jobs_future,
 #   workspace_jobs_cancel, workspace_jobs_pid_alive, workspace_cluster_compute,
 #   workspace_jobs_resolved, workspace_jobs_capability, workspace_jobs_authorized,
-#   workspace_job_queue_limit, workspace_job_session_queue_limit.
+#   workspace_job_queue_limit, workspace_session_queue_limit.
 # future::resolved itself is never mocked (promises polls it).
 #
 # Sessions are shiny::MockShinySession objects in one process; modules are mounted
@@ -303,7 +303,12 @@ ws6_session <- function(tag, probe = NULL, env = parent.frame()) {
     force(func)
     counted <- if (is.function(func)) function(...) {
       log$renders[[name]] <- (if (is.null(log$renders[[name]])) 0L else log$renders[[name]]) + 1L
-      value <- func(...)
+      # A failed render replaces the last good value, so a later assertion cannot read stale output.
+      log$values[[name]] <- structure(list(message = "render not completed"), class = "ws6_render_error")
+      value <- tryCatch(func(...), error = function(e) {
+        log$values[[name]] <- structure(list(message = conditionMessage(e)), class = "ws6_render_error")
+        stop(e)
+      })
       log$values[[name]] <- value
       value
     } else func
@@ -352,6 +357,7 @@ ws6_enables <- function(sess, id) {
 ws6_html <- function(sess, output) {
   sess$s$flushReact()
   value <- sess$log$values[[output]]
+  if (inherits(value, "ws6_render_error")) stop("render of ", output, " failed: ", value$message, call. = FALSE)
   if (is.list(value) && !is.null(value$html)) paste(as.character(value$html), collapse = "") else
     paste(as.character(value), collapse = "")
 }
@@ -380,7 +386,7 @@ ws6_mount <- function(sess, state, modules = "enrich", runner = NULL, jobs = NUL
                    u_big_degdf = state$u_big_degdf, u_rrnames = state$u_rrnames,
                    u_rrdfs = state$u_rrdfs, u_big_rrdf = state$u_big_rrdf)
       if (!is.null(runner)) args$enrichment_runner <- runner
-      do.call(richStudio:::enrichTabServer, args)
+      do.call(richStudio:::enrich_tab_server, args)
     }
     if ("cluster" %in% modules) {
       richStudio::clusterTabServer("cluster", u_degnames = state$u_degnames, u_degdfs = state$u_degdfs,
@@ -389,7 +395,7 @@ ws6_mount <- function(sess, state, modules = "enrich", runner = NULL, jobs = NUL
         u_cluslists = state$u_cluslists, clus_intermed = state$clus_intermed)
     }
     if ("upload" %in% modules) {
-      richStudio:::clusterUploadTabServer("cluster_upload", u_degnames = state$u_degnames,
+      richStudio:::cluster_upload_tab_server("cluster_upload", u_degnames = state$u_degnames,
         u_degdfs = state$u_degdfs, u_rrnames = state$u_rrnames, u_rrdfs = state$u_rrdfs,
         u_big_rrdf = state$u_big_rrdf, u_clusnames = state$u_clusnames, u_clusdfs = state$u_clusdfs,
         u_big_clusdf = state$u_big_clusdf, u_cluslists = state$u_cluslists)
@@ -554,8 +560,8 @@ ws6_data_only <- function(x) {
 
 ws6_accepts <- function(x) tryCatch(!isFALSE(richStudio:::workspace_run_record_validate(x)), error = function(e) FALSE)
 
-ws6_save <- function(sess, path, format) {
-  sess$s$setInputs("save-session_name" = "ws6", "save-save_format" = format)
+ws6_save <- function(sess, path) {
+  sess$s$setInputs("save-session_name" = "ws6")
   shiny::isolate(shiny::withReactiveDomain(sess$s, sess$log$download(path)))
   withr::defer(unlink(paste0(path, ".lock")), envir = parent.frame())
   invisible(path)
@@ -567,9 +573,8 @@ ws6_load <- function(sess, path, name = basename(path)) {
   sess$s$setInputs("save-load_session" = sess$log$load_n)
 }
 
-ws6_saved_records <- function(path, format) {
-  value <- if (format == "rds") readRDS(path)$run_records_json else
-    jsonlite::read_json(path, simplifyVector = TRUE)$run_records_json
+ws6_saved_records <- function(path) {
+  value <- jsonlite::read_json(path, simplifyVector = TRUE)$run_records_json
   richStudio:::workspace_run_records_parse(value)
 }
 
@@ -675,7 +680,7 @@ test_that("R2 REQ-001 REQ-002 duplicate clicks, policy refusal and reserved clus
   ws6_pid(dir, ws6_key("deg_c"), list(s3), own = own)
   # Check 3 (one queued job per session) runs before check 4; allow two queued
   # jobs so that the reserved name, not the queue bound, decides the refusal.
-  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_session_queue_limit = function(...) 2L, .package = "richStudio")
   ws6_cluster(s3, "rr1", "reserved")
   expect_identical(ws6_last(jobs3)$state, "queued")
   ws6_cluster(s3, "rr2", "reserved")
@@ -1111,8 +1116,8 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   kit <- ws6_latch_runner(dir)
   own <- ws6_workers(1L, dir = dir)
   payload <- ws_baseline_session()
-  valid <- withr::local_tempfile(fileext = ".rds")
-  saveRDS(payload, valid)
+  valid <- withr::local_tempfile(fileext = ".json")
+  richStudio:::session_json_write(payload, valid)
   s1 <- ws6_session("S1")
   ws6_close_wiring(s1)
   state <- ws6_add_deg(ws6_state(), "deg_a")
@@ -1120,7 +1125,7 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   ws6_run(s1, "deg_a")
   ws6_pid(dir, ws6_key("deg_a"), list(s1), own = own)
   enables <- ws6_enables(s1, "enrich-enrich_deg")
-  ws6_load(s1, valid, "valid.rds")
+  ws6_load(s1, valid, "valid.json")
   expect_identical(shiny::isolate(state$u_rrnames$labels), payload$rrnames)
   notes <- length(s1$log$notes)
   ws6_release(dir, ws6_key("deg_a"))
@@ -1135,16 +1140,16 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   expect_match(ws6_last(jobs)$note, "workspace replaced", fixed = TRUE)
   expect_identical(jobs$generation, 2L)
 
-  # A file rejected at save_tab.R:274-277 (no version) leaves the job valid.
-  invalid <- withr::local_tempfile(fileext = ".rds")
-  saveRDS(list(degnames = "x"), invalid)
+  # A file rejected for lacking a version leaves the job valid.
+  invalid <- withr::local_tempfile(fileext = ".json")
+  jsonlite::write_json(list(degnames = "x"), invalid, auto_unbox = TRUE)
   s2 <- ws6_session("S2")
   ws6_close_wiring(s2)
   state2 <- ws6_add_deg(ws6_state(), "deg_b")
   ws6_mount(s2, state2, modules = c("enrich", "save"), runner = kit$enrichment)
   ws6_run(s2, "deg_b")
   ws6_pid(dir, ws6_key("deg_b"), list(s2), own = own)
-  ws6_load(s2, invalid, "invalid.rds")
+  ws6_load(s2, invalid, "invalid.json")
   expect_identical(ws6_shown(s2, "Invalid session file format"), 1L)
   ws6_release(dir, ws6_key("deg_b"))
   expect_true(ws6_until(function() "deg_b_enriched" %in% shiny::isolate(names(state2$u_rrdfs)), list(s2)))
@@ -1156,13 +1161,11 @@ test_that("R10 AC-001 REQ-002 a session load during a run publishes nothing into
   s3 <- ws6_session("S3")
   state3 <- ws6_add_deg(ws6_state(), "deg_c")
   ws6_mount(s3, state3, modules = "save")
-  for (format in c("rds", "json")) {
-    saved <- withr::local_tempfile(fileext = paste0(".", format))
-    ws6_save(s3, saved, format)
-    fields <- if (format == "rds") names(readRDS(saved)) else names(jsonlite::read_json(saved))
-    expect_identical(fields, c("version", "created", "degnames", "degdfs", "rrnames", "rrdfs",
-                               "clusnames", "clusdfs", "cluslists"))
-  }
+  saved <- withr::local_tempfile(fileext = ".json")
+  ws6_save(s3, saved)
+  fields <- names(jsonlite::read_json(saved))
+  expect_identical(fields, c("version", "created", "degnames", "degdfs", "rrnames", "rrdfs",
+                             "clusnames", "clusdfs", "cluslists", "df_schema"))
   expect_null(s3$s$userData$workspace_jobs)
 })
 
@@ -1609,8 +1612,8 @@ test_that("R18 REQ-001 D2 the installed app installs the registry, panel and clo
   expect_true(nzchar(path))
   text <- paste(readLines(path, warn = FALSE), collapse = "\n")
   at <- function(pattern, fixed = TRUE) as.integer(regexpr(pattern, text, fixed = fixed))
-  module_calls <- c("workspace_navigation_server(", "enrichTabServer(", "rrVisTabServer(",
-                    "clusterUploadTabServer(", "clusterTabServer(", "clusVisTabServer(",
+  module_calls <- c("workspace_navigation_server(", "enrich_tab_server(", "rr_vis_tab_server(",
+                    "cluster_upload_tab_server(", "clusterTabServer(", "clus_vis_tab_server(",
                     "updateTabServer(", "saveTabServer(")
   first_module <- min(vapply(module_calls, function(p) { i <- at(p); if (i < 0L) .Machine$integer.max else i }, 1L))
   registry <- at("workspace_jobs_registry(")
@@ -1644,6 +1647,9 @@ ws6_three <- function(dir, kit, labels = c("deg_a", "deg_b", "deg_c"), env = par
   out
 }
 ws6_sessions <- function(x) lapply(x, `[[`, "sess")
+# Pass every session's registry, so a queued record whose queue entry was removed (a zombie)
+# is found as well as an entry whose record is missing.
+ws6_consistent <- function(x) richStudio:::workspace_job_queue_consistent(lapply(x, `[[`, "jobs"))
 
 test_that("R19 REQ-001 D3 FIFO across sessions with a live queue position", {
   withr::defer(richStudio:::workspace_job_queue_reset())
@@ -1722,9 +1728,9 @@ test_that("R21 REQ-001 a session without a running job still holds at most one q
   expect_identical(spy$factory, "S2")
 })
 
-test_that("R21b REQ-001 the per-session bound reads workspace_job_session_queue_limit()", {
+test_that("R21b REQ-001 the per-session bound reads workspace_session_queue_limit()", {
   withr::defer(richStudio:::workspace_job_queue_reset())
-  testthat::local_mocked_bindings(workspace_job_session_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_session_queue_limit = function(...) 2L, .package = "richStudio")
   dir <- withr::local_tempdir()
   kit <- ws6_latch_runner(dir)
   x <- ws6_three(dir, kit, labels = c("deg_a", "deg_b"))
@@ -1744,7 +1750,7 @@ test_that("R21b REQ-001 the per-session bound reads workspace_job_session_queue_
 
 test_that("R22 REQ-001 the process queue bound refuses with the queue length only", {
   withr::defer(richStudio:::workspace_job_queue_reset())
-  testthat::local_mocked_bindings(workspace_job_queue_limit = function() 2L, .package = "richStudio")
+  testthat::local_mocked_bindings(workspace_job_queue_limit = function(...) 2L, .package = "richStudio")
   dir <- withr::local_tempdir()
   kit <- ws6_latch_runner(dir)
   x <- ws6_three(dir, kit, labels = c("deg_a", "deg_b", "deg_c", "deg_d"))
@@ -1830,7 +1836,7 @@ ws6_r24_expect <- function(r, id2, button, stores2, s1_enables = 0L) {
   expect_gte(ws6_enables(x[[2]]$sess, button), 1L)
   expect_identical(ws6_enables(x[[1]]$sess, button), s1_enables)
   expect_identical(ws6_enables(x[[3]]$sess, button), 0L)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
 }
 
 # After the immediate sweep, S1's worker is released: S3 gets it, S2 never runs.
@@ -1866,14 +1872,14 @@ test_that("R24b REQ-002 AC-001 a queued job is superseded by a session load in i
   withr::defer(richStudio:::workspace_job_queue_reset())
   r <- ws6_r24(s2_modules = c("enrich", "save", "panel"))
   x <- r$x
-  valid <- withr::local_tempfile(fileext = ".rds")
-  saveRDS(ws_baseline_session(), valid)
+  valid <- withr::local_tempfile(fileext = ".json")
+  richStudio:::session_json_write(ws_baseline_session(), valid)
   ws6_run(x[[2]]$sess, "deg_2")
   id2 <- ws6_last(x[[2]]$jobs)$run_id
   ws6_run(x[[3]]$sess, "deg_3")
   id3 <- ws6_last(x[[3]]$jobs)$run_id
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "queued")
-  ws6_load(x[[2]]$sess, valid, "valid.rds")
+  ws6_load(x[[2]]$sess, valid, "valid.json")
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "superseded")
   expect_match(ws6_rec(x[[2]]$jobs, id2)$note, "workspace replaced", fixed = TRUE)
   stores2 <- ws6_snapshot(x[[2]]$state)
@@ -1927,7 +1933,7 @@ ws6_r25 <- function(interrupts, env = parent.frame()) {
   x[[2]]$sess$s$flushReact()
   expect_match(ws6_html(x[[3]]$sess, "jobs-jobs_status"), sprintf(ws6_msg$ahead, 0L), fixed = TRUE)
   expect_gte(ws6_enables(x[[2]]$sess, "enrich-enrich_deg"), 1L)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   ws6_release_all(dir)
 }
 
@@ -1956,7 +1962,7 @@ test_that("R26 REQ-002 closing a session drops its queued job", {
   id3 <- ws6_last(x[[3]]$jobs)$run_id
   x[[2]]$sess$s$close()
   expect_false(id2 %in% ws6_queue_ids())
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   ws6_release(dir, ws6_key("deg_a"))
   open <- ws6_sessions(x)[c(1, 3)]
   expect_true(ws6_until(function() identical(ws6_state_of(x[[3]]$jobs, id3), "running"), open))
@@ -2041,8 +2047,8 @@ test_that("R28 REQ-001 REQ-002 saved queued and running records reopen as interr
   ws6_run(src, "x3")
   states <- vapply(jobs_src$records, `[[`, character(1), "state")
   expect_identical(states, c("succeeded", "running", "queued"))
-  saved <- withr::local_tempfile(fileext = ".rds")
-  ws6_save(src, saved, "rds")
+  saved <- withr::local_tempfile(fileext = ".json")
+  ws6_save(src, saved)
 
   state_dst <- ws6_add_deg(ws6_state(), "live")
   ws6_mount(dst, state_dst, modules = c("enrich", "save", "panel"), runner = kit$enrichment, jobs = jobs_dst)
@@ -2050,14 +2056,14 @@ test_that("R28 REQ-001 REQ-002 saved queued and running records reopen as interr
   ws6_pid(dir, ws6_key("live"), list(dst), own = own)
   live <- ws6_last(jobs_dst)
   # The saved running record takes the live record's run id, forcing a collision.
-  payload <- readRDS(saved)
+  payload <- richStudio:::session_json_read(saved)
   records <- richStudio:::workspace_run_records_parse(payload$run_records_json)
   records[[2]]$run_id <- live$run_id
   payload$run_records_json <- richStudio:::workspace_run_records_json(records)
-  saveRDS(payload, saved)
+  richStudio:::session_json_write(payload, saved)
   queue <- length(ws6_queue()$entries)
   factory <- length(spy$factory)
-  ws6_load(dst, saved, "saved.rds")
+  ws6_load(dst, saved, "saved.json")
 
   expect_identical(ws6_rec(jobs_dst, live$run_id)$state, "running")
   expect_identical(ws6_rec(jobs_dst, live$run_id)$inputs, live$inputs)
@@ -2117,7 +2123,7 @@ ws6_internal_record <- function(jobs, run_id, kind, state, settings, inputs, out
        error_summary = NA_character_, stop_supported = FALSE)
 }
 
-test_that("R29 REQ-001 run records survive RDS and JSON saves losslessly", {
+test_that("R29 REQ-001 run records survive JSON saves losslessly", {
   withr::defer(richStudio:::workspace_job_queue_reset())
   latin1 <- "\xe9t\xe9"
   Encoding(latin1) <- "latin1"
@@ -2146,7 +2152,7 @@ test_that("R29 REQ-001 run records survive RDS and JSON saves losslessly", {
       list(species = "human", anntype = "KEGG", keytype = "ENTREZID", ontology = "", cutoff = 0.05, query = list()),
       list(input("deg", "b", 2L), input("deg", "c")), retry_of = "aaaaaaaaaaaa"))
 
-  for (format in c("rds", "json")) for (pick in list(1:6, 2L, integer())) {
+  for (format in "json") for (pick in list(1:6, 2L, integer())) {
     src <- ws6_session("SRC")
     jobs <- ws6_install(src)
     jobs$records <- build(jobs)[pick]
@@ -2161,8 +2167,8 @@ test_that("R29 REQ-001 run records survive RDS and JSON saves losslessly", {
       expect_identical(names(at_save[[1]]$settings), c("species", "anntype", "keytype", "ontology", "cutoff", "query"))
     }
     saved <- withr::local_tempfile(fileext = paste0(".", format))
-    ws6_save(src, saved, format)
-    loaded <- ws6_saved_records(saved, format)
+    ws6_save(src, saved)
+    loaded <- ws6_saved_records(saved)
     expect_length(loaded, length(pick))
     for (i in seq_along(pick)) expect_true(identical(loaded[[i]], at_save[[i]]), info = paste(format, i))
 
@@ -2209,7 +2215,7 @@ test_that("R30 REQ-002 AC-002 dispatch errors are contained to the entry that ra
   expect_false(x[[1]]$sess$s$isClosed())
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "failed")
   expect_identical(ws6_rec(x[[2]]$jobs, id2)$note, ws6_msg$could_not_start)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   expect_gte(ws6_enables(x[[2]]$sess, "enrich-enrich_deg"), 1L)
   # S1 gets only its own finally's re-enable; S3, still running, gets none.
   expect_identical(ws6_enables(x[[1]]$sess, "enrich-enrich_deg"), enables1 + 1L)
@@ -2247,7 +2253,7 @@ test_that("R30b REQ-002 AC-002 authorization, free-worker and policy errors at d
   x[[2]]$sess$s$elapse(600)
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "queued")
   expect_false(x[[2]]$sess$s$isClosed())
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   spy$free <- NULL
 
   # Policy load error at dispatch: the entry stays queued; its session is told once.
@@ -2258,7 +2264,7 @@ test_that("R30b REQ-002 AC-002 authorization, free-worker and policy errors at d
   x[[2]]$sess$s$elapse(600)
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "queued")
   expect_identical(ws6_shown(x[[2]]$sess, ws6_msg$policy_wait), 1L)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   expect_false(x[[1]]$sess$s$isClosed())
 
   # Authorization raises: the entry fails as Could not start; the next entry runs.
@@ -2270,7 +2276,7 @@ test_that("R30b REQ-002 AC-002 authorization, free-worker and policy errors at d
   ws6_own(own)
   expect_identical(ws6_state_of(x[[2]]$jobs, id2), "failed")
   expect_identical(ws6_rec(x[[2]]$jobs, id2)$note, ws6_msg$could_not_start)
-  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_true(ws6_consistent(x))
   expect_false(any(vapply(ws6_sessions(x), function(s) s$s$isClosed(), logical(1))))
   ws6_release_all(dir)
   ws6_until(function() !length(x[[3]]$jobs$in_flight), ws6_sessions(x))
@@ -2650,4 +2656,195 @@ test_that("R37 D14 the queue counter and a closed session's registry survive tha
     }
   })
   expect_identical(dispatch_errors, character())
+})
+
+# ---- WS-HOLD-CLEANUP: WS-006 review minors (F5-F10, F14, F15, O3) ----------------------
+
+test_that("R38 F5 the error summary redacts credentials, bearer tokens and Windows paths", {
+  summarise <- function(msg) richStudio:::workspace_jobs_error_summary(simpleError(msg))
+  expect_identical(summarise("login failed token=abc123 now"), "login failed token=<redacted> now")
+  expect_identical(summarise("password:hunter2"), "password=<redacted>")
+  expect_identical(summarise("sent token = abc"), "sent token=<redacted>")
+  expect_identical(summarise("Authorization: Bearer abc.def-1"), "Authorization: Bearer <redacted>")
+  expect_identical(summarise("cannot open C:\\Users\\me\\secret.txt"), "cannot open <path>")
+  expect_false(grepl("hunter2|abc.def", summarise("password:hunter2 Bearer abc.def")))
+  # Unchanged behaviour: POSIX paths with two or more segments, and ordinary text.
+  expect_identical(summarise("at /home/u/secret/file.R failed"), "at <path> failed")
+  expect_identical(summarise("object 'x' not found"), "object 'x' not found")
+})
+
+test_that("R39 F6 the queue consistency check finds a queued record whose queue entry was removed", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  reg <- new.env(parent = emptyenv())
+  reg$closed <- FALSE
+  reg$records <- list(list(run_id = "zombie", state = "queued"))
+  expect_true(richStudio:::workspace_job_queue_consistent())
+  expect_false(richStudio:::workspace_job_queue_consistent(list(reg)))
+})
+
+test_that("R40 F7 ws6_html does not return stale output after a render that errors", {
+  s1 <- ws6_session("S1")
+  broken <- shiny::reactiveVal(FALSE)
+  shiny::withReactiveDomain(s1$s, {
+    s1$s$output$probe <- shiny::renderText(if (broken()) stop("render failed") else "good")
+  })
+  expect_identical(ws6_html(s1, "probe"), "good")
+  broken(TRUE)
+  expect_error(ws6_html(s1, "probe"), "render failed", fixed = TRUE)
+})
+
+test_that("R41 F8 a running clustering record reserves its name under the production session bound", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  own <- ws6_workers(2L, dir = dir)
+  testthat::local_mocked_bindings(workspace_cluster_compute = kit$cluster, .package = "richStudio")
+  expect_identical(richStudio:::workspace_session_queue_limit(), 1L)
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_rr(ws6_state(), c("rr1", "rr2"))
+  ws6_mount(s1, state, modules = "cluster", jobs = jobs)
+  ws6_cluster(s1, "rr1", "reserved")
+  ws6_pid(dir, ws6_key("reserved"), list(s1), own = own)
+  expect_identical(ws6_last(jobs)$state, "running")
+  ws6_cluster(s1, "rr2", "reserved")
+  expect_identical(ws6_shown(s1, sprintf(ws6_msg$cluster_name, "reserved")), 1L)
+  expect_length(jobs$records, 1L)
+  expect_identical(ws6_claims(dir, "reserved"), 1L)
+})
+
+test_that("R42 F9 imported vector settings show their values without empty names", {
+  text <- richStudio:::workspace_jobs_settings_text
+  expect_identical(text(list(selected = list("r1", "r2"))), "selected: r1, r2")
+  expect_identical(text(list(params = list(k = 3, h = 0.5))), "params: k=3, h=0.5")
+  expect_identical(text(list(mixed = list(a = 1, 2))), "mixed: a=1, 2")
+  expect_identical(text(list(selected = c("r1", "r2"))), "selected: r1, r2")
+})
+
+test_that("R43 F10 UI builders call shinyjs and shinyWidgets only through their namespaces", {
+  bare_call <- function(fn) {
+    any(grepl("(^|[^:A-Za-z0-9_.])(useShinyjs|actionBttn)\\(", deparse(body(fn)), perl = TRUE))
+  }
+  expect_true(bare_call(function() useShinyjs()))
+  expect_false(bare_call(function() shinyjs::useShinyjs()))
+  for (fn in list(richStudio:::enrich_tab_ui, richStudio:::cluster_upload_tab_ui)) expect_false(bare_call(fn))
+  expect_no_error(richStudio:::enrich_tab_ui("x", "enrich"))
+})
+
+test_that("R44 F14 a dot-prefixed live cluster result still reserves its name", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  ws6_sequential()
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  ws6_release_all(dir)
+  testthat::local_mocked_bindings(workspace_cluster_compute = kit$cluster, .package = "richStudio")
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_rr(ws6_state(), "rr1")
+  shiny::isolate(state$u_clusdfs[[".d"]] <- data.frame(Term = "T1", Cluster = 1L))
+  ws6_mount(s1, state, modules = "cluster", jobs = jobs)
+  ws6_cluster(s1, "rr1", ".d")
+  expect_identical(ws6_shown(s1, sprintf(ws6_msg$cluster_name, ".d")), 1L)
+  expect_length(jobs$records, 0L)
+  expect_identical(ws6_claims(dir, ".d"), 0L)
+})
+
+test_that("R45 F15 a raise while removing the progress notification still releases the job", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  ws6_sequential()
+  testthat::local_mocked_bindings(removeNotification = function(...) stop("remove failed"), .package = "shiny")
+  s1 <- ws6_session("S1")
+  jobs <- ws6_install(s1)
+  state <- ws6_add_deg(ws6_state(), "deg_a")
+  runner <- function(deg_inputs, cutoff, species, anntype, keytype, ontology) {
+    lapply(deg_inputs, function(inp) ws6_publish_result(inp$name))
+  }
+  ws6_mount(s1, state, modules = c("enrich", "panel"), runner = runner, jobs = jobs)
+  enables <- ws6_enables(s1, "enrich-enrich_deg")
+  ws6_run(s1, "deg_a")
+  id <- ws6_last(jobs)$run_id
+  expect_true(ws6_until(function() identical(ws6_state_of(jobs, id), "succeeded"), list(s1), timeout = 10))
+  expect_true(ws6_until(function() ws6_enables(s1, "enrich-enrich_deg") > enables, list(s1), timeout = 10))
+  expect_null(jobs$handles[[id]]$future)
+  expect_identical(jobs$in_flight, character())
+})
+
+test_that("R46 O3 no package code tears down a module scope while the registry tracks only the root", {
+  dir <- file.path(testthat::test_path("..", ".."), "R")
+  testthat::skip_if_not(dir.exists(dir), "package sources are not available")
+  hits <- character()
+  for (file in list.files(dir, pattern = "[.]R$", full.names = TRUE)) {
+    lines <- readLines(file, warn = FALSE)
+    code <- lines[!grepl("^\\s*#", lines)]
+    if (any(grepl("[$]destroy\\(", code))) hits <- c(hits, basename(file))
+  }
+  expect_identical(hits, character())
+})
+
+test_that("R47 REQ-001 the queue bounds come from the injected policy loader", {
+  withr::defer(richStudio:::workspace_job_queue_reset())
+  loaded <- richStudio:::workspace_resource_policy()
+  loaded$limits$job_queue_session <- 2L
+  dir <- withr::local_tempdir()
+  kit <- ws6_latch_runner(dir)
+  x <- ws6_three(dir, kit, labels = c("deg_a", "deg_b"), policy_loader = function() loaded)
+  shiny::isolate(ws6_add_deg(x[[1]]$state, "deg_a_3"))
+  own <- ws6_workers(1L, dir = dir)
+  ws6_run(x[[2]]$sess, "deg_b")
+  ws6_pid(dir, ws6_key("deg_b"), ws6_sessions(x), own = own)
+  ws6_run(x[[1]]$sess, "deg_a")
+  ws6_run(x[[1]]$sess, "deg_a_2")
+  expect_identical(vapply(x[[1]]$jobs$records, `[[`, character(1), "state"), c("queued", "queued"))
+  ws6_run(x[[1]]$sess, "deg_a_3")
+  expect_identical(ws6_shown(x[[1]]$sess, ws6_msg$session_queue), 1L)
+  expect_length(x[[1]]$jobs$records, 2L)
+})
+
+# ---- SPEC-WS-013 M2 (AC-010): a missing package is an environment failure (N4) ----
+
+test_that("AC-010 a missing annotation package is classified and carries the complete command", {
+  classify <- richStudio:::workspace_jobs_environment_failure
+  env <- classify("Package 'org.Hs.eg.db' is required. Install it with: BiocManager::install('org.Hs.eg.db')")
+  expect_identical(env$package, "org.Hs.eg.db")
+  expect_identical(env$command, "BiocManager::install('org.Hs.eg.db')")
+  # no command in the message: one is built from the package name
+  expect_identical(classify("Package 'org.Mm.eg.db' is required.")$command,
+                   "BiocManager::install(\"org.Mm.eg.db\")")
+  expect_identical(classify("there is no package called 'foo'")$command, "install.packages(\"foo\")")
+  expect_null(classify("engine failed"))
+  expect_null(classify(NA_character_))
+  expect_null(classify(NULL))
+})
+
+test_that("AC-010 the error summary keeps the install line of a missing-package error", {
+  cond <- simpleError("Package 'org.Hs.eg.db' is required. Install it with:\n  BiocManager::install('org.Hs.eg.db')")
+  summary <- richStudio:::workspace_jobs_error_summary(cond)
+  expect_match(summary, "BiocManager::install('org.Hs.eg.db')", fixed = TRUE)
+  # other errors still keep only their first line
+  expect_identical(richStudio:::workspace_jobs_error_summary(simpleError("first\nsecond")), "first")
+})
+
+test_that("AC-010 Retry is not offered for an environment failure and is unchanged for others", {
+  jobs <- list(handles = list(abc = list(sources = list(1), launch = function() NULL)),
+               imported = character())
+  failed <- function(summary) list(run_id = "abc", state = "failed", error_summary = summary)
+  offered <- richStudio:::workspace_jobs_retry_offered
+  expect_false(offered(jobs, failed("Package 'org.Hs.eg.db' is required. Install it with: BiocManager::install('org.Hs.eg.db')")))
+  expect_true(offered(jobs, failed("engine failed")))
+  expect_true(offered(jobs, failed(NA_character_)))
+  expect_false(richStudio:::workspace_jobs_action_offered(jobs,
+    failed("Package 'x' is required."), "retry"))
+})
+
+test_that("AC-010 the failure message does not tell the user to use Retry and shows the command", {
+  text <- richStudio:::workspace_jobs_failure_text("Enrichment", "0123456789ab",
+    "Package 'org.Hs.eg.db' is required. Install it with: BiocManager::install('org.Hs.eg.db')")
+  expect_false(grepl("Retry", text, fixed = TRUE))
+  expect_match(text, "BiocManager::install('org.Hs.eg.db')", fixed = TRUE)
+  other <- richStudio:::workspace_jobs_failure_text("Enrichment", "0123456789ab", "engine failed")
+  expect_match(other, "use Retry in the job panel.", fixed = TRUE)
+  block <- as.character(richStudio:::workspace_jobs_environment_block(
+    richStudio:::workspace_jobs_environment_failure("Package 'org.Hs.eg.db' is required.")))
+  expect_match(block, "<code class=\"rs-job-command\">BiocManager::install(\"org.Hs.eg.db\")</code>", fixed = TRUE)
+  expect_match(block, "rs-copy", fixed = TRUE)
 })

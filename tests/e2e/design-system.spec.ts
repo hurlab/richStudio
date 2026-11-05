@@ -12,9 +12,9 @@ const sourceRoot = path.resolve(__dirname, '../..');
 const requireLocal = createRequire(__filename);
 const url = 'http://127.0.0.1:3872';
 const frozen = {
-  'R/workspace_components.R': 'f13e697ffcae12303cb0ff9aa159df9bf4f3284fb9272f366205de7744a8d9a1',
-  'inst/application/www/custom.css': '92fdf6e04d0660037165b958c3dccf181f1b2f3258f25156f46b328dedb29d5e',
-  'tests/testthat/test-workspace-components.R': 'a3c6ba91477caa5b2666c24c8e3b7dd93e02b0cc71fc3203e086f37bf5d66c42',
+  'R/workspace_components.R': '9af4994ffa7abc1ad70ff1f8bc57c7b6b8826163197db22b3fccd4fd20180b39',
+  'inst/application/www/custom.css': '78f3e3c1db3836106a4acd1a0cc7c72f3627a489653d32b21228b5b1b65585ee',
+  'tests/testthat/test-workspace-components.R': '7f1c2c41fa784b0f514027d614f5ec73aa62ee51c23f1a5febc6ca47ca68f908',
   'docs/design/workspace-design-system.md': '808b54610ab346c3037aaff2a9309baf24ab3a7d53862d9febea4a8f396d0ef0',
   'docs/design/workspace-screens.md': '448758fb68c9d005f6e69f18fc179a76d7ce35e705d8fcec3944705d4f9a527d',
   'docs/design/workspace-handoff.md': '086f3f8fa2b148f6807e9bf3e06d8e953f455e46e502337121eb08b418ebdd3c',
@@ -32,6 +32,8 @@ async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
 }
 
+// A pid that exits during a /proc scan reports ENOENT or ESRCH; either means it is not a member.
+function processGone(error: unknown) { return ['ENOENT', 'ESRCH'].includes((error as NodeJS.ErrnoException).code ?? ''); }
 type Identity = { pid: number; parent: number; group: number; start: string; state: string };
 async function identity(pid: number): Promise<Identity | undefined> {
   try {
@@ -39,7 +41,7 @@ async function identity(pid: number): Promise<Identity | undefined> {
     const fields = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
     return { pid, parent: Number(fields[1]), group: Number(fields[2]), start: fields[19], state: fields[0] };
   } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+    if (processGone(error)) return undefined;
     throw error;
   }
 }
@@ -62,9 +64,32 @@ async function profileProcesses(profile: string) {
     try {
       const args = (await fs.readFile(`/proc/${entry}/cmdline`, 'utf8')).split('\0');
       if (args.includes(`--user-data-dir=${profile}`)) found.push(...await descendants(record));
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    } catch (error) { if (!processGone(error)) throw error; }
   }
   return [...new Map(found.map(record => [record.pid, record])).values()];
+}
+// A zombie keeps its process group but its environ reads empty, and a process caught mid-exec can
+// read empty too; neither is a foreign joiner. Re-read before judging, and say what was seen.
+async function groupMemberOwned(record: Identity, marker: string): Promise<boolean> {
+  let seen: { state: string; environBytes?: number; readError?: string } | undefined;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const now = await identity(record.pid);
+    if (!now || now.start !== record.start || now.state === 'Z' || now.state === 'X') return false;
+    try {
+      const environment = await fs.readFile(`/proc/${record.pid}/environ`, 'utf8');
+      if (environment.split('\0').includes(marker)) return true;
+      seen = { state: now.state, environBytes: environment.length };
+    } catch (error) {
+      // A process that exits between the identity read and this read loses its mm: EACCES/ESRCH/ENOENT.
+      const code = (error as NodeJS.ErrnoException).code;
+      if (!['ENOENT', 'ESRCH', 'EACCES'].includes(code ?? '')) throw error;
+      seen = { state: now.state, readError: code };
+    }
+    await delay(20);
+  }
+  let cmdline = '';
+  try { cmdline = (await fs.readFile(`/proc/${record.pid}/cmdline`, 'utf8')).split('\0').join(' '); } catch { /* exited while reporting */ }
+  throw new Error(`Unknown process joined owned fixture group: ${JSON.stringify({ ...record, ...seen, cmdline })}`);
 }
 async function fixtureProcesses(owner: Identity, nonce: string) {
   const found: Identity[] = [];
@@ -72,10 +97,9 @@ async function fixtureProcesses(owner: Identity, nonce: string) {
     const record=await identity(Number(entry));
     if (!record || record.group !== owner.group) continue;
     try {
-      const environment=(await fs.readFile(`/proc/${entry}/environ`,'utf8')).split('\0');
-      if (!environment.includes(`WS_COMPONENT_NONCE=${nonce}`)) throw new Error('Unknown process joined owned fixture group');
+      if (!await groupMemberOwned(record, `WS_COMPONENT_NONCE=${nonce}`)) continue;
       found.push(record);
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    } catch (error) { if (!processGone(error)) throw error; }
   }
   return found;
 }
@@ -87,9 +111,9 @@ async function listeners(port: number, processes: Identity[]) {
     try {
       for (const fd of await fs.readdir(`/proc/${record.pid}/fd`)) {
         try { const link = await fs.readlink(`/proc/${record.pid}/fd/${fd}`); if (sockets.some(inode => `socket:[${inode}]` === link)) owners.push(record.pid); }
-        catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+        catch (error) { if (!processGone(error)) throw error; }
       }
-    } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+    } catch (error) { if (!processGone(error)) throw error; }
   }
   return { port, sockets, owners: [...new Set(owners)] };
 }
@@ -310,11 +334,27 @@ async function open(page: Page, component: { nonce: string }) {
 }
 const actionIds = ['a-act','b-act','a-update','a-unavailable','a-filled','a-open','a-change','a-remove'];
 const dialogKeys = ['a-confirm-cancel','a-confirm-confirm'];
+// page.screenshot({ fullPage: true }) under native browser zoom records only the top-left
+// CSS-sized quarter of the page. Page.getLayoutMetrics reports contentSize in device pixels
+// (CSS size times zoom), so a scale-1 clip of exactly that size records the whole document.
+async function fullPageScreenshot(page: Page) {
+  const cdp = await page.context().newCDPSession(page);
+  try {
+    const { contentSize } = await cdp.send('Page.getLayoutMetrics');
+    const clip = { x: 0, y: 0, width: contentSize.width, height: contentSize.height, scale: 1 };
+    const { data } = await cdp.send('Page.captureScreenshot', { format: 'png', captureBeyondViewport: true, clip });
+    const body = Buffer.from(data, 'base64');
+    return { body, width: body.readUInt32BE(16), height: body.readUInt32BE(20) };
+  } finally {
+    await cdp.detach();
+  }
+}
 async function layout(page: Page, info: TestInfo, name: string) {
   const bounds = await page.evaluate(() => {
     const region = document.querySelector<HTMLElement>('.rs-workspace-table-scroll')!;
     return { innerWidth, innerHeight, outerWidth, outerHeight, dpr: devicePixelRatio,
       visualScale: visualViewport?.scale, screenWidth: screen.width, screenHeight: screen.height, rootWidth: document.documentElement.scrollWidth,
+      rootHeight: document.documentElement.scrollHeight,
       region: { width: region.clientWidth, scroll: region.scrollWidth, label: region.getAttribute('aria-labelledby'), tab: region.tabIndex },
       inventory: [...document.querySelectorAll<HTMLButtonElement>('#fixture button')].map(button => button.id || 'a-confirm-'+button.value) };
   });
@@ -360,7 +400,12 @@ async function layout(page: Page, info: TestInfo, name: string) {
   await expect(dialog).not.toBeVisible(); await expect(page.locator('#applied')).toHaveText(String(applied+1));
   await expect(page.locator('#a-open')).toBeFocused(); await expect(page.locator('#a-open')).toBeInViewport();
   await attach(info,name,{...bounds,actions,keyboardReached:reached,dialogActions});
-  await info.attach(`${name}.png`, { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
+  // The PNG must hold the whole document in device pixels, which at native 200% zoom is twice its CSS size.
+  const shot = await fullPageScreenshot(page);
+  expect(Math.abs(shot.width - bounds.rootWidth * bounds.dpr), `${name} PNG width`).toBeLessThanOrEqual(2);
+  expect(Math.abs(shot.height - bounds.rootHeight * bounds.dpr), `${name} PNG height`).toBeLessThanOrEqual(2);
+  await attach(info,`${name}-capture`,{ pngWidth: shot.width, pngHeight: shot.height, dpr: bounds.dpr, rootWidth: bounds.rootWidth, rootHeight: bounds.rootHeight });
+  await info.attach(`${name}.png`, { body: shot.body, contentType: 'image/png' });
   return bounds;
 }
 
@@ -830,7 +875,9 @@ async function nativeZoom(component: Component, info: TestInfo) {
     } finally {
       await context?.close();
       const end=Date.now()+5000;
-      while ((await profileProcesses(profile)).length && Date.now()<end) await delay(25);
+      // Wait for both the profile-token processes and every observed identity (children carry no token).
+      const survivors = async () => (await profileProcesses(profile)).length > 0 || (await Promise.all(observed.map(same))).some(Boolean);
+      while (await survivors() && Date.now()<end) await delay(25);
       const remaining=await profileProcesses(profile);
       const observedRemaining=await Promise.all(observed.map(async record => ({...record,alive:await same(record)})));
       await attach(info,'zoom-cleanup',{ profile,remaining,observedRemaining });

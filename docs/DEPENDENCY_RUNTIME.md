@@ -1,12 +1,12 @@
 # Dependency runtime: SPEC-DEPENDENCY-001
 
-The migration targets official hurlab richR 0.1.5 and standalone richCluster 2.0.1. Installed consumer acceptance AC-001–AC-010 passed scoped verification under R 4.6.1. Independent consumer review returned PASS-WITH-DEBT; full-suite/overall-coverage/LSP gates and production execution remain unverified.
+The current pin is official hurlab richR 0.1.6 (commit `cd058a6105aa0427ec9fea9d63e26e007401a23f`, asset SHA256 `a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e`; 2026-11-05: 0.1.5 was the previous pin, `9be43abdae556d9f1df128149a70721f08ab7d25`). The original migration targeted official hurlab richR 0.1.5 and standalone richCluster 2.0.1. Installed consumer acceptance AC-001–AC-010 passed scoped verification under R 4.6.1. Independent consumer review returned PASS-WITH-DEBT; full-suite/overall-coverage/LSP gates and production execution remain unverified.
 
 ## Exact source identities
 
 | Package | Version | Repository | Commit | Source archive SHA256 |
 |---|---|---|---|---|
-| richR | 0.1.5 | hurlab/richR | `9be43abdae556d9f1df128149a70721f08ab7d25` | `0fdca054567c3e6c0ef51512a11ba755ea3694126aa42cbbb051fed3f1b69abf` |
+| richR | 0.1.6 | hurlab/richR | `cd058a6105aa0427ec9fea9d63e26e007401a23f` | `a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e` |
 | richCluster | 2.0.1 | hurlab/richCluster | `a0d1f630fbe64089ab38516116b78962672e6349` | `6abe64c1c156368afcd9fbec942fadf80848ba64c00dadeac6b2faff27b73c00` |
 | bioAnno | 0.99.45 | guokai8/bioAnno | `3c8936033b806b9f40c7028faa80e4971f6d0859` | `ddab5c458aee07253aedf26d137caeeb6e548538c1ef14f1d0cb27d4d1dc9da9` |
 
@@ -41,6 +41,19 @@ R CMD INSTALL --library=/tmp/richstudio-dependency-adoption-v015-lib-20261020 /a
 For the two GitHub commit archives, extract each into its own temporary directory and pass the extracted package-root directory (the directory containing DESCRIPTION) to the same `R CMD INSTALL --library=...` command. Do not treat a GitHub repository archive as interchangeable with an R-built source package. Archive download, extraction and identity checking must finish before installation.
 
 Install required dependencies into that task library first. Do not copy compiled packages between R versions. Source-archive installation can leave `RemoteSha` fields empty in the installed DESCRIPTION, so version/path output must be paired with verified archive hashes and installation logs; version equality alone does not prove origin. An initial failed attempt activated an ignored, worktree-local renv bootstrap; it was not evidence of a successful dependency installation or a full restore.
+
+## Local CI-matching R library
+
+Local runs must resolve the same package versions as CI and the live server (R 4.6.1, Bioconductor 3.23, Posit PPM noble binaries); a stale user library once passed tests on shiny 1.12 that broke on shiny 1.14. The dedicated library lives at `~/.local/share/richStudio/rlib-r46-ci`, outside git and outside `~/R`; override the location with `RICHSTUDIO_DEV_RLIB`.
+
+- `scripts/build-dev-rlib.sh` installs the full dependency closure of `DESCRIPTION` (plus the CI tools) into that library, then richR 0.1.5, bioAnno and richCluster from the pinned archives listed above. It aborts on any sha256 mismatch and only fills what is missing, so re-running is safe.
+- `scripts/dev-r.sh <command...>` runs a command with the library first on `R_LIBS_USER`/`R_LIBS`, `RENV_CONFIG_AUTOLOADER_ENABLED=FALSE`, and prints an identity line (R, shiny, later, richR) to stderr.
+
+```bash
+scripts/dev-r.sh Rscript --vanilla -e 'pkgload::load_all("."); testthat::test_file("tests/testthat/test-workspace-jobs.R")'
+```
+
+Tests that start worker processes (`test-dependency-integration.R`) need richStudio installed rather than `load_all`ed: `scripts/dev-r.sh R CMD INSTALL --no-docs --library=<temp-lib> .`, then put `<temp-lib>` ahead of the dev library in `R_LIBS_USER`/`R_LIBS` and run `testthat::test_file(..., package = "richStudio", load_package = "installed")`. The system site libraries stay on the search path behind the dev library; the identity line shows which library wins.
 
 ## Consumer compatibility policy
 
@@ -90,3 +103,13 @@ The development machine is the home computer. The measured target is Tailscale `
 Follow [the dependency deployment procedure](DEPENDENCY_DEPLOYMENT.md): prepare the shell script, independently review it and review the finished script again, then upload it over Tailscale. Only the user executes sudo. Provide the exact reviewed script path, sudo command and private server temporary log/exit-status paths after staging. Retrieve and inspect those files after execution before claiming deployment. No local deployment or agent-run sudo is authorized; the existing project deployment gates remain in force.
 
 Final [0.1.5 script safety review](../.moai/reports/SPEC-DEPENDENCY-001/deployment-audit-v015-final.md) returned **PASS** for exact script SHA256 `106a1d9b05f5302e94e188a3b50a0c82aed052303a3db89c17bb92a4d605cda5`, closing the obsolete-pin debt from round 3. Host permissions, R 4.5.2 execution, worker startup and real rollback remain unobserved. No upload or sudo execution has occurred at documentation preparation. Upload follows final documentation sync and push; script safety does not establish deployment.
+
+## Enrichment background (SPEC-WS-005)
+
+No richR release or pin change is needed: the installed public richR 0.1.5 forwards `universe` in `enrich`, `richGO` and `richKEGG`, and `tests/testthat/test-enrichment-background.R` reproduces an independent base-R `phyper` upper-tail oracle (fixture `tests/fixtures/workspace/universe-oracle.tsv`, tolerance 1e-12) for the generic, GO, KEGG and Reactome-via-`enrich` routes, in both the default and the explicit mode.
+
+- The default is the annotation universe (for GO, the requested ontology only). An explicit background is intersected with the annotation by richR, so it is labelled "measured and annotated", never the complete measured gene list.
+- Multiple-testing family: every term with at least one query gene, before the size and p-value reporting filters.
+- The custom-background control is offered only when `enrichment_background_capability()` passes (formals check plus a small replayed oracle); otherwise the control is hidden with the reason and the default route stays usable.
+- richR silently drops query genes outside the universe, so the application blocks such pairs itself and names the excluded genes.
+- Not exercised: `buildAnnot()` with real organism providers, KEGGM, `builtin = FALSE` KEGG, DAVID and GSEA.

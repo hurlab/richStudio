@@ -26,4 +26,16 @@
 ^scripts$
 ^\.moai$
 ^tests/e2e$
+^e2e$
 ^workspace-quality-artifacts$
+^logs$
+^app\.R$
+^DEPLOYMENT\.md$
+^INSTRUCTION\.md$
+^PROJECT_HANDOFF\.md$
+^PROJECT_LOG\.md$
+^SPEC-REFACTOR-001-IMPLEMENTATION-REPORT\.md$
+^STANDALONE\.md$
+^nginx-.*\.conf$
+^shiny-server-richstudio\.conf$
+^renv\.lock\.BACKUP$

@@ -26,11 +26,13 @@
 #'
 #' @export
 launch_richStudio <- function() {
-  appDir <- system.file("application", package = "richStudio")
-  if (appDir == "") {
-    stop("Could not find application. Try re-installing `richStudio`.",
-         call. = FALSE)
+  app_dir <- system.file("application", package = "richStudio")
+  if (app_dir == "") {
+    stop(
+      "Could not find application. Try re-installing `richStudio`.",
+      call. = FALSE
+    )
   }
 
-  shiny::runApp(appDir, display.mode = "normal")
+  shiny::runApp(app_dir, display.mode = "normal")
 }

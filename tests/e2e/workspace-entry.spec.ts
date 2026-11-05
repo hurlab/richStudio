@@ -8,11 +8,19 @@ import { createRequire } from 'node:module';
 const requireLocal = createRequire(__filename);
 
 const homeActions = [
-  { id: 'home-upload_gene_lists', label: 'Upload gene lists', tab: 'enrich_tab', landing: '#enrich-deg_files-label' },
+  { id: 'home-upload_gene_lists', label: 'Upload gene lists', tab: 'update_tab', landing: '#enrich-deg_files-label' },
   { id: 'home-import_results', label: 'Import enrichment results', tab: 'cluster_upload_tab', landing: '#cluster_upload-rr_files-label' },
-  { id: 'home-open_saved', label: 'Open saved analysis', tab: 'save_tab', landing: '#save-load_session' },
+  { id: 'home-open_saved', label: 'Open project', tab: 'update_tab', landing: '#save-load_project_file-label' },
   { id: 'home-load_demo', label: 'Load demo results', tab: 'rr_visualize_tab', landing: '#workspace-create_figure' },
 ] as const;
+
+// On a narrow viewport the context bar keeps its actions behind the Details toggle (SPEC-WS-013 M5).
+async function openContext(page: Page) {
+  const toggle = page.locator('.rs-context-toggle');
+  if ((page.viewportSize()?.width ?? 1280) >= 768) return;
+  await expect(toggle).toBeVisible();
+  if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click();
+}
 
 async function attach(info: TestInfo, name: string, value: unknown) {
   await info.attach(name, { body: JSON.stringify(value, null, 2), contentType: 'application/json' });
@@ -122,16 +130,16 @@ for (const action of homeActions) {
     await page.keyboard.press('Enter');
     await expectTab(page, action.tab);
     await expect(page.locator('#shiny-tab-home_tab')).toBeHidden();
+    if (action.id === 'home-load_demo') await openContext(page);
     await expect(page.locator(action.landing)).toBeVisible();
     if (action.id === 'home-open_saved') {
-      await expect(page.locator('#save-load_session_file-label')).toBeVisible();
+      await expect(page.locator('#save-load_project_file-label')).toBeVisible();
     }
     if (action.id === 'home-load_demo') {
       await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
     } else {
       // Demo data load only after the demo action.
-      await expect(page.locator('#workspace-summary')).toContainText('No dataset selected');
-      await expect(page.locator('#workspace-active_result option')).toHaveCount(1);
+      await expect(page.locator('#workspace-header')).toHaveCount(0);
     }
   });
 }
@@ -140,13 +148,13 @@ test('REQ-001 collapsed navigation reaches Home and Save/Load through relabelled
   if (info.project.name === 'chromium-narrow') {
     await expect(page.getByRole('button', { name: /Toggle navigation/ })).toBeVisible();
   }
-  await openRoute(page, 'save_tab', /Save\/Load/);
-  await expect(page.locator('#save-load_session')).toBeVisible();
+  await openRoute(page, 'save_tab', /Save/);
+  await expect(page.locator('#save-download_project')).toBeVisible();
   await openRoute(page, 'home_tab', /Home/);
   await expect(page.getByRole('heading', { name: 'Welcome to richStudio' })).toBeVisible();
   await expect(page.locator('#home-open_saved')).toBeVisible();
   await openSidebar(page);
-  await expect(page.locator('.sidebar-menu a[href="#shiny-tab-rr_visualize_tab"]')).toHaveText(/Enrichment figures/);
+  await expect(page.locator('.sidebar-menu a[href="#shiny-tab-rr_visualize_tab"]')).toHaveText(/Results/);
   await expect(page.locator('.sidebar-menu a[href="#shiny-tab-clus_visualize_tab"]')).toHaveText(/Cluster figures/);
   await closeNavigation(page);
 });
@@ -157,12 +165,8 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   const select = page.locator('#workspace-active_result');
   const summary = page.locator('#workspace-summary');
 
-  // S8r: nothing is selected before the demo action.
-  await expect(summary).toContainText('No dataset selected');
-  await expect(select).toHaveValue('');
-  await expect(page.locator('#workspace-active_result option:checked')).toHaveText('Choose a result');
-  await expect(page.locator('#workspace-create_figure')).toBeDisabled();
-  await expect(page.locator('#workspace-cluster_results')).toBeDisabled();
+  // No dataset controls render before results exist.
+  await expect(page.locator('#workspace-header')).toHaveCount(0);
 
   await page.locator('#home-load_demo').click();
   await expectTab(page, 'rr_visualize_tab');
@@ -182,20 +186,28 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
   await expect(summary).toContainText('kegg1');
 
   // AC-002: imported-only results reach an enrichment figure without analysis.
+  await openContext(page);
   await page.locator('#workspace-create_figure').click();
   await expectTab(page, 'rr_visualize_tab');
   await expect(page.locator('#rr_visualize-select_bar')).toHaveValue('kegg1');
   await expect(page.locator('#rr_visualize-select_dot')).toHaveValue('kegg1');
-  await page.locator('#shiny-tab-rr_visualize_tab a[data-toggle="tab"][data-value="Bar Plot"]').click();
+  await page.getByRole('radio', { name: 'Bar', exact: true }).check();
+  {
+    const toggle = page.locator('#shiny-tab-rr_visualize_tab label.rs-figure-toggle');
+    if (await toggle.isVisible() && !(await toggle.locator('input').isChecked())) await toggle.click();
+  }
+  // The figure's selectors sit in the collapsed Figure settings.
+  await page.locator('#shiny-tab-rr_visualize_tab details.rs-figure-settings').evaluate(d => { (d as HTMLDetailsElement).open = true; });
   await expect(page.locator('#rr_visualize-barplot .main-svg').first()).toBeVisible();
 
   // AC-003: valid settings survive a round trip through clustering.
   await chooseSelectize(page, 'rr_visualize-select_bar', 'go2');
   await chooseSelectize(page, 'rr_visualize-bar_type', 'value');
   await chooseSelectize(page, 'rr_visualize-bar_valtype', 'Pvalue');
+  await openContext(page);
   await page.locator('#workspace-cluster_results').click();
   await expectTab(page, 'cluster_tab');
-  await openRoute(page, 'rr_visualize_tab', /Enrichment figures/);
+  await openRoute(page, 'rr_visualize_tab', /Results/);
   const settings = {
     select_bar: await page.locator('#rr_visualize-select_bar').inputValue(),
     bar_type: await page.locator('#rr_visualize-bar_type').inputValue(),
@@ -208,11 +220,12 @@ test('REQ-002 REQ-003 REQ-004 AC-002 AC-003 S8r demo, dataset change, Create fig
 });
 
 test('REQ-001 REQ-003 M15 axe reports no violations on Home and on the populated header', async ({ page }, info) => {
-  await expect(page.locator('#workspace-summary')).toContainText('No dataset selected');
-  await axeScan(page, info, 'axe-home', ['#shiny-tab-home_tab', '#workspace-header']);
+  await expect(page.locator('#workspace-header')).toHaveCount(0);
+  await axeScan(page, info, 'axe-home', ['#shiny-tab-home_tab']);
   await page.locator('#home-load_demo').click();
   await expectTab(page, 'rr_visualize_tab');
   await expect(page.locator('#workspace-summary')).toContainText('go1');
+  await openContext(page);
   await expect(page.locator('#workspace-create_figure')).toBeEnabled();
   await axeScan(page, info, 'axe-header', ['#workspace-header']);
 });

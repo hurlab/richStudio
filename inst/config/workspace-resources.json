@@ -19,6 +19,8 @@
     "graph_nodes": 400,
     "graph_edges": 800,
     "workers": 1,
+    "job_queue_process": 8,
+    "job_queue_session": 1,
     "history_runs": 20,
     "temp_bytes": 269389676
   }

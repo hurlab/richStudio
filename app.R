@@ -3,7 +3,7 @@ if (file.exists("renv/activate.R")) {
   source("renv/activate.R")
 }
 
-# Make module functions (homeTabUI, etc.) available whether or not the package is installed.
+# Make module functions (home_tab_ui, etc.) available whether or not the package is installed.
 if (requireNamespace("richStudio", quietly = TRUE)) {
   library(richStudio)
 } else if (requireNamespace("devtools", quietly = TRUE)) {

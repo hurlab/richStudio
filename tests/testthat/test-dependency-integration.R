@@ -128,8 +128,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
   genes <- paste0("g", seq_len(20))
   parent <- dependency_richr_identity()
   cat("parent richR identity ", jsonlite::toJSON(parent, auto_unbox = TRUE), "\n", sep = "")
-  expect_identical(parent$namespace_version, "0.1.5")
-  expect_true(dependency_richr_origin(parent, parent$namespace_path, "0.1.5"))
+  expect_identical(parent$namespace_version, "0.1.6")
+  expect_true(dependency_richr_origin(parent, parent$namespace_path, "0.1.6"))
 
   # Register before creating anything. Nested worker cleanup runs before this.
   temporary <- tempfile("richr-origin-")
@@ -175,13 +175,13 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
     expect_identical(worker$namespace_version, expected_version)
     expect_identical(worker$package_version, expected_version)
     expect_identical(worker$namespace_path, if (label == "wrong-origin" || label == "wrong-version") copied_package else parent$namespace_path)
-    expect_identical(dependency_richr_origin(worker, parent$namespace_path, "0.1.5"), expected_origin)
+    expect_identical(dependency_richr_origin(worker, parent$namespace_path, "0.1.6"), expected_origin)
     if (label == "wrong-origin") {
-      expect_true(dependency_richr_origin(worker, copied_package, "0.1.5"))
+      expect_true(dependency_richr_origin(worker, copied_package, "0.1.6"))
     }
     # Version rejection is independent of origin: use the copy's own true path.
     if (label == "wrong-version") {
-      expect_false(dependency_richr_origin(worker, copied_package, "0.1.5"))
+      expect_false(dependency_richr_origin(worker, copied_package, "0.1.6"))
       expect_true(dependency_richr_origin(worker, copied_package, expected_version))
     }
     if (label == "valid-alias") {
@@ -199,8 +199,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
       })(), packages = "richR", seed = TRUE))
       cat("worker richR identity undeclared-library ", jsonlite::toJSON(unresolved, auto_unbox = TRUE), "\n", sep = "")
       expect_identical(unresolved$namespace_path, parent$namespace_path)
-      expect_identical(unresolved$namespace_version, "0.1.5")
-      expect_false(dependency_richr_origin(unresolved, parent$namespace_path, "0.1.5"))
+      expect_identical(unresolved$namespace_version, "0.1.6")
+      expect_false(dependency_richr_origin(unresolved, parent$namespace_path, "0.1.6"))
     }
     for (anntype in routes) {
       annotation <- dependency_annot_object(anntype, dependency_annotation_fixture(anntype, genes))
@@ -233,8 +233,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
         rrdfs = list(one = result), clusnames = character(),
         clusdfs = list(), cluslists = list()
       )
-      saved <- tempfile(fileext = ".rds", tmpdir = temporary)
-      saveRDS(legacy_session, saved)
+      saved <- tempfile(fileext = ".json", tmpdir = temporary)
+      richStudio:::session_json_write(legacy_session, saved)
       u_degnames <- shiny::reactiveValues(labels = character())
       u_degdfs <- shiny::reactiveValues()
       u_rrnames <- shiny::reactiveValues(labels = character())
@@ -253,7 +253,7 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
         {
           session$setInputs(
             load_session_file = list(
-              datapath = saved, name = "legacy.rds", size = file.info(saved)$size,
+              datapath = saved, name = "legacy.json", size = file.info(saved)$size,
               type = "application/octet-stream"
             ),
             load_session = 1
@@ -265,7 +265,7 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
     }
   }
   routes <- c("GO", "KEGG", "Reactome")
-  check_worker(parent$lib_paths, "ordinary", TRUE, "0.1.5", routes)
+  check_worker(parent$lib_paths, "ordinary", TRUE, "0.1.6", routes)
   # Preserve every other package and its precedence when replacing richR.
   other_libraries <- vapply(seq_along(parent$lib_paths), function(i) {
     library <- parent$lib_paths[[i]]
@@ -287,8 +287,8 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
     }
     projection
   }, character(1))
-  check_worker(c(alias, other_libraries), "valid-alias", TRUE, "0.1.5", routes)
-  check_worker(c(copied, other_libraries), "wrong-origin", FALSE, "0.1.5", "Reactome")
+  check_worker(c(alias, other_libraries), "valid-alias", TRUE, "0.1.6", routes)
+  check_worker(c(copied, other_libraries), "wrong-origin", FALSE, "0.1.6", "Reactome")
 
   # Synthetic metadata-only mismatch, not an upstream richR release. Keep the
   # supported >=0.1.5 API so the actual route reaches the identity comparison.
@@ -299,12 +299,12 @@ test_that("the worker future uses the installed richR dispatch and preserves sav
             startsWith(normalizePath(description), paste0(copied_package, "/")),
             startsWith(normalizePath(metadata), paste0(copied_package, "/")))
   dcf <- read.dcf(description)
-  dcf[1L, "Version"] <- "0.1.6"
+  dcf[1L, "Version"] <- "0.1.7"
   write.dcf(dcf, description)
   meta <- readRDS(metadata)
-  meta$DESCRIPTION["Version"] <- "0.1.6"
+  meta$DESCRIPTION["Version"] <- "0.1.7"
   saveRDS(meta, metadata)
-  check_worker(c(copied, other_libraries), "wrong-version", FALSE, "0.1.6", "Reactome")
+  check_worker(c(copied, other_libraries), "wrong-version", FALSE, "0.1.7", "Reactome")
 })
 
 test_that("standalone hierarchical clustering uses public paths and strict raw-Pvalue filtering", {
@@ -346,16 +346,16 @@ test_that("standalone hierarchical clustering uses public paths and strict raw-P
 })
 
 test_that("standalone richCluster availability requires the supported API version", {
-  expect_true(is_richCluster_available())
-  expect_false(is_richCluster_available(
+  expect_true(is_rich_cluster_available())
+  expect_false(is_rich_cluster_available(
     require_package = function(package, quietly) TRUE,
     package_version = function(package) package_version("1.0.2")
   ))
-  expect_true(is_richCluster_available(
+  expect_true(is_rich_cluster_available(
     require_package = function(package, quietly) TRUE,
     package_version = function(package) package_version("2.0.1")
   ))
-  expect_false(is_richCluster_available(
+  expect_false(is_rich_cluster_available(
     require_package = function(package, quietly) FALSE,
     package_version = function(package) stop("version should not be read")
   ))
@@ -590,7 +590,7 @@ test_that("enrichment observer publishes valid-empty results and rejects batches
     while (!predicate() && Sys.time() < deadline) later::run_now(timeoutSecs = 0.1)
     predicate()
   }
-  shiny::testServer(enrichTabServer, args = list(
+  shiny::testServer(enrich_tab_server, args = list(
     id = "enrich", u_degnames = deg_names, u_degdfs = deg_dfs, u_big_degdf = big_deg,
     u_rrnames = rr_names, u_rrdfs = rr_dfs, u_big_rrdf = big_rr,
     enrichment_runner = empty_runner
@@ -621,7 +621,7 @@ test_that("enrichment observer publishes valid-empty results and rejects batches
     }
     results
   }
-  shiny::testServer(enrichTabServer, args = list(
+  shiny::testServer(enrich_tab_server, args = list(
     id = "enrich", u_degnames = deg_names, u_degdfs = deg_dfs, u_big_degdf = big_deg,
     u_rrnames = rr_names, u_rrdfs = rr_dfs, u_big_rrdf = big_rr,
     enrichment_runner = failing_runner
@@ -655,7 +655,7 @@ test_that("session download handler writes an enrichment result that reloads", {
     download_capture$handler <- list(filename = filename, content = content)
     shiny::downloadHandler(filename = filename, content = content, ...)
   }
-  saved <- tempfile(fileext = ".rds")
+  saved <- tempfile(fileext = ".json")
 
   shiny::testServer(saveTabServer, args = list(
     id = "save", u_degnames = deg_names, u_degdfs = deg_dfs,
@@ -663,15 +663,15 @@ test_that("session download handler writes an enrichment result that reloads", {
     u_clusnames = clus_names, u_clusdfs = clus_dfs, u_cluslists = clus_lists,
     download_handler = download_factory
   ), {
-    session$setInputs(session_name = "dependency roundtrip", save_format = "rds")
-    expect_identical(download_capture$handler$filename(), "dependency roundtrip.rds")
+    session$setInputs(session_name = "dependency roundtrip")
+    expect_identical(download_capture$handler$filename(), "dependency roundtrip.json")
     download_capture$handler$content(saved)
   })
 
   expect_true(file.exists(saved))
-  session_data <- readRDS(saved)
+  session_data <- jsonlite::read_json(saved, simplifyVector = TRUE)
   expect_identical(session_data$version, "1.0")
-  expect_identical(session_data$rrdfs$deg1_enriched, produced)
+  expect_identical(session_data$rrnames, "deg1_enriched")
 
   loaded_rr_names <- shiny::reactiveValues(labels = character())
   loaded_rr_dfs <- shiny::reactiveValues()

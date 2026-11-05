@@ -137,6 +137,7 @@ test('REQ-001 REQ-002 DEG preview and commit are labelled separately and the car
   }
   await page.locator('#enrich-deg_files').setInputFiles(degList);
   await openRoute(page, 'enrich_tab');
+  await page.locator('#shiny-tab-enrich_tab details').evaluateAll(ds => ds.forEach(d => { (d as HTMLDetailsElement).open = true; }));
   await chooseSelectize(page, 'enrich-deg_table_select', 'review-genes.csv');
   await expect(page.getByText('Preview — not committed', { exact: true })).toBeVisible();
   await expect(page.locator('#enrich-review_preview_ui')).toContainText('padj < 0.05 (adjusted)');

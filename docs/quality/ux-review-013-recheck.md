@@ -443,6 +443,41 @@ M6 fixes (lead review of the first M6 commit)
 
 Not started.
 
+## M7 - Enrich progressive disclosure
+
+Decisions
+- Enrich is one column in three parts (Gene lists, Settings, Review and run). A top-sticky bar holds the Run control and a one-line summary (selected lists plus the settings in words) and comes first in the column, so it is on screen at every scroll position. On narrow screens `.wrapper` and `.content-wrapper` use `overflow: clip` (a clipping box, not a scroll container) so the sticky bar sticks to the viewport.
+- Gene lists: the list selector and one table (`files_table`) for gene lists and enrichment results together; a row drives the preview (it sets `deg_table_select` or `rr_table_select`) and a one-line plain preview. The two stacked boxes ("Uploaded files" and "View files") are gone from the page surface: rename and delete (`deg_list_table`, `rr_list_table`, `remove_deg`, `remove_rr`, the help buttons) and the stored-rows and export controls sit under Advanced.
+- Settings: a plain sentence list of the effective settings; the controls (species, annotation, gene ID type, ontology, default cutoff, background) are under Adjust, closed.
+- Review and run: a plain per-list review ("N genes will be submitted, keeping rows with ...; M rows are left out"); the 004 technical card, the preview controls, the committed-revision button, stored rows and exports are under Advanced, closed. The commit button reads "Use these settings"; the technical wording stays inside Advanced. No input id was removed; `review_commit`, `review_card`, `review_preview_ui`, `deg_table_select`, `rr_table_select` and the others keep their ids.
+- Species (F6, OD-5): the species recorded with the results made from the selected gene lists becomes the selection and the summary says "recorded with the gene lists"; with none recorded the summary shows the species the user chose ("your last choice"); with neither it shows "human (default)". Nothing is inferred from gene identifiers. `enrich_species_default` and `enrich_settings_summary` are pure functions.
+- REQ-016: the review functions (`review_resolve`, `review_snapshot_items`, `review_preview_card`) and the commit logic are unchanged; a testthat test compares the revision with `input-revision.json` (M0 golden).
+
+RED (run on ae016d0)
+- `scratchpad/m7/red-testthat.txt` (28 failures: three-part structure, closed disclosures, technical terms only in Advanced, species default, summary text) and `scratchpad/m7/red-e2e.txt` (AC-020 at both viewports and the AC-021 table test).
+
+Changed existing assertions (reason)
+- `compact-layout.spec.ts`: the tests open Adjust and Advanced (`openEnrichDisclosures`) before measuring or reading controls that now sit inside them; the primary-span measurement takes the Run control's container as `.box` or `.rs-run-bar` (the Run button no longer sits in a box). No threshold changed.
+- `input-review.spec.ts`: the DEG preview test opens Adjust and Advanced before choosing the preview list and reading the preview.
+- `ui-flows.spec.ts`: the AC-009 row counts open the Advanced disclosure that now holds the list of loaded sets.
+- `test-compact-layout.R` and the remaining testthat contracts were not changed: every Enrich id is still rendered once.
+
+Layout, measured with demo gene lists loaded and a finished clustering job (context bar and badge present)
+| | 1440x900 | 390x844 |
+|---|---|---|
+| scroll height before Adjust or Advanced (limit 1350 / 2110) | 995 | 1106 |
+| Run bar top at scroll 0, middle, bottom (limit 300 / 420) | 181, 133, 86 (page scrolls 95 px) | 218, 87, 50 |
+| horizontal overflow | none | none |
+| scroll height with Advanced open | 3385 | 6125 |
+
+`custom.css` digest re-pinned in `design-system.spec.ts`: before `91e8527e...` (value at ae016d0), after `749513df...`.
+
+Verification
+- Full testthat (CI library): `RESULT files 35 tests 4409 failed 0 errors 0 skipped 0` (the two `test-dependency-integration.R` environment errors did not occur in my runs).
+- Full browser gate via `scripts/test-workspace.sh browser`, fresh scratch `m7g`, render pre-step included, port 3871 checked free: `2 failed`, `170 passed (19.4m)`; the failures are `design-system.spec.ts:803` in both projects.
+- Note: the rename/stored-rows tables under Advanced render when the disclosure is opened (as the page did before, when hidden); keeping them live while hidden made the AC-009 row count stale in about half of the runs.
+- Screenshots in `scratchpad/m7-shots/` (1440x900 and 390x844): default without and with a finished job, scrolled to the middle and to the bottom, Adjust expanded, Advanced expanded.
+
 ## M8 - Results master-detail
 
 Not started.

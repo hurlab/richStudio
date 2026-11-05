@@ -291,6 +291,7 @@ test.describe('AC-009 gene-column validation', () => {
     const rows = () => page.locator('#enrich-deg_list_table tbody tr').filter({ hasNotText: 'No data available' });
     const expectRows = async (count: number) => {
       await showTab(page, 'enrich_tab');
+      await page.locator('#shiny-tab-enrich_tab details.rs-advanced').evaluate(d => { (d as HTMLDetailsElement).open = true; });
       await expect(rows()).toHaveCount(count);
       await showTab(page, 'update_tab');
     };
@@ -571,5 +572,29 @@ test.describe('M6 fixes', () => {
     await expect(done).toContainText(/\d+ clusters found with \d+ terms/);
     await expect(done).toContainText('clus1');
     await expect(done.getByText('View cluster figures', { exact: true })).toBeVisible();
+  });
+});
+
+// ---- M7: one table and the species default (AC-021) ----------------------------------------------
+
+test.describe('AC-021 Enrich table and species default', () => {
+  test('gene lists and results appear in one table whose row drives the preview, and the species summary says it is a default', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await connected(page);
+    await page.locator('#home-load_demo').click();
+    await expect(page.locator('#workspace-active_result')).toHaveValue('go1');
+    await showTab(page, 'update_tab');
+    await page.locator('#enrich-deg_load').click();
+    await showTab(page, 'enrich_tab');
+    const table = page.locator('#enrich-files_table');
+    await expect(table).toBeVisible();
+    await expect(table).toContainText('deg_mouse1');
+    await expect(table).toContainText('go1');
+    await table.locator('tbody tr', { hasText: 'deg_mouse2' }).click();
+    await expect(page.locator('#enrich-deg_table_select')).toHaveValue('deg_mouse2');
+    await table.locator('.paginate_button.next').click();
+    await table.locator('tbody tr', { hasText: 'kegg1' }).click();
+    await expect(page.locator('#enrich-rr_table_select')).toHaveValue('kegg1');
+    await expect(page.locator('#enrich-run_summary')).toContainText('Species: human (default)');
   });
 });

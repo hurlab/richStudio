@@ -1359,3 +1359,110 @@ test_that("AC-009 detection names a recognized column and never falls back to th
   expect_identical(none$columns, c("this.is.not", "other"))
   expect_identical(none$rows, 1L)
 })
+
+# ---- SPEC-WS-013 M7: Enrich progressive disclosure (AC-020, AC-021) ---------------------------
+
+ir7_html <- function(x) paste(as.character(x), collapse = "")
+ir7_ui <- function() {
+  compact_dep <- c("shinyjs", "shinyWidgets")
+  for (p in compact_dep) if (!paste0("package:", p) %in% search()) library(p, character.only = TRUE)
+  ir7_html(richStudio:::enrich_tab_ui("enrich", "enrich_tab", upload = FALSE))
+}
+
+test_that("AC-020 Enrich is one column in three parts with the run bar first, Adjust and Advanced as closed disclosures", {
+  html <- ir7_ui()
+  parts <- regmatches(html, gregexpr('class="rs-enrich-part"[^>]*data-part="[a-z]+"', html))[[1]]
+  expect_identical(sub('.*data-part="([a-z]+)"', "\\1", parts), c("genes", "settings", "review"))
+  for (heading in c("Gene lists", "Settings", "Review and run")) expect_match(html, heading, fixed = TRUE)
+  # the bar holds the summary and the Run control and comes before the first part
+  bar <- regmatches(html, regexpr('(?s)<div class="rs-run-bar".*?</div>\\s*</div>', html, perl = TRUE))
+  expect_length(bar, 1L)
+  expect_match(bar, 'id="enrich-enrich_deg"', fixed = TRUE)
+  expect_match(bar, 'id="enrich-run_summary"', fixed = TRUE)
+  expect_lt(regexpr("rs-run-bar", html, fixed = TRUE), regexpr('data-part="genes"', html, fixed = TRUE))
+  # Adjust holds the setting controls, Advanced the technical review; both closed
+  adjust <- regmatches(html, regexpr('(?s)<details class="rs-adjust"[^>]*>.*?</details>', html, perl = TRUE))
+  expect_length(adjust, 1L)
+  for (id in c("species_select", "anntype_select", "keytype_select", "ont_select", "deg_filter_cutoff")) {
+    expect_match(adjust, paste0('id="enrich-', id, '"'), fixed = TRUE)
+  }
+  advanced <- regmatches(html, regexpr('(?s)<details class="rs-advanced"[^>]*>.*?</details>\\s*</div>\\s*</div>', html, perl = TRUE))
+  expect_length(advanced, 1L)
+  for (id in c("review_commit", "review_card", "review_preview_ui", "review_p_role", "deg_table_select")) {
+    expect_match(advanced, paste0('id="enrich-', id, '"'), fixed = TRUE)
+  }
+  expect_false(grepl("<details[^>]* open", html))
+  expect_match(advanced, ">Use these settings<", fixed = TRUE)
+  # one table for gene lists and enrichment results
+  expect_identical(lengths(regmatches(html, gregexpr('id="enrich-files_table"', html, fixed = TRUE)))[[1]], 1L)
+})
+
+test_that("AC-020 the technical review terms are only inside Advanced", {
+  html <- ir7_html(richStudio:::enrich_tab_ui("enrich", "enrich_tab", upload = FALSE))
+  outside <- gsub('(?s)<details class="rs-advanced".*?</details>\\s*</div>\\s*</div>', "", html, perl = TRUE)
+  text <- gsub("[[:space:]]+", " ", gsub("<[^>]+>", " ", outside))
+  for (term in c("Commit input revision", "Source digest", "Stored rows", "P-value role", "Preview", "keytype")) {
+    expect_false(grepl(term, text, fixed = TRUE), info = term)
+  }
+})
+
+test_that("AC-021 the species default is the recorded species, else the session's last choice, else marked as a default", {
+  fn <- richStudio:::enrich_species_default
+  rec <- fn(recorded = "mouse", chosen = "rat")
+  expect_identical(c(rec$value, rec$source), c("mouse", "recorded"))
+  ch <- fn(recorded = character(), chosen = "rat")
+  expect_identical(c(ch$value, ch$source), c("rat", "chosen"))
+  df <- fn(recorded = c("?", NA), chosen = NULL)
+  expect_identical(c(df$value, df$source), c("human", "default"))
+  # two different recorded species are not a recorded default
+  expect_identical(fn(recorded = c("mouse", "human"), chosen = NULL)$source, "default")
+  summary <- richStudio:::enrich_settings_summary(list(species = rec, annotation = "GO", ontology = "BP",
+                                                       keytype = "SYMBOL", cutoff = 0.05))
+  expect_match(summary, "Species: mouse (recorded with the gene lists)", fixed = TRUE)
+  expect_match(richStudio:::enrich_settings_summary(list(species = df, annotation = "GO", ontology = "BP",
+                                                         keytype = "SYMBOL", cutoff = 0.05)),
+               "Species: human (default)", fixed = TRUE)
+  expect_match(richStudio:::enrich_settings_summary(list(species = ch, annotation = "GO", ontology = "BP",
+                                                         keytype = "SYMBOL", cutoff = 0.05)),
+               "Species: rat (your last choice)", fixed = TRUE)
+})
+
+test_that("AC-021 the review functions still produce the recorded input revision and snapshot (M0 golden)", {
+  as_json <- function(x) jsonlite::fromJSON(
+    jsonlite::toJSON(x, auto_unbox = TRUE, digits = I(17), na = "null", null = "null"), simplifyVector = FALSE)
+  golden <- jsonlite::fromJSON(ui_baseline_fixture_path("input-revision.json"), simplifyVector = FALSE)
+  expect_identical(as_json(ui_baseline_revision(ui_baseline_demo())), golden)
+})
+
+test_that("AC-021 the Enrich settings summary states the recorded species, the last choice, or a default", {
+  args <- ir_deg_upload_state()
+  html <- function(x) paste(x$html, collapse = "")
+  shiny::testServer(richStudio:::enrich_tab_server, args = args, {
+    shiny::isolate({
+      args$u_degnames$labels <- c("deg_a", "deg_b")
+      args$u_degdfs[["deg_a"]] <- data.frame(geneID = "g1")
+      args$u_degdfs[["deg_b"]] <- data.frame(geneID = "g2")
+      args$u_rrnames$labels <- "rr_a"
+      args$u_big_rrdf[["df"]] <- data.frame(name = "rr_a", from_deg = "deg_a", annot = "GO", keytype = "SYMBOL",
+                                            ontology = "BP", species = "mouse", stringsAsFactors = FALSE)
+    })
+    session$flushReact()
+    # neither recorded nor chosen: the existing default, marked
+    session$setInputs(degs_to_enrich = "deg_b")
+    session$flushReact()
+    expect_match(html(output$settings_summary), "Species: human (default)", fixed = TRUE)
+    expect_match(html(output$run_summary), "Species: human (default)", fixed = TRUE)
+    # recorded with the selected list: the default and the summary say so
+    session$setInputs(degs_to_enrich = "deg_a")
+    session$flushReact()
+    session$setInputs(species_select = "mouse")
+    session$flushReact()
+    expect_match(html(output$settings_summary), "Species: mouse (recorded with the gene lists)", fixed = TRUE)
+    # nothing recorded for another list, and a species chosen by the user
+    session$setInputs(degs_to_enrich = "deg_b")
+    session$flushReact()
+    session$setInputs(species_select = "rat")
+    session$flushReact()
+    expect_match(html(output$settings_summary), "Species: rat (your last choice)", fixed = TRUE)
+  })
+})

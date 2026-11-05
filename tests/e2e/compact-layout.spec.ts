@@ -41,10 +41,16 @@ async function tab(page: Page, name: string) {
   await page.evaluate(() => window.scrollTo(0, 0));
 }
 
+// Adjust and Advanced are closed by default (SPEC-WS-013 M7); these tests measure the controls inside them.
+async function openEnrichDisclosures(page: Page) {
+  await page.locator('#shiny-tab-enrich_tab details').evaluateAll(ds => ds.forEach(d => { (d as HTMLDetailsElement).open = true; }));
+}
+
 async function ready(page: Page) {
   await expect.poll(() => page.evaluate(() => !!(window as any).Shiny?.shinyapp?.isConnected())).toBe(true);
   await page.evaluate(() => document.fonts.ready);
   await tab(page, 'enrich_tab');
+  await openEnrichDisclosures(page);
   await expect(page.locator('#enrich-review_card')).toContainText('Select gene lists to review them before Run.');
 }
 
@@ -67,6 +73,7 @@ async function demo(page: Page) {
   await tab(page, 'update_tab');
   await page.locator('#enrich-deg_load').click();
   await tab(page, 'enrich_tab');
+  await openEnrichDisclosures(page);
   await expect(page.locator('#enrich-deg_list_table')).toContainText('deg_mouse1');
   await choose(page, 'enrich-deg_table_select', 'deg_mouse1');
   await choose(page, 'enrich-degs_to_enrich', 'deg_mouse1');
@@ -88,7 +95,7 @@ async function measure(page: Page) {
       return { x: b.x, y: b.y, right: b.right, bottom: b.bottom, width: b.width, height: b.height, docTop: b.top + scrollY, docBottom: b.bottom + scrollY };
     };
     const run = document.getElementById('enrich-enrich_deg')!;
-    const card = run.closest('.box')!;
+    const card = run.closest('.box, .rs-run-bar')!;
     const fields = names.map(name => {
       const input = document.getElementById(`enrich-${name}`)!;
       const group = input.closest('.shiny-input-container')!;

@@ -328,3 +328,41 @@ for (const vp of [{ width: 1440, height: 900, top: 300 }, { width: 390, height: 
     });
   });
 }
+
+// ---- M7: Enrich progressive disclosure (AC-020) -------------------------------------------------
+
+for (const vp of [{ width: 1440, height: 900, bar: 300, height_max: 1350 }, { width: 390, height: 844, bar: 420, height_max: 2110 }]) {
+  test.describe(`AC-020 Enrich at ${vp.width}x${vp.height}`, () => {
+    test('plain by default, the run bar stays near the top of the viewport at every scroll position, and the page is short', async ({ page }) => {
+      await page.setViewportSize({ width: vp.width, height: vp.height });
+      await populated(page);
+      await showTab(page, 'update_tab');
+      await page.locator('#enrich-deg_load').click();
+      await finishedClusterJob(page);
+      await showTab(page, 'enrich_tab');
+      await page.evaluate(() => window.scrollTo(0, 0));
+      for (const term of ['Commit input revision', 'Source digest', 'Stored rows', 'P-value role', 'Preview — not committed', 'keytype']) {
+        await expect(page.locator('#shiny-tab-enrich_tab').getByText(term).locator('visible=true'), `"${term}" is visible by default`).toHaveCount(0);
+      }
+      await expect(page.locator('#enrich-run_summary')).toBeVisible();
+      await expect(page.locator('#shiny-tab-enrich_tab .rs-adjust > summary')).toBeVisible();
+      await expect(page.locator('#shiny-tab-enrich_tab .rs-adjust > summary')).toContainText('Adjust');
+      expect(await page.locator('#shiny-tab-enrich_tab details[open]').count(), 'no disclosure open by default').toBe(0);
+      const height = await page.evaluate(() => document.documentElement.scrollHeight);
+      expect(height, 'scroll height before expanding Adjust or Advanced').toBeLessThanOrEqual(vp.height_max);
+      const widths = await page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
+      expect(widths[0], 'scrollWidth').toBeLessThanOrEqual(widths[1]);
+      const run = page.locator('#enrich-enrich_deg');
+      const bar = page.locator('#shiny-tab-enrich_tab .rs-run-bar');
+      const maxScroll = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+      for (const y of [0, Math.round(maxScroll / 2), maxScroll]) {
+        await page.evaluate(top => window.scrollTo(0, top), y);
+        await page.waitForTimeout(150);
+        const top = (await bar.boundingBox())!.y;
+        expect(top, `run bar top at scroll ${y}`).toBeLessThanOrEqual(vp.bar);
+        expect(top, `run bar top at scroll ${y}`).toBeGreaterThanOrEqual(0);
+        await expect(run, `Run in the viewport at scroll ${y}`).toBeInViewport();
+      }
+    });
+  });
+}

@@ -2341,3 +2341,87 @@ body:has(#shiny-tab-update_tab.active, #shiny-tab-enrich_tab.active, #shiny-tab-
 .rs-advanced[open] > summary::before {
   content: "\25BE";
 }
+
+/* --- SPEC-WS-013 M7: Enrich in three parts with a sticky Run bar --- */
+.rs-run-bar {
+  position: sticky;
+  top: 50px;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 0 0 8px;
+  padding: 6px 12px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow-sm);
+}
+.rs-run-bar .btn-action-hero {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.rs-run-bar-text {
+  flex: 1 1 240px;
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--rs-text-secondary-strong);
+}
+.rs-run-bar-text .shiny-html-output {
+  margin: 0;
+}
+.rs-enrich-part {
+  margin: 0 0 12px;
+  padding: 8px 12px 4px;
+  background: var(--rs-bg-card);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+}
+.rs-enrich-part > h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rs-primary-dark);
+}
+.rs-enrich-part .rs-settings-summary,
+.rs-enrich-part .rs-plain-preview {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+.rs-adjust,
+.rs-enrich-part .rs-advanced {
+  margin: 0 0 8px;
+}
+.rs-adjust > summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+  color: var(--rs-text);
+}
+.rs-adjust > summary::-webkit-details-marker {
+  display: none;
+}
+.rs-adjust > summary::before {
+  content: "\25B8";
+  font-size: 14px;
+}
+.rs-adjust[open] > summary::before {
+  content: "\25BE";
+}
+.rs-review-plain p {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+/* A clipping box (not a scroll container) keeps the Run bar sticky to the viewport on narrow screens. */
+@media (max-width: 767px) {
+  .wrapper,
+  body.skin-blue .wrapper .content-wrapper {
+    overflow: clip !important;
+  }
+}

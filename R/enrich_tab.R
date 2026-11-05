@@ -57,6 +57,52 @@ enrich_upload_box_ui <- function(ns) {
   )
 }
 
+# Plain-language species default (SPEC-WS-013 F6, OD-5): the species recorded with the results made
+# from the selected gene lists, else the species the user chose earlier in the session, else the
+# existing default, marked as a default. No species is inferred from gene identifiers.
+enrich_species_default <- function(recorded = character(), chosen = NULL) {
+  recorded <- unique(as.character(recorded))
+  recorded <- recorded[!is.na(recorded) & !recorded %in% c("", "?", "NULL", "NA")]
+  if (length(recorded) == 1L) {
+    return(list(value = recorded, source = "recorded"))
+  }
+  chosen <- as.character(chosen)
+  if (length(chosen) == 1L && !is.na(chosen) && nzchar(chosen)) {
+    return(list(value = chosen, source = "chosen"))
+  }
+  list(value = "human", source = "default")
+}
+
+enrich_species_note <- function(source) {
+  switch(
+    source,
+    recorded = "recorded with the gene lists",
+    chosen = "your last choice",
+    "default"
+  )
+}
+
+# The settings in one plain sentence list; `s` holds the effective species (value and source),
+# annotation, ontology, gene ID type and cutoff.
+enrich_settings_summary <- function(s) {
+  cutoff <- if (is.null(s$cutoff) || is.na(s$cutoff)) 0.05 else s$cutoff
+  paste0(
+    "Species: ",
+    s$species$value,
+    " (",
+    enrich_species_note(s$species$source),
+    "). Annotation: ",
+    s$annotation,
+    ". Ontology: ",
+    s$ontology,
+    ". Gene ID type: ",
+    s$keytype,
+    ". Cutoff: ",
+    format(cutoff),
+    "."
+  )
+}
+
 enrich_tab_ui <- function(id, tabName, upload = TRUE) {
   ns <- NS(id)
   htmltools::tagAppendAttributes(
@@ -69,17 +115,39 @@ enrich_tab_ui <- function(id, tabName, upload = TRUE) {
         },
         column(
           width = if (upload) 8 else 12,
-          box(
-            title = "Enrich",
-            status = "primary",
-            solidHeader = TRUE,
-            width = NULL,
+          # The Run control and a one-line summary stay at the top of the column while scrolling.
+          tags$div(
+            class = "rs-run-bar",
+            actionButton(
+              ns("enrich_deg"),
+              "Run Enrichment",
+              icon = icon("play"),
+              class = "btn-action-hero"
+            ),
+            tags$div(class = "rs-run-bar-text", uiOutput(ns("run_summary")))
+          ),
+          tags$div(
+            class = "rs-enrich-part",
+            `data-part` = "genes",
+            h3("Gene lists"),
             selectInput(
               ns("degs_to_enrich"),
               "Select DEG sets to enrich",
               choices = NULL,
               multiple = TRUE
             ),
+            helpText("Click a row to look at that list or result."),
+            DT::DTOutput(ns("files_table")),
+            uiOutput(ns("plain_preview"))
+          ),
+          tags$div(
+            class = "rs-enrich-part",
+            `data-part` = "settings",
+            h3("Settings"),
+            uiOutput(ns("settings_summary")),
+            tags$details(
+              class = "rs-adjust",
+              tags$summary("Adjust"),
             tags$div(
               class = "rs-compact-fields",
               selectInput(
@@ -151,31 +219,123 @@ enrich_tab_ui <- function(id, tabName, upload = TRUE) {
                 selected = "human"
               )
             ),
-            uiOutput(ns("background_ui")),
-            uiOutput(ns("background_review")),
-            h4("Review before Run"),
-            tags$div(class = "rs-compact-review", uiOutput(ns("review_card"))),
-            uiOutput(ns("review_messages")),
-            numericInput(
-              ns("deg_filter_cutoff"),
-              paste0(
-                "Default cutoff (used for gene lists without a ",
-                "committed revision)"
-              ),
-              value = NULL
-            ),
-            actionButton(
-              ns("enrich_deg"),
-              "Run Enrichment",
-              icon = icon("play"),
-              class = "btn-action-hero btn-block"
+              uiOutput(ns("background_ui")),
+              uiOutput(ns("background_review")),
+              numericInput(
+                ns("deg_filter_cutoff"),
+                paste0(
+                  "Default cutoff (used for gene lists without a ",
+                  "committed revision)"
+                ),
+                value = NULL
+              )
             )
-          )
-        )
-      ),
-      fluidRow(
-        column(
-          width = 12,
+          ),
+          tags$div(
+            class = "rs-enrich-part",
+            `data-part` = "review",
+            h3("Review and run"),
+            uiOutput(ns("review_plain")),
+            uiOutput(ns("review_messages")),
+            tags$details(
+              class = "rs-advanced",
+              tags$summary("Advanced: technical review and stored data"),
+              h4("Review before Run"),
+              tags$div(class = "rs-compact-review", uiOutput(ns("review_card"))),
+              h4("Preprocess data"),
+              selectInput(
+                ns("deg_table_select"),
+                "Select DEG set",
+                choices = NULL
+              ),
+              tags$div(
+                class = "review-preview",
+                h4("Preview \u2014 not committed"),
+                fluidRow(
+                  column(
+                    6,
+                    selectInput(
+                      ns("review_gene_col"),
+                      "Gene column",
+                      choices = c("Default (GeneID header)" = "__default__")
+                    )
+                  ),
+                  column(
+                    6,
+                    selectInput(
+                      ns("review_p_col"),
+                      "P-value column",
+                      choices = c(
+                        "Default (current rule)" = "__default__",
+                        "None \u2014 all rows" = "__none__"
+                      )
+                    )
+                  )
+                ),
+                fluidRow(
+                  column(
+                    6,
+                    selectInput(
+                      ns("review_p_role"),
+                      "P-value role",
+                      choices = c("Adjusted" = "adjusted", "Raw" = "raw")
+                    )
+                  ),
+                  column(
+                    6,
+                    numericInput(
+                      ns("review_cutoff"),
+                      "Preview cutoff",
+                      value = 0.05,
+                      min = 0,
+                      max = 1,
+                      step = 0.01
+                    )
+                  )
+                ),
+                uiOutput(ns("review_preview_ui")),
+                actionButton(ns("review_commit"), "Use these settings"),
+                helpText(
+                  "Use these settings records the preview as a committed input revision (Commit input revision)."
+                )
+              ),
+              br(),
+              h4("Stored rows"),
+              DT::dataTableOutput(ns("deg_table")),
+              br(),
+              hr(),
+              h4("Export data"),
+              selectInput(
+                ns("deg_export_type"),
+                "Export as",
+                choices = c(".txt", ".csv", ".tsv")
+              ),
+              downloadButton(ns("download_deg"), "Download"),
+              hr(),
+              h4("Enrichment results"),
+              fluidRow(
+                column(
+                  4,
+                  selectInput(
+                    ns("rr_table_select"),
+                    "Select enrichment result",
+                    choices = NULL
+                  ),
+                ),
+                column(
+                  4,
+                  selectInput(
+                    ns("rr_export_type"),
+                    "Export as",
+                    choices = c(".txt", ".csv", ".tsv")
+                  )
+                )
+              ),
+              downloadButton(ns("download_rr"), "Download"),
+              br(),
+              br(),
+              br(),
+              DT::dataTableOutput(ns("rr_table")),
           shinyjs::hidden(tags$div(
             id = ns("list_box"),
             tabBox(
@@ -233,103 +393,7 @@ enrich_tab_ui <- function(id, tabName, upload = TRUE) {
               )
             )
           )),
-          tabBox(
-            title = "View files",
-            width = NULL,
-            tabPanel(
-              title = "DEG sets",
-              h4("Preprocess data"),
-              selectInput(
-                ns("deg_table_select"),
-                "Select DEG set",
-                choices = NULL
-              ),
-              tags$div(
-                class = "review-preview",
-                h4("Preview \u2014 not committed"),
-                fluidRow(
-                  column(
-                    6,
-                    selectInput(
-                      ns("review_gene_col"),
-                      "Gene column",
-                      choices = c("Default (GeneID header)" = "__default__")
-                    )
-                  ),
-                  column(
-                    6,
-                    selectInput(
-                      ns("review_p_col"),
-                      "P-value column",
-                      choices = c(
-                        "Default (current rule)" = "__default__",
-                        "None \u2014 all rows" = "__none__"
-                      )
-                    )
-                  )
-                ),
-                fluidRow(
-                  column(
-                    6,
-                    selectInput(
-                      ns("review_p_role"),
-                      "P-value role",
-                      choices = c("Adjusted" = "adjusted", "Raw" = "raw")
-                    )
-                  ),
-                  column(
-                    6,
-                    numericInput(
-                      ns("review_cutoff"),
-                      "Preview cutoff",
-                      value = 0.05,
-                      min = 0,
-                      max = 1,
-                      step = 0.01
-                    )
-                  )
-                ),
-                uiOutput(ns("review_preview_ui")),
-                actionButton(ns("review_commit"), "Commit input revision")
-              ),
-              br(),
-              h4("Stored rows"),
-              DT::dataTableOutput(ns("deg_table")),
-              br(),
-              hr(),
-              h4("Export data"),
-              selectInput(
-                ns("deg_export_type"),
-                "Export as",
-                choices = c(".txt", ".csv", ".tsv")
-              ),
-              downloadButton(ns("download_deg"), "Download")
-            ),
-            tabPanel(
-              title = "Enrichment results",
-              fluidRow(
-                column(
-                  4,
-                  selectInput(
-                    ns("rr_table_select"),
-                    "Select enrichment result",
-                    choices = NULL
-                  ),
-                ),
-                column(
-                  4,
-                  selectInput(
-                    ns("rr_export_type"),
-                    "Export as",
-                    choices = c(".txt", ".csv", ".tsv")
-                  )
-                )
-              ),
-              downloadButton(ns("download_rr"), "Download"),
-              br(),
-              br(),
-              br(),
-              DT::dataTableOutput(ns("rr_table"))
+
             )
           )
         )
@@ -923,6 +987,205 @@ enrich_tab_server <- function(
       }
     })
 
+    # ---- progressive disclosure (SPEC-WS-013 M7) ----------------------------------
+    # The technical review above sits under Advanced; these outputs give the plain
+    # version, and none of them changes a recorded revision or snapshot.
+    species_chosen <- shiny::reactiveVal(NULL)
+    species_sent <- new.env(parent = emptyenv())
+    species_sent$value <- NULL
+    observeEvent(
+      input$species_select,
+      {
+        value <- input$species_select
+        if (!is.null(species_sent$value) && identical(value, species_sent$value)) {
+          species_sent$value <- NULL
+          return()
+        }
+        species_chosen(value)
+      },
+      ignoreInit = TRUE
+    )
+    recorded_species <- reactive({
+      selected <- input$degs_to_enrich
+      big <- u_big_rrdf[["df"]]
+      if (
+        !length(selected) ||
+          !is.data.frame(big) ||
+          !all(c("from_deg", "species") %in% names(big))
+      ) {
+        return(character())
+      }
+      as.character(big$species[big$from_deg %in% selected])
+    })
+    # The recorded species becomes the selection; with none recorded the selection stays what
+    # the user chose (or the default).
+    observe({
+      default <- enrich_species_default(recorded_species(), NULL)
+      if (identical(default$source, "recorded")) {
+        shiny::isolate({
+          if (!identical(input$species_select, default$value)) {
+            species_sent$value <- default$value
+            updateSelectInput(
+              session = shiny::getDefaultReactiveDomain(),
+              "species_select",
+              selected = default$value
+            )
+          }
+        })
+      }
+    })
+    species_summary <- reactive({
+      current <- input$species_select
+      if (is.null(current) || !nzchar(current)) {
+        current <- "human"
+      }
+      recorded <- enrich_species_default(recorded_species(), NULL)
+      source <- if (identical(recorded$source, "recorded") && identical(current, recorded$value)) {
+        "recorded"
+      } else if (!is.null(species_chosen())) {
+        "chosen"
+      } else {
+        "default"
+      }
+      list(value = current, source = source)
+    })
+    settings_text <- reactive(enrich_settings_summary(list(
+      species = species_summary(),
+      annotation = input$anntype_select %||% "GO",
+      ontology = input$ont_select %||% "BP",
+      keytype = input$keytype_select %||% "SYMBOL",
+      cutoff = review_cutoff_value(input$deg_filter_cutoff)
+    )))
+    output$settings_summary <- renderUI(tags$p(class = "rs-settings-summary", settings_text()))
+    output$run_summary <- renderUI({
+      selected <- input$degs_to_enrich
+      lead <- if (length(selected)) {
+        paste0("Run on ", paste(selected, collapse = ", "), ".")
+      } else {
+        "Select gene lists to run."
+      }
+      tags$span(lead, " ", settings_text())
+    })
+
+    # One table for gene lists and enrichment results; a row drives the preview.
+    files_rows <- reactive({
+      deg <- as.character(u_degnames$labels)
+      rr <- as.character(u_rrnames$labels)
+      data.frame(
+        Name = c(deg, rr),
+        Type = c(rep("Gene list", length(deg)), rep("Enrichment result", length(rr))),
+        Size = c(
+          vapply(deg, function(n) {
+            d <- u_degdfs[[n]]
+            if (is.data.frame(d)) paste(nrow(d), "rows") else ""
+          }, character(1)),
+          vapply(rr, function(n) {
+            d <- u_rrdfs[[n]]
+            if (is.data.frame(d)) paste(nrow(d), "terms") else ""
+          }, character(1))
+        ),
+        stringsAsFactors = FALSE,
+        row.names = NULL
+      )
+    })
+    output$files_table <- DT::renderDT(
+      files_rows(),
+      selection = "single",
+      rownames = FALSE,
+      options = list(dom = "tp", pageLength = 5, ordering = FALSE)
+    )
+    observeEvent(input$files_table_rows_selected, {
+      rows <- files_rows()
+      row <- input$files_table_rows_selected
+      if (!length(row) || row > nrow(rows)) {
+        return()
+      }
+      if (identical(rows$Type[[row]], "Gene list")) {
+        updateSelectInput(
+          session = shiny::getDefaultReactiveDomain(),
+          "deg_table_select",
+          selected = rows$Name[[row]]
+        )
+      } else {
+        updateSelectInput(
+          session = shiny::getDefaultReactiveDomain(),
+          "rr_table_select",
+          selected = rows$Name[[row]]
+        )
+      }
+    })
+    output$plain_preview <- renderUI({
+      rows <- files_rows()
+      row <- input$files_table_rows_selected
+      if (!length(row) || row > nrow(rows)) {
+        return(NULL)
+      }
+      name <- rows$Name[[row]]
+      line <- paste0(name, ": ", tolower(rows$Type[[row]]), ", ", rows$Size[[row]], ".")
+      if (identical(rows$Type[[row]], "Gene list")) {
+        snapshot <- review_card_entry_snapshot(name)
+        if (isTRUE(snapshot$ok)) {
+          line <- paste0(
+            line,
+            " With the current rule ",
+            snapshot$counts$submitted,
+            " genes would be submitted."
+          )
+        }
+      }
+      tags$p(class = "rs-plain-preview", line)
+    })
+    review_card_entry_snapshot <- function(name) {
+      df <- u_degdfs[[name]]
+      if (!is.data.frame(df)) {
+        return(list(ok = FALSE))
+      }
+      review_resolve(
+        df,
+        gene_header = review_gene_header(name),
+        cutoff = review_cutoff_value(input$deg_filter_cutoff),
+        name = name,
+        settings = review_settings()
+      )
+    }
+
+    # Plain review above Run: what will be submitted per list, in words.
+    output$review_plain <- renderUI({
+      entries <- review_card_data()
+      if (!length(entries)) {
+        return(tags$p("Select gene lists to see what will be submitted."))
+      }
+      tags$div(
+        class = "rs-review-plain",
+        lapply(entries, function(entry) {
+          snapshot <- entry$snapshot
+          text <- if (!isTRUE(snapshot$ok)) {
+            snapshot$message
+          } else {
+            counts <- snapshot$counts
+            paste0(
+              counts$submitted,
+              " genes will be submitted, keeping rows with ",
+              review_rule_text(snapshot$query_rule),
+              "; ",
+              counts$excluded[["p_cutoff"]] + counts$excluded[["p_missing"]],
+              " rows are left out."
+            )
+          }
+          note <- if (isTRUE(entry$committed)) {
+            if (isTRUE(entry$changed)) {
+              " The list changed since you saved these settings; save them again."
+            } else {
+              " Your settings are saved for this list."
+            }
+          } else {
+            ""
+          }
+          tags$p(tags$strong(paste0(entry$name, ": ")), paste0(text, note))
+        })
+      )
+    })
+
     # ---- background selector (SPEC-WS-005) --------------------------------------
     # The default is the annotation universe. A custom background is offered only when
     # the installed richR passes the public-route check, and it can only be submitted
@@ -1365,6 +1628,12 @@ enrich_tab_server <- function(
         }
       }
     )
+
+    # Outputs inside the closed disclosures still render, so their content is current when opened.
+    # (The tables render when their disclosure is opened, as before.)
+    for (name in c("review_card", "review_preview_ui", "files_table")) {
+      shiny::outputOptions(output, name, suspendWhenHidden = FALSE)
+    }
   })
 }
 sample_deg_path <- function(name) {

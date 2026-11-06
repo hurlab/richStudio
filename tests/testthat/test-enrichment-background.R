@@ -38,8 +38,9 @@ eb_routes <- function(fx) {
   )
 }
 
-# Permissive reporting options so every tested term is reported.
-eb_open <- list(pvalue = 1, minSize = 1, minGSSize = 1, maxSize = 500, maxGSSize = 500,
+# Permissive reporting options so every tested term is reported. `padj = NULL` is
+# stated because richR >= 0.2.0 defaults padj to 0.05, which would filter the fixture.
+eb_open <- list(pvalue = 1, padj = NULL, minSize = 1, minGSSize = 1, maxSize = 500, maxGSSize = 500,
                 keepRich = TRUE, padj.method = "BH")
 
 eb_call <- function(route, x, universe = NULL) {
@@ -239,10 +240,49 @@ test_that("REQ-004 AC-003 an unsupported route leaves the control unavailable an
   expect_identical(richStudio:::enrichment_background_missing_routes(fake), "enrich")
 })
 
-test_that("the installed richR 0.1.6 passes the capability self-check", {
+test_that("the installed richR passes the capability self-check", {
   cap <- richStudio:::enrichment_background_capability(refresh = TRUE)
   expect_true(cap$available)
   expect_null(cap$reason)
+})
+
+test_that("the self-check states pvalue = 1 and padj = NULL, so a padj default cannot filter its fixture", {
+  real_enrich <- richR::enrich
+  seen <- list()
+  # Emulates richR >= 0.2.0, whose enrich() defaults padj to 0.05, on any installed richR.
+  testthat::local_mocked_bindings(enrich = function(..., padj = 0.05) {
+    seen[[length(seen) + 1L]] <<- list(args = list(...), padj = padj, padj_given = !missing(padj))
+    real_enrich(..., padj = padj)
+  }, .package = "richR")
+  expect_true(richStudio:::enrichment_background_selfcheck())
+  expect_length(seen, 2L)
+  for (call in seen) {
+    expect_true(call$padj_given)
+    expect_null(call$padj)
+    expect_identical(call$args$pvalue, 1)
+  }
+})
+
+test_that("the self-check matches the oracle's raw and BH p-values on the default and a custom universe", {
+  suppressPackageStartupMessages(library(richR))
+  g <- function(i) paste0("g", i)
+  terms <- list(T1 = g(1:5), T2 = g(3:11), T3 = g(12:14), T4 = g(15:20), T5 = g(16:18))
+  long <- data.frame(GeneID = unlist(terms), Term = rep(names(terms), lengths(terms)))
+  query <- g(c(1, 2, 3, 12))
+  custom <- c(g(c(1:9, 11:14)), "g1", "ghostU1")
+  for (universe in list(NULL, custom)) {
+    oracle <- richStudio:::enrichment_background_oracle(terms, query,
+                                                         if (is.null(universe)) unlist(terms) else universe)
+    got <- suppressWarnings(suppressMessages(richR::enrich(x = query, object = long, universe = universe,
+      pvalue = 1, padj = NULL, minSize = 1, minGSSize = 1, maxSize = 500, maxGSSize = 500,
+      keepRich = TRUE, padj.method = "BH")))@result
+    got <- got[match(oracle$term, got$Annot), ]
+    expect_identical(nrow(got), nrow(oracle))
+    expect_equal(got$Pvalue, oracle$p, tolerance = 1e-12)
+    expect_equal(got$Padj, oracle$padj, tolerance = 1e-12)
+    # The fixture's BH values all exceed 0.05: a padj = 0.05 default would drop every row.
+    expect_true(all(oracle$padj > 0.05))
+  }
 })
 
 test_that("the default route is unchanged: shiny_enrich without a universe equals the bare richR call", {

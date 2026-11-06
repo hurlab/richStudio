@@ -915,22 +915,24 @@ class VerifyEnvLogicTests(unittest.TestCase):
         d.mkdir(parents=True, exist_ok=True)
         (d / "DESCRIPTION").write_text("Package: %s\nVersion: 1.0\nBuilt: %s\n" % (pkg, built or self.built))
 
-    def verify(self, builder="ok", enricher="ok", worker="ok", environ='c(HOME = "x")', libpaths=None):
+    def verify(self, builder="ok", enricher="ok", worker="ok", environ='c(HOME = "x")', libpaths=None, cache="ok"):
         fixture = self.tmp / "fixture.tsv"
         fixture.write_text("symbol\nTP53\n")
         lp = libpaths or 'c("%s", "%s")' % (self.rel_lib, self.annot)
-        builders = {"ok": "mk(6000, 1500)", "small": "mk(10, 5)"}
-        enrichers = {"ok": 'data.frame(Annot = c("GO:0006915", paste0("GO:", 1:5)), Padj = rep(0.001, 6))',
-                     "few": 'data.frame(Annot = c("GO:0006915", "GO:1"), Padj = c(0.001, 0.2))',
-                     "noterm": 'data.frame(Annot = paste0("GO:", 1:6), Padj = rep(0.001, 6))'}
+        builders = {"ok": "{ if (.armed && %s) .h <<- .h + 1L; mk(30000, 25000) }" % ("TRUE" if cache == "ok" else "FALSE"), "small": "mk(10, 5)"}
+        enrichers = {"ok": 'data.frame(Annot = c("GO:0097193", paste0("GO:", 1:110)), Padj = rep(0.001, 111))',
+                     "few": 'data.frame(Annot = c("GO:0097193", "GO:1"), Padj = c(0.001, 0.2))',
+                     "noterm": 'data.frame(Annot = paste0("GO:", 1:111), Padj = rep(0.001, 111))'}
         workers = {"ok": 'c("%s", "%s")' % (self.rel_lib, self.annot), "reversed": 'c("%s", "%s")' % (self.annot, self.rel_lib)}
         code = "\n".join([
             '.annotation_script_dir <- "%s"' % WORKER_R.parent,
             'source("%s")' % WORKER_R,
+            '.armed <- FALSE; .h <- 0L',
             'mk <- function(g, t) { n <- max(g, t); data.frame(a = rep_len(seq_len(g), n), b = rep_len(seq_len(t), n)) }',
             'res <- verify_env("%s", "%s", "%s", "%s", "%s",' % (self.rel, self.annot, ALLOWLIST, FLOORS, fixture),
             '  builder = function(species, keytype, anntype) %s,' % builders[builder],
             '  enricher = function(df, header, species, anntype, keytype, ontology) %s,' % enrichers[enricher],
+            '  cache_stats = function() list(disk_hits = .h), reset_memory = function() .armed <<- TRUE,',
             '  worker_libpaths = function() %s, libpaths = %s, environ = %s)' % (workers[worker], lp, environ),
             'quit(status = if (res) 0L else 1L)'])
         script = self.tmp / "v.R"
@@ -944,6 +946,7 @@ class VerifyEnvLogicTests(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         self.assertIn("VERIFY PASS", p.stdout)
         self.assertEqual(p.stdout.count("CHECK floor_"), 11)
+        self.assertIn("CHECK cache_second_pass: PASS", p.stdout)
         self.assertEqual(p.stdout.count("FAIL"), 0)
 
     def test_emptied_annotation_library_fails(self):
@@ -971,6 +974,11 @@ class VerifyEnvLogicTests(unittest.TestCase):
         self.assertIn("CHECK worker_libpaths_order: FAIL", p.stdout)
         p = self.verify(libpaths='c("%s", "%s")' % (self.annot, self.rel_lib))
         self.assertIn("CHECK libpaths_order: FAIL", p.stdout)
+
+    def test_second_pass_must_be_served_from_the_disk_cache(self):
+        p = self.verify(cache="none")
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("CHECK cache_second_pass: FAIL", p.stdout)
 
     def test_test_only_variable_in_the_environment_fails(self):
         p = self.verify(environ='c(RICHSTUDIO_ANNOTATION_TEST_MODE = "1")')

@@ -21,6 +21,10 @@ PROD_HOST <- "bioconductor.org"
 FREE_SPACE_FLOOR <- 2 * 1024^3
 CAP_FLOOR <- 5 * 1024^3
 NAME_RE <- "^[A-Za-z][A-Za-z0-9.]*$"
+# Lead-measured on hurlab (human fixture, richGO defaults): 298 rows with Padj < 0.05; the floor is
+# well under 50% of that. GO:0006915 can never be reported (1766 annotated BP genes > maxGSSize 500),
+# so the expected term is the intrinsic apoptotic signaling pathway.
+FIXTURE_MIN_ROWS <- 100L
 INSTALLED_COLS <- c("package", "version", "sha256", "md5", "source_url", "installed_at")
 
 # ---- plumbing -------------------------------------------------------------
@@ -210,8 +214,12 @@ free_bytes <- function(cfg, lib) {
 lib_bytes <- function(lib) {
   entries <- list.files(lib, all.files = TRUE, no.. = TRUE)
   entries <- entries[!startsWith(entries, ".staging-")]
-  if (!length(entries)) return(0)
-  out <- suppressWarnings(system2("du", c("-sk", sh(file.path(lib, entries))), stdout = TRUE, stderr = FALSE))
+  paths <- file.path(lib, entries)
+  # The annotation cache (<parent>/cache/<library name>) counts against the same cap.
+  cache <- file.path(dirname(lib), "cache", basename(lib))
+  if (dir.exists(cache)) paths <- c(paths, cache)
+  if (!length(paths)) return(0)
+  out <- suppressWarnings(system2("du", c("-sk", sh(paths)), stdout = TRUE, stderr = FALSE))
   sum(as.numeric(sub("\\s.*$", "", out)), na.rm = TRUE) * 1024
 }
 
@@ -459,10 +467,13 @@ default_worker_libpaths <- function() {
 }
 
 # builder(species, keytype, anntype) -> Annot; enricher(df, header, species, anntype, keytype, ontology)
-# -> data frame; worker_libpaths() -> character. The defaults are the real richR / richStudio / future
-# calls; tests inject stubs.
+# -> data frame; worker_libpaths() -> character; cache_stats() / reset_memory() read and clear the
+# annotation cache's memory level. The defaults are the real richStudio / future calls (annotations are
+# built through richStudio's own cached builder, which attaches reactome.db on a miss); tests inject stubs.
 verify_env <- function(release_dir, annot_lib, allowlist, floors, fixture,
-                       builder = function(species, keytype, anntype) richR::buildAnnot(species = species, keytype = keytype, anntype = anntype),
+                       builder = function(species, keytype, anntype) richStudio:::richstudio_build_annotation(species, keytype, anntype),
+                       cache_stats = function() richStudio:::annotation_cache_stats(),
+                       reset_memory = function() richStudio:::annotation_cache_reset(memory_only = TRUE),
                        enricher = function(df, header, species, anntype, keytype, ontology) {
                          richStudio:::shiny_enrich(df, header, species, anntype, keytype, ontology)@result
                        },
@@ -492,17 +503,29 @@ verify_env <- function(release_dir, annot_lib, allowlist, floors, fixture,
   }
 
   fl <- utils::read.delim(floors, sep = "\t", colClasses = "character", na.strings = character())
+  # Pass 1 builds (and caches) every annotation once; the counts are the floors' subject.
+  t_first <- 0
   for (i in seq_len(nrow(fl))) {
     sp <- fl$species[[i]]; at <- fl$anntype[[i]]
     t0 <- proc.time()[["elapsed"]]
     cnt <- tryCatch(annot_counts(builder(sp, "SYMBOL", at)), error = function(e) list(genes = NA_integer_, terms = NA_integer_, err = conditionMessage(e)))
     el <- proc.time()[["elapsed"]] - t0
+    t_first <- t_first + el
     min_g <- as.numeric(fl$min_genes[[i]]); min_t <- as.numeric(fl$min_terms[[i]])
     pass <- !is.na(cnt$genes) && cnt$genes >= min_g && cnt$terms >= min_t
     step(paste0("floor_", sp, "_", at), pass,
          sprintf("genes=%s (floor %s) terms=%s (floor %s) seconds=%.1f %s", cnt$genes, min_g, cnt$terms, min_t, el,
                  if (is.null(cnt$err)) "" else cnt$err))
   }
+  # Pass 2 in a cleared memory level must be served from the disk cache, much faster than pass 1.
+  reset_memory()
+  hits0 <- cache_stats()$disk_hits
+  t0 <- proc.time()[["elapsed"]]
+  for (i in seq_len(nrow(fl))) try(builder(fl$species[[i]], "SYMBOL", fl$anntype[[i]]), silent = TRUE)
+  t_second <- proc.time()[["elapsed"]] - t0
+  hits <- cache_stats()$disk_hits - hits0
+  step("cache_second_pass", hits >= nrow(fl) && (t_first < 5 || t_second <= 0.5 * t_first),
+       sprintf("disk_hits=%d of %d first_pass_seconds=%.1f second_pass_seconds=%.1f", hits, nrow(fl), t_first, t_second))
 
   fx <- utils::read.delim(fixture, sep = "\t", colClasses = "character", na.strings = character())
   res <- tryCatch(enricher(fx, "symbol", "human", "GO", "SYMBOL", "BP"), error = function(e) conditionMessage(e))
@@ -510,9 +533,9 @@ verify_env <- function(release_dir, annot_lib, allowlist, floors, fixture,
     pc <- grep("^(padj|p\\.adjust|adj)", names(res), ignore.case = TRUE, value = TRUE)[1L]
     ac <- grep("^(annot|id|go)$", names(res), ignore.case = TRUE, value = TRUE)[1L]
     sig <- if (is.na(pc)) res[0, , drop = FALSE] else res[!is.na(res[[pc]]) & res[[pc]] < 0.05, , drop = FALSE]
-    has_term <- !is.na(ac) && "GO:0006915" %in% sig[[ac]]
-    step("fixture_enrichment", nrow(sig) >= 5L && has_term,
-         sprintf("significant_rows=%d GO:0006915=%s", nrow(sig), has_term))
+    has_term <- !is.na(ac) && "GO:0097193" %in% sig[[ac]]
+    step("fixture_enrichment", nrow(sig) >= FIXTURE_MIN_ROWS && has_term,
+         sprintf("significant_rows=%d (floor %d) GO:0097193=%s", nrow(sig), FIXTURE_MIN_ROWS, has_term))
   } else {
     step("fixture_enrichment", FALSE, paste("error:", res))
   }

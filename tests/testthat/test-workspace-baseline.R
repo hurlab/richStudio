@@ -37,7 +37,7 @@ test_that("installed scientific routes retain the annotated-universe oracle", {
   annot <- data.frame(GeneID = paste0("g", 1:10), Term = rep(c("A", "B"), each = 5))
   object <- methods::new("Annot", species = "custom", anntype = "Reactome", keytype = "SYMBOL", annot = annot)
   family <- richR::enrich(x = c("g1", "g2", "g3", "g6"), object = object,
-    universe = paste0("g", 1:10), pvalue = 1, minGSSize = 1, minSize = 1)@result
+    universe = paste0("g", 1:10), pvalue = 1, padj = NULL, minGSSize = 1, minSize = 1)@result
   expect_setequal(family$Term, c("A", "B"))
   expect_equal(family$Pvalue[match("A", family$Term)], 11 / 42, tolerance = 1e-12)
   expect_equal(family$Padj[match("A", family$Term)], 11 / 21, tolerance = 1e-12)

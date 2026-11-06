@@ -348,26 +348,53 @@ test_that("no app source other than annotation_cache.R defaults to a direct rich
   expect_identical(hits, character())
 })
 
-fresh_process <- function(root, lib, builds_file) {
-  callr::r(function(root, lib, builds_file) {
-    suppressMessages(pkgload::load_all(root, quiet = TRUE))
-    Sys.setenv(RICHSTUDIO_ANNOTATION_LIB = lib)
-    fake <- methods::new("Annot", species = "human", anntype = "GO", keytype = "SYMBOL",
-                         annot = data.frame(GeneID = c("a", "b"), GOALL = c("x", "y")))
+fresh_body <- function(root, lib, builds_file) {
+  suppressMessages(pkgload::load_all(root, quiet = TRUE))
+  Sys.setenv(RICHSTUDIO_ANNOTATION_LIB = lib)
+  fake <- methods::new("Annot", species = "human", anntype = "GO", keytype = "SYMBOL",
+                       annot = data.frame(GeneID = c("a", "b"), GOALL = c("x", "y")))
+  testthat::with_mocked_bindings(
     testthat::with_mocked_bindings(
-      testthat::with_mocked_bindings(
-        {
-          x <- suppressMessages(richstudio_build_annotation("human", "SYMBOL", "GO"))
-          list(source = attr(x, "cache_source"), builds = length(readLines(builds_file, warn = FALSE)),
-               stats = annotation_cache_stats())
-        },
-        buildAnnot = function(...) { write("b", builds_file, append = TRUE); Sys.sleep(0.5); fake }, .package = "richR"),
-      annotation_org_package = function(species) "org.Fake.eg.db",
-      annotation_package_versions = function(pkgs) stats::setNames(rep("1.0", length(pkgs)), pkgs),
-      annotation_remote_sha = function(pkg) "", annotation_attach_reactome = function(anntype) invisible(FALSE),
-      .package = "richStudio")
-  }, args = list(root, lib, builds_file))
+      {
+        x <- suppressMessages(richstudio_build_annotation("human", "SYMBOL", "GO"))
+        list(source = attr(x, "cache_source"), builds = length(readLines(builds_file, warn = FALSE)),
+             stats = annotation_cache_stats(), pid = Sys.getpid())
+      },
+      buildAnnot = function(...) { write("b", builds_file, append = TRUE); Sys.sleep(0.5); fake }, .package = "richR"),
+    annotation_org_package = function(species) "org.Fake.eg.db",
+    annotation_package_versions = function(pkgs) stats::setNames(rep("1.0", length(pkgs)), pkgs),
+    annotation_remote_sha = function(pkg) "", annotation_attach_reactome = function(anntype) invisible(FALSE),
+    .package = "richStudio")
 }
+
+fresh_process <- function(root, lib, builds_file) {
+  callr::r(fresh_body, args = list(root, lib, builds_file))
+}
+
+test_that("a genuinely new multisession worker process is served from disk without a build", {
+  skip_on_cran()
+  skip_if_not_installed("pkgload")
+  skip_if_not_installed("future")
+  root <- normalizePath(testthat::test_path("..", ".."))
+  skip_if_not(file.exists(file.path(root, "DESCRIPTION")))
+  w <- cache_world()
+  builds <- withr::local_tempfile()
+  writeLines(character(), builds)
+  old <- future::plan()
+  withr::defer(future::plan(old))
+  run <- function() future::value(future::future(fresh_body(root, lib, builds),
+                                                 globals = list(fresh_body = fresh_body, root = root, lib = w$lib, builds = builds),
+                                                 seed = TRUE))
+  future::plan(future::multisession, workers = 1L)
+  first <- run()
+  future::plan(future::sequential)
+  future::plan(future::multisession, workers = 2L)   # a different spec: a brand-new cluster of fresh processes
+  second <- run()
+  expect_false(identical(first$pid, second$pid))
+  expect_identical(first$source, "built")
+  expect_identical(second$source, "disk")
+  expect_identical(second$builds, 1L)
+})
 
 test_that("a fresh process is served from disk, and two racing processes both succeed", {
   skip_on_cran()

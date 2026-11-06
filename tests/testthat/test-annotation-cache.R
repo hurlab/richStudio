@@ -48,7 +48,9 @@ test_that("a memory hit avoids the builder", {
   a <- quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
   b <- quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
   expect_identical(st$builds, 1L)
-  expect_identical(a, b)
+  expect_identical(attr(a, "cache_source"), "built")
+  expect_identical(attr(b, "cache_source"), "memory")
+  expect_identical(a@annot, b@annot)
   s <- annotation_cache_stats()
   expect_equal(c(s$memory_hits, s$misses, s$writes), c(1L, 1L, 1L))
 })
@@ -62,65 +64,79 @@ test_that("a disk hit after a memory reset (a fresh worker) avoids the builder",
   b <- quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
   expect_identical(st$builds, 1L)
   expect_identical(b@annot, a@annot)
+  expect_identical(attr(b, "cache_source"), "disk")
   expect_equal(annotation_cache_stats()$disk_hits, 1L)
   expect_equal(bitwAnd(as.integer(file.info(w$cache)$mode), 63L), 0L)
 })
 
-test_that("any key component change is a miss, including GO.db and richR versions", {
+test_that("each key component change is a miss; GO.db does not affect a KEGG key", {
   cache_world()
   st <- mock_world()
-  quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
-  quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
-  expect_identical(st$builds, 1L)
-  for (change in list(list(GO.db = "2.0"), list(AnnotationDbi = "9"), list(richR = "0.2.0"), list(org.Fake.eg.db = "7"))) {
-    st$versions <- change
+  sha <- list(richR = "", bioAnno = "")
+  schema_now <- ANNOTATION_CACHE_SCHEMA
+  r_minor <- "4.6"
+  testthat::local_mocked_bindings(
+    annotation_remote_sha = function(pkg) sha[[pkg]] %||% "",
+    annotation_r_minor = function() r_minor)
+  build <- function(anntype = "GO", sp = "human", kt = "SYMBOL") {
     annotation_cache_reset(memory_only = TRUE)
     before <- st$builds
-    quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
-    expect_identical(st$builds, before + 1L, info = names(change))
+    quiet(richstudio_build_annotation(sp, kt, anntype))
+    st$builds - before
   }
-  st$versions <- list()
-  annotation_cache_reset(memory_only = TRUE)
-  before <- st$builds
-  quiet(richstudio_build_annotation("mouse", "SYMBOL", "GO"))
-  quiet(richstudio_build_annotation("human", "ENTREZID", "GO"))
-  quiet(richstudio_build_annotation("human", "SYMBOL", "KEGG"))
-  expect_identical(st$builds, before + 3L)
-})
-
-test_that("reactome.db is part of the Reactome key only", {
-  cache_world()
-  st <- mock_world()
-  quiet(richstudio_build_annotation("human", "SYMBOL", "Reactome"))
-  st$versions <- list(reactome.db = "9.9")
-  annotation_cache_reset(memory_only = TRUE)
-  quiet(richstudio_build_annotation("human", "SYMBOL", "Reactome"))
-  expect_identical(st$builds, 2L)
-  quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
-  annotation_cache_reset(memory_only = TRUE)
+  expect_identical(build(), 1L)
+  expect_identical(build(), 0L)                       # unchanged key is a hit
+  changes <- list(
+    function() st$versions <- list(GO.db = "2.0"), function() st$versions <- list(AnnotationDbi = "9"),
+    function() st$versions <- list(richR = "0.2.0"), function() st$versions <- list(bioAnno = "1.1"),
+    function() st$versions <- list(org.Fake.eg.db = "7"),
+    function() { st$versions <- list(); sha$richR <<- "abc" }, function() { sha$richR <<- ""; sha$bioAnno <<- "def" },
+    function() { sha$bioAnno <<- ""; r_minor <<- "4.7" })
+  for (i in seq_along(changes)) {
+    changes[[i]]()
+    expect_identical(build(), 1L, info = paste("change", i))
+    st$versions <- list(); sha <- list(richR = "", bioAnno = ""); r_minor <- "4.6"
+  }
+  testthat::local_mocked_bindings(ANNOTATION_CACHE_SCHEMA = "2")
+  expect_identical(build(), 1L)
+  testthat::local_mocked_bindings(ANNOTATION_CACHE_SCHEMA = "1")
+  expect_identical(build(), 0L)
+  expect_identical(build(sp = "mouse"), 1L)
+  expect_identical(build(kt = "ENTREZID"), 1L)
+  expect_identical(build("KEGG"), 1L)
+  st$versions <- list(GO.db = "3.0")
+  expect_identical(build("KEGG"), 0L)                 # GO.db is not in a KEGG key
+  expect_identical(build("GO"), 1L)
   st$versions <- list(reactome.db = "1.1")
-  quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
-  expect_identical(st$builds, 3L)
+  expect_identical(build("GO"), 0L)                   # reactome.db is not in a GO key
+  expect_identical(build("Reactome"), 1L)
+  st$versions <- list()
+  expect_identical(build("Reactome"), 1L)             # reactome.db change is a miss for Reactome
 })
 
-test_that("a corrupt or truncated file is rebuilt and overwritten without an error", {
+test_that("planted bad files are each rejected, rebuilt and replaced by a valid file", {
   w <- cache_world()
   st <- mock_world()
   quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
   f <- list.files(w$cache, pattern = ANNOTATION_CACHE_FILE_RE, full.names = TRUE)
-  writeBin(readBin(f, "raw", 20L), f)
-  annotation_cache_reset(memory_only = TRUE)
-  expect_no_error(quiet(richstudio_build_annotation("human", "SYMBOL", "GO")))
-  expect_identical(st$builds, 2L)
-  expect_gt(file.size(f), 100)
-  saveRDS(list(key = "other", annot = fake_annot()), f)
-  annotation_cache_reset(memory_only = TRUE)
-  quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
-  expect_identical(st$builds, 3L)
-  saveRDS(list(key = "x", annot = "not an annot"), f)
-  annotation_cache_reset(memory_only = TRUE)
-  quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
-  expect_identical(st$builds, 4L)
+  expect_match(basename(f), "^[0-9a-f]{32}\\.rds$")
+  key <- readRDS(f)$key
+  plant <- list(
+    truncated = function() writeBin(readBin(f, "raw", 20L), f),
+    wrong_class = function() saveRDS(list(key = key, annot = "not an annot"), f),
+    zero_rows = function() saveRDS(list(key = key, annot = methods::new("Annot", species = "h", anntype = "GO", keytype = "SYMBOL",
+                                                                      annot = data.frame(GeneID = character(), GOALL = character()))), f),
+    missing_columns = function() saveRDS(list(key = key, annot = methods::new("Annot", species = "h", anntype = "GO", keytype = "SYMBOL",
+                                                                            annot = data.frame(GeneID = "a"))), f),
+    wrong_key = function() saveRDS(list(key = "other", annot = fake_annot()), f))
+  for (name in names(plant)) {
+    plant[[name]]()
+    annotation_cache_reset(memory_only = TRUE)
+    before <- st$builds
+    expect_no_error(quiet(richstudio_build_annotation("human", "SYMBOL", "GO")))
+    expect_identical(st$builds, before + 1L, info = name)
+    expect_true(annotation_cache_valid(readRDS(f), key), info = name)
+  }
 })
 
 test_that("writes use a temp name no reader accepts, leave no temp file, and a failed write keeps the old file", {
@@ -189,6 +205,7 @@ test_that("a symlinked cache directory, a symlinked file and a foreign-named fil
   # foreign-named file: right content, wrong name
   unlink(f)
   file.copy(real, file.path(w$cache, "evil.rds"))
+  file.copy(real, file.path(w$parent, paste0(strrep("a", 32), ".rds")))
   annotation_cache_reset(memory_only = TRUE)
   quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
   expect_equal(annotation_cache_stats()$disk_hits, 0L)
@@ -201,6 +218,7 @@ test_that("a symlinked cache directory, a symlinked file and a foreign-named fil
   annotation_cache_reset(memory_only = TRUE)
   quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
   expect_equal(annotation_cache_stats()$disk_hits, 0L)
+  expect_gte(annotation_cache_stats()$disabled, 1L)
   expect_identical(list.files(moved, recursive = TRUE), before_files)
 })
 
@@ -215,20 +233,40 @@ test_that("a group-writable cache directory disables the disk level for the call
   expect_equal(annotation_cache_stats()$disk_hits, 0L)
 })
 
-test_that("the disk cache is bounded by entry count and bytes, oldest first", {
+test_that("eviction keeps the bound, never the just-written entry, and sweeps stale temp files", {
   w <- cache_world()
   st <- mock_world()
-  withr::local_options(richstudio.annotation_cache_max_entries = 2L)
-  for (sp in c("human", "mouse", "rat")) {
-    quiet(richstudio_build_annotation(sp, "SYMBOL", "GO"))
-    Sys.sleep(1.1)
+  quiet(richstudio_build_annotation("human", "SYMBOL", "GO"))
+  dir <- w$cache
+  # 198 filler entries, oldest first
+  for (i in seq_len(198L)) {
+    f <- file.path(dir, sprintf("%032x.rds", i))
+    saveRDS(list(key = "k", annot = fake_annot()), f)
+    Sys.setFileTime(f, Sys.time() - 10000 + i)
   }
-  files <- list.files(w$cache, pattern = ANNOTATION_CACHE_FILE_RE, full.names = TRUE)
-  expect_length(files, 2L)
+  expect_length(list.files(dir, pattern = ANNOTATION_CACHE_FILE_RE), 199L)
+  old_tmp <- file.path(dir, ".tmp-1-old"); young_tmp <- file.path(dir, ".tmp-2-young")
+  writeLines("x", old_tmp); writeLines("x", young_tmp)
+  Sys.setFileTime(old_tmp, Sys.time() - 7200)
+  quiet(richstudio_build_annotation("mouse", "SYMBOL", "GO"))
+  expect_length(list.files(dir, pattern = ANNOTATION_CACHE_FILE_RE), 200L)
+  expect_false(file.exists(old_tmp)); expect_true(file.exists(young_tmp))
+  quiet(richstudio_build_annotation("rat", "SYMBOL", "GO"))
+  files <- list.files(dir, pattern = ANNOTATION_CACHE_FILE_RE, full.names = TRUE)
+  expect_length(files, 200L)
   expect_equal(annotation_cache_stats()$evictions, 1L)
-  withr::local_options(richstudio.annotation_cache_max_entries = 200L, richstudio.annotation_cache_max_bytes = 10)
+  expect_false(file.exists(file.path(dir, sprintf("%032x.rds", 1L))))   # oldest went first
+  # byte bound: just-written entry survives even when it alone exceeds the bound
+  withr::local_options(richstudio.annotation_cache_max_bytes = 10)
+  annotation_cache_reset(memory_only = TRUE)
   quiet(richstudio_build_annotation("pig", "SYMBOL", "GO"))
-  expect_length(list.files(w$cache, pattern = ANNOTATION_CACHE_FILE_RE), 0L)
+  left <- list.files(dir, pattern = ANNOTATION_CACHE_FILE_RE)
+  expect_length(left, 1L)
+  expect_true(grepl(ANNOTATION_CACHE_FILE_RE, left))
+  annotation_cache_reset(memory_only = TRUE)
+  before <- st$builds
+  quiet(richstudio_build_annotation("pig", "SYMBOL", "GO"))
+  expect_identical(st$builds, before)
 })
 
 test_that("Reactome attach happens on a miss and is not needed on a hit", {
@@ -299,4 +337,60 @@ test_that("a persistent single multisession worker reuses the memory level acros
   second <- future::value(future::future(stub_run(root), globals = list(stub_run = stub_run, root = root)))
   expect_identical(first, 1L)
   expect_identical(second, 1L)
+})
+
+test_that("no app source other than annotation_cache.R defaults to a direct richR::buildAnnot", {
+  root <- normalizePath(testthat::test_path("..", ".."))
+  skip_if_not(dir.exists(file.path(root, "R")))
+  files <- list.files(file.path(root, "R"), pattern = "\\.R$", full.names = TRUE)
+  files <- files[basename(files) != "annotation_cache.R"]
+  hits <- Filter(function(f) any(grepl("annotation_builder\\s*=\\s*richR::buildAnnot", readLines(f, warn = FALSE))), files)
+  expect_identical(hits, character())
+})
+
+fresh_process <- function(root, lib, builds_file) {
+  callr::r(function(root, lib, builds_file) {
+    suppressMessages(pkgload::load_all(root, quiet = TRUE))
+    Sys.setenv(RICHSTUDIO_ANNOTATION_LIB = lib)
+    fake <- methods::new("Annot", species = "human", anntype = "GO", keytype = "SYMBOL",
+                         annot = data.frame(GeneID = c("a", "b"), GOALL = c("x", "y")))
+    testthat::with_mocked_bindings(
+      testthat::with_mocked_bindings(
+        {
+          x <- suppressMessages(richstudio_build_annotation("human", "SYMBOL", "GO"))
+          list(source = attr(x, "cache_source"), builds = length(readLines(builds_file, warn = FALSE)),
+               stats = annotation_cache_stats())
+        },
+        buildAnnot = function(...) { write("b", builds_file, append = TRUE); Sys.sleep(0.5); fake }, .package = "richR"),
+      annotation_org_package = function(species) "org.Fake.eg.db",
+      annotation_package_versions = function(pkgs) stats::setNames(rep("1.0", length(pkgs)), pkgs),
+      annotation_remote_sha = function(pkg) "", annotation_attach_reactome = function(anntype) invisible(FALSE),
+      .package = "richStudio")
+  }, args = list(root, lib, builds_file))
+}
+
+test_that("a fresh process is served from disk, and two racing processes both succeed", {
+  skip_on_cran()
+  skip_if_not_installed("callr")
+  skip_if_not_installed("pkgload")
+  root <- normalizePath(testthat::test_path("..", ".."))
+  skip_if_not(file.exists(file.path(root, "DESCRIPTION")))
+  w <- cache_world()
+  builds <- withr::local_tempfile()
+  writeLines(character(), builds)
+  first <- fresh_process(root, w$lib, builds)
+  expect_identical(first$source, "built")
+  second <- fresh_process(root, w$lib, builds)
+  expect_identical(second$source, "disk")
+  expect_identical(second$builds, 1L)                       # no second build
+  expect_equal(second$stats$disk_hits, 1L)
+  # race: remove the entry, run two processes at once
+  unlink(list.files(w$cache, full.names = TRUE))
+  p1 <- callr::r_bg(function(f, ...) f(...), args = list(fresh_process, root, w$lib, builds), package = FALSE)
+  p2 <- callr::r_bg(function(f, ...) f(...), args = list(fresh_process, root, w$lib, builds), package = FALSE)
+  p1$wait(); p2$wait()
+  expect_length(list.files(w$cache, pattern = ANNOTATION_CACHE_FILE_RE), 1L)
+  expect_length(list.files(w$cache, all.files = TRUE, pattern = "^\\.tmp-"), 0L)
+  expect_true(annotation_cache_valid(readRDS(list.files(w$cache, full.names = TRUE, pattern = ANNOTATION_CACHE_FILE_RE)),
+                                     readRDS(list.files(w$cache, full.names = TRUE, pattern = ANNOTATION_CACHE_FILE_RE))$key))
 })

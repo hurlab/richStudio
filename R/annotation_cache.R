@@ -6,14 +6,14 @@
 # persistent worker process and the disk level is shared by every worker.
 #
 #   level 1  memory: package-level environment, LRU bounded to 3 entries
-#   level 2  disk:   <annotation library parent>/cache/<library name>/annot-<sha256>.rds
+#   level 2  disk:   <annotation library parent>/cache/<library name>/<md5 of the key text>.rds
 #
 # The cache never errors an analysis: any cache failure falls back to a normal build.
 # Only app-generated files whose names match the hashed-key pattern are ever read.
 
 ANNOTATION_CACHE_SCHEMA <- "1"
 ANNOTATION_CACHE_MEMORY_MAX <- 3L
-ANNOTATION_CACHE_FILE_RE <- "^annot-[0-9a-f]{64}\\.rds$"
+ANNOTATION_CACHE_FILE_RE <- "^[0-9a-f]{32}\\.rds$"
 
 .annotation_cache <- new.env(parent = emptyenv())
 
@@ -64,22 +64,26 @@ annotation_remote_sha <- function(pkg) {
   if (is.null(sha)) "" else as.character(sha)
 }
 
-# Everything the build output depends on. GO term names come from GO.db; Reactome needs
-# reactome.db and the organism package.
+annotation_r_minor <- function() {
+  paste(R.version$major, strsplit(R.version$minor, ".", fixed = TRUE)[[1L]][[1L]], sep = ".")
+}
+
+# Everything the build output depends on. GO term names come from GO.db (GO only); Reactome needs
+# reactome.db; the organism package and AnnotationDbi shape every build.
 annotation_cache_key <- function(species, keytype, anntype, stub = FALSE) {
   org <- annotation_org_package(species)
-  pkgs <- unique(c("AnnotationDbi", "GO.db", if (!is.na(org)) org,
+  pkgs <- unique(c("AnnotationDbi", if (!is.na(org)) org,
+                   if (identical(anntype, "GO")) "GO.db",
                    if (identical(anntype, "Reactome")) "reactome.db",
-                   if (anntype %in% c("KEGGM")) "KEGGREST"))
+                   if (identical(anntype, "KEGGM")) "KEGGREST"))
   vers <- annotation_package_versions(pkgs)
   parts <- c(schema = ANNOTATION_CACHE_SCHEMA, builder = if (stub) "stub" else "richR::buildAnnot",
-             species = species, keytype = keytype, anntype = anntype,
-             R = paste(R.version$major, strsplit(R.version$minor, ".", fixed = TRUE)[[1L]][[1L]], sep = "."),
+             species = species, keytype = keytype, anntype = anntype, R = annotation_r_minor(),
              richR = annotation_package_versions("richR"), richR_sha = annotation_remote_sha("richR"),
              bioAnno = annotation_package_versions("bioAnno"), bioAnno_sha = annotation_remote_sha("bioAnno"),
              stats::setNames(vers, paste0("pkg:", names(vers))))
   text <- paste(names(parts), unname(parts), sep = "=", collapse = "|")
-  list(text = text, hash = digest::digest(text, algo = "sha256", serialize = FALSE))
+  list(text = text, hash = digest::digest(text, algo = "md5", serialize = FALSE))
 }
 
 # ---- memory level ---------------------------------------------------------------
@@ -156,7 +160,7 @@ annotation_cache_dir <- function() {
   }
   if (file.access(dir, 2L) != 0L) return(list(dir = NULL, reason = "cache directory is not writable", fatal = TRUE))
   bad <- annotation_cache_dir_safe(dir, parent)
-  if (nzchar(bad)) return(list(dir = NULL, reason = paste("unsafe cache directory:", bad), fatal = FALSE))
+  if (nzchar(bad)) return(list(dir = NULL, reason = paste("unsafe cache directory:", bad), fatal = TRUE))
   list(dir = dir, reason = "", fatal = FALSE)
 }
 
@@ -166,7 +170,7 @@ annotation_cache_valid <- function(obj, key_text) {
 }
 
 annotation_disk_read <- function(dir, hash, key_text) {
-  f <- file.path(dir, paste0("annot-", hash, ".rds"))
+  f <- file.path(dir, paste0(hash, ".rds"))
   if (!grepl(ANNOTATION_CACHE_FILE_RE, basename(f))) return(NULL)
   if (!file.exists(f) && !annotation_link_target(f)) return(NULL)
   info <- file.info(f)
@@ -182,19 +186,24 @@ annotation_disk_read <- function(dir, hash, key_text) {
   obj$annot
 }
 
-annotation_disk_evict <- function(dir) {
+annotation_disk_evict <- function(dir, keep = NULL) {
   lim <- annotation_cache_limits()
+  # Stale temporary files (a killed write) go after an hour; a younger one may be a live write.
+  tmps <- list.files(dir, pattern = "^\\.tmp-", all.files = TRUE, full.names = TRUE)
+  if (length(tmps)) unlink(tmps[difftime(Sys.time(), file.info(tmps)$mtime, units = "secs") > 3600])
   files <- list.files(dir, pattern = ANNOTATION_CACHE_FILE_RE, full.names = TRUE)
   if (!length(files)) return(invisible(NULL))
   info <- file.info(files)
   ord <- order(info$mtime, files)
   files <- files[ord]
   size <- info$size[ord]
-  while (length(files) > 0L && (length(files) > lim$max_entries || sum(size) > lim$max_bytes)) {
-    unlink(files[[1L]])
-    annotation_cache_bump("evictions")
-    files <- files[-1L]
-    size <- size[-1L]
+  i <- 1L
+  while (i <= length(files) && (length(files) - i + 1L > lim$max_entries || sum(size[i:length(files)]) > lim$max_bytes)) {
+    if (!identical(basename(files[[i]]), keep)) {
+      unlink(files[[i]])
+      annotation_cache_bump("evictions")
+    }
+    i <- i + 1L
   }
   invisible(NULL)
 }
@@ -202,7 +211,7 @@ annotation_disk_evict <- function(dir) {
 # Temp file in the same directory, then an atomic rename: readers never see a partial file and
 # concurrent writers are harmless (the last rename wins).
 annotation_disk_write <- function(dir, hash, key_text, annot) {
-  f <- file.path(dir, paste0("annot-", hash, ".rds"))
+  f <- file.path(dir, paste0(hash, ".rds"))
   tmp <- file.path(dir, sprintf(".tmp-%d-%s", Sys.getpid(), paste(sample(c(letters, 0:9), 8, TRUE), collapse = "")))
   ok <- tryCatch({
     saveRDS(list(key = key_text, annot = annot), tmp)
@@ -214,7 +223,7 @@ annotation_disk_write <- function(dir, hash, key_text, annot) {
     return(invisible(FALSE))
   }
   annotation_cache_bump("writes")
-  annotation_disk_evict(dir)
+  annotation_disk_evict(dir, keep = basename(f))
   invisible(TRUE)
 }
 
@@ -233,58 +242,63 @@ annotation_attach_ns <- function(pkg) attachNamespace(pkg)
 
 # ---- the builder ---------------------------------------------------------------------
 
+annotation_cache_source <- function(x, source) {
+  attr(x, "cache_source") <- source
+  x
+}
+
 # `.builder` is an internal seam for tests (counting stub): a stub never touches the disk cache.
 # Production callers never pass it. On a miss the Reactome attach runs; on a hit it is not
-# needed, because the cached object is already built.
+# needed, because the cached object is already built. The result carries attr "cache_source"
+# (memory | disk | built), never saved to disk. Any cache failure falls back to a plain build.
 richstudio_build_annotation <- function(species, keytype, anntype, .builder = NULL) {
+  t0 <- proc.time()[["elapsed"]]
   stub <- !is.null(.builder)
+  build <- function() {
+    annotation_attach_reactome(anntype)
+    if (stub) .builder(species = species, keytype = keytype, anntype = anntype)
+    else richR::buildAnnot(species = species, keytype = keytype, anntype = anntype)
+  }
+  done <- function(x, source) {
+    annotation_cache_log(sprintf("annotation_cache: source=%s species=%s anntype=%s secs=%.2f", source, species, anntype,
+                                 proc.time()[["elapsed"]] - t0))
+    annotation_cache_source(x, source)
+  }
   disk <- NULL
   if (!stub) {
     d <- annotation_cache_dir()
     if (is.null(d$dir)) {
+      # Disabled for this call: behaves as before (a plain build), nothing read or written.
       annotation_cache_bump("disabled")
-      annotation_cache_log(paste("cache", if (isTRUE(d$fatal)) "disabled:" else "disk level off:", d$reason), once = d$reason)
-      if (isTRUE(d$fatal)) {
-        annotation_cache_bump("misses")
-        annotation_attach_reactome(anntype)
-        return(richR::buildAnnot(species = species, keytype = keytype, anntype = anntype))
-      }
-    } else {
-      disk <- d$dir
+      annotation_cache_bump("misses")
+      annotation_cache_log(paste("cache disabled:", d$reason), once = d$reason)
+      return(done(build(), "built"))
     }
+    disk <- d$dir
   }
   key <- tryCatch(annotation_cache_key(species, keytype, anntype, stub), error = function(e) NULL)
   if (is.null(key)) {
     annotation_cache_bump("misses")
-    annotation_attach_reactome(anntype)
-    return(if (stub) .builder(species = species, keytype = keytype, anntype = anntype)
-           else richR::buildAnnot(species = species, keytype = keytype, anntype = anntype))
+    return(done(build(), "built"))
   }
   hit <- annotation_memory_get(key$hash)
   if (!is.null(hit)) {
     annotation_cache_bump("memory_hits")
-    annotation_cache_log(paste("memory hit", substr(key$hash, 1, 12)))
-    return(hit)
+    return(done(hit, "memory"))
   }
   if (!is.null(disk)) {
     hit <- annotation_disk_read(disk, key$hash, key$text)
     if (!is.null(hit)) {
       annotation_cache_bump("disk_hits")
-      annotation_cache_log(paste("disk hit", substr(key$hash, 1, 12)))
       annotation_memory_put(key$hash, hit)
-      return(hit)
+      return(done(hit, "disk"))
     }
   }
   annotation_cache_bump("misses")
-  annotation_cache_log(paste("miss", substr(key$hash, 1, 12), "- building"))
-  annotation_attach_reactome(anntype)
-  built <- if (stub) .builder(species = species, keytype = keytype, anntype = anntype)
-           else richR::buildAnnot(species = species, keytype = keytype, anntype = anntype)
-  if (!is.null(disk)) {
-    if (annotation_cache_valid(list(key = key$text, annot = built), key$text)) {
-      annotation_disk_write(disk, key$hash, key$text, built)
-    }
+  built <- build()
+  if (!is.null(disk) && annotation_cache_valid(list(key = key$text, annot = built), key$text)) {
+    annotation_disk_write(disk, key$hash, key$text, built)
   }
   annotation_memory_put(key$hash, built)
-  built
+  done(built, "built")
 }

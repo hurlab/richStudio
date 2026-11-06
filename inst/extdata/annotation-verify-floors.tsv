@@ -10,3 +10,7 @@ rat	Reactome	3400	900
 zebrafish	Reactome	2900	800
 celegans	Reactome	2100	700
 human	KEGG	2900	110
+mouse	KEGG	3302	112
+rat	KEGG	3195	112
+zebrafish	KEGG	2277	77
+celegans	KEGG	979	62

@@ -1160,11 +1160,17 @@ class AllowlistShape(unittest.TestCase):
         self.assertEqual(pre, sorted(["org.Hs.eg.db", "org.Mm.eg.db", "org.Rn.eg.db", "org.Dr.eg.db", "org.Ce.eg.db", "reactome.db"]))
         self.assertEqual([r["species"] for r in rows if r["kind"] == "reactome"], ["*"])
 
-    def test_floors_cover_five_species_go_reactome_and_human_kegg(self):
+    def test_floors_cover_five_species_go_reactome_and_kegg(self):
         rows = table_rows(FLOORS)
         got = {(r["species"], r["anntype"]) for r in rows}
         five = ["human", "mouse", "rat", "zebrafish", "celegans"]
-        self.assertEqual(got, {(s, a) for s in five for a in ("GO", "Reactome")} | {("human", "KEGG")})
+        self.assertEqual(got, {(s, a) for s in five for a in ("GO", "Reactome", "KEGG")})
+        measured = {"mouse": (6605, 225), "rat": (6390, 225), "zebrafish": (4554, 155), "celegans": (1959, 125), "human": (5868, 229)}
+        for r in rows:
+            if r["anntype"] == "KEGG":
+                g, tm = measured[r["species"]]
+                self.assertLessEqual(int(r["min_genes"]), g / 2, r)
+                self.assertLessEqual(int(r["min_terms"]), tm / 2, r)
 
 
 if __name__ == "__main__":

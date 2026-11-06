@@ -78,9 +78,12 @@ enrichment_background_selfcheck <- function(tolerance = 1e-12) {
   universe <- c(g(c(1:9, 11:14)), "g1", "ghostU1")
   long <- data.frame(GeneID = unlist(terms), Term = rep(names(terms), lengths(terms)),
                      stringsAsFactors = FALSE)
+  # Every tested term must be reported for the oracle comparison, so both cutoffs are
+  # stated: richR >= 0.2.0 defaults padj to 0.05, which would drop every fixture row.
+  # This affects only this check, never the cutoffs of a user's analysis.
   one <- function(universe) {
     res <- suppressWarnings(suppressMessages(richR::enrich(
-      x = query, object = long, universe = universe, pvalue = 1, minSize = 1,
+      x = query, object = long, universe = universe, pvalue = 1, padj = NULL, minSize = 1,
       minGSSize = 1, maxSize = 500, maxGSSize = 500, keepRich = TRUE, padj.method = "BH")))
     res@result
   }

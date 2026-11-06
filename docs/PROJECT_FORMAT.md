@@ -88,6 +88,12 @@ digest, counts, annotation identity and richR version) is stored in `background`
 replaced by a typed absence, and restored as the attribute on open. When it is absent the whole
 field is `not_recorded`.
 
+SPEC-WS-014 adds one optional nested value inside that record: `background.annotation.packages`, a
+named object of the annotation packages the run needed and their installed versions, for example
+`{"org.Hs.eg.db": "3.23.1"}` (for Reactome with a non-ENTREZID gene ID type, `reactome.db` and the organism
+package). It is omitted when no annotation package is needed or recorded, so projects saved before this
+change open unchanged and no top-level manifest key, route or file changes.
+
 ## `tables.json`
 
 ```

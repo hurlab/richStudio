@@ -1,23 +1,23 @@
 species	package	kind	status	preinstall	est_mb	inst_mb	reactome_supported	reason
-human	org.Hs.eg.db	organism	available	yes	99	399	yes	
-mouse	org.Mm.eg.db	organism	available	yes	89	381	yes	
-rat	org.Rn.eg.db	organism	available	yes	61	274	yes	
-zebrafish	org.Dr.eg.db	organism	available	yes	36	141	yes	
-celegans	org.Ce.eg.db	organism	available	yes	20	72	yes	
-*	reactome.db	reactome	available	yes	319	1366	n/a	
-fly	org.Dm.eg.db	organism	available	no	30	110	yes	
-yeast	org.Sc.sgd.db	organism	available	no	15	65	yes	
-chicken	org.Gg.eg.db	organism	available	no	19	69	yes	
-bovine	org.Bt.eg.db	organism	available	no	22	78	yes	
-pig	org.Ss.eg.db	organism	available	no	21	81	yes	
-canine	org.Cf.eg.db	organism	available	no	31	124	yes	
-xenopus	org.Xl.eg.db	organism	available	no	26	107	yes	
-rhesus	org.Mmu.eg.db	organism	available	no	26	101	yes	
-arabidopsis	org.At.tair.db	organism	available	no	39	217	yes	
-anopheles	org.Ag.eg.db	organism	available	no	5	13	no	
-ecoli	org.EcK12.eg.db	organism	available	no	6	25	no	
-malaria	org.Pf.plasmo.db	organism	available	no	3	12	yes	
-chipm	org.Pt.eg.db	organism	available	no	27	106	yes	
+human	org.Hs.eg.db	organism	available	yes	99	398.5	yes	
+mouse	org.Mm.eg.db	organism	available	yes	89	380.7	yes	
+rat	org.Rn.eg.db	organism	available	yes	61	273.9	yes	
+zebrafish	org.Dr.eg.db	organism	available	yes	36	140.8	yes	
+celegans	org.Ce.eg.db	organism	available	yes	20	71.5	yes	
+*	reactome.db	reactome	available	yes	319	1365.4	n/a	
+fly	org.Dm.eg.db	organism	available	no	30	109.8	yes	
+yeast	org.Sc.sgd.db	organism	available	no	15	64.8	yes	
+chicken	org.Gg.eg.db	organism	available	no	19	68.4	yes	
+bovine	org.Bt.eg.db	organism	available	no	22	77.9	yes	
+pig	org.Ss.eg.db	organism	available	no	21	80.5	yes	
+canine	org.Cf.eg.db	organism	available	no	31	123.4	yes	
+xenopus	org.Xl.eg.db	organism	available	no	26	107.0	yes	
+rhesus	org.Mmu.eg.db	organism	available	no	26	100.6	yes	
+arabidopsis	org.At.tair.db	organism	available	no	39	217.0	yes	
+anopheles	org.Ag.eg.db	organism	available	no	5	12.7	no	
+ecoli	org.EcK12.eg.db	organism	available	no	6	24.5	no	
+malaria	org.Pf.plasmo.db	organism	available	no	3	11.8	yes	
+chipm	org.Pt.eg.db	organism	available	no	27	105.1	yes	
 toxoplasma	org.Tgondii.eg.db	organism	unavailable	no	n/a	n/a	no	not in the Bioconductor 3.23 annotation index
 sco	none	organism	unavailable	no	n/a	n/a	no	dropdown value has no richR species key; org.Sco.eg.db not in the index
 streptomyces	org.Sco.eg.db	organism	unavailable	no	n/a	n/a	no	not in the Bioconductor 3.23 annotation index

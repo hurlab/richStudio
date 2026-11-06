@@ -826,6 +826,21 @@ class InstallerTests(InstallerBase):
         self.assertEqual(env2.status()["reason"], "not_enough_disk", r.output())
         self.assertEqual(env2.downloads(), [])
 
+    def test_ac008_cache_size_counts_against_the_cap(self):
+        env = Env(self, [Pkg("org.Fake1.eg.db", est_mb="5100")])
+        r = env.run("org.Fake1.eg.db")
+        self.assertEqual(r.proc.returncode, 0, "5100 MiB alone is under the 5 GiB cap; " + r.output())
+        shutil.rmtree(env.lib / "org.Fake1.eg.db")
+        (env.lib / "INSTALLED.tsv").unlink()
+        cache = env.parent / "cache" / LIB_NAME
+        cache.mkdir(parents=True)
+        with open(cache / ("a" * 32 + ".rds"), "wb") as f:
+            f.write(os.urandom(100 * 1024 * 1024))
+        calls = len(env.downloads())
+        r = env.run("org.Fake1.eg.db")
+        self.assertEqual(env.status()["reason"], "not_enough_disk", r.output())
+        self.assertEqual(len(env.downloads()), calls)
+
     # AC-009 -----------------------------------------------------------------
     def test_ac009_installed_tsv_has_six_columns_and_survives_a_kill_before_rename(self):
         env = Env(self, [Pkg("org.Fake1.eg.db"), Pkg("org.Fake2.eg.db")])
@@ -915,24 +930,28 @@ class VerifyEnvLogicTests(unittest.TestCase):
         d.mkdir(parents=True, exist_ok=True)
         (d / "DESCRIPTION").write_text("Package: %s\nVersion: 1.0\nBuilt: %s\n" % (pkg, built or self.built))
 
-    def verify(self, builder="ok", enricher="ok", worker="ok", environ='c(HOME = "x")', libpaths=None, cache="ok"):
+    def verify(self, builder="ok", enricher="ok", worker="ok", environ='c(HOME = "x")', libpaths=None, cache="ok", expect_hit=False):
         fixture = self.tmp / "fixture.tsv"
         fixture.write_text("symbol\nTP53\n")
         lp = libpaths or 'c("%s", "%s")' % (self.rel_lib, self.annot)
-        builders = {"ok": "{ if (.armed && %s) .h <<- .h + 1L; mk(30000, 25000) }" % ("TRUE" if cache == "ok" else "FALSE"), "small": "mk(10, 5)"}
-        enrichers = {"ok": 'data.frame(Annot = c("GO:0097193", paste0("GO:", 1:110)), Padj = rep(0.001, 111))',
-                     "few": 'data.frame(Annot = c("GO:0097193", "GO:1"), Padj = c(0.001, 0.2))',
-                     "noterm": 'data.frame(Annot = paste0("GO:", 1:111), Padj = rep(0.001, 111))'}
+        hit = "TRUE" if cache == "ok" else "FALSE"
+        builders = {"ok": "{ s <- if (.armed && %s) 'disk' else 'built'; if (s == 'disk') .h <<- .h + 1L else .m <<- .m + 1L; structure(mk(30000, 25000), cache_source = s) }" % hit,
+                    "small": "structure(mk(10, 5), cache_source = 'built')"}
+        enrichers = {"ok": 'data.frame(Annot = c("GO:0097193", paste0("GO:", 1:150)), Padj = c(1e-23, rep(0.001, 150)))',
+                     "few": 'data.frame(Annot = c("GO:0097193", paste0("GO:", 1:100)), Padj = c(1e-23, rep(0.001, 100)))',
+                     "noterm": 'data.frame(Annot = paste0("GO:", 1:151), Padj = rep(0.001, 151))',
+                     "rank6": 'data.frame(Annot = c(paste0("GO:", 1:5), "GO:0097193", paste0("GO:x", 1:150)), Padj = c(rep(1e-20, 5), 1e-10, rep(0.001, 150)))'}
         workers = {"ok": 'c("%s", "%s")' % (self.rel_lib, self.annot), "reversed": 'c("%s", "%s")' % (self.annot, self.rel_lib)}
         code = "\n".join([
             '.annotation_script_dir <- "%s"' % WORKER_R.parent,
             'source("%s")' % WORKER_R,
-            '.armed <- FALSE; .h <- 0L',
+            '.armed <- FALSE; .h <- 0L; .m <- 0L',
             'mk <- function(g, t) { n <- max(g, t); data.frame(a = rep_len(seq_len(g), n), b = rep_len(seq_len(t), n)) }',
             'res <- verify_env("%s", "%s", "%s", "%s", "%s",' % (self.rel, self.annot, ALLOWLIST, FLOORS, fixture),
             '  builder = function(species, keytype, anntype) %s,' % builders[builder],
+            '  expect_hit = %s,' % ('TRUE' if expect_hit else 'FALSE'),
             '  enricher = function(df, header, species, anntype, keytype, ontology) %s,' % enrichers[enricher],
-            '  cache_stats = function() list(disk_hits = .h), reset_memory = function() .armed <<- TRUE,',
+            '  cache_stats = function() list(disk_hits = .h, misses = .m), reset_memory = function() .armed <<- TRUE,',
             '  worker_libpaths = function() %s, libpaths = %s, environ = %s)' % (workers[worker], lp, environ),
             'quit(status = if (res) 0L else 1L)'])
         script = self.tmp / "v.R"
@@ -945,7 +964,7 @@ class VerifyEnvLogicTests(unittest.TestCase):
         p = self.verify()
         self.assertEqual(p.returncode, 0, p.stdout + p.stderr)
         self.assertIn("VERIFY PASS", p.stdout)
-        self.assertEqual(p.stdout.count("CHECK floor_"), 11)
+        self.assertEqual(p.stdout.count("CHECK floor_"), 15)
         self.assertIn("CHECK cache_second_pass: PASS", p.stdout)
         self.assertEqual(p.stdout.count("FAIL"), 0)
 
@@ -962,7 +981,7 @@ class VerifyEnvLogicTests(unittest.TestCase):
         self.assertIn("CHECK floor_human_GO: FAIL", p.stdout)
 
     def test_fixture_needs_five_significant_rows_and_the_apoptosis_term(self):
-        for kind in ("few", "noterm"):
+        for kind in ("few", "noterm", "rank6"):
             with self.subTest(kind=kind):
                 p = self.verify(enricher=kind)
                 self.assertNotEqual(p.returncode, 0)
@@ -974,6 +993,11 @@ class VerifyEnvLogicTests(unittest.TestCase):
         self.assertIn("CHECK worker_libpaths_order: FAIL", p.stdout)
         p = self.verify(libpaths='c("%s", "%s")' % (self.annot, self.rel_lib))
         self.assertIn("CHECK libpaths_order: FAIL", p.stdout)
+
+    def test_expect_hit_requires_human_go_first_pass_to_be_a_hit(self):
+        p = self.verify(expect_hit=True)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("CHECK human_go_hit: FAIL", p.stdout)
 
     def test_second_pass_must_be_served_from_the_disk_cache(self):
         p = self.verify(cache="none")
@@ -1106,7 +1130,8 @@ class MergeGatePlaceholders(unittest.TestCase):
         expected = max(5 * 1024 ** 3, 2 * sum(float(r["inst_mb"]) for r in rows) * 1024 ** 2)
         out = subprocess.run([RSCRIPT, "--vanilla", str(WORKER_R), "cap"], capture_output=True, text=True,
                              timeout=60, env={k: v for k, v in os.environ.items() if not k.startswith("RICHSTUDIO_")}).stdout
-        self.assertEqual(out.strip(), "cap_bytes=%d" % expected)
+        got = int(out.strip().split("=")[1])
+        self.assertLessEqual(abs(got - expected), 1, "%s vs %s (float rounding of decimal MiB sizes)" % (got, expected))
 
     def test_ac012_deploy_record_has_no_placeholders(self):
         text = RECORD.read_text()

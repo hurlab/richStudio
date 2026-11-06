@@ -22,9 +22,9 @@ FREE_SPACE_FLOOR <- 2 * 1024^3
 CAP_FLOOR <- 5 * 1024^3
 NAME_RE <- "^[A-Za-z][A-Za-z0-9.]*$"
 # Lead-measured on hurlab (human fixture, richGO defaults): 298 rows with Padj < 0.05; the floor is
-# well under 50% of that. GO:0006915 can never be reported (1766 annotated BP genes > maxGSSize 500),
-# so the expected term is the intrinsic apoptotic signaling pathway.
-FIXTURE_MIN_ROWS <- 100L
+# 50% of that (149). GO:0006915 can never be reported (1766 annotated BP genes > maxGSSize 500),
+# so the expected term, among the five best by Padj, is the intrinsic apoptotic signaling pathway.
+FIXTURE_MIN_ROWS <- 149L
 INSTALLED_COLS <- c("package", "version", "sha256", "md5", "source_url", "installed_at")
 
 # ---- plumbing -------------------------------------------------------------
@@ -472,7 +472,7 @@ default_worker_libpaths <- function() {
 # built through richStudio's own cached builder, which attaches reactome.db on a miss); tests inject stubs.
 verify_env <- function(release_dir, annot_lib, allowlist, floors, fixture,
                        builder = function(species, keytype, anntype) richStudio:::richstudio_build_annotation(species, keytype, anntype),
-                       cache_stats = function() richStudio:::annotation_cache_stats(),
+                       cache_stats = function() richStudio:::annotation_cache_stats(), expect_hit = FALSE,
                        reset_memory = function() richStudio:::annotation_cache_reset(memory_only = TRUE),
                        enricher = function(df, header, species, anntype, keytype, ontology) {
                          richStudio:::shiny_enrich(df, header, species, anntype, keytype, ontology)@result
@@ -503,29 +503,51 @@ verify_env <- function(release_dir, annot_lib, allowlist, floors, fixture,
   }
 
   fl <- utils::read.delim(floors, sep = "\t", colClasses = "character", na.strings = character())
-  # Pass 1 builds (and caches) every annotation once; the counts are the floors' subject.
+  # Pre-warm: GO, builtin KEGG and Reactome for the five pre-installed species (15 entries) through the
+  # one richStudio builder. Floors apply where the floors file has a row; every entry must be non-empty.
+  five <- c("human", "mouse", "rat", "zebrafish", "celegans")
+  combos <- expand.grid(anntype = c("GO", "KEGG", "Reactome"), species = five, stringsAsFactors = FALSE)
+  src <- function(x) { s <- attr(x, "cache_source"); if (is.null(s)) "unknown" else s }
   t_first <- 0
-  for (i in seq_len(nrow(fl))) {
-    sp <- fl$species[[i]]; at <- fl$anntype[[i]]
+  first_src <- character()
+  for (i in seq_len(nrow(combos))) {
+    sp <- combos$species[[i]]; at <- combos$anntype[[i]]
     t0 <- proc.time()[["elapsed"]]
-    cnt <- tryCatch(annot_counts(builder(sp, "SYMBOL", at)), error = function(e) list(genes = NA_integer_, terms = NA_integer_, err = conditionMessage(e)))
+    obj <- tryCatch(builder(sp, "SYMBOL", at), error = function(e) e)
     el <- proc.time()[["elapsed"]] - t0
     t_first <- t_first + el
-    min_g <- as.numeric(fl$min_genes[[i]]); min_t <- as.numeric(fl$min_terms[[i]])
-    pass <- !is.na(cnt$genes) && cnt$genes >= min_g && cnt$terms >= min_t
-    step(paste0("floor_", sp, "_", at), pass,
-         sprintf("genes=%s (floor %s) terms=%s (floor %s) seconds=%.1f %s", cnt$genes, min_g, cnt$terms, min_t, el,
-                 if (is.null(cnt$err)) "" else cnt$err))
+    if (inherits(obj, "error")) {
+      step(paste0("build_", sp, "_", at), FALSE, conditionMessage(obj))
+      first_src[[paste(sp, at)]] <- "error"
+      next
+    }
+    first_src[[paste(sp, at)]] <- src(obj)
+    cnt <- annot_counts(obj)
+    row <- which(fl$species == sp & fl$anntype == at)
+    min_g <- if (length(row)) as.numeric(fl$min_genes[[row[[1L]]]]) else 1
+    min_t <- if (length(row)) as.numeric(fl$min_terms[[row[[1L]]]]) else 1
+    step(paste0("floor_", sp, "_", at), cnt$genes >= min_g && cnt$terms >= min_t,
+         sprintf("genes=%s (floor %s) terms=%s (floor %s) seconds=%.1f source=%s", cnt$genes, min_g, cnt$terms, min_t, el, src(obj)))
   }
-  # Pass 2 in a cleared memory level must be served from the disk cache, much faster than pass 1.
+  if (expect_hit) {
+    step("human_go_hit", first_src[["human GO"]] %in% c("memory", "disk"), paste("source =", first_src[["human GO"]]))
+  }
+  # Pass 2 in a cleared memory level: every entry must be a hit (memory or disk), none rebuilt.
   reset_memory()
-  hits0 <- cache_stats()$disk_hits
+  misses0 <- cache_stats()$misses
   t0 <- proc.time()[["elapsed"]]
-  for (i in seq_len(nrow(fl))) try(builder(fl$species[[i]], "SYMBOL", fl$anntype[[i]]), silent = TRUE)
+  second <- vapply(seq_len(nrow(combos)), function(i) {
+    x <- tryCatch(builder(combos$species[[i]], "SYMBOL", combos$anntype[[i]]), error = function(e) NULL)
+    if (is.null(x)) "error" else src(x)
+  }, character(1))
   t_second <- proc.time()[["elapsed"]] - t0
-  hits <- cache_stats()$disk_hits - hits0
-  step("cache_second_pass", hits >= nrow(fl) && (t_first < 5 || t_second <= 0.5 * t_first),
-       sprintf("disk_hits=%d of %d first_pass_seconds=%.1f second_pass_seconds=%.1f", hits, nrow(fl), t_first, t_second))
+  step("cache_second_pass", all(second %in% c("memory", "disk")) && cache_stats()$misses == misses0,
+       sprintf("entries=%d hits=%d first_pass_seconds=%.1f second_pass_seconds=%.1f sources=%s", nrow(combos),
+               sum(second %in% c("memory", "disk")), t_first, t_second, paste(table(second), names(table(second)), collapse = ",")))
+  rss <- tryCatch(grep("^VmRSS", readLines("/proc/self/status"), value = TRUE), error = function(e) "VmRSS: unavailable")
+  cdir <- file.path(dirname(annot_lib), "cache", basename(annot_lib))
+  du <- if (dir.exists(cdir)) suppressWarnings(system2("du", c("-sk", shQuote(cdir)), stdout = TRUE)) else "no cache dir"
+  cat(sprintf("INFO cache_dir_du_kb: %s | main process %s\n", sub("\\s.*$", "", du[[1L]]), gsub("\\s+", " ", rss[[1L]])))
 
   fx <- utils::read.delim(fixture, sep = "\t", colClasses = "character", na.strings = character())
   res <- tryCatch(enricher(fx, "symbol", "human", "GO", "SYMBOL", "BP"), error = function(e) conditionMessage(e))
@@ -533,9 +555,11 @@ verify_env <- function(release_dir, annot_lib, allowlist, floors, fixture,
     pc <- grep("^(padj|p\\.adjust|adj)", names(res), ignore.case = TRUE, value = TRUE)[1L]
     ac <- grep("^(annot|id|go)$", names(res), ignore.case = TRUE, value = TRUE)[1L]
     sig <- if (is.na(pc)) res[0, , drop = FALSE] else res[!is.na(res[[pc]]) & res[[pc]] < 0.05, , drop = FALSE]
-    has_term <- !is.na(ac) && "GO:0097193" %in% sig[[ac]]
+    top5 <- if (is.na(pc) || is.na(ac)) character() else as.character(res[[ac]][order(res[[pc]])][seq_len(min(5L, nrow(res)))])
+    has_term <- "GO:0097193" %in% top5
     step("fixture_enrichment", nrow(sig) >= FIXTURE_MIN_ROWS && has_term,
-         sprintf("significant_rows=%d (floor %d) GO:0097193=%s", nrow(sig), FIXTURE_MIN_ROWS, has_term))
+         sprintf("significant_rows=%d (floor %d) GO:0097193_in_top5=%s top5=%s", nrow(sig), FIXTURE_MIN_ROWS, has_term,
+                 paste(top5, collapse = ",")))
   } else {
     step("fixture_enrichment", FALSE, paste("error:", res))
   }
@@ -571,7 +595,7 @@ main <- function(args = commandArgs(trailingOnly = TRUE)) {
       "verify-env" = {
         if (length(args) < 3L) bail(1L, "usage: verify-env <release dir> <annotation lib>")
         rd <- sub("/+$", "", args[[2L]])
-        if (verify_env(rd, sub("/+$", "", args[[3L]]),
+        if (verify_env(rd, sub("/+$", "", args[[3L]]), expect_hit = "expect-hit" %in% args[-(1:3)],
                        file.path(rd, "inst", "extdata", "annotation-allowlist.tsv"),
                        file.path(rd, "inst", "extdata", "annotation-verify-floors.tsv"),
                        file.path(rd, "tests", "fixtures", "annotation", "human-query-20.tsv"))) 0L else 1L

@@ -201,9 +201,10 @@ ensure_annotation_library() {  # <build root holding inst/annotation>
 # REQ-011: the release's real environment, exactly as shiny-server reads it. The .Renviron
 # bytes must equal the generator output, then a minimal-environment R started in the release
 # directory checks library order (main and future worker), the pre-installed packages, the
-# floors and the fixture enrichment (annotation-install.R verify-env).
-verify_runtime_env() {  # <release dir or live path>
-    local root=$1 real
+# floors, the 15-entry annotation cache pre-warm (second pass all hits) and the fixture enrichment
+# (annotation-install.R verify-env). After the swap `expect-hit` also asserts human GO is a cache hit.
+verify_runtime_env() {  # <release dir or live path> [expect-hit]
+    local root=$1 expect=${2:-} real
     real="$(cd "$root" && pwd -P)"
     printf 'verify_runtime_env: %s (resolves to %s; annotation library %s)\n' "$root" "$real" "$ANNOTATION_LIB"
     [[ -f "$root/.Renviron" ]] || fail "release has no .Renviron: $root"
@@ -213,7 +214,7 @@ verify_runtime_env() {  # <release dir or live path>
         fail "release .Renviron carries a RICHSTUDIO_ANNOTATION_TEST variable"
     fi
     as_app_user "$root" env -i HOME="$APP_HOME" PATH="/usr/local/bin:/usr/bin:/bin" \
-        Rscript "$root/inst/annotation/annotation-install.R" verify-env "$root" "$ANNOTATION_LIB" ||
+        Rscript "$root/inst/annotation/annotation-install.R" verify-env "$root" "$ANNOTATION_LIB" $expect ||
         fail "real-environment verification failed for $root"
 }
 
@@ -478,7 +479,7 @@ printf 'Restarting shiny-server for the new release.\n'
 timeout --kill-after=5s 210s systemctl restart shiny-server
 wait_for_app || fail 'app did not come up cleanly after restart'
 # A 200 alone never passes (B6): the same real-environment verification, against the live path.
-verify_runtime_env "$APP_PATH" || fail 'post-swap real-environment verification failed'
+verify_runtime_env "$APP_PATH" expect-hit || fail 'post-swap real-environment verification failed'
 check_live_process_env
 if pgrep -u "$APP_USER" -f 'R-4\.5' >/dev/null; then
     fail 'an R process still references the R 4.5 library'

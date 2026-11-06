@@ -2,8 +2,11 @@
 """SPEC-DEPLOYRECOVERY-001: execute the actual publication tail with safe mocks."""
 
 import argparse
+import getpass
 import os
+import re
 import shlex
+import shutil
 import sys
 from pathlib import Path
 import subprocess
@@ -66,7 +69,7 @@ systemctl() {
     if [[ $1 == restart ]]; then
         if [[ $LIVE_TARGET == "$RELEASE_DIR" ]]; then
             case "$CASE" in
-                success|publish_health_failure|publish_inactive) return 0 ;;
+                success|publish_health_failure|publish_inactive|post_swap_verify_failure) return 0 ;;
                 foreign_target) LIVE_TARGET=/mock/foreign ;;
             esac
             FAILED=1
@@ -95,6 +98,16 @@ curl() {
 sleep() { record "sleep $*"; }
 pgrep() { return 1; }
 rm() { record "cleanup $*"; }
+# WS-014: the post-swap real-environment verification and the live-process scan. The mock fails the
+# verification only while the new release is live, with HTTP still answering 200 (a 200 never passes).
+verify_runtime_env() {
+    record "verify_runtime_env $LIVE_TARGET $*"
+    if [[ $CASE == post_swap_verify_failure && $LIVE_TARGET == "$RELEASE_DIR" ]]; then
+        printf 'ERROR: real-environment verification failed for %s\n' "$1" >&2
+        return 1
+    fi
+}
+check_live_process_env() { record "live_process_env"; }
 '''
 
 
@@ -145,6 +158,21 @@ class RecoveryTests(unittest.TestCase):
         for case, code in [("signal_int", 130), ("signal_term", 143)]:
             with self.subTest(case=case):
                 self.assert_recovered(case, code)
+
+    def test_post_swap_verification_failure_restores_even_when_http_is_200(self):
+        result = self.assert_recovered("post_swap_verify_failure", 1)
+        self.assertIn("verify_runtime_env /mock/candidate /mock/app", result.stderr)
+        self.assertIn("real-environment verification failed", result.stderr)
+        # HTTP answered 200 for the candidate before verification ran: a 200 alone never passes.
+        self.assertLess(result.stderr.index("http /mock/candidate"), result.stderr.index("verify_runtime_env /mock/candidate"))
+        self.assertNotIn("DEPLOY COMPLETE", result.stdout)
+
+    def test_success_runs_the_live_verification_after_the_http_check(self):
+        result = self.run_case("success")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("verify_runtime_env /mock/candidate /mock/app", result.stderr)
+        self.assertLess(result.stderr.index("http /mock/candidate"), result.stderr.index("verify_runtime_env /mock/candidate"))
+        self.assertLess(result.stderr.index("verify_runtime_env /mock/candidate"), result.stderr.index("live_process_env"))
 
     def test_pre_switch_failure_does_not_restart_or_restore(self):
         result = self.run_case("pre_swap_failure")
@@ -201,6 +229,120 @@ class RecoveryTests(unittest.TestCase):
         self.assertNotIn("ROLLBACK", result.stdout)
         self.assertNotIn("link ln -sfn -- /mock/previous", result.stderr)
         self.assertIn("cleanup -rf -- /mock/build", result.stderr)
+
+
+ANNOTATION_BLOCK = re.compile(r"# >>> WS-014 annotation functions >>>\n(.*?)# <<< WS-014 annotation functions <<<", re.S)
+LIB_LEAF = "r4.6-bioc3.23"
+
+
+class AnnotationFunctionTests(unittest.TestCase):
+    """SPEC-WS-014 M1 deploy functions, sourced from the real script into a harness with fakes.
+
+    AC-002 (.Renviron generator), AC-011 (real-environment verification fails before the swap on a
+    mistyped or reversed library order), AC-016 (R minor and Bioconductor pin)."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp(prefix="deploy-annotation-test-")).resolve()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.annot = self.tmp / "annotation" / LIB_LEAF
+
+    def run_bash(self, body, path=None, extra_env=None):
+        match = ANNOTATION_BLOCK.search(SOURCE.read_text())
+        self.assertIsNotNone(match, "annotation function block markers not found")
+        script = self.tmp / "harness.sh"
+        script.write_text(
+            "set -Eeuo pipefail\n"
+            "PINNED_R_MINOR=4.6\nBIOC_VERSION=3.23\nLIB_RELATIVE=renv/library/release-r46\n"
+            "APP_HOME=%s\nAPP_USER=%s\nANNOTATION_LIB=%s\nANNOTATION_PARENT=%s\n"
+            "fail() { printf 'ERROR: %%s\\n' \"$*\" >&2; exit 1; }\n"
+            "as_app_user() { shift; \"$@\"; }\n" % (self.tmp, getpass.getuser(), self.annot, self.annot.parent)
+            + match.group(1) + "\n" + body + "\n")
+        env = {"PATH": path or "/usr/bin:/bin"}
+        env.update(extra_env or {})
+        return subprocess.run(["bash", str(script)], capture_output=True, text=True, timeout=60, env=env)
+
+    def release(self, name="rel"):
+        rel = self.tmp / name
+        (rel / "renv" / "library" / "release-r46").mkdir(parents=True)
+        self.annot.mkdir(parents=True, exist_ok=True)
+        return rel
+
+    # AC-002
+    def test_renviron_generator_has_exactly_three_variables_and_cmp_detects_a_typo(self):
+        rel = self.release()
+        result = self.run_bash('render_renviron "%s" > "%s/.Renviron"' % (rel, rel))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        lines = (rel / ".Renviron").read_text().splitlines()
+        self.assertEqual(lines, [
+            "RENV_CONFIG_AUTOLOADER_ENABLED=FALSE",
+            "R_LIBS_USER=%s/renv/library/release-r46:%s" % (rel, self.annot),
+            "RICHSTUDIO_ANNOTATION_LIB=%s" % self.annot])
+        self.assertEqual(self.run_bash('cmp <(render_renviron "%s") "%s/.Renviron"' % (rel, rel)).returncode, 0)
+        (rel / ".Renviron").write_text("\n".join(lines).replace("richStudio/annotation", "richStudio/annotatoin").replace(str(self.annot), str(self.annot) + "x") + "\n")
+        self.assertNotEqual(self.run_bash('cmp <(render_renviron "%s") "%s/.Renviron"' % (rel, rel)).returncode, 0)
+
+    # AC-011 (logic: bytes mismatch stops before R runs)
+    def test_mistyped_or_reversed_renviron_fails_before_the_verification_r_runs(self):
+        rel = self.release()
+        good = self.run_bash('render_renviron "%s"' % rel).stdout.splitlines()
+        reversed_libs = "R_LIBS_USER=%s:%s/renv/library/release-r46" % (self.annot, rel)
+        cases = {
+            "mistyped": [good[0], good[1].replace(LIB_LEAF, "r4.6-bioc3.22"), good[2]],
+            "reversed": [good[0], reversed_libs, good[2]],
+            "test_variable": good + ["RICHSTUDIO_ANNOTATION_TEST_MODE=1"],
+        }
+        for name, lines in cases.items():
+            with self.subTest(case=name):
+                (rel / ".Renviron").write_text("\n".join(lines) + "\n")
+                body = 'as_app_user() { printf "R-INVOKED\\n"; }\nverify_runtime_env "%s"' % rel
+                result = self.run_bash(body)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotIn("R-INVOKED", result.stdout + result.stderr)
+                self.assertIn("ERROR:", result.stderr)
+        (rel / ".Renviron").write_text("\n".join(good) + "\n")
+        body = 'as_app_user() { shift; printf "R-INVOKED %%s\\n" "$*"; }\nverify_runtime_env "%s"' % (rel, )
+        result = self.run_bash(body)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("verify-env", result.stdout)
+        self.assertIn("env -i", result.stdout)
+
+    # AC-011 (mechanism: R really reads ./.Renviron from the release directory and orders the libraries)
+    def test_real_r_reads_the_release_renviron_and_orders_the_libraries(self):
+        rel = self.release()
+        (rel / ".Renviron").write_text(self.run_bash('render_renviron "%s"' % rel).stdout)
+        probe = "cat(.libPaths()[1:2], sep = '\\n')"
+        run = subprocess.run(["env", "-i", "HOME=" + str(self.tmp), "PATH=/usr/local/bin:/usr/bin:/bin", "Rscript",
+                              "-e", probe], cwd=rel, capture_output=True, text=True, timeout=120)
+        self.assertEqual(run.stdout.split(), [str(rel / "renv/library/release-r46"), str(self.annot)], run.stderr)
+        (rel / ".Renviron").write_text("R_LIBS_USER=%s:%s/renv/library/release-r46\n" % (self.annot, rel))
+        run = subprocess.run(["env", "-i", "HOME=" + str(self.tmp), "PATH=/usr/local/bin:/usr/bin:/bin", "Rscript",
+                              "-e", probe], cwd=rel, capture_output=True, text=True, timeout=120)
+        self.assertEqual(run.stdout.split(), [str(self.annot), str(rel / "renv/library/release-r46")])
+
+    # AC-016
+    def test_version_pin_accepts_any_4_6_patch_and_rejects_other_minors(self):
+        shim = self.tmp / "shim"
+        shim.mkdir()
+        cases = [("4.6.2", "3.23", True), ("4.6.1", "3.23", True), ("4.7.0", "3.23", False),
+                 ("4.5.9", "3.23", False), ("4.6.2", "3.24", False)]
+        for r_version, bioc, accepted in cases:
+            with self.subTest(r=r_version, bioc=bioc):
+                (shim / "R").write_text("#!/bin/sh\necho 'R version %s (2026-10-29) -- \"Diversified Portfolio\"'\n" % r_version)
+                (shim / "Rscript").write_text("#!/bin/sh\nprintf '%s'\n" % bioc)
+                os.chmod(shim / "R", 0o755)
+                os.chmod(shim / "Rscript", 0o755)
+                result = self.run_bash("check_runtime_versions", path="%s:/usr/bin:/bin" % shim)
+                self.assertIn("Measured R %s, Bioconductor %s" % (r_version, bioc), result.stdout)
+                if accepted:
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                else:
+                    self.assertNotEqual(result.returncode, 0)
+                    if r_version.rsplit(".", 1)[0] != "4.6":
+                        self.assertIn(r_version, result.stderr)
+                        self.assertIn("4.6", result.stderr)
+                    else:
+                        self.assertIn(bioc, result.stderr)
+                        self.assertIn("3.23", result.stderr)
 
 
 if __name__ == "__main__":

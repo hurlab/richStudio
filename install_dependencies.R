@@ -77,6 +77,10 @@ install_cran <- function(packages) {
 # Bioconductor Packages
 # ============================================================================
 
+# Note: on the deployed host the organism packages (org.*.eg.db, reactome.db) are NOT installed
+# here. They live in a persistent annotation library outside every release and are installed by
+# inst/annotation/annotation-install.sh (SPEC-WS-014; see docs/DEPENDENCY_DEPLOYMENT.md). This
+# list is for a developer machine and is unchanged.
 bioc_packages <- c(
   # These are typically required by richR/bioAnno
   "AnnotationDbi",

@@ -22,8 +22,10 @@ readonly SHINY_URL="http://127.0.0.1:3838/richStudio/"
 readonly REPO_URL="https://github.com/hurlab/richStudio.git"
 readonly EXPECTED_HOST="Hurlab.und.nodak.edu"
 readonly EXPECTED_TAILSCALE_IP="100.94.67.89"
-readonly EXPECTED_R="4.6.1"
+readonly PINNED_R_MINOR="4.6"
 readonly BIOC_VERSION="3.23"
+readonly LIVE_ANNOTATION_PARENT="/home/juhur/.local/share/richStudio/annotation"
+readonly ANNOTATION_LEAF="r${PINNED_R_MINOR}-bioc${BIOC_VERSION}"
 readonly CRAN_BINARY_REPO="https://packagemanager.posit.co/cran/__linux__/noble/latest"
 readonly RICHR_URL="https://github.com/hurlab/richR/releases/download/v0.1.6/richR_0.1.6.tar.gz"
 readonly RICHR_SHA256="a88cfa6d287058873d5a43228a66504086bbd0b707b8dad6bb0d13f4b976529e"
@@ -76,6 +78,10 @@ else
     chmod 0770 "$WORK_ROOT"
     LOG_FILE="$RESULT_DIR/deployment.log"
 fi
+# The annotation library is persistent and outside every release (SPEC-WS-014); a preflight
+# uses a scratch one under its own work root and never touches the live one.
+if (( PREFLIGHT )); then ANNOTATION_PARENT="$WORK_ROOT/annotation"; else ANNOTATION_PARENT="$LIVE_ANNOTATION_PARENT"; fi
+ANNOTATION_LIB="$ANNOTATION_PARENT/$ANNOTATION_LEAF"
 touch "$LOG_FILE"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
@@ -97,13 +103,145 @@ r_build() {
         RENV_CONFIG_AUTOLOADER_ENABLED=FALSE R_LIBS_USER="$LIB" "$@"
 }
 
+# >>> WS-014 annotation functions >>>
+# Functions only: nothing below runs until it is called, so tests can source this block.
+annotation_allowlist_packages() {  # <root> preinstall|available
+    local file="$1/inst/extdata/annotation-allowlist.tsv"
+    [[ -r $file ]] || fail "annotation allowlist not found: $file"
+    case "$2" in
+        preinstall) awk -F'\t' 'NR > 1 && $4 == "available" && $5 == "yes" { print $2 }' "$file" ;;
+        available)  awk -F'\t' 'NR > 1 && $4 == "available" { print $2 }' "$file" ;;
+        *) fail "bad allowlist filter: $2" ;;
+    esac
+}
+
+# The one generator of the release .Renviron: release library first, annotation library second.
+render_renviron() {  # <release dir the library paths point into>
+    printf 'RENV_CONFIG_AUTOLOADER_ENABLED=FALSE\nR_LIBS_USER=%s:%s\nRICHSTUDIO_ANNOTATION_LIB=%s\n' \
+        "$1/$LIB_RELATIVE" "$ANNOTATION_LIB" "$ANNOTATION_LIB"
+}
+
+# REQ-016: pin the R minor (any 4.6.x) and the Bioconductor version; print what was measured.
+check_runtime_versions() {
+    local r_measured bioc_measured
+    r_measured="$(R --version | sed -n '1s/.*version \([0-9.]*\).*/\1/p')"
+    bioc_measured="$(as_app_user "$APP_HOME" Rscript -e 'cat(as.character(BiocManager::version()))' 2>/dev/null)" || bioc_measured=unmeasurable
+    printf 'Measured R %s, Bioconductor %s (pinned: R %s.x, Bioconductor %s)\n' \
+        "$r_measured" "$bioc_measured" "$PINNED_R_MINOR" "$BIOC_VERSION"
+    [[ "$r_measured" == "$PINNED_R_MINOR".* && "$r_measured" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+        fail "server R is $r_measured but the pinned R minor is $PINNED_R_MINOR (any $PINNED_R_MINOR.x is accepted)"
+    [[ "$bioc_measured" == "$BIOC_VERSION" ]] ||
+        fail "server Bioconductor is $bioc_measured but the pinned version is $BIOC_VERSION"
+}
+
+# REQ-015: shape, ownership and mode of the annotation library and its parent.
+check_annotation_library() {  # <dir> <expected owner>
+    local dir=$1 owner=$2 d mode actual
+    [[ $dir == /* && $dir != *..* ]] || fail "annotation library path is not absolute or contains '..': $dir"
+    [[ $dir != /opt/richStudio/* ]] || fail "annotation library is inside the sealed release tree: $dir"
+    [[ ! -L $dir ]] || fail "annotation library is a symbolic link: $dir"
+    [[ "$(basename -- "$dir")" =~ ^r[0-9]+\.[0-9]+-bioc[0-9]+\.[0-9]+$ ]] ||
+        fail "annotation library name is not r<R minor>-bioc<Bioc version>: $dir"
+    for d in "$dir" "$(dirname -- "$dir")"; do
+        [[ -d $d ]] || fail "annotation directory is missing: $d"
+        actual="$(stat -c %U -- "$d")"
+        [[ "$actual" == "$owner" ]] || fail "annotation directory is owned by $actual, not by $owner: $d"
+        mode="$(stat -c %a -- "$d")"
+        (( (8#$mode & 8#022) == 0 )) || fail "annotation directory is group- or world-writable (mode $mode): $d"
+    done
+}
+
+# REQ-015: no annotation package may sit in the sealed release library.
+check_release_lib_clean() {  # <release or build root>
+    local root=$1 pkg pkgs
+    pkgs="$(annotation_allowlist_packages "$root" available)"
+    for pkg in $pkgs; do
+        [[ ! -e "$root/$LIB_RELATIVE/$pkg" ]] ||
+            fail "annotation package $pkg exists in the sealed release library: $root/$LIB_RELATIVE/$pkg"
+    done
+}
+
+# Idempotent: create the library as the app user, then run the supervisor once per pre-install
+# package, each with its own 2400 s deadline. Busy (75) is retried every 10 s for up to 2400 s.
+ensure_annotation_library() {  # <build root holding inst/annotation>
+    local root=$1 pkg rc waited status_file holder reason
+    status_file="$ANNOTATION_LIB.status"
+    as_app_user "$APP_HOME" mkdir -p -m 0755 -- "$ANNOTATION_PARENT" "$ANNOTATION_LIB"
+    check_annotation_library "$ANNOTATION_LIB" "$APP_USER"
+    for pkg in $(annotation_allowlist_packages "$root" preinstall); do
+        waited=0
+        while :; do
+            rc=0
+            printf 'Annotation package %s: running the installer\n' "$pkg"
+            as_app_user "$root" env RICHSTUDIO_ANNOTATION_LIB="$ANNOTATION_LIB" R_LIBS_USER="$root/$LIB_RELATIVE" \
+                R_ENVIRON_USER=/dev/null R_PROFILE_USER=/dev/null RENV_CONFIG_AUTOLOADER_ENABLED=FALSE \
+                RICHSTUDIO_RSCRIPT="$(command -v Rscript)" \
+                bash "$root/inst/annotation/annotation-install.sh" "$pkg" || rc=$?
+            case "$rc" in
+                0) break ;;
+                75)
+                    holder="$(awk -F= '$1 == "pid" { print $2 }' "$status_file" 2>/dev/null || true)"
+                    (( waited < 2400 )) ||
+                        fail "annotation library lock still held after 2400 s (holder pid ${holder:-unknown})"
+                    printf 'Another installer holds the annotation library (pid %s); retrying in 10 s\n' "${holder:-unknown}"
+                    sleep 10
+                    waited=$((waited + 10))
+                    ;;
+                127) fail "the installer needs a tool this host lacks (see its message above)" ;;
+                *)
+                    reason="$(awk -F= '$1 == "reason" { print $2 }' "$status_file" 2>/dev/null || true)"
+                    fail "annotation install of $pkg failed (exit $rc, reason ${reason:-unknown})"
+                    ;;
+            esac
+        done
+    done
+    [[ ! -f "$ANNOTATION_LIB/INSTALLED.tsv" ]] || cat "$ANNOTATION_LIB/INSTALLED.tsv"
+}
+
+# REQ-011: the release's real environment, exactly as shiny-server reads it. The .Renviron
+# bytes must equal the generator output, then a minimal-environment R started in the release
+# directory checks library order (main and future worker), the pre-installed packages, the
+# floors and the fixture enrichment (annotation-install.R verify-env).
+verify_runtime_env() {  # <release dir or live path>
+    local root=$1 real
+    real="$(cd "$root" && pwd -P)"
+    printf 'verify_runtime_env: %s (resolves to %s; annotation library %s)\n' "$root" "$real" "$ANNOTATION_LIB"
+    [[ -f "$root/.Renviron" ]] || fail "release has no .Renviron: $root"
+    cmp -s <(render_renviron "$real") "$root/.Renviron" ||
+        fail "release .Renviron differs from the generator output: $root/.Renviron"
+    if grep -q 'RICHSTUDIO_ANNOTATION_TEST' "$root/.Renviron"; then
+        fail "release .Renviron carries a RICHSTUDIO_ANNOTATION_TEST variable"
+    fi
+    as_app_user "$root" env -i HOME="$APP_HOME" PATH="/usr/local/bin:/usr/bin:/bin" \
+        Rscript "$root/inst/annotation/annotation-install.R" verify-env "$root" "$ANNOTATION_LIB" ||
+        fail "real-environment verification failed for $root"
+}
+
+# After the swap: the live app process must not carry the test-only variables.
+check_live_process_env() {
+    local pid found=0
+    for pid in $(pgrep -u "$APP_USER" -f 'SockJSAdapter|shiny-server' || true); do
+        [[ -r "/proc/$pid/environ" ]] || continue
+        found=$((found + 1))
+        if tr '\0' '\n' < "/proc/$pid/environ" | grep -q '^RICHSTUDIO_ANNOTATION_TEST'; then
+            fail "a RICHSTUDIO_ANNOTATION_TEST variable is present in live process $pid"
+        fi
+    done
+    if (( found )); then
+        printf 'Live process environment: %d process(es) scanned, none carry RICHSTUDIO_ANNOTATION_TEST*\n' "$found"
+    else
+        printf 'Live process environment: no live app R process found; NOT CHECKED\n'
+    fi
+}
+# <<< WS-014 annotation functions <<<
+
 printf 'Mode: %s\nRelease: %s\nWork root: %s\nLog: %s\n' \
     "$([[ $PREFLIGHT == 1 ]] && echo preflight || echo deploy)" "$RELEASE_SHA" "$WORK_ROOT" "$LOG_FILE"
 
 # ---- environment checks -----------------------------------------------------
 [[ "$(hostname -f)" == "$EXPECTED_HOST" ]] || fail 'hostname does not match the reviewed server'
 [[ "$(tailscale ip -4 2>/dev/null | head -n 1)" == "$EXPECTED_TAILSCALE_IP" ]] || fail 'Tailscale address does not match'
-[[ "$(R --version | sed -n '1s/.*version \([0-9.]*\).*/\1/p')" == "$EXPECTED_R" ]] || fail "server R is not $EXPECTED_R"
+check_runtime_versions
 grep -Eq "^[[:space:]]*app_dir $APP_PATH;$" "$SHINY_CONFIG" || fail 'configured Shiny app directory changed'
 grep -Eq '^[[:space:]]*run_as juhur;$' "$SHINY_CONFIG" || fail 'configured app run user changed'
 grep -Eq "^[[:space:]]*log_dir $APP_PATH/logs;$" "$SHINY_CONFIG" || fail 'configured app log directory changed'
@@ -176,10 +314,15 @@ r_build Rscript -e '
   }
 ' "$LIB" "$CRAN_BINARY_REPO" "$BIOC_VERSION" "$SRC/richR" "$SRC/bioAnno" "$SRC/richCluster" "$BUILD_DIR"
 
-printf 'Building compiled hurlab packages and richStudio from source for R %s\n' "$EXPECTED_R"
+printf 'Building compiled hurlab packages and richStudio from source for R %s.x\n' "$PINNED_R_MINOR"
 for pkg_src in "$SRC/richR_0.1.6.tar.gz" "$SRC/bioAnno" "$SRC/richCluster" "$BUILD_DIR"; do
     r_build R CMD INSTALL --no-test-load --library="$LIB" "$pkg_src"
 done
+
+# ---- annotation library (persistent, outside every release) -----------------
+printf 'Ensuring the annotation library %s\n' "$ANNOTATION_LIB"
+ensure_annotation_library "$BUILD_DIR"
+check_release_lib_clean "$BUILD_DIR"
 
 # ---- verification before anything live changes -----------------------------
 verify_release() {
@@ -214,7 +357,13 @@ verify_release() {
     '
 }
 verify_release "$BUILD_DIR"
-[[ -z "$(as_app_user "$BUILD_DIR" git status --porcelain --untracked-files=normal | grep -v "^?? $LIB_RELATIVE\|^?? renv/\|^?? logs/" || true)" ]] || fail 'verification changed release files'
+if (( PREFLIGHT )); then
+    # The preflight reads the same generated .Renviron the finalized release will carry, against
+    # the scratch annotation library; the generated file is exempt from the clean-tree check.
+    render_renviron "$BUILD_DIR" > "$BUILD_DIR/.Renviron"
+    verify_runtime_env "$BUILD_DIR"
+fi
+[[ -z "$(as_app_user "$BUILD_DIR" git status --porcelain --untracked-files=normal | grep -v "^?? $LIB_RELATIVE\|^?? renv/\|^?? logs/\|^?? \.Renviron$" || true)" ]] || fail 'verification changed release files'
 
 if (( PREFLIGHT )); then
     printf 'PREFLIGHT PASS\nNothing live was changed. Build left at %s (delete when done).\n' "$WORK_ROOT"
@@ -230,7 +379,7 @@ chmod 0750 "$WORK_ROOT"
 mkdir -m 0700 "$RELEASE_STAGE"
 cp -a --no-preserve=ownership,mode "$BUILD_DIR/." "$RELEASE_STAGE/"
 rm -rf -- "$RELEASE_STAGE/.git"
-printf 'RENV_CONFIG_AUTOLOADER_ENABLED=FALSE\nR_LIBS_USER=%s\n' "$RELEASE_DIR/$LIB_RELATIVE" > "$RELEASE_STAGE/.Renviron"
+render_renviron "$RELEASE_DIR" > "$RELEASE_STAGE/.Renviron"
 printf '%s\n' "$RELEASE_SHA" > "$RELEASE_STAGE/.release-commit"
 printf 'richR %s\nbioAnno %s\nrichCluster %s\n' "$RICHR_SHA256" "$BIOANNO_SHA256" "$RICHCLUSTER_SHA256" \
     > "$RELEASE_STAGE/.dependency-archives.sha256"
@@ -244,6 +393,9 @@ mv -- "$RELEASE_STAGE" "$RELEASE_DIR"
 printf 'Verifying the finalized release at its final path.\n'
 verify_release "$RELEASE_DIR"
 as_app_user "$RELEASE_DIR" bash -c 'test ! -w "$1/app.R" && test -w "$1/logs"' _ "$RELEASE_DIR" || fail 'release permissions are wrong'
+printf 'Real-environment verification of the finalized release at its final path (before the swap).\n'
+check_release_lib_clean "$RELEASE_DIR"
+verify_runtime_env "$RELEASE_DIR"
 
 # ---- publish: atomic symlink swap, then full shiny-server restart -----------
 [[ "$(readlink -- "$APP_PATH")" == "$PREVIOUS_TARGET" ]] || fail 'live symlink changed during the build'
@@ -325,6 +477,9 @@ SWAPPED=1
 printf 'Restarting shiny-server for the new release.\n'
 timeout --kill-after=5s 210s systemctl restart shiny-server
 wait_for_app || fail 'app did not come up cleanly after restart'
+# A 200 alone never passes (B6): the same real-environment verification, against the live path.
+verify_runtime_env "$APP_PATH" || fail 'post-swap real-environment verification failed'
+check_live_process_env
 if pgrep -u "$APP_USER" -f 'R-4\.5' >/dev/null; then
     fail 'an R process still references the R 4.5 library'
 fi

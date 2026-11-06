@@ -413,7 +413,7 @@ enrich_tab_server <- function(
   u_rrdfs,
   u_big_rrdf,
   enrichment_runner = run_enrichment_jobs,
-  annotation_builder = richR::buildAnnot
+  annotation_builder = richstudio_build_annotation
 ) {
   moduleServer(id, function(input, output, session) {
     # Session job registry (SPEC-WS-006), shared through session$userData.

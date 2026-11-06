@@ -42,7 +42,7 @@ query_gene_ids <- function(x, header) {
 # universe: NULL for the annotation universe, or an explicit character vector forwarded
 # to the public richR route (richR intersects it with the annotation).
 shiny_enrich <- function(x, header, species, anntype, keytype, ontology,
-                         annotation_builder = richR::buildAnnot, universe = NULL) {
+                         annotation_builder = richstudio_build_annotation, universe = NULL) {
   x <- query_gene_ids(x, header)
   if (length(x) == 0) {
     stop("No query genes remain after input filtering.", call. = FALSE)
@@ -69,7 +69,7 @@ shiny_enrich <- function(x, header, species, anntype, keytype, ontology,
 # An explicit background is reviewed against the annotation first; any incompatible
 # query/background pair stops the run before richR is called.
 run_enrichment_jobs <- function(deg_inputs, cutoff, species, anntype, keytype,
-                                ontology, annotation_builder = richR::buildAnnot,
+                                ontology, annotation_builder = richstudio_build_annotation,
                                 background = NULL) {
   explicit <- !is.null(background) && identical(background$mode, "explicit")
   annotation_ids <- NULL

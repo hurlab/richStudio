@@ -164,11 +164,13 @@ check_release_lib_clean() {  # <release or build root>
 # Idempotent: create the library as the app user, then run the supervisor once per pre-install
 # package, each with its own 2400 s deadline. Busy (75) is retried every 10 s for up to 2400 s.
 ensure_annotation_library() {  # <build root holding inst/annotation>
-    local root=$1 pkg rc waited status_file holder reason
+    local root=$1 pkg pkgs rc waited status_file holder reason
     status_file="$ANNOTATION_LIB.status"
     as_app_user "$APP_HOME" mkdir -p -m 0755 -- "$ANNOTATION_PARENT" "$ANNOTATION_LIB"
     check_annotation_library "$ANNOTATION_LIB" "$APP_USER"
-    for pkg in $(annotation_allowlist_packages "$root" preinstall); do
+    pkgs="$(annotation_allowlist_packages "$root" preinstall)" || fail "cannot read the annotation allowlist under $root"
+    [[ -n $pkgs ]] || fail "the annotation allowlist lists no pre-install package: $root/inst/extdata/annotation-allowlist.tsv"
+    for pkg in $pkgs; do
         waited=0
         while :; do
             rc=0
@@ -234,6 +236,14 @@ check_live_process_env() {
         printf 'Live process environment: no live app R process found; NOT CHECKED\n'
     fi
 }
+
+# A shell that exported the installer's test-only (or any other annotation) variables must not
+# change deploy or preflight behaviour: every child inherits this scrubbed environment.
+scrub_annotation_env() {
+    local v
+    for v in $(compgen -e | grep '^RICHSTUDIO_ANNOTATION_' || true); do unset "$v"; done
+}
+scrub_annotation_env
 # <<< WS-014 annotation functions <<<
 
 printf 'Mode: %s\nRelease: %s\nWork root: %s\nLog: %s\n' \
@@ -254,7 +264,8 @@ printf 'Current live target: %s\n' "$PREVIOUS_TARGET"
 # ---- exact-commit checkout ---------------------------------------------------
 as_app_user "$WORK_ROOT" git init --quiet "$BUILD_DIR"
 as_app_user "$BUILD_DIR" git remote add origin "$REPO_URL"
-as_app_user "$BUILD_DIR" git fetch --quiet --no-tags --depth 1 origin "$RELEASE_SHA"
+as_app_user "$BUILD_DIR" timeout --kill-after=10 300 git fetch --quiet --no-tags --depth 1 origin "$RELEASE_SHA" ||
+    fail "git fetch of $RELEASE_SHA failed or exceeded the 300 s limit"
 as_app_user "$BUILD_DIR" git checkout --quiet --detach FETCH_HEAD
 [[ "$(as_app_user "$BUILD_DIR" git rev-parse HEAD)" == "$RELEASE_SHA" ]] || fail 'checked-out commit does not match the release SHA'
 [[ ! -e "$BUILD_DIR/.Renviron" ]] || fail 'release already contains a .Renviron'

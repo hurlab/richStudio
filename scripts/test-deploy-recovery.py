@@ -319,6 +319,33 @@ class AnnotationFunctionTests(unittest.TestCase):
                               "-e", probe], cwd=rel, capture_output=True, text=True, timeout=120)
         self.assertEqual(run.stdout.split(), [str(self.annot), str(rel / "renv/library/release-r46")])
 
+    def test_scrub_removes_every_annotation_variable_from_child_environments(self):
+        body = "scrub_annotation_env\nenv | grep -c '^RICHSTUDIO_ANNOTATION_' || true"
+        result = self.run_bash(body, extra_env={"RICHSTUDIO_ANNOTATION_TEST_MODE": "1",
+                                                "RICHSTUDIO_ANNOTATION_TEST_CONFIG": "/x", "RICHSTUDIO_ANNOTATION_LIB": "/y",
+                                                "RICHSTUDIO_OTHER": "keep"})
+        self.assertEqual(result.stdout.strip(), "0", result.stderr)
+        kept = self.run_bash("env | grep -c '^RICHSTUDIO_OTHER=' || true", extra_env={"RICHSTUDIO_OTHER": "keep"})
+        self.assertEqual(kept.stdout.strip(), "1")
+
+    def test_missing_or_empty_preinstall_allowlist_aborts_the_ensure_step(self):
+        rel = self.release()
+        (rel / "inst" / "extdata").mkdir(parents=True)
+        self.annot.parent.chmod(0o755)
+        missing = self.run_bash('ensure_annotation_library "%s"' % rel)
+        self.assertNotEqual(missing.returncode, 0)
+        self.assertIn("allowlist", missing.stderr)
+        (rel / "inst" / "extdata" / "annotation-allowlist.tsv").write_text(
+            "species\tpackage\tkind\tstatus\tpreinstall\test_mb\tinst_mb\treactome_supported\treason\n"
+            "fly\torg.Dm.eg.db\torganism\tavailable\tno\t30\t110\tyes\t\n")
+        empty = self.run_bash('ensure_annotation_library "%s"' % rel)
+        self.assertNotEqual(empty.returncode, 0)
+        self.assertIn("no pre-install package", empty.stderr)
+
+    def test_git_fetch_is_bounded_by_a_timeout(self):
+        line = next(l for l in SOURCE.read_text().splitlines() if "git fetch" in l and "RELEASE_SHA" in l)
+        self.assertIn("timeout --kill-after=10 300 git fetch", line)
+
     # AC-016
     def test_version_pin_accepts_any_4_6_patch_and_rejects_other_minors(self):
         shim = self.tmp / "shim"

@@ -1,0 +1,24 @@
+species	package	kind	status	preinstall	est_mb	inst_mb	reactome_supported	reason
+human	org.Hs.eg.db	organism	available	yes	99	PENDING-LEAD	yes	
+mouse	org.Mm.eg.db	organism	available	yes	89	PENDING-LEAD	yes	
+rat	org.Rn.eg.db	organism	available	yes	61	PENDING-LEAD	yes	
+zebrafish	org.Dr.eg.db	organism	available	yes	36	PENDING-LEAD	yes	
+celegans	org.Ce.eg.db	organism	available	yes	20	PENDING-LEAD	yes	
+*	reactome.db	reactome	available	yes	319	PENDING-LEAD	n/a	
+fly	org.Dm.eg.db	organism	available	no	30	PENDING-LEAD	yes	
+yeast	org.Sc.sgd.db	organism	available	no	15	PENDING-LEAD	yes	
+chicken	org.Gg.eg.db	organism	available	no	19	PENDING-LEAD	yes	
+bovine	org.Bt.eg.db	organism	available	no	22	PENDING-LEAD	yes	
+pig	org.Ss.eg.db	organism	available	no	21	PENDING-LEAD	yes	
+canine	org.Cf.eg.db	organism	available	no	31	PENDING-LEAD	yes	
+xenopus	org.Xl.eg.db	organism	available	no	26	PENDING-LEAD	yes	
+rhesus	org.Mmu.eg.db	organism	available	no	26	PENDING-LEAD	yes	
+arabidopsis	org.At.tair.db	organism	available	no	39	PENDING-LEAD	yes	
+anopheles	org.Ag.eg.db	organism	available	no	5	PENDING-LEAD	no	
+ecoli	org.EcK12.eg.db	organism	available	no	6	PENDING-LEAD	no	
+malaria	org.Pf.plasmo.db	organism	available	no	3	PENDING-LEAD	yes	
+chipm	org.Pt.eg.db	organism	available	no	27	PENDING-LEAD	yes	
+toxoplasma	org.Tgondii.eg.db	organism	unavailable	no	n/a	n/a	no	not in the Bioconductor 3.23 annotation index
+sco	none	organism	unavailable	no	n/a	n/a	no	dropdown value has no richR species key; org.Sco.eg.db not in the index
+streptomyces	org.Sco.eg.db	organism	unavailable	no	n/a	n/a	no	not in the Bioconductor 3.23 annotation index
+ecsakai	org.EcSakai.eg.db	organism	unavailable	no	n/a	n/a	no	not offered by the dropdown; not confirmed in the index

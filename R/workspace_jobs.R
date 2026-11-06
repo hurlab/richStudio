@@ -316,6 +316,10 @@ workspace_jobs_registry <- function(
   # stay owned.
   jobs$tick <- shiny::withReactiveDomain(NULL, shiny::reactiveVal(0L))
   jobs$announce <- shiny::withReactiveDomain(NULL, shiny::reactiveVal(""))
+  # Annotation-install requests of this session (SPEC-WS-014 M2): rows driven by the installer's
+  # status file, never futures.
+  jobs$installs <- shiny::withReactiveDomain(NULL, shiny::reactiveVal(list()))
+  jobs$install_observer <- FALSE
   jobs$policy_loader <- policy_loader
   jobs$ack_timeout <- ack_timeout
   jobs$imported <- character()
@@ -363,6 +367,11 @@ workspace_jobs_for <- function(session) {
 }
 
 workspace_jobs_peek <- function(session) session$userData$workspace_jobs
+
+# The session's annotation-install requests; empty for a registry built without them.
+workspace_jobs_installs <- function(jobs) {
+  if (is.function(jobs$installs)) jobs$installs() else list()
+}
 
 workspace_jobs_new_run_id <- function(jobs) {
   existing <- vapply(
@@ -1614,6 +1623,40 @@ workspace_jobs_row <- function(ns, rec, buttons = list()) {
 }
 
 # The failure message and the complete install command in a copyable code element.
+# One annotation-install request as a row of the tray (SPEC-WS-014 M2): kind, short id, textual
+# state, what is being installed, the offered actions, and for a failure the fixed reason message with
+# the manual command in the Copy command panel (from the structured failure, not from text).
+workspace_install_row <- function(ns, rec, buttons = list()) {
+  failed <- identical(rec$state, "failed") && !is.null(rec$failure)
+  shiny::tagList(
+    shiny::tags$li(
+      class = "rs-job rs-install",
+      `data-state` = if (failed) "failed" else rec$state,
+      shiny::tags$span(class = "rs-job-kind", "Installing annotation"),
+      " ",
+      shiny::tags$code(class = "rs-job-id", substr(rec$id, 1L, 8L)),
+      " ",
+      shiny::tags$span(class = "rs-job-state", rec$text),
+      " ",
+      shiny::tags$span(
+        class = "rs-job-inputs",
+        sprintf("Package: %s; species: %s", paste(rec$packages, collapse = ", "), rec$species)
+      ),
+      buttons
+    ),
+    if (failed) {
+      shiny::tags$p(
+        class = "rs-job-status",
+        if (is.null(rec$failure$command)) {
+          rec$failure$message
+        } else {
+          workspace_jobs_environment_block(list(message = rec$failure$message, command = rec$failure$command))
+        }
+      )
+    }
+  )
+}
+
 workspace_jobs_environment_block <- function(env) {
   shiny::tagList(
     paste0(" ", env$message, " Install it in R with:"),
@@ -1725,15 +1768,39 @@ workspace_jobs_server <- function(id, jobs) {
     shown_records <- function() {
       Filter(function(r) !(r$run_id %in% dismissed()), jobs$records)
     }
+    # Annotation-install rows (SPEC-WS-014 M2) share the jobs list output, so the tray keeps its one
+    # polite region and its output ids.
+    installs_ui <- function() {
+      recs <- workspace_jobs_installs(jobs)
+      if (!length(recs)) {
+        return(NULL)
+      }
+      status <- shiny::isolate(annotation_read_status(annotation_lib_dir()))
+      shiny::tags$ul(
+        class = "rs-job-list rs-install-list",
+        lapply(recs, function(rec) {
+          buttons <- list()
+          if (annotation_stop_offered(rec, status)) {
+            buttons <- c(buttons, list(workspace_jobs_button(ns, "install_stop", rec$id, "Stop")))
+          }
+          if (identical(rec$state, "failed")) {
+            buttons <- c(buttons, list(workspace_jobs_button(ns, "install_retry", rec$id, "Retry")))
+          }
+          buttons <- c(buttons, list(workspace_jobs_button(ns, "install_dismiss", rec$id, "Dismiss")))
+          workspace_install_row(ns, rec, buttons)
+        })
+      )
+    }
     output$jobs_list <- shiny::renderUI({
       jobs$tick()
+      installs <- installs_ui()
       records <- shown_records()
       if (!length(records)) {
-        return(NULL)
+        return(installs)
       }
       # One malformed record shows a placeholder instead of erroring the whole
       # list.
-      shiny::tags$ul(
+      shiny::tagList(installs, shiny::tags$ul(
         class = "rs-job-list",
         lapply(records, function(rec) {
           tryCatch(
@@ -1783,7 +1850,7 @@ workspace_jobs_server <- function(id, jobs) {
             }
           )
         })
-      )
+      ))
     })
     output$jobs_status <- shiny::renderUI({
       jobs$tick()
@@ -1903,11 +1970,21 @@ workspace_jobs_server <- function(id, jobs) {
     }
     output$badge <- shiny::renderUI({
       jobs$tick()
-      workspace_job_badge(shown_records(), tray_id = session$ns("tray"), id = session$ns("job_badge"))
+      # An annotation install the session waits for counts as a running job (finished once it ends),
+      # so the badge that opens the tray exists while only an install is on the board.
+      installs <- lapply(workspace_jobs_installs(jobs), function(r) {
+        list(state = if (r$state %in% c("active", "stopping")) "running" else "succeeded")
+      })
+      workspace_job_badge(c(shown_records(), installs), tray_id = session$ns("tray"), id = session$ns("job_badge"))
     })
     shiny::outputOptions(output, "badge", suspendWhenHidden = FALSE)
     shiny::observeEvent(input$job_action, {
       value <- input$job_action
+      if (is.list(value) && is.character(value$action) && length(value$action) == 1L &&
+          startsWith(value$action, "install_")) {
+        annotation_install_action(jobs, value)
+        return()
+      }
       if (is.list(value) && identical(value$action, "dismiss")) {
         rec <- if (is.character(value$run) && length(value$run) == 1L) {
           workspace_jobs_record(jobs, value$run)

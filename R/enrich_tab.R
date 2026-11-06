@@ -194,7 +194,7 @@ enrich_tab_ui <- function(id, tabName, upload = TRUE) {
               selectInput(
                 ns("species_select"),
                 "Select species",
-                c(
+                annotation_species_choices(c(
                   "human",
                   "mouse",
                   "rat",
@@ -212,10 +212,8 @@ enrich_tab_ui <- function(id, tabName, upload = TRUE) {
                   "anopheles",
                   "ecoli",
                   "malaria",
-                  "chipm",
-                  "toxoplasma",
-                  "sco"
-                ),
+                  "chipm"
+                )),
                 selected = "human"
               )
             ),
@@ -1414,117 +1412,125 @@ enrich_tab_server <- function(
         cutoff_val <- 0.05
       }
 
-      # 2. Admit the job. Inputs, settings and the input values are captured
-      # now; the
-      #    session job registry queues the job and launches it when a worker is
-      # free.
-      runner <- enrichment_runner
-      labels <- vapply(deg_inputs, function(x) x$name, character(1))
-      sources <- lapply(labels, function(label) {
-        list(
-          store = "deg",
-          label = label,
-          rv = u_degdfs,
-          value = u_degdfs[[label]]
-        )
-      })
-      settings <- list(
-        species = species_val,
-        anntype = anntype_val,
-        keytype = keytype_val,
-        ontology = ontology_val,
-        cutoff = cutoff_val,
-        background = if (is.null(background_val)) {
-          "annotation universe"
-        } else {
-          sprintf(
-            "explicit %s",
-            substr(enrichment_background_digest(background_val$ids), 1, 12)
-          )
-        },
-        query = lapply(deg_inputs, function(x) {
+      # 2. Everything below is the job admission, captured as one closure so that it can start either
+      # now or, when an annotation package must be installed first (SPEC-WS-014 M2), when the install
+      # has finished. Inputs, settings and input values were all captured above.
+      start_job <- function() {
+        # 2. Admit the job. Inputs, settings and the input values are captured
+        # now; the
+        #    session job registry queues the job and launches it when a worker is
+        # free.
+        runner <- enrichment_runner
+        labels <- vapply(deg_inputs, function(x) x$name, character(1))
+        sources <- lapply(labels, function(label) {
           list(
-            name = x$name,
-            query_rule = x$query_rule,
-            n_submitted = length(x$ids),
-            revision_digest = x$revision_digest
+            store = "deg",
+            label = label,
+            rv = u_degdfs,
+            value = u_degdfs[[label]]
           )
         })
-      )
-
-      # 3. Launch future (no reactive reads inside)
-      runner_args <- list(
-        deg_inputs = deg_inputs,
-        cutoff = cutoff_val,
-        species = species_val,
-        anntype = anntype_val,
-        keytype = keytype_val,
-        ontology = ontology_val
-      )
-      if (!is.null(background_val)) {
-        runner_args$background <- background_val
-      }
-      launch <- function() {
-        workspace_jobs_future(
-          do.call(runner, runner_args),
-          packages = "richR",
-          seed = TRUE
-        )
-      }
-
-      # 4. Publish an authorized result (runs in Shiny session context); an
-      # earlier
-      #    run's label is never overwritten: <name>_enriched, then
-      # <name>_enriched_<k>.
-      publish <- function(results) {
-        outputs <- character()
-        for (res in results) {
-          base <- paste0(res$name, "_enriched")
-          lab <- workspace_jobs_free_label(
-            base,
-            shiny::isolate(c(u_rrnames$labels, names(u_rrdfs)))
-          )
-          result_df <- res$result
-          # The universe that produced this result travels with it (SPEC-WS-005).
-          attr(result_df, "richstudio_background") <- res$background
-          u_rrdfs[[lab]] <- result_df
-          u_rrnames$labels <- unique(c(shiny::isolate(u_rrnames$labels), lab))
-          if (identical(lab, base)) {
-            u_big_rrdf[["df"]] <- add_file_rrdf(
-              shiny::isolate(u_big_rrdf[["df"]]),
-              name = res$name,
-              annot = res$anntype,
-              keytype = res$keytype,
-              ontology = res$ontology,
-              species = res$species,
-              file = FALSE
-            )
+        settings <- list(
+          species = species_val,
+          anntype = anntype_val,
+          keytype = keytype_val,
+          ontology = ontology_val,
+          cutoff = cutoff_val,
+          background = if (is.null(background_val)) {
+            "annotation universe"
           } else {
-            u_big_rrdf[["df"]] <- workspace_jobs_rrdf_row(
-              shiny::isolate(u_big_rrdf[["df"]]),
-              lab,
-              res$name,
-              res
+            sprintf(
+              "explicit %s",
+              substr(enrichment_background_digest(background_val$ids), 1, 12)
             )
-          }
-          outputs <- c(outputs, lab)
-        }
-        showNotification(
-          paste(length(results), "DEG set(s) enriched successfully!"),
-          type = "message"
+          },
+          query = lapply(deg_inputs, function(x) {
+            list(
+              name = x$name,
+              query_rule = x$query_rule,
+              n_submitted = length(x$ids),
+              revision_digest = x$revision_digest
+            )
+          })
         )
-        outputs
+
+        # 3. Launch future (no reactive reads inside)
+        runner_args <- list(
+          deg_inputs = deg_inputs,
+          cutoff = cutoff_val,
+          species = species_val,
+          anntype = anntype_val,
+          keytype = keytype_val,
+          ontology = ontology_val
+        )
+        if (!is.null(background_val)) {
+          runner_args$background <- background_val
+        }
+        launch <- function() {
+          workspace_jobs_future(
+            do.call(runner, runner_args),
+            packages = "richR",
+            seed = TRUE
+          )
+        }
+
+        # 4. Publish an authorized result (runs in Shiny session context); an
+        # earlier
+        #    run's label is never overwritten: <name>_enriched, then
+        # <name>_enriched_<k>.
+        publish <- function(results) {
+          outputs <- character()
+          for (res in results) {
+            base <- paste0(res$name, "_enriched")
+            lab <- workspace_jobs_free_label(
+              base,
+              shiny::isolate(c(u_rrnames$labels, names(u_rrdfs)))
+            )
+            result_df <- res$result
+            # The universe that produced this result travels with it (SPEC-WS-005).
+            attr(result_df, "richstudio_background") <- res$background
+            u_rrdfs[[lab]] <- result_df
+            u_rrnames$labels <- unique(c(shiny::isolate(u_rrnames$labels), lab))
+            if (identical(lab, base)) {
+              u_big_rrdf[["df"]] <- add_file_rrdf(
+                shiny::isolate(u_big_rrdf[["df"]]),
+                name = res$name,
+                annot = res$anntype,
+                keytype = res$keytype,
+                ontology = res$ontology,
+                species = res$species,
+                file = FALSE
+              )
+            } else {
+              u_big_rrdf[["df"]] <- workspace_jobs_rrdf_row(
+                shiny::isolate(u_big_rrdf[["df"]]),
+                lab,
+                res$name,
+                res
+              )
+            }
+            outputs <- c(outputs, lab)
+          }
+          showNotification(
+            paste(length(results), "DEG set(s) enriched successfully!"),
+            type = "message"
+          )
+          outputs
+        }
+        workspace_jobs_submit(
+          jobs,
+          "enrichment",
+          sources,
+          settings,
+          launch,
+          publish,
+          session,
+          "enrich_deg",
+          progress = "Enrichment analysis running in background..."
+        )
       }
-      workspace_jobs_submit(
-        jobs,
-        "enrichment",
-        sources,
-        settings,
-        launch,
-        publish,
-        session,
-        "enrich_deg",
-        progress = "Enrichment analysis running in background..."
+      annotation_install_gate(
+        jobs, session, species_val, anntype_val, keytype_val, start_job
       )
 
       # Return NULL so Shiny knows this observer is async

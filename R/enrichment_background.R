@@ -203,9 +203,17 @@ enrichment_background_record <- function(enriched, background = NULL, annotation
     } else {
       "Query genes without annotation are dropped; the universe is the annotation."
     },
-    annotation = list(species = species, anntype = anntype, keytype = keytype, ontology = ontology,
-                      annotation_genes = if (is.null(annotation_ids)) NA_integer_ else length(annotation_ids),
-                      richR = tryCatch(as.character(utils::packageVersion("richR")), error = function(e) NA_character_))
+    annotation = c(
+      list(species = species, anntype = anntype, keytype = keytype, ontology = ontology,
+           annotation_genes = if (is.null(annotation_ids)) NA_integer_ else length(annotation_ids),
+           richR = tryCatch(as.character(utils::packageVersion("richR")), error = function(e) NA_character_)),
+      # SPEC-WS-014: the installed version of every annotation package the run needs; omitted when
+      # none is needed or installed, so a record without it (older projects) stays valid.
+      local({
+        pk <- annotation_provenance_packages(species, anntype, keytype)
+        if (length(pk)) list(packages = pk) else NULL
+      })
+    )
   )
   not_applicable <- c("annotation", "unavailable", if (!explicit) c("background_digest", "submitted_count"))
   record$unavailable <- names(Filter(function(x) length(x) == 1L && is.na(x),

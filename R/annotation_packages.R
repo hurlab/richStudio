@@ -252,7 +252,40 @@ annotation_deps <- function() {
   list(now = annotation_now, status = annotation_read_status, pid_live = annotation_pid_is_installer,
        lock_free = annotation_lock_free, launch = annotation_launch, state = annotation_package_state,
        start_epoch = annotation_proc_start_epoch, session_of = annotation_proc_session,
-       signal = annotation_signal, kill_session = annotation_kill_session)
+       signal = annotation_signal, kill_session = annotation_kill_session, keytypes = annotation_keytypes)
+}
+
+# ---- gene ID type check ------------------------------------------------------------------------------
+
+ANNOTATION_KEYTYPE_CACHE <- new.env(parent = emptyenv())
+
+# The gene ID types an installed organism package accepts, or NULL when they cannot be read; the run then
+# proceeds as before and richR reports any problem itself.
+annotation_keytypes <- function(lib, pkg) {
+  if (!is.null(ANNOTATION_KEYTYPE_CACHE[[pkg]])) return(ANNOTATION_KEYTYPE_CACHE[[pkg]])
+  kt <- tryCatch({
+    loadNamespace(pkg, lib.loc = c(lib, .libPaths()))
+    as.character(getExportedValue("AnnotationDbi", "keytypes")(getExportedValue(pkg, pkg)))
+  }, error = function(e) NULL)
+  if (length(kt)) assign(pkg, kt, envir = ANNOTATION_KEYTYPE_CACHE)
+  kt
+}
+
+# A plain reason when `keytype` is not one of `available`, else NULL. Unknown `available` never refuses.
+annotation_keytype_problem <- function(species, keytype, available) {
+  if (!length(available) || !is.character(keytype) || length(keytype) != 1L || keytype %in% available) return(NULL)
+  suggest <- intersect(c("SYMBOL", "GENENAME", "ENTREZID", "ENSEMBL", "ORF", "SGD", "TAIR"), available)
+  sprintf("The %s annotation has no '%s' gene IDs; choose a gene ID type it has, such as %s.",
+          species, keytype, paste(suggest, collapse = ", "))
+}
+
+# The check for one request, against the organism package among `packages` (none for Reactome + ENTREZID).
+annotation_keytype_check <- function(species, keytype, packages, lib, deps) {
+  if (is.null(deps$keytypes)) return(NULL)
+  al <- annotation_allowlist()
+  org <- intersect(packages, al$package[al$kind == "organism"])
+  if (!length(org)) return(NULL)
+  annotation_keytype_problem(species, keytype, deps$keytypes(lib, org[[1L]]))
 }
 
 # ---- the decision rules (REQ-030): strict first match ----------------------------------------------
@@ -355,6 +388,11 @@ annotation_install_gate <- function(jobs, session, species, anntype, keytype, st
   }
   states <- vapply(res$packages, function(p) deps$state(lib, p), character(1))
   if (all(states == "present")) {
+    problem <- annotation_keytype_check(species, keytype, res$packages, lib, deps)
+    if (!is.null(problem)) {
+      shiny::showNotification(paste("Run not started.", problem), type = "warning", duration = 10)
+      return(invisible("refused"))
+    }
     start_job()
     return(invisible("started"))
   }
@@ -423,6 +461,11 @@ annotation_install_poll <- function(jobs, deps = annotation_deps()) {
       continue = {
         annotation_install_update(jobs, rec$id, list(state = "done", text = "Done", stop_at = NULL))
         annotation_install_announce(jobs, rec, "Done")
+        problem <- annotation_keytype_check(rec$species, rec$keytype, rec$packages, lib, deps)
+        if (!is.null(problem)) {
+          shiny::showNotification(paste("Run not started.", problem), type = "warning", duration = 10)
+          next
+        }
         tryCatch(rec$start_job(), error = function(e) {
           shiny::showNotification(paste("The analysis could not start:", conditionMessage(e)), type = "warning")
         })

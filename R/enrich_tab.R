@@ -73,6 +73,20 @@ enrich_species_default <- function(recorded = character(), chosen = NULL) {
   list(value = "human", source = "default")
 }
 
+# Default gene ID type per species: yeast's annotation (org.Sc.sgd.db) has no SYMBOL key, so it starts on
+# GENENAME; every other offered species starts on SYMBOL.
+enrich_keytype_default <- function(species) {
+  if (identical(species, "yeast")) "GENENAME" else "SYMBOL"
+}
+
+# The gene ID type to select after the species changes from `prev` to `new`, or NULL to leave it. It follows
+# the species only while it still holds the previous species' default, so a type the user chose stays.
+enrich_keytype_follow <- function(prev, new, current) {
+  prev_default <- enrich_keytype_default(prev %||% "human")
+  target <- enrich_keytype_default(new)
+  if (identical(current, prev_default) && !identical(current, target)) target else NULL
+}
+
 enrich_species_note <- function(source) {
   switch(
     source,
@@ -1003,6 +1017,17 @@ enrich_tab_server <- function(
       },
       ignoreInit = TRUE
     )
+    # The gene ID type follows the species default unless the user picked another type.
+    keytype_species <- new.env(parent = emptyenv())
+    keytype_species$value <- NULL
+    observeEvent(input$species_select, {
+      new <- input$species_select
+      target <- enrich_keytype_follow(keytype_species$value, new, input$keytype_select)
+      keytype_species$value <- new
+      if (!is.null(target)) {
+        updateSelectInput(session = shiny::getDefaultReactiveDomain(), "keytype_select", selected = target)
+      }
+    })
     recorded_species <- reactive({
       selected <- input$degs_to_enrich
       big <- u_big_rrdf[["df"]]

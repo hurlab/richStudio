@@ -87,6 +87,29 @@ enrich_keytype_follow <- function(prev, new, current) {
   if (identical(current, prev_default) && !identical(current, target)) target else NULL
 }
 
+# Why Run cannot start yet, or NULL when it can: nothing selected, or no uploaded gene lists. A click that
+# arrives in that state gets this message instead of stopping silently.
+enrich_run_blocker <- function(selected, gene_lists) {
+  if (!is.data.frame(gene_lists) || !nrow(gene_lists)) return("Upload gene lists before running.")
+  if (!length(selected) || all(!nzchar(as.character(selected)))) return("Select one or more gene lists to run.")
+  NULL
+}
+
+# The gene lists to keep selected after the list of gene lists changes: those that still exist.
+enrich_keep_selection <- function(selected, choices) {
+  intersect(as.character(selected), as.character(choices))
+}
+
+# One app-log line per Run click, so a click that ends without a visible result can be traced.
+enrich_run_log <- function(outcome, selected, settings = list()) {
+  outcome <- as.character(outcome %||% "unknown")[1L]
+  message(sprintf(
+    "[richStudio] Run: %s (lists=%d species=%s annotation=%s keytype=%s)",
+    outcome, length(selected), settings$species %||% "-", settings$anntype %||% "-", settings$keytype %||% "-"
+  ))
+  invisible(outcome)
+}
+
 enrich_species_note <- function(source) {
   switch(
     source,
@@ -474,13 +497,19 @@ enrich_tab_server <- function(
       )
       updateSelectInput(
         session = shiny::getDefaultReactiveDomain(),
-        "degs_to_enrich",
-        choices = u_degnames_reactive()
-      )
-      updateSelectInput(
-        session = shiny::getDefaultReactiveDomain(),
         "rr_table_select",
         choices = u_rrnames_reactive()
+      )
+    })
+    # Gene lists to enrich: updated only when the gene lists change, keeping the lists still present, so a
+    # new enrichment result no longer clears the selection.
+    observe({
+      choices <- u_degnames_reactive()
+      updateSelectInput(
+        session = shiny::getDefaultReactiveDomain(),
+        "degs_to_enrich",
+        choices = choices,
+        selected = enrich_keep_selection(shiny::isolate(input$degs_to_enrich), choices)
       )
     })
 
@@ -1346,11 +1375,21 @@ enrich_tab_server <- function(
     # test text inputs:
     # Xkr4 Rp1 Sox17
     # Mrpl15 Lypla1 Tcea1
+    # The job system alone owns the Run button's enabled state (it disables on submit and re-enables after
+    # publishing); a click that cannot start says why instead.
     observeEvent(input$enrich_deg, {
-      req(input$degs_to_enrich)
-
-      # 1. Collect ALL reactive inputs BEFORE entering future
-      req(u_big_degdf[["df"]])
+      run_log <- function(outcome) {
+        enrich_run_log(outcome, input$degs_to_enrich, list(
+          species = input$species_select, anntype = input$anntype_select, keytype = input$keytype_select
+        ))
+      }
+      # 1. Collect ALL reactive inputs BEFORE entering future. A click that cannot start says why.
+      blocker <- enrich_run_blocker(input$degs_to_enrich, u_big_degdf[["df"]])
+      if (!is.null(blocker)) {
+        showNotification(paste("Run not started.", blocker), type = "warning", duration = 10)
+        run_log("blocked")
+        return(NULL)
+      }
       # A missing policy, a changed committed input or an empty rule stops Run
       # before
       # any runner call; stores and selections stay unchanged. So does an
@@ -1399,6 +1438,7 @@ enrich_tab_server <- function(
         }
       )
       if (is.null(deg_inputs)) {
+        run_log("stopped at review")
         return(NULL)
       }
       background_val <- NULL
@@ -1407,6 +1447,7 @@ enrich_tab_server <- function(
         check <- background_check()
         if (!isTRUE(admitted$ok)) {
           review_report(admitted$message)
+          run_log("stopped at background")
           return(NULL)
         }
         if (
@@ -1420,10 +1461,12 @@ enrich_tab_server <- function(
             "Check the background before running; the lists or settings",
             "changed since the last check"
           ))
+          run_log("stopped at background")
           return(NULL)
         }
         if (!isTRUE(check$ok)) {
           review_report(unlist(lapply(check$entries, function(r) r$problems)))
+          run_log("stopped at background")
           return(NULL)
         }
         background_val <- list(mode = "explicit", ids = admitted$ids)
@@ -1554,9 +1597,9 @@ enrich_tab_server <- function(
           progress = "Enrichment analysis running in background..."
         )
       }
-      annotation_install_gate(
+      run_log(annotation_install_gate(
         jobs, session, species_val, anntype_val, keytype_val, start_job
-      )
+      ))
 
       # Return NULL so Shiny knows this observer is async
       NULL

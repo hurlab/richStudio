@@ -17,8 +17,8 @@ test_that("the selection keeps only gene lists that still exist", {
 })
 
 test_that("the Run log line names the outcome and the settings", {
-  expect_message(enrich_run_log("blocked", character(), list(species = "yeast", anntype = "GO", keytype = "GENENAME")),
-                 "[richStudio] Run: blocked (lists=0 species=yeast annotation=GO keytype=GENENAME)", fixed = TRUE)
+  expect_message(enrich_run_log("not started - no gene list selected", character(), list(species = "yeast", anntype = "GO", keytype = "GENENAME")),
+                 "[richStudio] Run: not started - no gene list selected (lists=0 species=yeast annotation=GO keytype=GENENAME)", fixed = TRUE)
   expect_message(enrich_run_log(NULL, "a"), "[richStudio] Run: unknown (lists=1", fixed = TRUE)
 })
 
@@ -42,7 +42,7 @@ test_that("in the tab, a Run click with nothing selected says why and is logged,
   shiny::testServer(richStudio:::enrich_tab_server, args = tab$args, {
     session$setInputs(species_select = "human", anntype_select = "GO", keytype_select = "SYMBOL",
                       ont_select = "BP", deg_filter_cutoff = 0.05, degs_to_enrich = character())
-    expect_message(session$setInputs(enrich_deg = 1L), "[richStudio] Run: blocked (lists=0", fixed = TRUE)
+    expect_message(session$setInputs(enrich_deg = 1L), "[richStudio] Run: not started - no gene list selected (lists=0", fixed = TRUE)
     expect_true(any(grepl("Run not started. Select one or more gene lists to run.", notes, fixed = TRUE)))
     expect_identical(ran, 0L)
   })
@@ -69,4 +69,15 @@ test_that("in the tab, a new enrichment result does not reset the gene-list sele
     expect_identical(last$selected, "set1")
     expect_identical(as.character(last$choices), c("set1", "set2"))
   })
+})
+
+test_that("log wording is plain for every Run outcome", {
+  expect_identical(enrich_run_blocker_reason("Select one or more gene lists to run."), "not started - no gene list selected")
+  expect_identical(enrich_run_blocker_reason("Upload gene lists before running."), "not started - no gene lists uploaded")
+  expect_identical(enrich_run_gate_outcome("started"), "started")
+  expect_identical(enrich_run_gate_outcome("pending"), "waiting for annotation install")
+  expect_identical(enrich_run_gate_outcome("refused"), "not started - annotation check refused it")
+  expect_identical(enrich_run_gate_outcome("duplicate"), "not started - annotation install already running")
+  expect_identical(enrich_run_gate_outcome(NULL), "unknown")
+  expect_false(any(grepl("blocked", c(enrich_run_blocker_reason("x"), enrich_run_gate_outcome("refused")))))
 })

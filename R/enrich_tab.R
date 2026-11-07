@@ -100,6 +100,23 @@ enrich_keep_selection <- function(selected, choices) {
   intersect(as.character(selected), as.character(choices))
 }
 
+# Plain log wording for a click the blocker stopped, and for each annotation gate result.
+enrich_run_blocker_reason <- function(blocker) {
+  if (grepl("^Upload", blocker %||% "")) "not started - no gene lists uploaded" else "not started - no gene list selected"
+}
+
+enrich_run_gate_outcome <- function(code) {
+  code <- as.character(code %||% "unknown")[1L]
+  switch(
+    code,
+    started = "started",
+    pending = "waiting for annotation install",
+    refused = "not started - annotation check refused it",
+    duplicate = "not started - annotation install already running",
+    code
+  )
+}
+
 # One app-log line per Run click, so a click that ends without a visible result can be traced.
 enrich_run_log <- function(outcome, selected, settings = list()) {
   outcome <- as.character(outcome %||% "unknown")[1L]
@@ -1387,7 +1404,7 @@ enrich_tab_server <- function(
       blocker <- enrich_run_blocker(input$degs_to_enrich, u_big_degdf[["df"]])
       if (!is.null(blocker)) {
         showNotification(paste("Run not started.", blocker), type = "warning", duration = 10)
-        run_log("blocked")
+        run_log(enrich_run_blocker_reason(blocker))
         return(NULL)
       }
       # A missing policy, a changed committed input or an empty rule stops Run
@@ -1438,7 +1455,7 @@ enrich_tab_server <- function(
         }
       )
       if (is.null(deg_inputs)) {
-        run_log("stopped at review")
+        run_log("not started - stopped at review")
         return(NULL)
       }
       background_val <- NULL
@@ -1447,7 +1464,7 @@ enrich_tab_server <- function(
         check <- background_check()
         if (!isTRUE(admitted$ok)) {
           review_report(admitted$message)
-          run_log("stopped at background")
+          run_log("not started - background check needed")
           return(NULL)
         }
         if (
@@ -1461,12 +1478,12 @@ enrich_tab_server <- function(
             "Check the background before running; the lists or settings",
             "changed since the last check"
           ))
-          run_log("stopped at background")
+          run_log("not started - background check needed")
           return(NULL)
         }
         if (!isTRUE(check$ok)) {
           review_report(unlist(lapply(check$entries, function(r) r$problems)))
-          run_log("stopped at background")
+          run_log("not started - background check needed")
           return(NULL)
         }
         background_val <- list(mode = "explicit", ids = admitted$ids)
@@ -1597,9 +1614,9 @@ enrich_tab_server <- function(
           progress = "Enrichment analysis running in background..."
         )
       }
-      run_log(annotation_install_gate(
+      run_log(enrich_run_gate_outcome(annotation_install_gate(
         jobs, session, species_val, anntype_val, keytype_val, start_job
-      ))
+      )))
 
       # Return NULL so Shiny knows this observer is async
       NULL

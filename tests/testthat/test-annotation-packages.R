@@ -522,3 +522,26 @@ test_that("AC-020/024/029 a detached install runs outside the future pool, finis
   expect_identical(found$pid, worker_pid_before)
   expect_identical(dirname(normalizePath(found$path)), normalizePath(w$lib))
 })
+
+test_that("after an install finishes, a gene ID type the new package lacks stops the run with a plain reason", {
+  w <- apk_world()
+  withr::local_envvar(RICHSTUDIO_ANNOTATION_LIB = w$lib)
+  notes <- collect_notifications()
+  for (case in list(list(keytype = "SYMBOL", runs = 0L), list(keytype = "GENENAME", runs = 1L))) {
+    jobs <- fake_jobs()
+    box <- new.env()
+    deps <- fake_deps(box)
+    deps$keytypes <- function(lib, pkg) c("ENTREZID", "GENENAME", "ORF")
+    started <- 0L
+    expect_identical(annotation_install_gate(jobs, NULL, "yeast", "GO", case$keytype,
+                                             function() started <<- started + 1L, deps), "pending")
+    box$states <- list(org.Sc.sgd.db = "present")
+    box$status <- status_for(recs(jobs)[[1L]]$token, state = "completed")
+    box$now <- box$now + 2
+    annotation_install_poll(jobs, deps)
+    expect_identical(recs(jobs)[[1L]]$state, "done")
+    expect_identical(started, case$runs)
+  }
+  texts <- vapply(notes$notes, function(n) n$text, "")
+  expect_length(grep("Run not started. The yeast annotation has no 'SYMBOL'", texts, fixed = TRUE), 1L)
+})
